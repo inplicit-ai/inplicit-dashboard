@@ -72,13 +72,15 @@ export default async function OrgDetailPage({
       default_interview_length_min: parseIntOr(get("default_interview_length_min")),
     };
     const api = makeApi(await requestCookie());
+    let redirectTo: string;
     try {
       await api.staff.orgs.update(id, patch);
-      redirect(`/staff/orgs/${id}?updated=1`);
+      redirectTo = `/staff/orgs/${id}?updated=1`;
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : (e as Error).message;
-      redirect(`/staff/orgs/${id}?edit=1&error=${encodeURIComponent(msg)}`);
+      redirectTo = `/staff/orgs/${id}?edit=1&error=${encodeURIComponent(msg)}`;
     }
+    redirect(redirectTo);
   }
 
   async function suspendOrgAction() {

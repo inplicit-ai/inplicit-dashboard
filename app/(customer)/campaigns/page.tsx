@@ -21,7 +21,7 @@ export default async function CampaignsPage() {
       <PageHeader
         title="Audits"
         actions={
-          <Link href="/admin/campaigns/new" className="btn btn--primary">
+          <Link href="/campaigns/new" className="btn btn--primary">
             Neuer Audit
           </Link>
         }
@@ -43,7 +43,7 @@ export default async function CampaignsPage() {
             <p className="empty-state__title">Noch keine Audits.</p>
             <p>Lege deinen ersten an, lade Teilnehmer ein, sieh dir die Insights an.</p>
             <Link
-              href="/admin/campaigns/new"
+              href="/campaigns/new"
               className="btn btn--primary"
               style={{ marginTop: "var(--space-6)" }}
             >
@@ -56,7 +56,7 @@ export default async function CampaignsPage() {
       {campaigns.length > 0 && (
         <div className="list-stack">
           {campaigns.map((c) => (
-            <Link key={c.id} href={`/admin/campaigns/${c.id}`} className="campaign-row">
+            <Link key={c.id} href={`/campaigns/${c.id}`} className="campaign-row">
               <div>
                 <p className="campaign-row__title">{c.org_name}</p>
                 <p className="caption" style={{ marginTop: "var(--space-1)" }}>

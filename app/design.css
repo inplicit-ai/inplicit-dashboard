@@ -1252,6 +1252,10 @@ img, svg, video { max-width: 100%; display: block; }
 .sidebar__menu > summary::-webkit-details-marker { display: none; }
 
 .sidebar__item--menu { width: 100%; }
+.sidebar__item--logout { width: 100%; }
+.sidebar__item--logout:hover { color: var(--color-error, #ef4444); }
+.sidebar__item--logout:hover .sidebar__item-icon { color: var(--color-error, #ef4444); }
+.sidebar__bottom form { width: 100%; }
 
 .sidebar__menu-chev {
   margin-left: auto;
@@ -1339,7 +1343,7 @@ img, svg, video { max-width: 100%; display: block; }
   .shell--with-sidebar { padding-left: 0; }
 }
 
-/* ─── Campaign row (used by /admin/campaigns) ─────────────────────────────── */
+/* ─── Campaign row (used by /campaigns) ─────────────────────────────── */
 
 .campaign-row {
   display: flex;

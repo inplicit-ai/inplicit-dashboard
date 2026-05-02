@@ -125,6 +125,19 @@ export function makeApi(cookie?: string) {
           method: "POST",
           body: JSON.stringify({ email }),
         }),
+      setPassword: (password: string) =>
+        request<{ ok: boolean }>("/api/auth/set-password", {
+          method: "POST",
+          body: JSON.stringify({ password }),
+        }),
+    },
+    orgs: {
+      me: () => request<Organization>("/api/orgs/me"),
+      updateMe: (body: UpdateOrgInput) =>
+        request<Organization>("/api/orgs/me", {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        }),
     },
     me: () => request<Me>("/api/me"),
     staff: {
@@ -420,6 +433,7 @@ export interface Me {
   org?: Organization | null;
   email_verified_at?: string | null;
   last_login_at?: string | null;
+  must_set_password?: boolean | null;
 }
 
 export interface Organization {

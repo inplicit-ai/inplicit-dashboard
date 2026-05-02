@@ -147,7 +147,7 @@ export function RagSearch() {
             {response.results.map((r) => (
               <Link
                 key={r.vse_insight_id}
-                href={`/admin/campaigns/${r.campaign_id}/interviews/${r.interview_id}`}
+                href={`/campaigns/${r.campaign_id}/interviews/${r.interview_id}`}
                 className="group block rounded-card border border-line bg-canvas px-5 py-4 shadow-card transition-all hover:-translate-y-0.5 hover:border-fg-subtle hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-4">

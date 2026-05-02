@@ -43,6 +43,7 @@ export default async function NewOrgPage({
     }
 
     const api = makeApi(await requestCookie());
+    let redirectTo: string;
     try {
       const result = await api.staff.orgs.create(body);
       const params = new URLSearchParams();
@@ -50,12 +51,13 @@ export default async function NewOrgPage({
       if (result.email_sent === true) params.set("email_sent", "1");
       if (result.email_error) params.set("email_error", result.email_error);
       const qs = params.toString();
-      redirect(`/staff/orgs/${result.org.id}${qs ? "?" + qs : ""}`);
+      redirectTo = `/staff/orgs/${result.org.id}${qs ? "?" + qs : ""}`;
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : (e as Error).message;
       const stickyParam = encodeURIComponent(JSON.stringify(body));
-      redirect(`/staff/orgs/new?error=${encodeURIComponent(msg)}&sticky=${stickyParam}`);
+      redirectTo = `/staff/orgs/new?error=${encodeURIComponent(msg)}&sticky=${stickyParam}`;
     }
+    redirect(redirectTo);
   }
 
   return (

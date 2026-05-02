@@ -25,7 +25,7 @@ async function doLogout(req: NextRequest) {
     );
   }
 
-  const response = NextResponse.redirect(new URL("/admin/login", req.url), {
+  const response = NextResponse.redirect(new URL("/login", req.url), {
     status: 303,
   });
   const setCookie = upstream?.headers.get("set-cookie");

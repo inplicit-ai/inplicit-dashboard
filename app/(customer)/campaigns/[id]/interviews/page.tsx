@@ -51,7 +51,7 @@ export default async function InterviewsPage({
             </thead>
             <tbody>
               {interviews.map((i) => {
-                const href = `/admin/campaigns/${id}/interviews/${i.id}`;
+                const href = `/campaigns/${id}/interviews/${i.id}`;
                 return (
                   <tr key={i.id}>
                     <td>

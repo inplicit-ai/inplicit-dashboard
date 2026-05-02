@@ -27,7 +27,7 @@ export default async function NewCampaignPage({
     } catch (e) {
       console.error("[create-campaign] backend unreachable:", (e as Error).message);
       redirect(
-        "/admin/campaigns/new?error=" +
+        "/campaigns/new?error=" +
           encodeURIComponent(
             `Backend nicht erreichbar (${API_BASE}).`,
           ),
@@ -42,17 +42,17 @@ export default async function NewCampaignPage({
         errMsg = j.error ?? text;
       } catch {}
       redirect(
-        "/admin/campaigns/new?error=" + encodeURIComponent(`Fehler ${res.status}: ${errMsg}`),
+        "/campaigns/new?error=" + encodeURIComponent(`Fehler ${res.status}: ${errMsg}`),
       );
     }
 
     const result = (await res.json()) as { campaign?: { id: string } };
-    redirect(`/admin/campaigns/${result.campaign?.id ?? ""}`);
+    redirect(`/campaigns/${result.campaign?.id ?? ""}`);
   }
 
   return (
     <div className="new-campaign">
-      <Link href="/admin/campaigns" className="btn btn--link new-campaign__back">
+      <Link href="/campaigns" className="btn btn--link new-campaign__back">
         ← Audits
       </Link>
 

@@ -34,6 +34,7 @@ export default async function NewStaffUserPage({
     }
 
     const api = makeApi(await requestCookie());
+    let redirectTo: string;
     try {
       const result = await api.staff.users.create({
         email,
@@ -48,14 +49,13 @@ export default async function NewStaffUserPage({
       if (result.user.email) params.set("reissued_for", result.user.email);
       if (result.email_sent) params.set("email_sent", "1");
       if (result.email_error) params.set("email_error", result.email_error);
-      redirect("/staff/users?" + params.toString());
+      redirectTo = "/staff/users?" + params.toString();
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : (e as Error).message;
       const stickyParam = encodeURIComponent(JSON.stringify({ email, name }));
-      redirect(
-        `/staff/users/new?error=${encodeURIComponent(msg)}&sticky=${stickyParam}`,
-      );
+      redirectTo = `/staff/users/new?error=${encodeURIComponent(msg)}&sticky=${stickyParam}`;
     }
+    redirect(redirectTo);
   }
 
   return (

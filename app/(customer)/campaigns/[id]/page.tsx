@@ -59,10 +59,10 @@ export default async function CampaignOverview({
             : `Gesendet: ${sent}, übersprungen: ${skipped}, fehlgeschlagen: ${failed}`;
       }
     }
-    revalidatePath(`/admin/campaigns/${id}`);
+    revalidatePath(`/campaigns/${id}`);
     const params = new URLSearchParams({ flash, flashType });
     const { redirect } = await import("next/navigation");
-    redirect(`/admin/campaigns/${id}?${params.toString()}`);
+    redirect(`/campaigns/${id}?${params.toString()}`);
   }
 
   if (error || !campaign) {
@@ -119,7 +119,7 @@ export default async function CampaignOverview({
               {launchLabel}
             </button>
           </form>
-          <Link href={`/admin/campaigns/${id}/participants`} className="btn btn--link">
+          <Link href={`/campaigns/${id}/participants`} className="btn btn--link">
             Einzeln verwalten →
           </Link>
         </div>

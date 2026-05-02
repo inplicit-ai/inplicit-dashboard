@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import type { ComponentType, SVGProps } from "react";
 import type { Me } from "@/lib/api";
 import {
@@ -14,6 +14,8 @@ import {
   IconSearch,
   IconSettings,
   IconUsers,
+  IconFileText,
+  IconUserPlus
 } from "@/components/icons";
 import { SettingsDialog } from "@/components/SettingsDialog";
 
@@ -40,7 +42,11 @@ interface NavSection {
 
 export function Sidebar({ mode, me, orgLabel }: SidebarProps) {
   const pathname = usePathname() ?? "";
-  const navSections = mode === "staff" ? staffNav(me?.role === "INPLICIT_ADMIN") : CUSTOMER_NAV;
+  const params = useParams();
+  
+  const campaignId = typeof params?.id === "string" ? params.id : null;
+
+  const navSections = mode === "staff" ? staffNav(me?.role === "INPLICIT_ADMIN") : customerNav(campaignId);
 
   const avatarLetter =
     mode === "staff" ? "I" : (orgLabel?.[0]?.toUpperCase() ?? "·");
@@ -55,7 +61,7 @@ export function Sidebar({ mode, me, orgLabel }: SidebarProps) {
       <div className="sidebar__inner">
         <div className="sidebar__brand">
           <Link
-            href={mode === "staff" ? "/staff/orgs" : "/admin/campaigns"}
+            href={mode === "staff" ? "/staff/orgs" : "/campaigns"}
             className="sidebar__brand-mark"
             aria-label="Inplicit"
           >
@@ -119,6 +125,14 @@ export function Sidebar({ mode, me, orgLabel }: SidebarProps) {
               </button>
             }
           />
+          <form method="POST" action="/logout">
+            <button type="submit" className="sidebar__item sidebar__item--logout">
+              <span className="sidebar__item-icon" aria-hidden="true">
+                <IconLogOut size={16} />
+              </span>
+              <span className="sidebar__item-label">Log Out</span>
+            </button>
+          </form>
           <details className="sidebar__menu">
             <summary className="sidebar__item sidebar__item--menu">
               <span className="sidebar__avatar sidebar__avatar--sm" aria-hidden="true">
@@ -145,7 +159,7 @@ export function Sidebar({ mode, me, orgLabel }: SidebarProps) {
                   </span>
                 </div>
               )}
-              <form method="POST" action="/admin/logout" className="sidebar__menu-form">
+              <form method="POST" action="/logout" className="sidebar__menu-form">
                 <button
                   type="submit"
                   className="sidebar__menu-item sidebar__menu-item--button"
@@ -167,31 +181,44 @@ function staffNav(isAdmin: boolean): NavSection[] {
   const items: NavItem[] = [
     { href: "/staff/orgs", label: "Organisationen", icon: IconBuilding },
   ];
-  // The Team page is admin-only — regular staff can't manage other staff.
-  // Backend enforces the same rule on /api/staff/users (require_admin).
   if (isAdmin) {
     items.push({ href: "/staff/users", label: "Team", icon: IconUsers });
   }
   return [{ label: "Back-Office", items }];
 }
 
-const CUSTOMER_NAV: NavSection[] = [
-  {
-    label: "Workspace",
-    items: [
-      { href: "/admin/campaigns", label: "Übersicht", icon: IconLayoutGrid },
-      { href: "/admin/campaigns", label: "Audits", icon: IconFolderKanban },
-    ],
-  },
-  {
+function customerNav(campaignId: string | null): NavSection[] {
+  const nav: NavSection[] = [
+    {
+      label: "Workspace",
+      items: [
+        { href: "/campaigns", label: "Überblick", icon: IconLayoutGrid },
+        { href: "/campaigns", label: "Audits", icon: IconFolderKanban },
+      ],
+    },
+  ];
+
+  if (campaignId) {
+    nav.push({
+      label: "Audit",
+      items: [
+        { href: `/campaigns/${campaignId}/interviews`, label: "Interviews", icon: IconFileText },
+        { href: `/campaigns/${campaignId}/participants`, label: "Participants", icon: IconUsers },
+      ],
+    });
+  }
+
+  nav.push({
     label: "Wissen",
     items: [
       {
-        href: "/admin/insights",
+        href: "/insights",
         label: "Insights",
         icon: IconSearch,
         badge: "RAG",
       },
     ],
-  },
-];
+  });
+
+  return nav;
+}

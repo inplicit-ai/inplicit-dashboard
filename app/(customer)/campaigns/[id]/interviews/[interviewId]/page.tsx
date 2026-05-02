@@ -56,7 +56,7 @@ export default async function InterviewDetailPage({
 
           <div className="iv-detail__back">
             <Link
-              href={`/admin/campaigns/${campaignId}/interviews`}
+              href={`/campaigns/${campaignId}/interviews`}
               className="link-back"
             >
               ← Zurück zur Liste

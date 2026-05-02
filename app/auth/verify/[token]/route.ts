@@ -17,10 +17,16 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 
   // Strip cookie attrs to use as a request header for /api/me
   const cookieValue = setCookie.split(";")[0];
-  let location = "/admin/campaigns";
+  let location = "/campaigns";
   try {
     const me = await makeApi(cookieValue).me();
-    location = me.role === "INPLICIT_STAFF" ? "/staff/orgs" : "/admin/campaigns";
+    if (me.must_set_password) {
+      location = "/set-password";
+    } else if (me.role === "INPLICIT_STAFF" || me.role === "INPLICIT_ADMIN") {
+      location = "/staff/orgs";
+    } else {
+      location = "/campaigns";
+    }
     console.log(`[auth] login successful — role=${me.role}, → ${location}`);
   } catch (e) {
     console.warn("[auth] /api/me failed post-verify:", e);
@@ -48,7 +54,7 @@ function renderError(message: string): string {
     <span style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:#dc2626">Fehler</span>
     <h1 style="margin-top:0.5rem;font-size:1.5rem">Anmeldung fehlgeschlagen</h1>
     <p style="margin-top:0.75rem">${message}</p>
-    <a href="/admin/login" style="display:inline-block;margin-top:1.25rem;color:#0a0a0a;text-decoration:underline">Erneut versuchen</a>
+    <a href="/login" style="display:inline-block;margin-top:1.25rem;color:#0a0a0a;text-decoration:underline">Erneut versuchen</a>
   </div>
 </body>
 </html>`;

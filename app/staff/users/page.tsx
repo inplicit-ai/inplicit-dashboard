@@ -36,6 +36,7 @@ export default async function StaffUsersPage({
     const id = String(formData.get("id") ?? "");
     if (!id) return;
     const api = makeApi(await requestCookie());
+    let redirectTo: string;
     try {
       const result = await api.staff.users.issueMagicLink(id);
       const params = new URLSearchParams({
@@ -44,13 +45,12 @@ export default async function StaffUsersPage({
       });
       if (result.email_sent) params.set("email_sent", "1");
       if (result.email_error) params.set("email_error", result.email_error);
-      redirect("/staff/users?" + params.toString());
+      redirectTo = "/staff/users?" + params.toString();
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : (e as Error).message;
-      redirect(
-        "/staff/users?flashType=err&flash=" + encodeURIComponent(msg),
-      );
+      redirectTo = "/staff/users?flashType=err&flash=" + encodeURIComponent(msg);
     }
+    redirect(redirectTo);
   }
 
   async function deleteUserAction(formData: FormData) {
@@ -58,18 +58,15 @@ export default async function StaffUsersPage({
     const id = String(formData.get("id") ?? "");
     if (!id) return;
     const api = makeApi(await requestCookie());
+    let redirectTo: string;
     try {
       await api.staff.users.remove(id);
-      redirect(
-        "/staff/users?flashType=ok&flash=" +
-          encodeURIComponent("Staff-User gelöscht."),
-      );
+      redirectTo = "/staff/users?flashType=ok&flash=" + encodeURIComponent("Staff-User gelöscht.");
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : (e as Error).message;
-      redirect(
-        "/staff/users?flashType=err&flash=" + encodeURIComponent(msg),
-      );
+      redirectTo = "/staff/users?flashType=err&flash=" + encodeURIComponent(msg);
     }
+    redirect(redirectTo);
   }
 
   return (

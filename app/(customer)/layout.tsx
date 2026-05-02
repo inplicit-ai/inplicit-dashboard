@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
 import { Sidebar } from "@/components/Sidebar";
-import { requireUser } from "@/lib/auth";
+import { requireOrgOwner } from "@/lib/auth";
 
 export default async function AdminLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const { me } = await requireUser();
+  const { me } = await requireOrgOwner();
 
   return (
     <div className="shell shell--with-sidebar">
