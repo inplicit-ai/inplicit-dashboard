@@ -63,11 +63,24 @@ export function makeApi(cookie?: string) {
     insights: {
       list: (campaignId: string, params?: InsightParams) => {
         const q = new URLSearchParams();
-        if (params?.semantic_type) q.set("semantic_type", params.semantic_type);
         if (params?.limit) q.set("limit", String(params.limit));
         if (params?.offset) q.set("offset", String(params.offset));
         return request<VseInsight[]>(`/api/campaigns/${campaignId}/insights?${q}`);
       },
+    },
+    synthesisConfig: {
+      get: (campaignId: string) =>
+        request<SynthesisConfig>(
+          `/api/campaigns/${campaignId}/synthesis-config`,
+        ),
+      update: (campaignId: string, body: SynthesisConfig) =>
+        request<SynthesisConfig>(
+          `/api/campaigns/${campaignId}/synthesis-config`,
+          {
+            method: "PATCH",
+            body: JSON.stringify(body),
+          },
+        ),
     },
     clusters: {
       list: (campaignId: string) =>
@@ -80,6 +93,8 @@ export function makeApi(cookie?: string) {
     interviews: {
       list: (campaignId: string) =>
         request<Interview[]>(`/api/campaigns/${campaignId}/interviews`),
+      detail: (interviewId: string) =>
+        request<InterviewDetail>(`/api/interviews/${interviewId}`),
     },
     participants: {
       list: (campaignId: string) =>
@@ -110,6 +125,42 @@ export function makeApi(cookie?: string) {
           method: "POST",
           body: JSON.stringify({ email }),
         }),
+    },
+    me: () => request<Me>("/api/me"),
+    staff: {
+      orgs: {
+        list: () => request<Organization[]>("/api/staff/orgs"),
+        get: (id: string) => request<Organization>(`/api/staff/orgs/${id}`),
+        create: (body: ProvisionOrgInput) =>
+          request<ProvisionOrgResponse>("/api/staff/orgs", {
+            method: "POST",
+            body: JSON.stringify(body),
+          }),
+        update: (id: string, body: UpdateOrgInput) =>
+          request<Organization>(`/api/staff/orgs/${id}`, {
+            method: "PATCH",
+            body: JSON.stringify(body),
+          }),
+        suspend: (id: string) =>
+          request<{ ok: boolean }>(`/api/staff/orgs/${id}/suspend`, {
+            method: "POST",
+          }),
+        remove: (id: string) =>
+          request<{ ok: boolean }>(`/api/staff/orgs/${id}`, {
+            method: "DELETE",
+          }),
+        issueMagicLink: (id: string) =>
+          request<{
+            ok: boolean;
+            owner_email: string;
+            email_sent: boolean;
+            magic_link?: string;
+            email_error?: string;
+          }>(
+            `/api/staff/orgs/${id}/issue-magic-link`,
+            { method: "POST" },
+          ),
+      },
     },
     health: () => request<{ status: string }>("/health"),
   };
@@ -150,7 +201,6 @@ export interface CreateCampaignInput {
 }
 
 export interface InsightParams {
-  semantic_type?: string;
   limit?: number;
   offset?: number;
 }
@@ -159,13 +209,49 @@ export interface VseInsight {
   id: string;
   interview_id: string;
   campaign_id: string;
-  semantic_type: string;
-  content: string;
-  verbatim_quote?: string;
+  problem_statement: string;
+  human_solution?: string | null;
+  business_opportunity?: string | null;
+  origin_solution?: "HUMAN" | "AI" | null;
+  utterance_ids: string[];
   phase: string;
   department?: string;
+  cluster_id?: string | null;
   confidence?: number;
   created_at: string;
+}
+
+export interface SynthesisConfig {
+  vector_weights: {
+    problem: number;
+    solution: number;
+    opportunity: number;
+  };
+  thresholds: {
+    tau_assign: number;
+    tau_create: number;
+    tau_merge: number;
+    tau_meta: number;
+  };
+  signal: {
+    phase1_weight: number;
+    phase2_weight: number;
+    emit_threshold: number;
+    min_departments: number;
+  };
+  hypothesis: {
+    verify_confidence: number;
+    verify_min_supporters: number;
+    reject_min_contradictors: number;
+    reject_max_confidence: number;
+    evolve_min_each: number;
+    department_target: number;
+  };
+  meta_synthesis: {
+    min_verified_clusters: number;
+    min_departments: number;
+    discovery_interval_seconds: number;
+  };
 }
 
 export interface Cluster {
@@ -182,11 +268,13 @@ export interface Hypothesis {
   id: string;
   campaign_id: string;
   statement: string;
+  /** SEED | PENDING | EVOLVING | VERIFIED | REJECTED */
   validation_state: string;
   n_supporting: number;
   n_contradicting: number;
   dept_coverage: string[];
   confidence_score: number;
+  parent_hypothesis_id?: string | null;
 }
 
 export interface MapData {
@@ -207,6 +295,24 @@ export interface Interview {
   ended_at?: string;
   duration_seconds?: number;
   processing_status?: string;
+}
+
+export interface Utterance {
+  id: string;
+  interview_id: string;
+  speaker: "agent" | "participant";
+  utterance_index: number;
+  text: string;
+  phase: string;
+  timestamp_start?: number;
+  timestamp_end?: number;
+  created_at?: string;
+}
+
+export interface InterviewDetail {
+  interview: Interview;
+  utterances: Utterance[];
+  insights: VseInsight[];
 }
 
 export interface CampaignStats {
@@ -240,6 +346,15 @@ export interface Participant {
   email_sent?: boolean;
   email_sent_at?: string;
   created_at?: string;
+  /**
+   * Status of the participant's latest interview row, if any. Populated by
+   * the list endpoint via a lateral join so the dashboard can render an
+   * accurate Status badge without a second request.
+   *
+   * One of: IN_PROGRESS | COMPLETED | ABANDONED | PROCESSING | PROCESSED | FAILED.
+   * Absent when the participant has no interview yet (or it was discarded as empty).
+   */
+  latest_interview_status?: string | null;
 }
 
 export interface ParticipantInput {
@@ -254,4 +369,70 @@ export interface InviteResult {
   sent?: boolean;
   dev_link?: string;
   error?: string;
+}
+
+// ─── Multi-tenancy types ───────────────────────────────────────────────────
+
+export type Role = "INPLICIT_STAFF" | "ORG_OWNER";
+
+export interface Me {
+  id: string;
+  email: string;
+  name: string;
+  role: Role;
+  org_id?: string | null;
+  /** Resolved organization for ORG_OWNER users. Null for INPLICIT_STAFF. */
+  org?: Organization | null;
+  email_verified_at?: string | null;
+  last_login_at?: string | null;
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  company_context: string;
+  industry?: string | null;
+  default_locale: string;
+  default_voice_id: number;
+  default_interview_length_min: number;
+  status: "ACTIVE" | "SUSPENDED" | "DELETED";
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
+}
+
+export interface ProvisionOrgInput {
+  name: string;
+  slug: string;
+  company_context: string;
+  industry?: string;
+  default_locale?: string;
+  default_voice_id?: number;
+  default_interview_length_min?: number;
+  owner_email: string;
+  owner_name: string;
+  issue_magic_link?: boolean;
+}
+
+export interface ProvisionOrgResponse {
+  org: Organization;
+  owner: Me;
+  /** Returned when the staff member ticked "Magic-Link sofort ausgeben". */
+  magic_link?: string;
+  /** True when Resend successfully accepted the welcome mail. False if
+   *  Resend isn't configured, was rejected, or threw. */
+  email_sent?: boolean;
+  /** Resend's error string, only present when email_sent is false because
+   *  of a real failure (not because Resend isn't configured at all). */
+  email_error?: string;
+}
+
+export interface UpdateOrgInput {
+  name?: string;
+  company_context?: string;
+  industry?: string;
+  default_locale?: string;
+  default_voice_id?: number;
+  default_interview_length_min?: number;
 }

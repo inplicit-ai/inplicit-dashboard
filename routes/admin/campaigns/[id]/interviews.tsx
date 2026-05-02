@@ -42,29 +42,38 @@ export default defineRoute(async (req, ctx) => {
                   <th>Status</th>
                   <th>Auswertung</th>
                   <th>Gestartet</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
-                {interviews.map((i) => (
-                  <tr key={i.id}>
-                    <td><span class="mono text-secondary">{i.anon_id}</span></td>
-                    <td>{i.department ?? "—"}</td>
-                    <td class="text-secondary" style="text-transform: capitalize">
-                      {i.mode}
-                    </td>
-                    <td><StatusBadge status={i.status} /></td>
-                    <td>
-                      {i.processing_status && i.status === "COMPLETED"
-                        ? <StatusBadge status={i.processing_status} />
-                        : "—"}
-                    </td>
-                    <td class="caption">
-                      {i.started_at
-                        ? new Date(i.started_at).toLocaleString("de-DE")
-                        : "—"}
-                    </td>
-                  </tr>
-                ))}
+                {interviews.map((i) => {
+                  const href = `/admin/campaigns/${id}/interviews/${i.id}`;
+                  return (
+                    <tr key={i.id}>
+                      <td>
+                        <a href={href} class="mono row-link">{i.anon_id}</a>
+                      </td>
+                      <td>{i.department ?? "—"}</td>
+                      <td class="text-secondary" style="text-transform: capitalize">
+                        {i.mode}
+                      </td>
+                      <td><StatusBadge status={i.status} /></td>
+                      <td>
+                        {i.processing_status && i.status === "COMPLETED"
+                          ? <StatusBadge status={i.processing_status} />
+                          : "—"}
+                      </td>
+                      <td class="caption">
+                        {i.started_at
+                          ? new Date(i.started_at).toLocaleString("de-DE")
+                          : "—"}
+                      </td>
+                      <td class="text-right">
+                        <a href={href} class="row-link" aria-label="Details">→</a>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

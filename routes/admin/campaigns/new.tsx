@@ -54,13 +54,13 @@ export const handler: Handlers<Data> = {
 
 export default function NewCampaign({ data }: PageProps<Data>) {
   return (
-    <Layout title="Neue Kampagne">
+    <Layout title="Neuer Audit">
       <div class="new-campaign">
         <a href="/admin/campaigns" class="btn btn--link new-campaign__back">
-          ← Kampagnen
+          ← Audits
         </a>
 
-        <PageHeader title="Neue Kampagne" />
+        <PageHeader title="Neuer Audit" />
 
         {data.error && <div class="flash flash--err section">{data.error}</div>}
 
@@ -114,7 +114,7 @@ export default function NewCampaign({ data }: PageProps<Data>) {
           </label>
 
           <button type="submit" class="btn btn--primary btn--lg new-campaign__submit">
-            Kampagne anlegen
+            Audit anlegen
           </button>
         </form>
       </div>

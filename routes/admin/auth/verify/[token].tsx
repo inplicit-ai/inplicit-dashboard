@@ -1,5 +1,5 @@
 import { Handlers } from "$fresh/server.ts";
-import { verifyMagicLinkToken } from "../../../../lib/api.ts";
+import { makeApi, verifyMagicLinkToken } from "../../../../lib/api.ts";
 
 export const handler: Handlers = {
   async GET(_req, ctx) {
@@ -15,12 +15,24 @@ export const handler: Handlers = {
       );
     }
 
-    console.log(`[auth] login successful, redirecting to /admin/campaigns`);
+    // Routing decision: Inplicit-Staff lands on the staff console; ORG_OWNERs
+    // go to the customer dashboard. We need /api/me to find out which — call
+    // it with the cookie the backend just gave us.
+    const cookieValue = setCookie.split(";")[0]; // strip attrs (HttpOnly, etc.)
+    let location = "/admin/campaigns";
+    try {
+      const api = makeApi(cookieValue);
+      const me = await api.me();
+      location = me.role === "INPLICIT_STAFF" ? "/staff/orgs" : "/admin/campaigns";
+      console.log(`[auth] login successful — role=${me.role}, → ${location}`);
+    } catch (e) {
+      console.warn("[auth] /api/me failed post-verify, defaulting to customer dashboard:", e);
+    }
 
     return new Response(null, {
       status: 302,
       headers: {
-        Location: "/admin/campaigns",
+        Location: location,
         "Set-Cookie": setCookie,
       },
     });

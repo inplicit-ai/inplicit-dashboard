@@ -86,8 +86,8 @@ export default function CampaignOverview({ data, params }: PageProps<Data>) {
 
   if (error || !campaign) {
     return (
-      <Layout title="Kampagne">
-        <ErrorState error={error ?? new Error("Kampagne nicht gefunden.")} />
+      <Layout title="Audit">
+        <ErrorState error={error ?? new Error("Audit nicht gefunden.")} />
       </Layout>
     );
   }
@@ -98,7 +98,7 @@ export default function CampaignOverview({ data, params }: PageProps<Data>) {
 
   const isDraft = campaign.status === "DRAFT";
   const launchLabel = isDraft
-    ? "Kampagne starten — alle einladen"
+    ? "Audit starten - alle einladen"
     : "Ausstehende Einladungen versenden";
 
   return (

@@ -259,7 +259,7 @@ export default function ParticipantsTable({ campaignId, initial }: Props) {
               <tr>
                 <td colSpan={7}>
                   <div class="empty-state">
-                    <p class="empty-state__title">Noch keine Teilnehmer in dieser Kampagne.</p>
+                    <p class="empty-state__title">Noch keine Teilnehmer in diesem Audit.</p>
                     <p>Füge welche per Knopfdruck hinzu — oder per CSV-Upload beim Erstellen.</p>
                   </div>
                 </td>
@@ -477,8 +477,24 @@ function RowActions({
 }
 
 function ParticipantStatus({ p }: { p: Participant }) {
-  if (p.token_used) return <span class="badge badge--knowledge">Interview gestartet</span>;
-  if (p.email_sent) return <span class="badge badge--opportunity">Eingeladen</span>;
+  // Status precedence: actual interview state outranks the invite/token flags
+  // because those can lag (e.g. token_used=TRUE while the empty-interview
+  // cleanup runs, or COMPLETED rows where token_used is no longer the truth).
+  switch (p.latest_interview_status) {
+    case "COMPLETED":
+    case "PROCESSING":
+    case "PROCESSED":
+      return <span class="badge badge--success">Abgeschlossen</span>;
+    case "IN_PROGRESS":
+      return <span class="badge badge--knowledge">Läuft</span>;
+    case "ABANDONED":
+      return <span class="badge badge--warning">Abgebrochen</span>;
+    case "FAILED":
+      return <span class="badge badge--danger">Fehler</span>;
+  }
+  if (p.email_sent) {
+    return <span class="badge badge--opportunity">Eingeladen</span>;
+  }
   return <span class="badge">Nicht eingeladen</span>;
 }
 

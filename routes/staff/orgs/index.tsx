@@ -1,76 +1,81 @@
 import { defineRoute } from "$fresh/server.ts";
-import { Campaign, makeApi, Me } from "../../../lib/api.ts";
+import { makeApi, Organization } from "../../../lib/api.ts";
 import { Layout, PageHeader, StatusBadge } from "../../../components/Layout.tsx";
 import { ErrorState } from "../../../components/ErrorState.tsx";
-import RagSearch from "../../../islands/RagSearch.tsx";
+import { requireStaff } from "../../../lib/staff-guard.ts";
 
 export default defineRoute(async (req) => {
-  const cookie = req.headers.get("cookie") ?? undefined;
-  const api = makeApi(cookie);
+  const guard = await requireStaff(req);
+  if (!guard.ok) return guard.redirect;
 
-  let campaigns: Campaign[] = [];
-  let me: Me | undefined;
+  const api = makeApi(guard.cookie);
+  let orgs: Organization[] = [];
   let error: unknown = null;
 
   try {
-    [campaigns, me] = await Promise.all([api.campaigns.list(), api.me()]);
-    console.log(`[campaigns] loaded ${campaigns.length} as ${me.email}`);
+    orgs = await api.staff.orgs.list();
   } catch (e) {
     error = e;
   }
 
   return (
-    <Layout title="Audits" me={me}>
+    <Layout title="Orgs (Staff)" mode="staff" me={guard.me}>
       <PageHeader
-        title="Audits"
+        eyebrow="Inplicit Staff"
+        title="Organisationen"
+        muted={`${orgs.length} aktiv`}
         actions={
-          <a href="/admin/campaigns/new" class="btn btn--primary">
-            Neuer Audit
+          <a href="/staff/orgs/new" class="btn btn--primary">
+            Neue Organisation
           </a>
         }
       />
 
-      <section class="section">
-        <RagSearch />
-      </section>
-
       {error && <div class="section"><ErrorState error={error} /></div>}
 
-      {!error && campaigns.length === 0 && (
+      {!error && orgs.length === 0 && (
         <div class="card">
           <div class="empty-state">
-            <p class="empty-state__title">Noch keine Audits.</p>
-            <p>Lege deinen ersten an, lade Teilnehmer ein, sieh dir die Insights an.</p>
+            <p class="empty-state__title">Noch keine Kunden-Organisation.</p>
+            <p>
+              Lege die erste an. Pro Org genau ein Customer-User, das Inplicit-Team
+              behält Cross-Org-Zugriff.
+            </p>
             <a
-              href="/admin/campaigns/new"
+              href="/staff/orgs/new"
               class="btn btn--primary"
               style="margin-top: var(--space-6)"
             >
-              Ersten Audit erstellen
+              Erste Organisation anlegen
             </a>
           </div>
         </div>
       )}
 
-      {campaigns.length > 0 && (
+      {orgs.length > 0 && (
         <div class="list-stack">
-          {campaigns.map((c) => (
-            <a key={c.id} href={`/admin/campaigns/${c.id}`} class="campaign-row">
+          {orgs.map((o) => (
+            <a key={o.id} href={`/staff/orgs/${o.id}`} class="org-row">
               <div>
-                <p class="campaign-row__title">{c.org_name}</p>
+                <p class="org-row__title">{o.name}</p>
                 <p class="caption" style="margin-top: var(--space-1)">
-                  {c.language.toUpperCase()} · {c.interview_length_min} Min ·{" "}
-                  {new Date(c.created_at).toLocaleDateString("de-DE")}
+                  <span class="mono">{o.slug}</span>
+                  {o.industry && <> · {o.industry}</>}
+                   · {o.default_locale.toUpperCase()}
+                   · {o.default_interview_length_min} Min
+                  {o.created_at && (
+                    <> · seit {new Date(o.created_at).toLocaleDateString("de-DE")}</>
+                  )}
                 </p>
               </div>
-              <StatusBadge status={c.status} />
+              <StatusBadge status={o.status} />
             </a>
           ))}
         </div>
       )}
 
       <style>{`
-        .campaign-row {
+        .org-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -81,11 +86,11 @@ export default defineRoute(async (req) => {
           border-radius: var(--radius-card);
           transition: border-color 0.15s var(--ease-smooth), background 0.15s var(--ease-smooth);
         }
-        .campaign-row:hover {
+        .org-row:hover {
           border-color: var(--color-text-tertiary);
           background: var(--color-surface);
         }
-        .campaign-row__title {
+        .org-row__title {
           font-size: var(--text-body-lg);
           font-weight: 500;
           color: var(--color-text-primary);

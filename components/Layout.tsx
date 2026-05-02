@@ -1,5 +1,7 @@
 import { ComponentChildren } from "preact";
 import { asset } from "$fresh/runtime.ts";
+import type { Me } from "../lib/api.ts";
+import { Sidebar } from "./Sidebar.tsx";
 
 type Tab =
   | "overview"
@@ -9,11 +11,21 @@ type Tab =
   | "hypotheses"
   | "map";
 
+type Mode = "customer" | "staff";
+
 interface LayoutProps {
   title: string;
   children: ComponentChildren;
   campaignId?: string;
   activeTab?: Tab;
+  /** "staff" swaps the navigation + shows the staff banner. */
+  mode?: Mode;
+  /** Currently authenticated user. Drives the avatar + account menu. */
+  me?: Me;
+  /** Optional org label shown in the sidebar's top row. Defaults to a
+   *  mode-appropriate fallback. Customer routes can pass the active org's
+   *  name once we wire `/api/orgs/me` (Phase 8). */
+  orgLabel?: string;
   /** Force theme. Defaults to "light" — matches the marketing site. */
   theme?: "light" | "dark";
 }
@@ -23,6 +35,9 @@ export function Layout({
   children,
   campaignId,
   activeTab,
+  mode = "customer",
+  me,
+  orgLabel,
   theme = "light",
 }: LayoutProps) {
   return (
@@ -30,7 +45,7 @@ export function Layout({
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{title} — Inplicit</title>
+        <title>{title} - Inplicit</title>
 
         {/* Favicon */}
         <link rel="icon" type="image/svg+xml" href={asset("/logo_icon.svg")} />
@@ -48,7 +63,9 @@ export function Layout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
         />
 
-        {/* App stylesheet */}
+        {/* Tailwind utilities — processed by $fresh/plugins/tailwind.ts */}
+        <link rel="stylesheet" href={asset("/styles.css")} />
+        {/* Design system: tokens + composed classes (.btn, .card, …) */}
         <link rel="stylesheet" href={asset("/design.css")} />
 
         {/* FOUC guard — applies the design tokens before the external CSS finishes loading */}
@@ -58,17 +75,40 @@ export function Layout({
           body.is-ready { opacity: 1; }
         `}</style>
       </head>
-      <body class="shell">
-        <AppHeader />
+      <body class="shell shell--with-sidebar">
+        <Sidebar
+          mode={mode}
+          me={me}
+          orgLabel={orgLabel ?? me?.org?.name}
+        />
         {campaignId && activeTab && (
           <CampaignTabs campaignId={campaignId} active={activeTab} />
         )}
         <main class="app-main">{children}</main>
-        {/* Reveal once stylesheet has been parsed */}
+
+        {/* Active-state helper: stamps `.is-active` on whichever sidebar item
+            matches the current path. Saves us from threading `pathname`
+            through every defineRoute. Runs once at DOMContentLoaded. */}
         <script
           dangerouslySetInnerHTML={{
-            __html:
-              "requestAnimationFrame(() => document.body.classList.add('is-ready'));",
+            __html: `
+              (function () {
+                requestAnimationFrame(function () {
+                  document.body.classList.add('is-ready');
+                  var path = location.pathname;
+                  var links = document.querySelectorAll('.sidebar__item[data-href]');
+                  // Score each link by prefix length so the longest match wins.
+                  var best = null, bestLen = 0;
+                  links.forEach(function (el) {
+                    var href = el.getAttribute('data-href') || '';
+                    if (path === href || path.indexOf(href + '/') === 0) {
+                      if (href.length > bestLen) { best = el; bestLen = href.length; }
+                    }
+                  });
+                  if (best) best.classList.add('is-active');
+                });
+              })();
+            `,
           }}
         />
       </body>
@@ -76,26 +116,6 @@ export function Layout({
   );
 }
 
-function AppHeader() {
-  return (
-    <header class="app-header">
-      <div class="app-header__inner">
-        <a href="/admin/campaigns" class="wordmark" aria-label="Inplicit">
-          <img
-            src={asset("/logo.svg")}
-            alt="Inplicit"
-            class="wordmark__logo"
-          />
-        </a>
-        <nav class="app-header__nav">
-          <a href="/admin/campaigns">Kampagnen</a>
-          <span class="sep">·</span>
-          <a href="/admin/login">Abmelden</a>
-        </nav>
-      </div>
-    </header>
-  );
-}
 
 function CampaignTabs({ campaignId, active }: { campaignId: string; active: Tab }) {
   const tabs: { id: Tab; label: string; href: string }[] = [
@@ -166,11 +186,11 @@ const STATUS_LABEL: Record<string, string> = {
   ABANDONED: "Abgebrochen",
   FAILED: "Fehler",
   PROCESSING: "Wird ausgewertet",
-  PENDING: "Offen",
+  PENDING: "In Validierung",
+  SEED: "Frisch extrahiert",
+  EVOLVING: "Im Wandel",
   VERIFIED: "Verifiziert",
-  LACKING: "Unzureichend",
-  CONTRADICTED: "Widerlegt",
-  UNTESTABLE: "Nicht testbar",
+  REJECTED: "Verworfen",
   COMPLETE: "Abgeschlossen",
   EXTRACTING: "Extraktion",
   CLUSTERING: "Clustering",
@@ -189,11 +209,11 @@ const STATUS_VARIANT: Record<string, string> = {
   ABANDONED: "badge--warning",
   FAILED: "badge--danger",
   VERIFIED: "badge--success",
-  CONTRADICTED: "badge--danger",
-  LACKING: "badge--warning",
-  PENDING: "badge--knowledge",
+  REJECTED: "badge--danger",
+  EVOLVING: "badge--warning",
+  PENDING: "badge--opportunity",
+  SEED: "badge--knowledge",
   DRAFT: "badge--knowledge",
-  UNTESTABLE: "badge--knowledge",
 };
 
 export function StatusBadge({ status }: { status: string }) {
@@ -202,41 +222,3 @@ export function StatusBadge({ status }: { status: string }) {
   return <span class={`badge ${variant}`}>{label}</span>;
 }
 
-// ── Insight semantic-type badge — innovation-mining categories ──────────────
-
-export type SemanticType =
-  | "pain_point"
-  | "opportunity"
-  | "process_gap"
-  | "knowledge"
-  | "pain"
-  | "behavior"
-  | "fact";
-
-interface SemanticMeta {
-  label: string;
-  klass: string;
-  short: string;
-}
-
-export const SEMANTIC_META: Record<string, SemanticMeta> = {
-  pain_point: { label: "Schmerzpunkt", short: "Pain", klass: "badge--pain" },
-  opportunity: { label: "Chance", short: "Opportunity", klass: "badge--opportunity" },
-  process_gap: { label: "Prozesslücke", short: "Gap", klass: "badge--gap" },
-  knowledge: { label: "Wissen", short: "Knowledge", klass: "badge--knowledge" },
-  pain: { label: "Schmerzpunkt", short: "Pain", klass: "badge--pain" },
-  behavior: { label: "Prozesslücke", short: "Gap", klass: "badge--gap" },
-  fact: { label: "Wissen", short: "Knowledge", klass: "badge--knowledge" },
-};
-
-export const SEMANTIC_ORDER: SemanticType[] = [
-  "pain_point",
-  "opportunity",
-  "process_gap",
-  "knowledge",
-];
-
-export function SemanticBadge({ type }: { type: string }) {
-  const meta = SEMANTIC_META[type] ?? { label: type, klass: "", short: type };
-  return <span class={`badge ${meta.klass}`}>{meta.label}</span>;
-}

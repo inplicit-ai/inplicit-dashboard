@@ -52,9 +52,13 @@ export default defineRoute(async (req, ctx) => {
           background: var(--color-accent-soft);
           border-color: var(--color-accent-muted);
         }
-        .hyp-card[data-state="CONTRADICTED"] {
+        .hyp-card[data-state="REJECTED"] {
           background: var(--color-pain-soft);
           border-color: var(--color-pain-muted);
+        }
+        .hyp-card[data-state="EVOLVING"] {
+          background: var(--color-bg-soft);
+          border-color: var(--color-text-tertiary);
         }
         .hyp-card__head {
           display: flex;

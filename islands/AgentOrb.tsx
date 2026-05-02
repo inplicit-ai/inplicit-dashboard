@@ -247,6 +247,7 @@ export default function AgentOrb({
         renderer.setSize(w * dpr, h * dpr);
         canvas.style.width = w + "px";
         canvas.style.height = h + "px";
+        canvas.style.display = "block";
         if (program) {
           program.uniforms.iResolution.value.set(
             canvas.width,
@@ -256,6 +257,12 @@ export default function AgentOrb({
         }
       };
       globalThis.addEventListener("resize", resize);
+      // Track parent size changes (e.g., size prop swap) so the canvas
+      // never drifts out of the container.
+      const ro = typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => resize())
+        : null;
+      ro?.observe(container);
       resize();
 
       let currentRot = 0;
@@ -292,6 +299,7 @@ export default function AgentOrb({
       return () => {
         cancelAnimationFrame(rafId);
         globalThis.removeEventListener("resize", resize);
+        ro?.disconnect();
         try {
           if (canvas && container.contains(canvas)) {
             container.removeChild(canvas);
@@ -306,7 +314,10 @@ export default function AgentOrb({
     }
   }, [hue, maxRotationSpeed, maxHoverIntensity]);
 
-  const sizeStyle = `width:${size}px;height:${size}px;${style ?? ""}`;
+  const sizeStyle =
+    `width:${size}px;height:${size}px;overflow:hidden;display:inline-block;line-height:0;${
+      style ?? ""
+    }`;
   return (
     <div
       ref={ctnRef}
