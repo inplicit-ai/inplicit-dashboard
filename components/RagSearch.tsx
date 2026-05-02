@@ -1,15 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowUp, Sparkles } from "lucide-react";
-import {
-  PromptInput,
-  PromptInputActions,
-  PromptInputTextarea,
-} from "@/components/ui/prompt-input";
-import { PromptSuggestion } from "@/components/ui/prompt-suggestion";
-import { Button } from "@/components/ui/button";
+import { ArrowUp, CheckCircle2, Send, Sparkles } from "lucide-react";
 
 // Stage-1 vector search: embed → Qdrant → cited insight rows. Stage-2
 // (LLM-summarized cite-or-decline answer) hangs off the same endpoint later;
@@ -33,11 +26,30 @@ interface SearchResponse {
   searched_campaigns: number;
 }
 
-const SUGGESTIONS = [
-  "Wo verschwenden Mitarbeiter die meiste Zeit?",
-  "Welche Tools werden umgangen?",
-  "Was sagen Vertriebler über das CRM?",
-  "Wo gibt es Reibung zwischen Teams?",
+const SUGGESTIONS: Array<{
+  label: string;
+  prompt: string;
+  icon: typeof Sparkles;
+  tone: "amber" | "green" | "violet";
+}> = [
+  {
+    label: "Summarize",
+    prompt: "Fasse die zentralen Pain-Points der letzten Audits zusammen.",
+    icon: Sparkles,
+    tone: "amber",
+  },
+  {
+    label: "Correct Grammar",
+    prompt: "Wo gibt es Reibung zwischen Teams?",
+    icon: CheckCircle2,
+    tone: "green",
+  },
+  {
+    label: "Compress",
+    prompt: "Welche Tools werden umgangen oder doppelt genutzt?",
+    icon: Send,
+    tone: "violet",
+  },
 ];
 
 export function RagSearch() {
@@ -45,6 +57,7 @@ export function RagSearch() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [response, setResponse] = useState<SearchResponse | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   async function runSearch(q: string) {
     const trimmed = q.trim();
@@ -75,104 +88,99 @@ export function RagSearch() {
     void runSearch(query);
   }
 
-  function onSuggestion(s: string) {
-    setQuery(s);
-    void runSearch(s);
+  function onSuggestion(prompt: string) {
+    setQuery(prompt);
+    textareaRef.current?.focus();
+    void runSearch(prompt);
   }
 
-  const hasSearched = response !== null;
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      onSubmit();
+    }
+  }
+
+  const canSend = query.trim().length > 0 && !loading;
 
   return (
-    <div className="w-full">
-      <PromptInput
-        isLoading={loading}
-        value={query}
-        onValueChange={setQuery}
-        onSubmit={onSubmit}
-        className="rounded-card pt-1"
-      >
-        <div className="flex flex-col">
-          <PromptInputTextarea
-            placeholder="Frag deine Audit-Daten — z. B. „Wo nutzen Vertriebler das CRM nicht?“"
-            className="min-h-[44px] pt-3 pl-4 text-base leading-[1.3]"
-          />
-          <PromptInputActions className="mt-3 flex w-full items-center justify-between gap-2 px-3 pb-3">
-            <div className="flex items-center gap-2 text-xs text-fg-subtle">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>RAG · {response?.searched_campaigns ?? "—"} Audits indiziert</span>
-            </div>
-            <Button
-              size="icon"
-              disabled={!query.trim() || loading}
-              onClick={onSubmit}
-              className="size-9 rounded-full"
-              aria-label="Suche starten"
+    <div className="rag">
+      {/* Prompt card */}
+      <div className="rag__card">
+        <textarea
+          ref={textareaRef}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Refine your message..."
+          rows={2}
+          className="rag__input"
+        />
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={!canSend}
+          aria-label="Suche starten"
+          className="rag__send"
+        >
+          {loading ? (
+            <span className="rag__send-loading" aria-hidden="true" />
+          ) : (
+            <ArrowUp width={14} height={14} />
+          )}
+        </button>
+      </div>
+
+      {/* Suggestion pills */}
+      <div className="rag__suggestions">
+        {SUGGESTIONS.map((s) => {
+          const Icon = s.icon;
+          return (
+            <button
+              key={s.label}
+              type="button"
+              onClick={() => onSuggestion(s.prompt)}
+              className={`rag__pill rag__pill--${s.tone}`}
             >
-              {loading ? (
-                <span className="size-3 rounded-sm bg-primary-foreground animate-pulse" />
-              ) : (
-                <ArrowUp className="h-4 w-4" />
-              )}
-            </Button>
-          </PromptInputActions>
-        </div>
-      </PromptInput>
+              <Icon className="rag__pill-icon" width={13} height={13} />
+              <span>{s.label}</span>
+            </button>
+          );
+        })}
+      </div>
 
-      {!hasSearched && !loading && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {SUGGESTIONS.map((s) => (
-            <PromptSuggestion key={s} onClick={() => onSuggestion(s)}>
-              <Sparkles className="mr-2 h-3.5 w-3.5" />
-              {s}
-            </PromptSuggestion>
-          ))}
-        </div>
-      )}
-
-      {error && (
-        <div className="mt-6 rounded-ui border border-pain/40 bg-pain-soft px-4 py-3 text-sm text-pain">
-          {error}
-        </div>
-      )}
+      {error && <div className="rag__error">{error}</div>}
 
       {response && (
-        <div className="mt-8">
-          <p className="mb-3 text-sm text-fg-muted">
+        <div className="rag__results">
+          <p className="rag__results-meta">
             {response.results.length === 0
               ? `Keine Belege in den Audits gefunden für „${response.query}".`
               : `${response.results.length} Beleg${response.results.length === 1 ? "" : "e"} aus ${response.searched_campaigns} Audit${response.searched_campaigns === 1 ? "" : "s"}.`}
           </p>
 
-          <div className="flex flex-col gap-3">
+          <div className="rag__results-list">
             {response.results.map((r) => (
               <Link
                 key={r.vse_insight_id}
                 href={`/campaigns/${r.campaign_id}/interviews/${r.interview_id}`}
-                className="group block rounded-card border border-line bg-canvas px-5 py-4 shadow-card transition-all hover:-translate-y-0.5 hover:border-fg-subtle hover:shadow-md"
+                className="rag__result"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <p className="text-fg leading-relaxed">{r.problem_statement}</p>
-                  <span className="shrink-0 rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-mono text-fg-muted">
+                <div className="rag__result-head">
+                  <p className="rag__result-text">{r.problem_statement}</p>
+                  <span className="rag__result-score">
                     {(r.score * 100).toFixed(0)}%
                   </span>
                 </div>
                 {r.human_solution && (
-                  <p className="mt-2 text-sm italic text-fg-muted">
-                    „{r.human_solution}"
-                  </p>
+                  <p className="rag__result-quote">„{r.human_solution}"</p>
                 )}
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="rounded-full bg-accent-soft px-2.5 py-0.5 font-mono text-accent-strong">
-                    {r.anon_id}
-                  </span>
+                <div className="rag__result-meta">
+                  <span className="rag__chip rag__chip--accent">{r.anon_id}</span>
                   {r.department && (
-                    <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-fg-muted">
-                      {r.department}
-                    </span>
+                    <span className="rag__chip">{r.department}</span>
                   )}
-                  <span className="ml-auto text-fg-subtle group-hover:text-fg-muted">
-                    Interview öffnen →
-                  </span>
+                  <span className="rag__open">Interview öffnen →</span>
                 </div>
               </Link>
             ))}

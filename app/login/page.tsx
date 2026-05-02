@@ -34,7 +34,13 @@ export default async function LoginPage({
         body: JSON.stringify({ email, password }),
         cache: "no-store",
       });
+      type SignInResponse = {
+        role?: string;
+        org_id?: string | null;
+        must_set_password?: boolean;
+      };
       let apiErrorMsg = "";
+      let signIn: SignInResponse | null = null;
       if (!res.ok) {
         let msg = `HTTP ${res.status}`;
         try {
@@ -44,6 +50,12 @@ export default async function LoginPage({
           }
         } catch {}
         apiErrorMsg = msg;
+      } else {
+        try {
+          signIn = (await res.json()) as SignInResponse;
+        } catch {
+          // Body parse failed but the cookie is set — fall through.
+        }
       }
       if (apiErrorMsg) {
         redirect(`/login?error=${encodeURIComponent(apiErrorMsg)}&email=${encodeURIComponent(email)}`);
@@ -51,10 +63,7 @@ export default async function LoginPage({
       const setCookie = res.headers.get("set-cookie");
       if (setCookie) {
         // Mirror the backend's Set-Cookie attributes verbatim so __Host-
-        // prefix invariants (Secure / Path=/ / no Domain) survive. The old
-        // string-split approach hard-coded `httpOnly: true` and tied
-        // `secure` to NODE_ENV, which broke whenever frontend env and
-        // backend env disagreed about TLS.
+        // prefix invariants (Secure / Path=/ / no Domain) survive.
         const { cookies } = await import("next/headers");
         const jar = await cookies();
         const parsed = parseSetCookie(setCookie);
@@ -62,17 +71,18 @@ export default async function LoginPage({
           jar.set(parsed.name, parsed.value, parsed.options);
         }
       }
-      const meCookie = setCookie?.split(";")[0] ?? "";
+
+      // Resolve the redirect target from the sign-in response itself rather
+      // than following up with /api/me — the second round-trip used to add
+      // 300–600ms (or up to a few seconds on a cold backend) to "Continue".
       let location = "/campaigns";
-      try {
-        const me = await makeApi(meCookie).me();
-        if (me.must_set_password) {
-          location = "/set-password";
-        } else if (me.role === "INPLICIT_STAFF" || me.role === "INPLICIT_ADMIN") {
-          location = "/staff/orgs";
-        }
-      } catch {
-        // fall back to customer dashboard
+      if (signIn?.must_set_password) {
+        location = "/set-password";
+      } else if (
+        signIn?.role === "INPLICIT_STAFF" ||
+        signIn?.role === "INPLICIT_ADMIN"
+      ) {
+        location = "/staff/orgs";
       }
       redirect(location);
     }

@@ -7,15 +7,15 @@ import type { ComponentType, SVGProps } from "react";
 import type { Me } from "@/lib/api";
 import {
   IconBuilding,
-  IconChevrons,
+  IconFileText,
   IconFolderKanban,
   IconLayoutGrid,
   IconLogOut,
+  IconMap,
+  IconScale,
   IconSearch,
   IconSettings,
   IconUsers,
-  IconFileText,
-  IconUserPlus
 } from "@/components/icons";
 import { SettingsDialog } from "@/components/SettingsDialog";
 
@@ -26,6 +26,10 @@ interface SidebarProps {
   mode: Mode;
   me?: Me;
   orgLabel?: string;
+  /** When false, org-level sections (Insights, Knowledge Map, …) render
+   *  as disabled placeholders — they need at least one audit before they
+   *  hold meaningful data. */
+  hasAudits?: boolean;
 }
 
 interface NavItem {
@@ -33,6 +37,10 @@ interface NavItem {
   label: string;
   icon: IconCmp;
   badge?: string;
+  /** True → render as a non-clickable, dimmed row with an explanation. */
+  disabled?: boolean;
+  /** Hint shown via title attribute when disabled. */
+  disabledHint?: string;
 }
 
 interface NavSection {
@@ -40,13 +48,16 @@ interface NavSection {
   items: NavItem[];
 }
 
-export function Sidebar({ mode, me, orgLabel }: SidebarProps) {
+export function Sidebar({ mode, me, orgLabel, hasAudits = false }: SidebarProps) {
   const pathname = usePathname() ?? "";
   const params = useParams();
-  
+
   const campaignId = typeof params?.id === "string" ? params.id : null;
 
-  const navSections = mode === "staff" ? staffNav(me?.role === "INPLICIT_ADMIN") : customerNav(campaignId);
+  const navSections =
+    mode === "staff"
+      ? staffNav(me?.role === "INPLICIT_ADMIN")
+      : customerNav(campaignId, hasAudits);
 
   const avatarLetter =
     mode === "staff" ? "I" : (orgLabel?.[0]?.toUpperCase() ?? "·");
@@ -93,11 +104,32 @@ export function Sidebar({ mode, me, orgLabel }: SidebarProps) {
               <span className="sidebar__section-label">{section.label}</span>
               {section.items.map((item) => {
                 const Icon = item.icon;
+                const className = `sidebar__item${
+                  isActive(item.href) && !item.disabled ? " is-active" : ""
+                }${item.disabled ? " is-disabled" : ""}`;
+                if (item.disabled) {
+                  return (
+                    <span
+                      key={item.href + item.label}
+                      className={className}
+                      title={item.disabledHint}
+                      aria-disabled="true"
+                    >
+                      <span className="sidebar__item-icon" aria-hidden="true">
+                        <Icon size={16} />
+                      </span>
+                      <span className="sidebar__item-label">{item.label}</span>
+                      {item.badge && (
+                        <span className="sidebar__item-badge">{item.badge}</span>
+                      )}
+                    </span>
+                  );
+                }
                 return (
                   <Link
                     key={item.href + item.label}
                     href={item.href}
-                    className={`sidebar__item${isActive(item.href) ? " is-active" : ""}`}
+                    className={className}
                   >
                     <span className="sidebar__item-icon" aria-hidden="true">
                       <Icon size={16} />
@@ -117,7 +149,7 @@ export function Sidebar({ mode, me, orgLabel }: SidebarProps) {
           <SettingsDialog
             me={me}
             trigger={
-              <button type="button" className="sidebar__item">
+              <button type="button" className="sidebar__item sidebar__item--bottom">
                 <span className="sidebar__item-icon" aria-hidden="true">
                   <IconSettings size={16} />
                 </span>
@@ -125,52 +157,17 @@ export function Sidebar({ mode, me, orgLabel }: SidebarProps) {
               </button>
             }
           />
-          <form method="POST" action="/logout">
-            <button type="submit" className="sidebar__item sidebar__item--logout">
+          <form method="POST" action="/logout" className="sidebar__bottom-form">
+            <button
+              type="submit"
+              className="sidebar__item sidebar__item--bottom sidebar__item--logout"
+            >
               <span className="sidebar__item-icon" aria-hidden="true">
                 <IconLogOut size={16} />
               </span>
               <span className="sidebar__item-label">Log Out</span>
             </button>
           </form>
-          <details className="sidebar__menu">
-            <summary className="sidebar__item sidebar__item--menu">
-              <span className="sidebar__avatar sidebar__avatar--sm" aria-hidden="true">
-                {me?.name?.[0]?.toUpperCase() ?? me?.email?.[0]?.toUpperCase() ?? "?"}
-              </span>
-              <span className="sidebar__item-label">
-                {me?.name ?? me?.email ?? "Account"}
-              </span>
-              <span className="sidebar__menu-chev" aria-hidden="true">
-                <IconChevrons size={14} />
-              </span>
-            </summary>
-            <div className="sidebar__menu-panel" role="menu">
-              {me && (
-                <div className="sidebar__menu-meta">
-                  <span className="sidebar__menu-name">{me.name ?? "-"}</span>
-                  <span className="sidebar__menu-email">{me.email}</span>
-                  <span className="sidebar__menu-role">
-                    {me.role === "INPLICIT_ADMIN"
-                      ? "Inplicit Admin"
-                      : me.role === "INPLICIT_STAFF"
-                        ? "Inplicit Staff"
-                        : "Org Owner"}
-                  </span>
-                </div>
-              )}
-              <form method="POST" action="/logout" className="sidebar__menu-form">
-                <button
-                  type="submit"
-                  className="sidebar__menu-item sidebar__menu-item--button"
-                  role="menuitem"
-                >
-                  <IconLogOut size={14} />
-                  <span>Abmelden</span>
-                </button>
-              </form>
-            </div>
-          </details>
         </div>
       </div>
     </aside>
@@ -187,8 +184,8 @@ function staffNav(isAdmin: boolean): NavSection[] {
   return [{ label: "Back-Office", items }];
 }
 
-function customerNav(campaignId: string | null): NavSection[] {
-  const nav: NavSection[] = [
+function customerNav(campaignId: string | null, hasAudits: boolean): NavSection[] {
+  const sections: NavSection[] = [
     {
       label: "Workspace",
       items: [
@@ -198,27 +195,62 @@ function customerNav(campaignId: string | null): NavSection[] {
     },
   ];
 
-  if (campaignId) {
-    nav.push({
-      label: "Audit",
-      items: [
-        { href: `/campaigns/${campaignId}/interviews`, label: "Interviews", icon: IconFileText },
-        { href: `/campaigns/${campaignId}/participants`, label: "Participants", icon: IconUsers },
-      ],
-    });
-  }
+  // Org-wide sections — these aggregate across all audits in the org, so
+  // they live next to "Workspace" not under a specific audit. They render
+  // as disabled placeholders until at least one audit exists. The hrefs
+  // point to the per-campaign route for now (Phase 7 still wires data
+  // there); a future phase moves them to dedicated /interviews,
+  // /participants, /map, /cross-validation, /insights org-level routes.
+  const disabledHint = hasAudits
+    ? undefined
+    : "Verfügbar, sobald der erste Audit angelegt ist.";
 
-  nav.push({
-    label: "Wissen",
+  const orgItems: NavItem[] = [
+    {
+      href: campaignId ? `/campaigns/${campaignId}/interviews` : "/campaigns",
+      label: "Interviews",
+      icon: IconFileText,
+      disabled: !hasAudits,
+      disabledHint,
+    },
+    {
+      href: campaignId ? `/campaigns/${campaignId}/participants` : "/campaigns",
+      label: "Teilnehmer",
+      icon: IconUsers,
+      disabled: !hasAudits,
+      disabledHint,
+    },
+    {
+      href: campaignId ? `/campaigns/${campaignId}/map` : "/campaigns",
+      label: "Knowledge Map",
+      icon: IconMap,
+      disabled: !hasAudits,
+      disabledHint,
+    },
+    {
+      href: campaignId ? `/campaigns/${campaignId}/hypotheses` : "/campaigns",
+      label: "Cross-Validation",
+      icon: IconScale,
+      disabled: !hasAudits,
+      disabledHint,
+    },
+  ];
+
+  sections.push({ label: "Wissen", items: orgItems });
+
+  sections.push({
+    label: "Ask",
     items: [
       {
-        href: "/insights",
+        href: "/campaigns",
         label: "Insights",
         icon: IconSearch,
         badge: "RAG",
+        disabled: !hasAudits,
+        disabledHint,
       },
     ],
   });
 
-  return nav;
+  return sections;
 }

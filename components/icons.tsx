@@ -187,3 +187,24 @@ export function IconUserPlus(p: IconProps) {
     </svg>
   );
 }
+
+export function IconMap(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3z" />
+      <path d="M9 3v15M15 6v15" />
+    </svg>
+  );
+}
+
+export function IconScale(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M16 16.5h6l-3-7-3 7Z" />
+      <path d="M2 16.5h6l-3-7-3 7Z" />
+      <path d="M5 9.5h14" />
+      <path d="M12 3v17.5" />
+      <path d="M8 21h8" />
+    </svg>
+  );
+}
