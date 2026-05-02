@@ -1,0 +1,58 @@
+.login-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+}
+.login-main {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+}
+.login-wordmark {
+  display: inline-flex;
+}
+.login-wordmark__logo {
+  height: 24px;
+  width: auto;
+  display: block;
+}
+.login-card {
+  width: 100%;
+  padding: var(--space-10);
+}
+.login-headline {
+  margin-top: var(--space-3);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+}
+.login-flash {
+  margin-top: var(--space-6);
+}
+.login-form {
+  margin-top: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.login-btn {
+  width: 100%;
+}
+.login-devlink {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-accent-muted);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.login-devlink__a {
+  color: var(--color-accent-strong);
+  word-break: break-all;
+}
+.login-devlink__a:hover {
+  text-decoration: underline;
+}

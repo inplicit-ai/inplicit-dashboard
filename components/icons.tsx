@@ -1,22 +1,17 @@
-// Inline SVG icons in the Lucide visual style (24×24 viewBox, stroke=currentColor,
-// strokeWidth=1.75, no fill, rounded line caps). Drawn small enough that we
-// don't need a package dependency, but consistent enough to swap in
-// `lucide-preact` later if we grow the set.
+import type { SVGProps } from "react";
 
-import type { JSX } from "preact";
+type IconProps = SVGProps<SVGSVGElement> & { size?: number };
 
-type IconProps = JSX.SVGAttributes<SVGSVGElement> & { size?: number };
-
-function base({ size = 16, ...rest }: IconProps): JSX.SVGAttributes<SVGSVGElement> {
+function base({ size = 16, ...rest }: IconProps): SVGProps<SVGSVGElement> {
   return {
     width: size,
     height: size,
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor",
-    "stroke-width": 1.75,
-    "stroke-linecap": "round",
-    "stroke-linejoin": "round",
+    strokeWidth: 1.75,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
     ...rest,
   };
 }

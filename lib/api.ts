@@ -1,4 +1,4 @@
-const API_BASE = Deno.env.get("API_URL") ?? "http://localhost:8080";
+const API_BASE = process.env.API_URL ?? "http://localhost:8080";
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public detail?: unknown) {
@@ -8,7 +8,7 @@ export class ApiError extends Error {
 
 export class BackendDownError extends Error {
   constructor() {
-    super(`Backend not reachable at ${API_BASE}. Is "cargo run" running in inplicit-backend/?`);
+    super(`Backend not reachable at ${API_BASE}.`);
   }
 }
 
@@ -22,7 +22,7 @@ export function makeApi(cookie?: string) {
 
     let res: Response;
     try {
-      res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+      res = await fetch(`${API_BASE}${path}`, { ...init, headers, cache: "no-store" });
     } catch (e) {
       console.error(`[api] ${init?.method ?? "GET"} ${path} → network error:`, (e as Error).message);
       throw new BackendDownError();
@@ -161,17 +161,38 @@ export function makeApi(cookie?: string) {
             { method: "POST" },
           ),
       },
+      users: {
+        list: () => request<StaffUserSummary[]>("/api/staff/users"),
+        create: (body: CreateStaffInput) =>
+          request<CreateStaffResponse>("/api/staff/users", {
+            method: "POST",
+            body: JSON.stringify(body),
+          }),
+        issueMagicLink: (id: string) =>
+          request<{
+            ok: boolean;
+            owner_email: string;
+            magic_link: string;
+            email_sent: boolean;
+            email_error?: string;
+          }>(`/api/staff/users/${id}/issue-magic-link`, {
+            method: "POST",
+          }),
+        remove: (id: string) =>
+          request<{ ok: boolean }>(`/api/staff/users/${id}`, {
+            method: "DELETE",
+          }),
+      },
     },
     health: () => request<{ status: string }>("/health"),
   };
 }
 
-// Default no-cookie API for convenience
 export const api = makeApi();
 
 /** Verify a magic link token and return the Set-Cookie header from the backend. */
 export async function verifyMagicLinkToken(token: string): Promise<string | null> {
-  const res = await fetch(`${API_BASE}/api/auth/verify/${token}`);
+  const res = await fetch(`${API_BASE}/api/auth/verify/${token}`, { cache: "no-store" });
   if (!res.ok) {
     console.error(`[auth] verify failed: ${res.status} ${res.statusText}`);
     return null;
@@ -346,14 +367,6 @@ export interface Participant {
   email_sent?: boolean;
   email_sent_at?: string;
   created_at?: string;
-  /**
-   * Status of the participant's latest interview row, if any. Populated by
-   * the list endpoint via a lateral join so the dashboard can render an
-   * accurate Status badge without a second request.
-   *
-   * One of: IN_PROGRESS | COMPLETED | ABANDONED | PROCESSING | PROCESSED | FAILED.
-   * Absent when the participant has no interview yet (or it was discarded as empty).
-   */
   latest_interview_status?: string | null;
 }
 
@@ -373,7 +386,30 @@ export interface InviteResult {
 
 // ─── Multi-tenancy types ───────────────────────────────────────────────────
 
-export type Role = "INPLICIT_STAFF" | "ORG_OWNER";
+export type Role = "INPLICIT_ADMIN" | "INPLICIT_STAFF" | "ORG_OWNER";
+
+export interface StaffUserSummary {
+  id: string;
+  email: string;
+  name: string;
+  role: "INPLICIT_STAFF";
+  email_verified_at?: string | null;
+  last_login_at?: string | null;
+  created_at?: string | null;
+}
+
+export interface CreateStaffInput {
+  email: string;
+  name: string;
+  issue_magic_link?: boolean;
+}
+
+export interface CreateStaffResponse {
+  user: StaffUserSummary;
+  magic_link?: string;
+  email_sent?: boolean;
+  email_error?: string;
+}
 
 export interface Me {
   id: string;
@@ -381,7 +417,6 @@ export interface Me {
   name: string;
   role: Role;
   org_id?: string | null;
-  /** Resolved organization for ORG_OWNER users. Null for INPLICIT_STAFF. */
   org?: Organization | null;
   email_verified_at?: string | null;
   last_login_at?: string | null;
@@ -418,13 +453,8 @@ export interface ProvisionOrgInput {
 export interface ProvisionOrgResponse {
   org: Organization;
   owner: Me;
-  /** Returned when the staff member ticked "Magic-Link sofort ausgeben". */
   magic_link?: string;
-  /** True when Resend successfully accepted the welcome mail. False if
-   *  Resend isn't configured, was rejected, or threw. */
   email_sent?: boolean;
-  /** Resend's error string, only present when email_sent is false because
-   *  of a real failure (not because Resend isn't configured at all). */
   email_error?: string;
 }
 
