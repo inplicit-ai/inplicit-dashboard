@@ -159,7 +159,7 @@ export default async function NewCampaignPage({
         </FormCard>
 
         <div className="mt-2 flex flex-col-reverse justify-end gap-3 sm:flex-row sm:gap-2">
-          <Button asChild variant="outline">
+          <Button asChild variant="accent">
             <Link href="/campaigns">Abbrechen</Link>
           </Button>
           <Button type="submit" size="lg">

@@ -1174,6 +1174,8 @@
 .sidebar__item {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
+  text-align: left;
   gap: var(--space-3);
   height: 36px;
   padding: 0 var(--space-3);
@@ -1443,7 +1445,7 @@
   flex: 1;
   min-height: 28px;
   max-height: 240px;
-  padding: 0;
+  padding: 3px 0 0 0;
   padding-right: var(--space-10);
   font-family: var(--font-family);
   font-size: var(--text-body);

@@ -179,7 +179,7 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
           </Section>
         </div>
 
-        <DialogFooter className="px-6">
+        <DialogFooter className="px-6 py-4">
           <DialogClose asChild>
             <Button type="button" variant="ghost" size="sm">
               Close
