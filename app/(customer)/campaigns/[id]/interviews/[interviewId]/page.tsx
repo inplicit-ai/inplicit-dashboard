@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { makeApi, type InterviewDetail } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ErrorState";
 import { PageHeader, StatusBadge } from "@/components/PageChrome";
 import { InterviewDetailView } from "@/components/InterviewDetailView";
@@ -24,13 +26,25 @@ export default async function InterviewDetailPage({
   return (
     <>
       {error && (
-        <div className="section">
+        <div className="mb-6">
           <ErrorState error={error} />
         </div>
       )}
 
       {detail && (
         <>
+          <Button
+            asChild
+            variant="link"
+            size="sm"
+            className="mb-2 px-0 text-fg-muted"
+          >
+            <Link href={`/campaigns/${campaignId}/interviews`}>
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Zurück zur Liste
+            </Link>
+          </Button>
+
           <PageHeader
             eyebrow={`Interview · ${detail.interview.anon_id}`}
             title="Detailansicht"
@@ -44,7 +58,7 @@ export default async function InterviewDetailPage({
               />
             }
             actions={
-              <div className="iv-detail__badges">
+              <div className="inline-flex flex-wrap gap-2">
                 <StatusBadge status={detail.interview.status} />
                 {detail.interview.processing_status &&
                   detail.interview.status === "COMPLETED" && (
@@ -54,15 +68,6 @@ export default async function InterviewDetailPage({
             }
           />
 
-          <div className="iv-detail__back">
-            <Link
-              href={`/campaigns/${campaignId}/interviews`}
-              className="link-back"
-            >
-              ← Zurück zur Liste
-            </Link>
-          </div>
-
           <InterviewDetailView
             utterances={detail.utterances}
             insights={detail.insights}
@@ -70,29 +75,6 @@ export default async function InterviewDetailPage({
           />
         </>
       )}
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .iv-detail__back { margin: calc(var(--space-6) * -1) 0 var(--space-8) 0; }
-        .link-back {
-          font-size: var(--text-meta);
-          color: var(--color-text-secondary);
-          border-bottom: 1px solid transparent;
-        }
-        .link-back:hover { border-bottom-color: var(--color-text-secondary); }
-        .iv-detail__badges { display: inline-flex; gap: var(--space-2); }
-        .meta-line {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--space-2) var(--space-4);
-          font-size: var(--text-meta);
-          color: var(--color-text-secondary);
-        }
-        .meta-line__sep { color: var(--color-text-quaternary); }
-      `,
-        }}
-      />
     </>
   );
 }
@@ -118,10 +100,11 @@ function MetaLine({
   if (duration) parts.push(formatDuration(duration));
 
   return (
-    <span className="meta-line">
+    <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-fg-muted">
       {parts.map((p, i) => (
-        <span key={i}>
-          {i > 0 && <span className="meta-line__sep">·</span>} {p}
+        <span key={i} className="inline-flex items-center gap-3">
+          {i > 0 && <span aria-hidden className="text-fg-subtle">·</span>}
+          {p}
         </span>
       ))}
     </span>

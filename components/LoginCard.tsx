@@ -1,12 +1,15 @@
 "use client";
 
-import * as React from "react";
 import { useState } from "react";
 import Image from "next/image";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, CheckCircle2, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/PageChrome";
+import { cn } from "@/lib/utils";
 
 interface LoginCardProps {
   signIn: (formData: FormData) => Promise<void>;
@@ -16,60 +19,64 @@ interface LoginCardProps {
   devLink?: string;
 }
 
-export function LoginCard({ signIn, defaultEmail, error, message, devLink }: LoginCardProps) {
+export function LoginCard({
+  signIn,
+  defaultEmail,
+  error,
+  message,
+  devLink,
+}: LoginCardProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="login-shell">
-      <div className="login-main">
-        <a href="/campaigns" aria-label="Inplicit">
+    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="flex w-full max-w-[440px] flex-col items-center gap-8">
+        <Link href="/campaigns" aria-label="Inplicit">
           <Image
             src="/logo.svg"
             alt="Inplicit"
             width={120}
             height={24}
             priority
-            style={{ height: 24, width: "auto" }}
+            className="h-6 w-auto"
           />
-        </a>
+        </Link>
 
-        <div className="card login-card">
-          <span className="eyebrow">Sign in</span>
-          <h1 className="headline login-headline">Inplicit Dashboard.</h1>
-          <p style={{ marginTop: "var(--space-3)", color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
-            Enter your email and password, or leave the password blank to receive a magic link.
+        <Card className="w-full rounded-card border-line bg-surface p-8 sm:p-10">
+          <Eyebrow>Sign in</Eyebrow>
+          <h1 className="mt-3 text-3xl font-medium leading-tight tracking-tight text-fg sm:text-4xl">
+            Inplicit Dashboard.
+          </h1>
+          <p className="mt-3 text-sm text-fg-muted">
+            Enter your email and password, or leave the password blank to
+            receive a magic link.
           </p>
 
-          {error && (
-            <div className="flash flash--err login-flash">{error}</div>
-          )}
+          {error && <Banner type="err" message={error} />}
           {message && (
-            <div className="flash flash--ok login-flash">
+            <Banner type="ok">
               {message}
               {devLink && (
-                <div className="login-devlink">
-                  <span className="eyebrow" style={{ color: "var(--color-accent-strong)" }}>Dev link</span>
-                  <a className="mono login-devlink__a" href={devLink}>{devLink}</a>
+                <div className="mt-3 space-y-1 border-t border-success/20 pt-3">
+                  <Eyebrow className="text-success">Dev link</Eyebrow>
+                  <a
+                    className="block break-all font-mono text-xs text-success hover:underline"
+                    href={devLink}
+                  >
+                    {devLink}
+                  </a>
                 </div>
               )}
-            </div>
+            </Banner>
           )}
 
-          <form action={signIn} className="login-form">
-            <div className="field">
-              <Label htmlFor="email" className="field__label">Email address</Label>
-              <div style={{ position: "relative" }}>
-                <Mail
-                  size={15}
-                  style={{
-                    position: "absolute",
-                    left: 12,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    color: "var(--color-text-quaternary)",
-                    pointerEvents: "none",
-                  }}
-                />
+          <form action={signIn} className="mt-6 flex flex-col gap-4">
+            <Field>
+              <Label htmlFor="email" className="text-xs font-medium text-fg-muted">
+                Email address
+              </Label>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
                 <Input
                   id="email"
                   name="email"
@@ -78,64 +85,81 @@ export function LoginCard({ signIn, defaultEmail, error, message, devLink }: Log
                   defaultValue={defaultEmail ?? ""}
                   placeholder="you@company.com"
                   autoComplete="email"
-                  style={{ paddingLeft: "2.25rem" }}
+                  className="h-11 pl-9 text-base md:text-sm"
                 />
               </div>
-            </div>
+            </Field>
 
-            <div className="field">
-              <Label htmlFor="password" className="field__label">
+            <Field>
+              <Label htmlFor="password" className="text-xs font-medium text-fg-muted">
                 Password{" "}
-                <span style={{ color: "var(--color-text-quaternary)", fontWeight: 400 }}>(optional — magic link)</span>
+                <span className="font-normal text-fg-subtle">
+                  (optional — magic link)
+                </span>
               </Label>
-              <div style={{ position: "relative" }}>
-                <Lock
-                  size={15}
-                  style={{
-                    position: "absolute",
-                    left: 12,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    color: "var(--color-text-quaternary)",
-                    pointerEvents: "none",
-                  }}
-                />
+              <div className="relative">
+                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
                 <Input
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  style={{ paddingLeft: "2.25rem", paddingRight: "2.5rem" }}
+                  className="h-11 pl-9 pr-10 text-base md:text-sm"
                 />
                 <button
                   type="button"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   onClick={() => setShowPassword((v) => !v)}
-                  style={{
-                    position: "absolute",
-                    right: 8,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    padding: "6px",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    color: "var(--color-text-quaternary)",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
+                  className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-sm p-1.5 text-fg-subtle transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
-            </div>
+            </Field>
 
-            <button type="submit" className="btn btn--primary btn--lg login-btn">
+            <Button type="submit" size="lg" className="mt-2 w-full">
               Continue
-            </button>
+            </Button>
           </form>
-        </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function Field({ children }: { children: React.ReactNode }) {
+  return <div className="space-y-1.5">{children}</div>;
+}
+
+function Banner({
+  type,
+  message,
+  children,
+}: {
+  type: "ok" | "err";
+  message?: string;
+  children?: React.ReactNode;
+}) {
+  const Icon = type === "ok" ? CheckCircle2 : AlertCircle;
+  return (
+    <div
+      role="status"
+      className={cn(
+        "mt-6 flex items-start gap-2.5 rounded-ui border px-3.5 py-2.5 text-sm",
+        type === "ok"
+          ? "border-success/30 bg-success-soft text-success"
+          : "border-pain/30 bg-pain-soft text-pain",
+      )}
+    >
+      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+      <div className="min-w-0 leading-snug">
+        {message && <p>{message}</p>}
+        {children}
       </div>
     </div>
   );

@@ -1,8 +1,14 @@
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AlertCircle } from "lucide-react";
 import { ApiError, makeApi } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
-import "../login/login.css";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Eyebrow } from "@/components/PageChrome";
 
 interface SetPasswordSearchParams {
   error?: string;
@@ -29,8 +35,7 @@ export default async function SetPasswordPage({
 
     if (password.length < 10) {
       redirect(
-        "/set-password?error=" +
-          encodeURIComponent("Mindestens 10 Zeichen."),
+        "/set-password?error=" + encodeURIComponent("Mindestens 10 Zeichen."),
       );
     }
     if (password !== confirm) {
@@ -58,72 +63,84 @@ export default async function SetPasswordPage({
   const isFirstTime = me.must_set_password === true;
 
   return (
-    <main className="login-shell">
-      <div className="login-main">
-        <a href="/" className="login-wordmark" aria-label="Inplicit">
+    <main className="flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="flex w-full max-w-[440px] flex-col items-center gap-8">
+        <Link href="/" aria-label="Inplicit">
           <Image
             src="/logo.svg"
             alt="Inplicit"
             width={120}
             height={24}
-            className="login-wordmark__logo"
             priority
+            className="h-6 w-auto"
           />
-        </a>
+        </Link>
 
-        <div className="card login-card">
-          <span className="eyebrow">
+        <Card className="w-full rounded-card border-line bg-surface p-8 sm:p-10">
+          <Eyebrow>
             {isFirstTime ? "Konto einrichten" : "Passwort ändern"}
-          </span>
-          <h1 className="headline login-headline">
+          </Eyebrow>
+          <h1 className="mt-3 text-3xl font-medium leading-tight tracking-tight text-fg sm:text-4xl">
             {isFirstTime ? "Lege dein Passwort fest." : "Neues Passwort."}
           </h1>
-          <p
-            className="page-header__meta"
-            style={{ marginTop: "var(--space-3)" }}
-          >
+          <p className="mt-3 text-sm text-fg-muted">
             {isFirstTime
               ? "Ab jetzt meldest du dich mit E-Mail und Passwort an. Den Magic-Link brauchst du nur noch, falls du das Passwort vergisst."
               : "Mindestens 10 Zeichen. Beide Felder müssen übereinstimmen."}
           </p>
 
           {sp.error && (
-            <div className="flash flash--err login-flash">{sp.error}</div>
+            <div
+              role="alert"
+              className="mt-6 flex items-start gap-2.5 rounded-ui border border-pain/30 bg-pain-soft px-3.5 py-2.5 text-sm text-pain"
+            >
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <p className="leading-snug">{sp.error}</p>
+            </div>
           )}
 
-          <form action={submit} className="login-form">
-            <label className="field">
-              <span className="field__label">Neues Passwort</span>
-              <input
+          <form action={submit} className="mt-6 flex flex-col gap-4">
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="password"
+                className="text-xs font-medium text-fg-muted"
+              >
+                Neues Passwort
+              </Label>
+              <Input
+                id="password"
                 type="password"
                 name="password"
                 required
                 minLength={10}
-                className="input"
                 placeholder="••••••••••"
                 autoComplete="new-password"
+                className="h-11 text-base md:text-sm"
               />
-            </label>
-            <label className="field">
-              <span className="field__label">Passwort bestätigen</span>
-              <input
+            </div>
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="confirm"
+                className="text-xs font-medium text-fg-muted"
+              >
+                Passwort bestätigen
+              </Label>
+              <Input
+                id="confirm"
                 type="password"
                 name="confirm"
                 required
                 minLength={10}
-                className="input"
                 placeholder="••••••••••"
                 autoComplete="new-password"
+                className="h-11 text-base md:text-sm"
               />
-            </label>
-            <button
-              type="submit"
-              className="btn btn--primary btn--lg login-btn"
-            >
+            </div>
+            <Button type="submit" size="lg" className="mt-2 w-full">
               Speichern
-            </button>
+            </Button>
           </form>
-        </div>
+        </Card>
       </div>
     </main>
   );

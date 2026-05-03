@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  ApiError,
-  makeApi,
-  type ProvisionOrgInput,
-} from "@/lib/api";
+import { AlertCircle, ArrowLeft } from "lucide-react";
+import { ApiError, makeApi, type ProvisionOrgInput } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/PageChrome";
+import { cn } from "@/lib/utils";
 
 export default async function NewOrgPage({
   searchParams,
@@ -29,13 +32,22 @@ export default async function NewOrgPage({
       industry: get("industry") || undefined,
       default_locale: get("default_locale") || "de",
       default_voice_id: parseIntOr(get("default_voice_id"), 438),
-      default_interview_length_min: parseIntOr(get("default_interview_length_min"), 25),
+      default_interview_length_min: parseIntOr(
+        get("default_interview_length_min"),
+        25,
+      ),
       owner_email: get("owner_email"),
       owner_name: get("owner_name"),
       issue_magic_link: formData.get("issue_magic_link") === "on",
     };
 
-    if (!body.name || !body.slug || !body.company_context || !body.owner_email || !body.owner_name) {
+    if (
+      !body.name ||
+      !body.slug ||
+      !body.company_context ||
+      !body.owner_email ||
+      !body.owner_name
+    ) {
       const stickyParam = encodeURIComponent(JSON.stringify(body));
       redirect(
         `/staff/orgs/new?error=${encodeURIComponent("Bitte alle Pflichtfelder ausfüllen.")}&sticky=${stickyParam}`,
@@ -61,10 +73,13 @@ export default async function NewOrgPage({
   }
 
   return (
-    <div className="new-org">
-      <Link href="/staff/orgs" className="btn btn--link new-org__back">
-        ← Organisationen
-      </Link>
+    <div className="mx-auto max-w-[680px]">
+      <Button asChild variant="link" size="sm" className="mb-4 px-0 text-fg-muted">
+        <Link href="/staff/orgs">
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Organisationen
+        </Link>
+      </Button>
 
       <PageHeader
         eyebrow="Inplicit Staff"
@@ -72,157 +87,241 @@ export default async function NewOrgPage({
         muted="ein Kunde, ein Account"
       />
 
-      {sp.error && <div className="flash flash--err section">{sp.error}</div>}
-
-      <form action={createOrg} className="card new-org__form">
-        <div className="new-org__group">
-          <h2 className="subtitle">Unternehmen</h2>
-          <p className="caption">Daten zum Kunden. Sind später bearbeitbar.</p>
+      {sp.error && (
+        <div
+          role="alert"
+          className="mb-6 flex items-start gap-2.5 rounded-ui border border-pain/30 bg-pain-soft px-3.5 py-2.5 text-sm text-pain"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p className="leading-snug">{sp.error}</p>
         </div>
+      )}
 
-        <label className="field">
-          <span className="field__label">Name *</span>
-          <input name="name" required className="input" placeholder="Acme GmbH" defaultValue={sticky.name} />
-        </label>
-
-        <label className="field">
-          <span className="field__label">Slug *</span>
-          <p className="caption new-org__hint">
-            URL-tauglich, eindeutig, klein-buchstaben + Bindestrich (z.B. <span className="mono">acme-gmbh</span>).
-          </p>
-          <input
-            name="slug"
-            required
-            className="input mono"
-            pattern="[a-z0-9\-]+"
-            placeholder="acme-gmbh"
-            defaultValue={sticky.slug}
+      <Card className="rounded-card border-line bg-surface p-6">
+        <form action={createOrg} className="flex flex-col gap-5">
+          <SectionHeading
+            title="Unternehmen"
+            subtitle="Daten zum Kunden. Sind später bearbeitbar."
           />
-        </label>
 
-        <label className="field">
-          <span className="field__label">Unternehmenskontext *</span>
-          <p className="caption new-org__hint">
-            2–4 Sätze. Branche, Größe, Produkt, Zielgruppe. Wird in jeden Interview-System-Prompt eingespeist.
-          </p>
-          <textarea
-            name="company_context"
+          <Field id="name" label="Name" required>
+            <Input
+              id="name"
+              name="name"
+              required
+              placeholder="Acme GmbH"
+              defaultValue={sticky.name}
+              className="h-11 text-base md:text-sm"
+            />
+          </Field>
+
+          <Field
+            id="slug"
+            label="Slug"
             required
-            rows={6}
-            className="textarea"
-            placeholder="Acme GmbH ist ein B2B-SaaS für Logistikfirmen mit Sitz in Berlin..."
-            defaultValue={sticky.company_context}
+            hint={
+              <>
+                URL-tauglich, eindeutig, klein-buchstaben + Bindestrich (z. B.{" "}
+                <Mono>acme-gmbh</Mono>).
+              </>
+            }
+          >
+            <Input
+              id="slug"
+              name="slug"
+              required
+              pattern="[a-z0-9\-]+"
+              placeholder="acme-gmbh"
+              defaultValue={sticky.slug}
+              className="h-11 font-mono text-base md:text-sm"
+            />
+          </Field>
+
+          <Field
+            id="company_context"
+            label="Unternehmenskontext"
+            required
+            hint="2–4 Sätze. Branche, Größe, Produkt, Zielgruppe. Wird in jeden Interview-System-Prompt eingespeist."
+          >
+            <Textarea
+              id="company_context"
+              name="company_context"
+              required
+              rows={6}
+              placeholder="Acme GmbH ist ein B2B-SaaS für Logistikfirmen mit Sitz in Berlin..."
+              defaultValue={sticky.company_context}
+              className="min-h-[150px] text-base md:text-sm"
+            />
+          </Field>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field id="industry" label="Branche">
+              <Input
+                id="industry"
+                name="industry"
+                placeholder="Logistik-SaaS"
+                defaultValue={sticky.industry}
+                className="h-11 text-base md:text-sm"
+              />
+            </Field>
+            <Field id="default_locale" label="Standardsprache">
+              <NativeSelect
+                id="default_locale"
+                name="default_locale"
+                defaultValue={sticky.default_locale ?? "de"}
+              >
+                <option value="de">Deutsch</option>
+                <option value="en">English</option>
+              </NativeSelect>
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field id="default_voice_id" label="Standard-Voice-ID">
+              <Input
+                id="default_voice_id"
+                name="default_voice_id"
+                type="number"
+                min={1}
+                defaultValue={String(sticky.default_voice_id ?? 438)}
+                className="h-11 font-mono text-base md:text-sm"
+              />
+            </Field>
+            <Field
+              id="default_interview_length_min"
+              label="Standard-Interviewdauer (Min)"
+            >
+              <Input
+                id="default_interview_length_min"
+                name="default_interview_length_min"
+                type="number"
+                min={10}
+                max={60}
+                defaultValue={String(sticky.default_interview_length_min ?? 25)}
+                className="h-11 text-base md:text-sm"
+              />
+            </Field>
+          </div>
+
+          <Separator />
+
+          <SectionHeading
+            title="Customer-Account"
+            subtitle="Genau ein User pro Org. Die Person, die das Dashboard sieht."
           />
-        </label>
 
-        <div className="new-org__row">
-          <label className="field">
-            <span className="field__label">Branche</span>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field id="owner_email" label="Owner-Email" required>
+              <Input
+                id="owner_email"
+                name="owner_email"
+                type="email"
+                required
+                placeholder="max@acme.de"
+                defaultValue={sticky.owner_email}
+                className="h-11 text-base md:text-sm"
+              />
+            </Field>
+            <Field id="owner_name" label="Owner-Name" required>
+              <Input
+                id="owner_name"
+                name="owner_name"
+                required
+                placeholder="Max Mustermann"
+                defaultValue={sticky.owner_name}
+                className="h-11 text-base md:text-sm"
+              />
+            </Field>
+          </div>
+
+          <label className="flex items-start gap-3 rounded-ui border border-line bg-canvas p-3.5 text-sm text-fg">
             <input
-              name="industry"
-              className="input"
-              placeholder="Logistik-SaaS"
-              defaultValue={sticky.industry}
+              type="checkbox"
+              name="issue_magic_link"
+              defaultChecked
+              className="mt-0.5 size-4 cursor-pointer rounded-sm border-line accent-accent"
             />
-          </label>
-          <label className="field">
-            <span className="field__label">Standardsprache</span>
-            <select name="default_locale" className="select" defaultValue={sticky.default_locale ?? "de"}>
-              <option value="de">Deutsch</option>
-              <option value="en">English</option>
-            </select>
-          </label>
-        </div>
-
-        <div className="new-org__row">
-          <label className="field">
-            <span className="field__label">Standard-Voice-ID</span>
-            <input
-              name="default_voice_id"
-              type="number"
-              min="1"
-              className="input"
-              defaultValue={String(sticky.default_voice_id ?? 438)}
-            />
-          </label>
-          <label className="field">
-            <span className="field__label">Standard-Interviewdauer (Min)</span>
-            <input
-              name="default_interview_length_min"
-              type="number"
-              min="10"
-              max="60"
-              className="input"
-              defaultValue={String(sticky.default_interview_length_min ?? 25)}
-            />
-          </label>
-        </div>
-
-        <div className="new-org__divider" />
-
-        <div className="new-org__group">
-          <h2 className="subtitle">Customer-Account</h2>
-          <p className="caption">
-            Genau ein User pro Org. Die Person, die das Dashboard sieht.
-          </p>
-        </div>
-
-        <div className="new-org__row">
-          <label className="field">
-            <span className="field__label">Owner-Email *</span>
-            <input
-              name="owner_email"
-              type="email"
-              required
-              className="input"
-              placeholder="max@acme.de"
-              defaultValue={sticky.owner_email}
-            />
-          </label>
-          <label className="field">
-            <span className="field__label">Owner-Name *</span>
-            <input
-              name="owner_name"
-              required
-              className="input"
-              placeholder="Max Mustermann"
-              defaultValue={sticky.owner_name}
-            />
-          </label>
-        </div>
-
-        <label className="field new-org__check">
-          <input type="checkbox" name="issue_magic_link" defaultChecked />
-          <span>
-            Magic-Link sofort ausgeben{" "}
-            <span className="caption">
-              Der Owner bekommt eine Welcome-Email mit dem Login-Link (15 Min gültig, single-use).
+            <span className="space-y-0.5">
+              <span className="block font-medium">Magic-Link sofort ausgeben</span>
+              <span className="block text-xs text-fg-muted">
+                Der Owner bekommt eine Welcome-Email mit dem Login-Link (15 Min
+                gültig, single-use).
+              </span>
             </span>
-          </span>
-        </label>
+          </label>
 
-        <button type="submit" className="btn btn--primary btn--lg new-org__submit">
-          Organisation anlegen
-        </button>
-      </form>
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .new-org { max-width: 680px; margin: 0 auto; }
-        .new-org__back { margin-bottom: var(--space-6); display: inline-block; }
-        .new-org__form { display: flex; flex-direction: column; gap: var(--space-5); }
-        .new-org__group { display: flex; flex-direction: column; gap: var(--space-1); }
-        .new-org__hint { margin-bottom: var(--space-2); }
-        .new-org__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-        .new-org__divider { height: 1px; background: var(--color-border); margin: var(--space-3) 0; }
-        .new-org__check { flex-direction: row; align-items: flex-start; gap: var(--space-3); }
-        .new-org__check input { margin-top: 4px; }
-        .new-org__submit { width: 100%; margin-top: var(--space-3); }
-      `,
-        }}
-      />
+          <Button type="submit" size="lg" className="w-full">
+            Organisation anlegen
+          </Button>
+        </form>
+      </Card>
     </div>
+  );
+}
+
+// ─── Pieces ───────────────────────────────────────────────────────────────────
+
+function SectionHeading({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <h2 className="text-base font-semibold tracking-tight text-fg">{title}</h2>
+      <p className="text-sm text-fg-muted">{subtitle}</p>
+    </div>
+  );
+}
+
+function Field({
+  id,
+  label,
+  required,
+  hint,
+  children,
+}: {
+  id: string;
+  label: string;
+  required?: boolean;
+  hint?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="flex items-center gap-1.5 text-xs font-medium text-fg-muted">
+        {label}
+        {required && <span className="text-pain">*</span>}
+      </label>
+      {hint && <p className="text-xs leading-relaxed text-fg-subtle">{hint}</p>}
+      {children}
+    </div>
+  );
+}
+
+function Mono({ children }: { children: React.ReactNode }) {
+  return (
+    <code className="rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-fg">
+      {children}
+    </code>
+  );
+}
+
+function NativeSelect({
+  className,
+  ...props
+}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select
+      {...props}
+      className={cn(
+        "flex h-11 w-full appearance-none rounded-ui border border-line bg-canvas px-3 py-2 pr-8 text-base text-fg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%221.75%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-[position:right_0.625rem_center] bg-[size:1rem] bg-no-repeat",
+        className,
+      )}
+    />
   );
 }
 

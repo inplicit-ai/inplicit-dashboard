@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import { ApiError, makeApi } from "@/lib/api";
 import { requireAdmin, requestCookie } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/PageChrome";
 
 interface SearchParams {
@@ -59,10 +63,13 @@ export default async function NewStaffUserPage({
   }
 
   return (
-    <div className="new-org">
-      <Link href="/staff/users" className="btn btn--link new-org__back">
-        ← Team
-      </Link>
+    <div className="mx-auto max-w-[540px]">
+      <Button asChild variant="link" size="sm" className="mb-4 px-0 text-fg-muted">
+        <Link href="/staff/users">
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Team
+        </Link>
+      </Button>
 
       <PageHeader
         eyebrow="Inplicit Staff"
@@ -70,67 +77,97 @@ export default async function NewStaffUserPage({
         muted="Magic-Link Login"
       />
 
-      {sp.error && <div className="flash flash--err section">{sp.error}</div>}
+      {sp.error && (
+        <div
+          role="alert"
+          className="mb-6 flex items-start gap-2.5 rounded-ui border border-pain/30 bg-pain-soft px-3.5 py-2.5 text-sm text-pain"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p className="leading-snug">{sp.error}</p>
+        </div>
+      )}
 
-      <form action={createStaff} className="card new-org__form">
-        <p className="caption">
-          Neuer Staff-User bekommt einen Magic-Link per Email (15 Min gültig). Die Person
-          loggt sich damit ein und nutzt für jeden weiteren Login ebenfalls den
-          Magic-Link-Flow. Passwort gibt's nur für dich als Admin.
-        </p>
+      <Card className="rounded-card border-line bg-surface p-6">
+        <form action={createStaff} className="flex flex-col gap-5">
+          <p className="text-sm text-fg-muted">
+            Neuer Staff-User bekommt einen Magic-Link per Email (15 Min gültig).
+            Die Person loggt sich damit ein und nutzt für jeden weiteren Login
+            ebenfalls den Magic-Link-Flow. Passwort gibt&apos;s nur für dich als
+            Admin.
+          </p>
 
-        <label className="field">
-          <span className="field__label">Name *</span>
-          <input
-            name="name"
-            required
-            className="input"
-            placeholder="Max Mustermann"
-            defaultValue={sticky.name ?? ""}
-          />
-        </label>
+          <Field id="staff-name" label="Name" required>
+            <Input
+              id="staff-name"
+              name="name"
+              required
+              placeholder="Max Mustermann"
+              defaultValue={sticky.name ?? ""}
+              className="h-11 text-base md:text-sm"
+            />
+          </Field>
 
-        <label className="field">
-          <span className="field__label">E-Mail *</span>
-          <input
-            name="email"
-            type="email"
-            required
-            className="input"
-            placeholder="max@inplicit.ai"
-            defaultValue={sticky.email ?? ""}
-            autoComplete="off"
-          />
-        </label>
+          <Field id="staff-email" label="E-Mail" required>
+            <Input
+              id="staff-email"
+              name="email"
+              type="email"
+              required
+              placeholder="max@inplicit.ai"
+              defaultValue={sticky.email ?? ""}
+              autoComplete="off"
+              className="h-11 text-base md:text-sm"
+            />
+          </Field>
 
-        <label className="field new-org__check">
-          <input type="checkbox" name="issue_magic_link" defaultChecked />
-          <span>
-            Magic-Link sofort ausgeben{" "}
-            <span className="caption">
-              Empfehlung. Wenn ausgeschaltet, kannst du den Link später aus der Liste
-              ausstellen.
+          <label className="flex items-start gap-3 rounded-ui border border-line bg-canvas p-3.5 text-sm text-fg">
+            <input
+              type="checkbox"
+              name="issue_magic_link"
+              defaultChecked
+              className="mt-0.5 size-4 cursor-pointer rounded-sm border-line accent-accent"
+            />
+            <span className="space-y-0.5">
+              <span className="block font-medium">
+                Magic-Link sofort ausgeben
+              </span>
+              <span className="block text-xs text-fg-muted">
+                Empfehlung. Wenn ausgeschaltet, kannst du den Link später aus
+                der Liste ausstellen.
+              </span>
             </span>
-          </span>
-        </label>
+          </label>
 
-        <button type="submit" className="btn btn--primary btn--lg new-org__submit">
-          Staff anlegen
-        </button>
-      </form>
+          <Button type="submit" size="lg" className="w-full">
+            Staff anlegen
+          </Button>
+        </form>
+      </Card>
+    </div>
+  );
+}
 
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .new-org { max-width: 540px; margin: 0 auto; }
-        .new-org__back { margin-bottom: var(--space-6); display: inline-block; }
-        .new-org__form { display: flex; flex-direction: column; gap: var(--space-5); }
-        .new-org__check { flex-direction: row; align-items: flex-start; gap: var(--space-3); }
-        .new-org__check input { margin-top: 4px; }
-        .new-org__submit { width: 100%; margin-top: var(--space-3); }
-      `,
-        }}
-      />
+function Field({
+  id,
+  label,
+  required,
+  children,
+}: {
+  id: string;
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label
+        htmlFor={id}
+        className="flex items-center gap-1.5 text-xs font-medium text-fg-muted"
+      >
+        {label}
+        {required && <span className="text-pain">*</span>}
+      </label>
+      {children}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { makeApi, type Cluster } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
+import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/ErrorState";
 import { PageHeader } from "@/components/PageChrome";
 import { KnowledgeMap } from "@/components/KnowledgeMap";
@@ -21,15 +22,18 @@ export default async function MapPage({
 
   return (
     <>
-      <PageHeader title="Knowledge Map" />
+      <PageHeader
+        title="Knowledge Map"
+        meta="Geclusterte Insights, gewichtet nach Signal-Stärke und Abteilungs-Abdeckung."
+      />
       {error && (
-        <div className="section">
+        <div className="mb-6">
           <ErrorState error={error} />
         </div>
       )}
-      <div className="card card--flush">
+      <Card className="overflow-hidden p-0">
         <KnowledgeMap clusters={clusters} />
-      </div>
+      </Card>
     </>
   );
 }

@@ -15,6 +15,7 @@
   /* Lines */
   --color-line: var(--color-border);
   --color-line-subtle: var(--color-border-subtle);
+  --color-line-strong: var(--color-border-strong);
 
   /* Text */
   --color-fg: var(--color-text-primary);

@@ -12,7 +12,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Eyebrow } from "@/components/PageChrome";
 import { cn } from "@/lib/utils";
 import type { Utterance, VseInsight } from "@/lib/api";
 
@@ -119,22 +121,24 @@ export function InterviewDetailView({
   return (
     <>
       {/* ─── Insights ─────────────────────────────────────────────────────────── */}
-      <section className="section">
+      <section className="mb-8">
         <SectionHeader
           eyebrow="Schlüssel-Insights"
           title="Was aus diesem Gespräch hervorging"
           count={insights.length}
         />
         {insights.length === 0 ? (
-          <div className="card">
-            <div className="empty-state">
-              <p className="empty-state__title">Noch keine Insights extrahiert.</p>
-              <p>
+          <Card className="rounded-card border-dashed bg-surface/40 p-10">
+            <div className="flex flex-col items-center justify-center gap-2 text-center">
+              <p className="text-sm font-semibold text-fg">
+                Noch keine Insights extrahiert.
+              </p>
+              <p className="text-xs text-fg-muted">
                 Sie erscheinen, sobald die Auswertung abgeschlossen ist
                 {processingStatus && ` (aktuell: ${processingStatus})`}.
               </p>
             </div>
-          </div>
+          </Card>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {insights.map((insight) => (
@@ -165,14 +169,14 @@ export function InterviewDetailView({
       </section>
 
       {/* ─── Transcript-as-Logs ───────────────────────────────────────────────── */}
-      <section className="section">
+      <section className="mb-8">
         <SectionHeader
           eyebrow="Transkript"
           title="Vollständiger Verlauf"
           count={utterances.length}
         />
 
-        <div className="card card--flush overflow-hidden">
+        <Card className="overflow-hidden p-0">
           {/* Toolbar */}
           <div className="flex flex-col gap-3 border-b border-line bg-surface/50 p-4 sm:flex-row sm:items-center">
             <div className="relative flex-1">
@@ -263,7 +267,7 @@ export function InterviewDetailView({
               </AnimatePresence>
             </div>
           </div>
-        </div>
+        </Card>
       </section>
     </>
   );
@@ -346,9 +350,9 @@ function SectionHeader({
 }) {
   return (
     <header className="mb-4 flex items-end justify-between gap-4">
-      <div>
-        <span className="eyebrow">{eyebrow}</span>
-        <h2 className="title mt-1">{title}</h2>
+      <div className="space-y-1.5">
+        <Eyebrow>{eyebrow}</Eyebrow>
+        <h2 className="text-xl font-semibold tracking-tight text-fg">{title}</h2>
       </div>
       <span className="font-mono text-sm text-fg-subtle">{count}</span>
     </header>

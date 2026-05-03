@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 interface Tab {
   id: string;
@@ -53,17 +54,30 @@ export function CampaignTabs({ campaignId }: { campaignId: string }) {
   const pathname = usePathname() ?? "";
 
   return (
-    <div className="app-tabs">
-      <nav className="app-tabs__inner">
-        {TABS.map((t) => (
-          <Link
-            key={t.id}
-            href={t.href(campaignId)}
-            className={t.match(pathname, campaignId) ? "is-active" : ""}
-          >
-            {t.label}
-          </Link>
-        ))}
+    <div className="-mx-4 mb-8 border-b border-line sm:-mx-8">
+      <nav
+        aria-label="Audit-Bereiche"
+        className="scrollbar-none mx-auto flex max-w-[1280px] gap-7 overflow-x-auto px-4 sm:px-8"
+      >
+        {TABS.map((t) => {
+          const active = t.match(pathname, campaignId);
+          return (
+            <Link
+              key={t.id}
+              href={t.href(campaignId)}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "relative -mb-px whitespace-nowrap border-b-2 py-4 text-sm font-medium transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                active
+                  ? "border-accent text-fg"
+                  : "border-transparent text-fg-muted hover:text-fg",
+              )}
+            >
+              {t.label}
+            </Link>
+          );
+        })}
       </nav>
     </div>
   );

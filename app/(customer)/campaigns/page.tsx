@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { ArrowRight, Plus, Sparkles } from "lucide-react";
 import type { Campaign } from "@/lib/api";
 import { makeApi } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/ErrorState";
 import { PageHeader, StatusBadge } from "@/components/PageChrome";
 import { RagSearch } from "@/components/RagSearch";
@@ -20,55 +23,80 @@ export default async function CampaignsPage() {
     <>
       <PageHeader
         title="Audits"
+        meta="Stichproben deiner Organisation. Jeder Audit bündelt eine Runde anonymer Interviews mit ausgewerteten Insights."
         actions={
-          <Link href="/campaigns/new" className="btn btn--primary">
-            Neuer Audit
-          </Link>
+          <Button asChild size="sm">
+            <Link href="/campaigns/new">
+              <Plus className="h-4 w-4" />
+              Neuer Audit
+            </Link>
+          </Button>
         }
       />
 
-      <section className="section">
+      <section className="mb-8">
         <RagSearch />
       </section>
 
       {error && (
-        <div className="section">
+        <div className="mb-6">
           <ErrorState error={error} />
         </div>
       )}
 
       {!error && campaigns.length === 0 && (
-        <div className="card">
-          <div className="empty-state">
-            <p className="empty-state__title">Noch keine Audits.</p>
-            <p>Lege deinen ersten an, lade Teilnehmer ein, sieh dir die Insights an.</p>
-            <Link
-              href="/campaigns/new"
-              className="btn btn--primary"
-              style={{ marginTop: "var(--space-6)" }}
-            >
-              Ersten Audit erstellen
-            </Link>
+        <Card className="rounded-card border-dashed bg-surface/40 p-10">
+          <div className="flex flex-col items-center justify-center gap-3 text-center">
+            <div className="grid size-11 place-items-center rounded-full bg-accent-soft text-accent">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-base font-semibold text-fg">
+                Noch keine Audits.
+              </p>
+              <p className="text-sm text-fg-muted">
+                Lege deinen ersten an, lade Teilnehmer ein, sieh dir die
+                Insights an.
+              </p>
+            </div>
+            <Button asChild className="mt-2">
+              <Link href="/campaigns/new">
+                <Plus className="h-4 w-4" />
+                Ersten Audit erstellen
+              </Link>
+            </Button>
           </div>
-        </div>
+        </Card>
       )}
 
       {campaigns.length > 0 && (
-        <div className="list-stack">
+        <div className="space-y-2.5">
           {campaigns.map((c) => (
-            <Link key={c.id} href={`/campaigns/${c.id}`} className="campaign-row">
-              <div>
-                <p className="campaign-row__title">{c.org_name}</p>
-                <p className="caption" style={{ marginTop: "var(--space-1)" }}>
-                  {c.language.toUpperCase()} · {c.interview_length_min} Min ·{" "}
-                  {new Date(c.created_at).toLocaleDateString("de-DE")}
-                </p>
-              </div>
-              <StatusBadge status={c.status} />
-            </Link>
+            <CampaignRow key={c.id} c={c} />
           ))}
         </div>
       )}
     </>
+  );
+}
+
+function CampaignRow({ c }: { c: Campaign }) {
+  return (
+    <Link
+      href={`/campaigns/${c.id}`}
+      className="group flex items-center justify-between gap-4 rounded-card border border-line bg-surface p-5 shadow-sm transition-colors hover:border-line-strong hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+    >
+      <div className="min-w-0 space-y-1.5">
+        <p className="truncate text-base font-medium text-fg">{c.org_name}</p>
+        <p className="text-xs text-fg-muted">
+          {c.language.toUpperCase()} · {c.interview_length_min} Min ·{" "}
+          {new Date(c.created_at).toLocaleDateString("de-DE")}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-3">
+        <StatusBadge status={c.status} />
+        <ArrowRight className="h-4 w-4 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-fg" />
+      </div>
+    </Link>
   );
 }

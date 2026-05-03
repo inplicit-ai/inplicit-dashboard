@@ -1,14 +1,28 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
+  AlertCircle,
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle2,
+  KeyRound,
+  Pencil,
+} from "lucide-react";
+import {
   ApiError,
   makeApi,
   type Organization,
   type UpdateOrgInput,
 } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { ErrorState } from "@/components/ErrorState";
-import { PageHeader, StatusBadge } from "@/components/PageChrome";
+import { Eyebrow, PageHeader, StatusBadge } from "@/components/PageChrome";
+import { cn } from "@/lib/utils";
 
 interface OrgDetailSearchParams {
   edit?: string;
@@ -69,7 +83,9 @@ export default async function OrgDetailPage({
       industry: get("industry") || undefined,
       default_locale: get("default_locale") || undefined,
       default_voice_id: parseIntOr(get("default_voice_id")),
-      default_interview_length_min: parseIntOr(get("default_interview_length_min")),
+      default_interview_length_min: parseIntOr(
+        get("default_interview_length_min"),
+      ),
     };
     const api = makeApi(await requestCookie());
     let redirectTo: string;
@@ -110,13 +126,7 @@ export default async function OrgDetailPage({
   if (!org || error) {
     return (
       <>
-        <Link
-          href="/staff/orgs"
-          className="btn btn--link"
-          style={{ marginBottom: "var(--space-6)", display: "inline-block" }}
-        >
-          ← Organisationen
-        </Link>
+        <BackLink />
         {error && <ErrorState error={error} />}
       </>
     );
@@ -126,16 +136,10 @@ export default async function OrgDetailPage({
 
   return (
     <>
-      <Link
-        href="/staff/orgs"
-        className="btn btn--link"
-        style={{ marginBottom: "var(--space-6)", display: "inline-block" }}
-      >
-        ← Organisationen
-      </Link>
+      <BackLink />
 
       {sp.error && (
-        <div className="section">
+        <div className="mb-6">
           <ErrorState error={new Error(sp.error)} />
         </div>
       )}
@@ -147,291 +151,459 @@ export default async function OrgDetailPage({
             title={org.name}
             muted={org.slug}
             meta={
-              <>
-                <StatusBadge status={org.status} />{" "}
-                <span className="caption">
-                  {org.default_locale.toUpperCase()} · {org.default_interview_length_min} Min · Voice{" "}
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <StatusBadge status={org.status} />
+                <span className="text-xs text-fg-muted">
+                  {org.default_locale.toUpperCase()} ·{" "}
+                  {org.default_interview_length_min} Min · Voice{" "}
                   {org.default_voice_id}
                 </span>
-              </>
+              </span>
             }
             actions={
-              <div className="org-actions">
-                <Link href={`/staff/orgs/${org.id}?edit=1`} className="btn btn--ghost">
-                  Bearbeiten
-                </Link>
-                <form action={issueMagicLinkAction} style={{ display: "inline" }}>
-                  <button type="submit" className="btn btn--primary">
+              <>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/staff/orgs/${org.id}?edit=1`}>
+                    <Pencil className="h-3.5 w-3.5" />
+                    Bearbeiten
+                  </Link>
+                </Button>
+                <form action={issueMagicLinkAction}>
+                  <Button type="submit" size="sm">
+                    <KeyRound className="h-3.5 w-3.5" />
                     Magic-Link ausgeben
-                  </button>
+                  </Button>
                 </form>
-              </div>
+              </>
             }
           />
 
-          {sp.updated === "1" && <div className="card flash flash--ok">Organisation aktualisiert.</div>}
-          {sp.suspended === "1" && <div className="card flash flash--ok">Organisation suspendiert.</div>}
+          {sp.updated === "1" && (
+            <Flash type="ok" message="Organisation aktualisiert." />
+          )}
+          {sp.suspended === "1" && (
+            <Flash type="ok" message="Organisation suspendiert." />
+          )}
 
           {sp.magic_link && (
-            <div className="card flash flash--ok">
-              <p className="subtitle" style={{ marginBottom: "var(--space-2)" }}>
-                Magic-Link bereit{sp.reissued_for && <span className="caption"> für {sp.reissued_for}</span>}
+            <Card className="mb-6 rounded-card border-success/30 bg-success-soft/40 p-5">
+              <p className="text-base font-semibold text-fg">
+                Magic-Link bereit
+                {sp.reissued_for && (
+                  <span className="ml-2 text-xs font-normal text-fg-muted">
+                    für {sp.reissued_for}
+                  </span>
+                )}
               </p>
-              <p className="caption" style={{ marginBottom: "var(--space-3)" }}>
+              <p className="mt-1 text-xs text-fg-muted">
                 15 Minuten gültig, single-use.
-                {sp.email_sent === "1" ? " Eine Email mit dem Link wurde an den Owner verschickt." : ""}
+                {sp.email_sent === "1"
+                  ? " Eine Email mit dem Link wurde an den Owner verschickt."
+                  : ""}
               </p>
-              <div className="org-magic-link">
-                <a className="mono org-magic-link__a" href={sp.magic_link}>
+              <div className="mt-3 break-all rounded-ui border border-line bg-canvas p-3 font-mono text-xs">
+                <a
+                  className="text-accent-strong hover:underline"
+                  href={sp.magic_link}
+                >
                   {sp.magic_link}
                 </a>
               </div>
-              <p className="caption" style={{ marginTop: "var(--space-3)" }}>
-                Tipp: in einem Inkognito-Tab öffnen, um nicht deine Staff-Session zu überschreiben.
+              <p className="mt-3 text-xs text-fg-subtle">
+                Tipp: in einem Inkognito-Tab öffnen, um nicht deine
+                Staff-Session zu überschreiben.
               </p>
-            </div>
+            </Card>
           )}
 
           {sp.email_error && (
-            <div className="card flash flash--err">
-              <p className="subtitle" style={{ marginBottom: "var(--space-2)" }}>
+            <Card className="mb-6 rounded-card border-pain/30 bg-pain-soft/40 p-5">
+              <p className="text-base font-semibold text-pain">
                 Welcome-Email konnte nicht versendet werden
               </p>
-              <p className="caption mono" style={{ wordBreak: "break-all" }}>
+              <p className="mt-2 break-all font-mono text-xs text-fg-muted">
                 {sp.email_error}
               </p>
-              <p className="caption" style={{ marginTop: "var(--space-3)" }}>
-                Häufige Ursachen: <span className="mono">RESEND_API_KEY</span> fehlt,{" "}
-                <span className="mono">FROM_EMAIL</span> nicht domain-verifiziert, oder die
+              <p className="mt-3 text-xs text-fg-subtle">
+                Häufige Ursachen: <Mono>RESEND_API_KEY</Mono> fehlt,{" "}
+                <Mono>FROM_EMAIL</Mono> nicht domain-verifiziert, oder die
                 Resend-Sandbox erlaubt nur Versand an die Account-Email.
               </p>
-            </div>
+            </Card>
           )}
 
-          <section className="card section">
-            <h2 className="subtitle">Unternehmenskontext</h2>
-            <p className="caption" style={{ marginBottom: "var(--space-3)" }}>
-              Wird in jeden Interview-System-Prompt der Org eingespeist. Audits können das pro Audit überschreiben.
+          <Card className="mb-6 rounded-card border-line bg-surface p-6">
+            <Eyebrow>Unternehmenskontext</Eyebrow>
+            <p className="mt-3 text-xs text-fg-muted">
+              Wird in jeden Interview-System-Prompt der Org eingespeist. Audits
+              können das pro Audit überschreiben.
             </p>
-            <p className="org-context">{org.company_context}</p>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-fg">
+              {org.company_context}
+            </p>
             {org.industry && (
-              <p className="caption" style={{ marginTop: "var(--space-3)" }}>
-                Branche: <span className="mono">{org.industry}</span>
+              <p className="mt-3 text-xs text-fg-muted">
+                Branche: <Mono>{org.industry}</Mono>
               </p>
             )}
-          </section>
+          </Card>
 
-          <section className="card section">
-            <h2 className="subtitle">Defaults für neue Audits</h2>
-            <dl className="org-defaults">
-              <div>
-                <dt className="caption">Sprache</dt>
-                <dd>{org.default_locale.toUpperCase()}</dd>
-              </div>
-              <div>
-                <dt className="caption">Interviewdauer</dt>
-                <dd>{org.default_interview_length_min} Minuten</dd>
-              </div>
-              <div>
-                <dt className="caption">ElevenLabs Voice-ID</dt>
-                <dd className="mono">{org.default_voice_id}</dd>
-              </div>
-              <div>
-                <dt className="caption">Status</dt>
-                <dd>
-                  <StatusBadge status={org.status} />
-                </dd>
-              </div>
-            </dl>
-          </section>
+          <Card className="mb-6 rounded-card border-line bg-surface p-6">
+            <Eyebrow>Defaults für neue Audits</Eyebrow>
+            <DefList className="mt-4">
+              <DefRow label="Sprache" value={org.default_locale.toUpperCase()} />
+              <DefRow
+                label="Interviewdauer"
+                value={`${org.default_interview_length_min} Minuten`}
+              />
+              <DefRow
+                label="ElevenLabs Voice-ID"
+                value={<Mono>{org.default_voice_id}</Mono>}
+              />
+              <DefRow label="Status" value={<StatusBadge status={org.status} />} />
+            </DefList>
+          </Card>
 
-          <section className="card section">
-            <h2 className="subtitle">Metadaten</h2>
-            <dl className="org-defaults">
-              <div>
-                <dt className="caption">Org-ID</dt>
-                <dd className="mono" style={{ fontSize: "0.85em" }}>
-                  {org.id}
-                </dd>
-              </div>
-              <div>
-                <dt className="caption">Slug</dt>
-                <dd className="mono">{org.slug}</dd>
-              </div>
-              <div>
-                <dt className="caption">Erstellt</dt>
-                <dd>{org.created_at ? new Date(org.created_at).toLocaleString("de-DE") : "-"}</dd>
-              </div>
-              <div>
-                <dt className="caption">Aktualisiert</dt>
-                <dd>{org.updated_at ? new Date(org.updated_at).toLocaleString("de-DE") : "-"}</dd>
-              </div>
-            </dl>
-          </section>
+          <Card className="mb-6 rounded-card border-line bg-surface p-6">
+            <Eyebrow>Metadaten</Eyebrow>
+            <DefList className="mt-4">
+              <DefRow
+                label="Org-ID"
+                value={<Mono className="text-[10px]">{org.id}</Mono>}
+              />
+              <DefRow label="Slug" value={<Mono>{org.slug}</Mono>} />
+              <DefRow
+                label="Erstellt"
+                value={
+                  org.created_at
+                    ? new Date(org.created_at).toLocaleString("de-DE")
+                    : "—"
+                }
+              />
+              <DefRow
+                label="Aktualisiert"
+                value={
+                  org.updated_at
+                    ? new Date(org.updated_at).toLocaleString("de-DE")
+                    : "—"
+                }
+              />
+            </DefList>
+          </Card>
 
-          <section className="card section danger-zone">
-            <header className="danger-zone__header">
-              <h2 className="subtitle">Danger Zone</h2>
-              <p className="caption">Aktionen mit weitreichenden Folgen. Lesen, dann bewusst ausführen.</p>
+          <Card className="rounded-card border-pain/30 bg-pain-soft/30 p-6">
+            <header className="mb-5 flex items-start gap-3">
+              <span className="grid size-8 place-items-center rounded-full bg-pain/15 text-pain">
+                <AlertTriangle className="h-4 w-4" />
+              </span>
+              <div>
+                <h2 className="text-base font-semibold tracking-tight text-fg">
+                  Danger Zone
+                </h2>
+                <p className="text-xs text-fg-muted">
+                  Aktionen mit weitreichenden Folgen. Lesen, dann bewusst
+                  ausführen.
+                </p>
+              </div>
             </header>
 
-            <div className="danger-zone__row">
-              <div>
-                <p className="danger-zone__title">Suspendieren</p>
-                <p className="caption">
-                  Org-Status auf <span className="mono">SUSPENDED</span>. Bestehende Audits bleiben, aber der
-                  Customer kann sich nicht einloggen, bis du sie reaktivierst.
-                </p>
-              </div>
-              <form action={suspendOrgAction} style={{ display: "inline" }}>
-                <button type="submit" className="btn btn--ghost">
+            <DangerRow
+              title="Suspendieren"
+              description={
+                <>
+                  Org-Status auf <Mono>SUSPENDED</Mono>. Bestehende Audits
+                  bleiben, aber der Customer kann sich nicht einloggen, bis du
+                  sie reaktivierst.
+                </>
+              }
+            >
+              <form action={suspendOrgAction}>
+                <Button type="submit" variant="outline" size="sm">
                   Suspendieren
-                </button>
+                </Button>
               </form>
-            </div>
+            </DangerRow>
 
-            <div className="danger-zone__row">
-              <div>
-                <p className="danger-zone__title">Löschen</p>
-                <p className="caption">
-                  Soft-Delete. Org wird auf <span className="mono">DELETED</span> markiert und aus den Listen
-                  verborgen.
-                </p>
-                <p className="caption" style={{ marginTop: "var(--space-3)" }}>
-                  Zur Bestätigung den Org-Namen exakt eintippen: <span className="mono">{org.name}</span>
-                </p>
-              </div>
-              <form action={deleteOrgAction} className="danger-zone__delete">
-                <input
+            <Separator className="my-5 bg-pain/20" />
+
+            <DangerRow
+              title="Löschen"
+              description={
+                <>
+                  Soft-Delete. Org wird auf <Mono>DELETED</Mono> markiert und
+                  aus den Listen verborgen.
+                  <br />
+                  <span className="mt-2 block">
+                    Zur Bestätigung den Org-Namen exakt eintippen:{" "}
+                    <Mono>{org.name}</Mono>
+                  </span>
+                </>
+              }
+            >
+              <form
+                action={deleteOrgAction}
+                className="flex min-w-[240px] flex-col gap-2"
+              >
+                <Input
                   type="text"
                   name="confirm_name"
                   required
-                  className="input"
                   placeholder={org.name}
                   autoComplete="off"
+                  className="h-10"
                 />
-                <button type="submit" className="btn btn--danger">
+                <Button type="submit" variant="destructive" size="sm">
                   Endgültig löschen
-                </button>
+                </Button>
               </form>
-            </div>
-          </section>
+            </DangerRow>
+          </Card>
         </>
       )}
 
       {editing && (
         <>
-          <PageHeader eyebrow="Bearbeiten" title={org.name} muted={org.slug} />
+          <PageHeader
+            eyebrow="Bearbeiten"
+            title={org.name}
+            muted={org.slug}
+          />
 
-          <form action={updateOrgAction} className="card edit-form">
-            <label className="field">
-              <span className="field__label">Name</span>
-              <input name="name" className="input" defaultValue={org.name} required />
-            </label>
-
-            <label className="field">
-              <span className="field__label">Unternehmenskontext</span>
-              <p className="caption" style={{ marginBottom: "var(--space-2)" }}>
-                Wird in jeden Interview-System-Prompt eingespeist.
-              </p>
-              <textarea
-                name="company_context"
-                rows={6}
-                className="textarea"
-                defaultValue={org.company_context}
-              />
-            </label>
-
-            <div className="edit-form__row">
-              <label className="field">
-                <span className="field__label">Branche</span>
-                <input
-                  name="industry"
-                  className="input"
-                  defaultValue={org.industry ?? ""}
-                  placeholder="Logistik-SaaS"
+          <Card className="rounded-card border-line bg-surface p-6">
+            <form action={updateOrgAction} className="flex flex-col gap-5">
+              <Field id="edit-name" label="Name" required>
+                <Input
+                  id="edit-name"
+                  name="name"
+                  defaultValue={org.name}
+                  required
+                  className="h-11 text-base md:text-sm"
                 />
-              </label>
-              <label className="field">
-                <span className="field__label">Standardsprache</span>
-                <select
-                  name="default_locale"
-                  className="select"
-                  defaultValue={org.default_locale}
-                >
-                  <option value="de">Deutsch</option>
-                  <option value="en">English</option>
-                </select>
-              </label>
-            </div>
+              </Field>
 
-            <div className="edit-form__row">
-              <label className="field">
-                <span className="field__label">Voice-ID</span>
-                <input
-                  name="default_voice_id"
-                  type="number"
-                  min="1"
-                  className="input"
-                  defaultValue={String(org.default_voice_id)}
+              <Field
+                id="edit-context"
+                label="Unternehmenskontext"
+                hint="Wird in jeden Interview-System-Prompt eingespeist."
+              >
+                <Textarea
+                  id="edit-context"
+                  name="company_context"
+                  rows={6}
+                  defaultValue={org.company_context}
+                  className="min-h-[150px] text-base md:text-sm"
                 />
-              </label>
-              <label className="field">
-                <span className="field__label">Interviewdauer (Min)</span>
-                <input
-                  name="default_interview_length_min"
-                  type="number"
-                  min="10"
-                  max="60"
-                  className="input"
-                  defaultValue={String(org.default_interview_length_min)}
-                />
-              </label>
-            </div>
+              </Field>
 
-            <div className="edit-form__actions">
-              <Link href={`/staff/orgs/${org.id}`} className="btn btn--ghost">
-                Abbrechen
-              </Link>
-              <button type="submit" className="btn btn--primary">
-                Speichern
-              </button>
-            </div>
-          </form>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field id="edit-industry" label="Branche">
+                  <Input
+                    id="edit-industry"
+                    name="industry"
+                    defaultValue={org.industry ?? ""}
+                    placeholder="Logistik-SaaS"
+                    className="h-11 text-base md:text-sm"
+                  />
+                </Field>
+                <Field id="edit-locale" label="Standardsprache">
+                  <NativeSelect
+                    id="edit-locale"
+                    name="default_locale"
+                    defaultValue={org.default_locale}
+                  >
+                    <option value="de">Deutsch</option>
+                    <option value="en">English</option>
+                  </NativeSelect>
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field id="edit-voice" label="Voice-ID">
+                  <Input
+                    id="edit-voice"
+                    name="default_voice_id"
+                    type="number"
+                    min={1}
+                    defaultValue={String(org.default_voice_id)}
+                    className="h-11 font-mono text-base md:text-sm"
+                  />
+                </Field>
+                <Field id="edit-length" label="Interviewdauer (Min)">
+                  <Input
+                    id="edit-length"
+                    name="default_interview_length_min"
+                    type="number"
+                    min={10}
+                    max={60}
+                    defaultValue={String(org.default_interview_length_min)}
+                    className="h-11 text-base md:text-sm"
+                  />
+                </Field>
+              </div>
+
+              <div className="mt-2 flex justify-end gap-2">
+                <Button asChild variant="outline">
+                  <Link href={`/staff/orgs/${org.id}`}>Abbrechen</Link>
+                </Button>
+                <Button type="submit">Speichern</Button>
+              </div>
+            </form>
+          </Card>
         </>
       )}
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .org-actions { display: flex; gap: var(--space-3); }
-        .org-context { white-space: pre-wrap; font-size: var(--text-body); color: var(--color-text-primary); line-height: 1.6; }
-        .org-defaults { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-4); margin: 0; }
-        .org-defaults > div { display: flex; flex-direction: column; gap: var(--space-1); }
-        .org-defaults dd { margin: 0; font-weight: 500; color: var(--color-text-primary); }
-        .org-magic-link { padding: var(--space-3); background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-ui); word-break: break-all; }
-        .org-magic-link__a { color: var(--color-accent-strong); }
-        .org-magic-link__a:hover { text-decoration: underline; }
-        .danger-zone { border-color: var(--color-pain-muted); background: var(--color-pain-soft); }
-        .danger-zone__header { margin-bottom: var(--space-5); }
-        .danger-zone__row {
-          display: grid;
-          grid-template-columns: 1fr auto;
-          gap: var(--space-4);
-          align-items: start;
-          padding: var(--space-5) 0;
-          border-top: 1px solid var(--color-pain-muted);
-        }
-        .danger-zone__row:first-of-type { border-top: 0; padding-top: 0; }
-        .danger-zone__title { font-size: var(--text-body); font-weight: 500; color: var(--color-text-primary); margin-bottom: var(--space-2); }
-        .danger-zone__delete { display: flex; flex-direction: column; gap: var(--space-2); min-width: 240px; }
-        .edit-form { display: flex; flex-direction: column; gap: var(--space-5); }
-        .edit-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-        .edit-form__actions { display: flex; gap: var(--space-3); justify-content: flex-end; margin-top: var(--space-3); }
-      `,
-        }}
-      />
     </>
+  );
+}
+
+// ─── Pieces ───────────────────────────────────────────────────────────────────
+
+function BackLink() {
+  return (
+    <Button asChild variant="link" size="sm" className="mb-4 px-0 text-fg-muted">
+      <Link href="/staff/orgs">
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Organisationen
+      </Link>
+    </Button>
+  );
+}
+
+function Flash({ type, message }: { type: "ok" | "err"; message: string }) {
+  const Icon = type === "ok" ? CheckCircle2 : AlertCircle;
+  return (
+    <div
+      role="status"
+      className={cn(
+        "mb-6 flex items-start gap-2.5 rounded-ui border px-3.5 py-2.5 text-sm",
+        type === "ok"
+          ? "border-success/30 bg-success-soft text-success"
+          : "border-pain/30 bg-pain-soft text-pain",
+      )}
+    >
+      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+      <p className="leading-snug">{message}</p>
+    </div>
+  );
+}
+
+function DefList({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <dl
+      className={cn(
+        "grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4",
+        className,
+      )}
+    >
+      {children}
+    </dl>
+  );
+}
+
+function DefRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">
+        {label}
+      </dt>
+      <dd className="m-0 text-sm font-medium text-fg">{value}</dd>
+    </div>
+  );
+}
+
+function DangerRow({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-[1fr_auto]">
+      <div>
+        <p className="text-sm font-semibold text-fg">{title}</p>
+        <p className="mt-1 text-xs leading-relaxed text-fg-muted">
+          {description}
+        </p>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Field({
+  id,
+  label,
+  required,
+  hint,
+  children,
+}: {
+  id: string;
+  label: string;
+  required?: boolean;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label
+        htmlFor={id}
+        className="flex items-center gap-1.5 text-xs font-medium text-fg-muted"
+      >
+        {label}
+        {required && <span className="text-pain">*</span>}
+      </label>
+      {hint && <p className="text-xs text-fg-subtle">{hint}</p>}
+      {children}
+    </div>
+  );
+}
+
+function Mono({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <code
+      className={cn(
+        "rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-fg",
+        className,
+      )}
+    >
+      {children}
+    </code>
+  );
+}
+
+function NativeSelect({
+  className,
+  ...props
+}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select
+      {...props}
+      className={cn(
+        "flex h-11 w-full appearance-none rounded-ui border border-line bg-canvas px-3 py-2 pr-8 text-base text-fg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%221.75%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-[position:right_0.625rem_center] bg-[size:1rem] bg-no-repeat",
+        className,
+      )}
+    />
   );
 }
 

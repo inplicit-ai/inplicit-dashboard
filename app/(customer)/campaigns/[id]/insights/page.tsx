@@ -1,7 +1,10 @@
+import { Lightbulb } from "lucide-react";
 import { makeApi, type VseInsight } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
+import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/ErrorState";
 import { PageHeader } from "@/components/PageChrome";
+import { cn } from "@/lib/utils";
 
 export default async function InsightsPage({
   params,
@@ -26,145 +29,124 @@ export default async function InsightsPage({
 
   return (
     <>
-      <PageHeader title="Insights" />
+      <PageHeader
+        title="Insights"
+        meta="VSE-Triaden — Problem · Lösungsidee · Business-Chance — extrahiert aus den abgeschlossenen Interviews."
+      />
+
       {error && (
-        <div className="section">
+        <div className="mb-6">
           <ErrorState error={error} />
         </div>
       )}
 
-      <div className="metrics-row section">
+      <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Metric label="Probleme" value={counts.total} />
         <Metric label="Mit Lösungsidee" value={counts.withSolution} />
         <Metric label="Mit Business-Chance" value={counts.withOpportunity} />
       </div>
 
       {insights.length === 0 ? (
-        <div className="card">
-          <div className="empty-state">
-            <p className="empty-state__title">Noch keine Insights extrahiert.</p>
-            <p>Sie erscheinen hier nach abgeschlossenen Interviews.</p>
+        <Card className="rounded-card border-dashed bg-surface/40 p-10">
+          <div className="flex flex-col items-center justify-center gap-3 text-center">
+            <div className="grid size-11 place-items-center rounded-full bg-surface-2 text-fg-muted">
+              <Lightbulb className="h-5 w-5" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-base font-semibold text-fg">
+                Noch keine Insights extrahiert.
+              </p>
+              <p className="text-sm text-fg-muted">
+                Sie erscheinen hier nach abgeschlossenen Interviews.
+              </p>
+            </div>
           </div>
-        </div>
+        </Card>
       ) : (
-        <div className="list-stack">
+        <div className="space-y-3">
           {insights.map((i) => (
             <TriadRow key={i.id} insight={i} />
           ))}
         </div>
       )}
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .metrics-row {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: var(--space-4);
-        }
-        @media (max-width: 640px) { .metrics-row { grid-template-columns: 1fr; } }
-        .metric {
-          padding: var(--space-5) var(--space-6);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-card);
-          display: flex;
-          flex-direction: column;
-          gap: var(--space-1);
-        }
-        .metric__value {
-          font-size: 2rem;
-          font-weight: 400;
-          letter-spacing: -0.025em;
-          font-variant-numeric: tabular-nums;
-          line-height: 1;
-        }
-        .metric__label {
-          font-size: var(--text-body-sm);
-          color: var(--color-text-secondary);
-        }
-        .triad-row {
-          background: var(--color-bg);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-card);
-          padding: var(--space-6);
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr;
-          gap: var(--space-5);
-          align-items: stretch;
-        }
-        @media (max-width: 900px) { .triad-row { grid-template-columns: 1fr; } }
-        .triad-cell { display: flex; flex-direction: column; gap: var(--space-2); }
-        .triad-cell__label {
-          font-size: var(--text-eyebrow);
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--color-text-tertiary);
-        }
-        .triad-cell__body {
-          font-size: var(--text-body);
-          line-height: 1.5;
-          color: var(--color-text-primary);
-        }
-        .triad-cell--empty .triad-cell__body {
-          color: var(--color-text-tertiary);
-          font-style: italic;
-          border: 1px dashed var(--color-border);
-          border-radius: var(--radius-sm);
-          padding: var(--space-3);
-        }
-        .triad-meta {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--space-2);
-          margin-top: var(--space-3);
-          padding-top: var(--space-3);
-          border-top: 1px solid var(--color-border);
-          font-size: var(--text-body-sm);
-          color: var(--color-text-secondary);
-        }
-        .triad-meta > span { display: inline-flex; gap: var(--space-1); }
-      `,
-        }}
-      />
     </>
   );
 }
 
 function Metric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="metric">
-      <span className="metric__value">{value}</span>
-      <span className="metric__label">{label}</span>
-    </div>
+    <Card className="rounded-card border-line bg-surface p-5 shadow-sm">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">
+        {label}
+      </p>
+      <p className="mt-2 font-mono text-3xl font-medium tabular-nums tracking-tight text-fg">
+        {value}
+      </p>
+    </Card>
   );
 }
 
 function TriadRow({ insight }: { insight: VseInsight }) {
   return (
-    <div className="triad-row">
-      <TriadCell label="Problem" body={insight.problem_statement} />
-      <TriadCell
-        label={insight.origin_solution === "AI" ? "Idee (AI)" : "Idee"}
-        body={insight.human_solution}
-      />
-      <TriadCell label="Chance" body={insight.business_opportunity} />
-      <div className="triad-meta" style={{ gridColumn: "1 / -1" }}>
-        {insight.department && <span>Department: {insight.department}</span>}
-        {insight.phase && <span>Phase: {insight.phase}</span>}
+    <Card className="rounded-card border-line bg-surface p-6">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+        <TriadCell label="Problem" body={insight.problem_statement} />
+        <TriadCell
+          label={insight.origin_solution === "AI" ? "Idee (AI)" : "Idee"}
+          body={insight.human_solution}
+        />
+        <TriadCell label="Chance" body={insight.business_opportunity} />
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-x-4 gap-y-1 border-t border-line-subtle pt-4 text-xs text-fg-muted">
+        {insight.department && (
+          <span>
+            <span className="text-fg-subtle">Department: </span>
+            <span className="text-fg">{insight.department}</span>
+          </span>
+        )}
+        {insight.phase && (
+          <span>
+            <span className="text-fg-subtle">Phase: </span>
+            <span className="text-fg">{insight.phase}</span>
+          </span>
+        )}
         {typeof insight.confidence === "number" && (
-          <span>Konfidenz: {Math.round(insight.confidence * 100)}%</span>
+          <span>
+            <span className="text-fg-subtle">Konfidenz: </span>
+            <span className="font-mono tabular-nums text-fg">
+              {Math.round(insight.confidence * 100)}%
+            </span>
+          </span>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
-function TriadCell({ label, body }: { label: string; body?: string | null }) {
+function TriadCell({
+  label,
+  body,
+}: {
+  label: string;
+  body?: string | null;
+}) {
   const empty = !body;
   return (
-    <div className={`triad-cell${empty ? " triad-cell--empty" : ""}`}>
-      <span className="triad-cell__label">{label}</span>
-      <p className="triad-cell__body">{body ?? "—"}</p>
+    <div className="flex flex-col gap-2">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">
+        {label}
+      </span>
+      <p
+        className={cn(
+          "text-sm leading-relaxed",
+          empty
+            ? "rounded-sm border border-dashed border-line p-3 italic text-fg-subtle"
+            : "text-fg",
+        )}
+      >
+        {body ?? "—"}
+      </p>
     </div>
   );
 }

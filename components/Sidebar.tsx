@@ -195,49 +195,54 @@ function customerNav(campaignId: string | null, hasAudits: boolean): NavSection[
     },
   ];
 
-  // Org-wide sections — these aggregate across all audits in the org, so
-  // they live next to "Workspace" not under a specific audit. They render
-  // as disabled placeholders until at least one audit exists. The hrefs
-  // point to the per-campaign route for now (Phase 7 still wires data
-  // there); a future phase moves them to dedicated /interviews,
-  // /participants, /map, /cross-validation, /insights org-level routes.
-  const disabledHint = hasAudits
-    ? undefined
-    : "Verfügbar, sobald der erste Audit angelegt ist.";
+  // Per-campaign sections. Until Phase 7 promotes these to dedicated
+  // org-level routes, they only have a meaningful destination when a
+  // specific audit is open. With no campaignId in the URL, the old code
+  // sent every link back to `/campaigns`, which made the sidebar feel
+  // frozen ("clicked Insights, now nothing else navigates"). The right
+  // call: render them as disabled placeholders explaining the
+  // requirement.
+  const noCampaignHint = "Öffne zuerst ein Audit, um diesen Bereich zu nutzen.";
+  const noAuditsHint = "Verfügbar, sobald der erste Audit angelegt ist.";
+  const perCampaignDisabled = !hasAudits || !campaignId;
+  const perCampaignHint = !hasAudits ? noAuditsHint : noCampaignHint;
 
   const orgItems: NavItem[] = [
     {
       href: campaignId ? `/campaigns/${campaignId}/interviews` : "/campaigns",
       label: "Interviews",
       icon: IconFileText,
-      disabled: !hasAudits,
-      disabledHint,
+      disabled: perCampaignDisabled,
+      disabledHint: perCampaignHint,
     },
     {
       href: campaignId ? `/campaigns/${campaignId}/participants` : "/campaigns",
       label: "Teilnehmer",
       icon: IconUsers,
-      disabled: !hasAudits,
-      disabledHint,
+      disabled: perCampaignDisabled,
+      disabledHint: perCampaignHint,
     },
     {
       href: campaignId ? `/campaigns/${campaignId}/map` : "/campaigns",
       label: "Knowledge Map",
       icon: IconMap,
-      disabled: !hasAudits,
-      disabledHint,
+      disabled: perCampaignDisabled,
+      disabledHint: perCampaignHint,
     },
     {
       href: campaignId ? `/campaigns/${campaignId}/hypotheses` : "/campaigns",
       label: "Cross-Validation",
       icon: IconScale,
-      disabled: !hasAudits,
-      disabledHint,
+      disabled: perCampaignDisabled,
+      disabledHint: perCampaignHint,
     },
   ];
 
   sections.push({ label: "Wissen", items: orgItems });
 
+  // Insights is org-level (RAG searches across every audit in the org),
+  // so it stays enabled whenever at least one audit exists — even from
+  // /campaigns, where it lives.
   sections.push({
     label: "Ask",
     items: [
@@ -247,7 +252,7 @@ function customerNav(campaignId: string | null, hasAudits: boolean): NavSection[
         icon: IconSearch,
         badge: "RAG",
         disabled: !hasAudits,
-        disabledHint,
+        disabledHint: !hasAudits ? noAuditsHint : undefined,
       },
     ],
   });

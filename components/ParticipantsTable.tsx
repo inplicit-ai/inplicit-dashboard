@@ -1,11 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { Pencil, Send, Trash2, UserPlus } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Mail,
+  Pencil,
+  RotateCw,
+  Send,
+  Trash2,
+  UserPlus,
+  X,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import type { Participant } from "@/lib/api";
 
 interface Props {
@@ -22,6 +42,15 @@ interface DraftRow {
 
 const EMPTY_DRAFT: DraftRow = { email: "", name: "", department: "", role: "" };
 
+const FIELD_PLACEHOLDERS = {
+  email: "person@unternehmen.de",
+  name: "Vor- und Nachname",
+  department: "z. B. Produktentwicklung",
+  role: "z. B. Senior Engineer",
+} as const;
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export function ParticipantsTable({ campaignId, initial }: Props) {
   const [rows, setRows] = useState<Participant[]>(initial);
   const [editing, setEditing] = useState<string | null>(null);
@@ -29,14 +58,33 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
   const [adding, setAdding] = useState(false);
   const [newDraft, setNewDraft] = useState<DraftRow>(EMPTY_DRAFT);
   const [busy, setBusy] = useState<string | null>(null);
-  const [flash, setFlash] = useState<{ type: "ok" | "err"; message: string } | null>(null);
+  const [flash, setFlash] = useState<{
+    type: "ok" | "err";
+    message: string;
+  } | null>(null);
 
-  function flashOk(msg: string) {
-    setFlash({ type: "ok", message: msg });
+  const counts = useMemo(() => {
+    let invited = 0;
+    let completed = 0;
+    for (const p of rows) {
+      if (p.email_sent) invited += 1;
+      if (
+        p.latest_interview_status === "COMPLETED" ||
+        p.latest_interview_status === "PROCESSING" ||
+        p.latest_interview_status === "PROCESSED"
+      ) {
+        completed += 1;
+      }
+    }
+    return { total: rows.length, invited, completed };
+  }, [rows]);
+
+  function flashOk(message: string) {
+    setFlash({ type: "ok", message });
     setTimeout(() => setFlash(null), 4000);
   }
-  function flashErr(msg: string) {
-    setFlash({ type: "err", message: msg });
+  function flashErr(message: string) {
+    setFlash({ type: "err", message });
     setTimeout(() => setFlash(null), 6000);
   }
 
@@ -161,19 +209,17 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
   }
 
   return (
-    <>
-      {flash && (
-        <div
-          className={`flash ${flash.type === "ok" ? "flash--ok" : "flash--err"} mb-4`}
-        >
-          {flash.message}
+    <div className="space-y-5">
+      {/* Header / KPI strip */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+          <Stat label="Teilnehmer" value={counts.total} />
+          <Divider />
+          <Stat label="Eingeladen" value={counts.invited} />
+          <Divider />
+          <Stat label="Abgeschlossen" value={counts.completed} />
         </div>
-      )}
 
-      <div className="mb-4 flex items-center justify-between">
-        <span className="text-sm text-fg-muted">
-          {rows.length} {rows.length === 1 ? "Teilnehmer" : "Teilnehmer"}
-        </span>
         {!adding && (
           <Button size="sm" onClick={() => setAdding(true)}>
             <UserPlus className="h-4 w-4" />
@@ -182,171 +228,183 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
         )}
       </div>
 
-      <div className="card card--flush overflow-hidden">
-        <div className="-webkit-overflow-scrolling-touch w-full overflow-x-auto">
-          <table className="table" style={{ minWidth: 880 }}>
-            <thead>
-              <tr>
-                <th style={{ minWidth: 120 }}>Anon-ID</th>
-                <th style={{ minWidth: 200 }}>E-Mail</th>
-                <th style={{ minWidth: 140 }}>Name</th>
-                <th style={{ minWidth: 140 }}>Abteilung</th>
-                <th style={{ minWidth: 140 }}>Rolle</th>
-                <th style={{ minWidth: 140 }}>Status</th>
-                <th className="table__actions" style={{ minWidth: 240 }}>
-                  Aktionen
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {adding && (
-                <tr style={{ background: "var(--color-surface)" }}>
-                  <td className="text-fg-subtle">—</td>
-                  <td>
-                    <Input
-                      type="email"
-                      placeholder="email@example.com"
-                      className="h-9"
-                      value={newDraft.email}
-                      onChange={(e) =>
-                        setNewDraft((d) => ({ ...d, email: e.target.value }))
-                      }
-                    />
-                  </td>
-                  <td>
-                    <Input
-                      placeholder="Name"
-                      className="h-9"
-                      value={newDraft.name}
-                      onChange={(e) =>
-                        setNewDraft((d) => ({ ...d, name: e.target.value }))
-                      }
-                    />
-                  </td>
-                  <td>
-                    <Input
-                      placeholder="Abteilung"
-                      className="h-9"
-                      value={newDraft.department}
-                      onChange={(e) =>
-                        setNewDraft((d) => ({ ...d, department: e.target.value }))
-                      }
-                    />
-                  </td>
-                  <td>
-                    <Input
-                      placeholder="Rolle"
-                      className="h-9"
-                      value={newDraft.role}
-                      onChange={(e) =>
-                        setNewDraft((d) => ({ ...d, role: e.target.value }))
-                      }
-                    />
-                  </td>
-                  <td className="text-fg-subtle">—</td>
-                  <td className="table__actions">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setAdding(false);
-                        setNewDraft(EMPTY_DRAFT);
-                      }}
-                      disabled={busy === "__new__"}
-                    >
-                      Abbrechen
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={addRow}
-                      disabled={busy === "__new__"}
-                    >
-                      Speichern
-                    </Button>
-                  </td>
-                </tr>
-              )}
+      {/* Flash banner */}
+      {flash && <FlashBanner type={flash.type} message={flash.message} />}
 
-              {rows.length === 0 && !adding && (
-                <tr>
-                  <td colSpan={7}>
-                    <div className="empty-state">
-                      <p className="empty-state__title">
-                        Noch keine Teilnehmer in diesem Audit.
-                      </p>
-                      <p>
-                        Füge welche per Knopfdruck hinzu — oder per CSV-Upload beim
-                        Erstellen.
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              )}
+      {/* Inline create form — separate Card so the inputs have room to breathe */}
+      {adding && (
+        <Card className="border-dashed border-line bg-surface/40 p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-fg">Neuer Teilnehmer</p>
+              <p className="text-xs text-fg-muted">
+                E-Mail ist Pflicht. Name, Abteilung und Rolle helfen bei der
+                Auswertung — sind aber optional.
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setAdding(false);
+                setNewDraft(EMPTY_DRAFT);
+              }}
+              disabled={busy === "__new__"}
+              aria-label="Abbrechen"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
 
-              {rows.map((p) => {
-                const isEditing = editing === p.id;
-                return (
-                  <tr key={p.id}>
-                    <td>
-                      <span className="mono font-medium text-fg">{p.anon_id}</span>
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <Input
-                          type="email"
-                          className="h-9"
-                          value={draft.email}
-                          onChange={(e) =>
-                            setDraft((d) => ({ ...d, email: e.target.value }))
-                          }
-                        />
-                      ) : (
-                        <span className="mono text-fg-muted">{p.email}</span>
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <Input
-                          className="h-9"
-                          value={draft.name}
-                          onChange={(e) =>
-                            setDraft((d) => ({ ...d, name: e.target.value }))
-                          }
-                        />
-                      ) : (
-                        p.name ?? "—"
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <Input
-                          className="h-9"
-                          value={draft.department}
-                          onChange={(e) =>
-                            setDraft((d) => ({ ...d, department: e.target.value }))
-                          }
-                        />
-                      ) : (
-                        p.department ?? "—"
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <Input
-                          className="h-9"
-                          value={draft.role}
-                          onChange={(e) =>
-                            setDraft((d) => ({ ...d, role: e.target.value }))
-                          }
-                        />
-                      ) : (
-                        p.role ?? "—"
-                      )}
-                    </td>
-                    <td>
-                      <ParticipantStatus p={p} />
-                    </td>
-                    <td className="table__actions">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Field
+              id="new-email"
+              label="E-Mail"
+              required
+              type="email"
+              placeholder={FIELD_PLACEHOLDERS.email}
+              value={newDraft.email}
+              onChange={(v) => setNewDraft((d) => ({ ...d, email: v }))}
+            />
+            <Field
+              id="new-name"
+              label="Name"
+              placeholder={FIELD_PLACEHOLDERS.name}
+              value={newDraft.name}
+              onChange={(v) => setNewDraft((d) => ({ ...d, name: v }))}
+            />
+            <Field
+              id="new-department"
+              label="Abteilung"
+              placeholder={FIELD_PLACEHOLDERS.department}
+              value={newDraft.department}
+              onChange={(v) => setNewDraft((d) => ({ ...d, department: v }))}
+            />
+            <Field
+              id="new-role"
+              label="Rolle"
+              placeholder={FIELD_PLACEHOLDERS.role}
+              value={newDraft.role}
+              onChange={(v) => setNewDraft((d) => ({ ...d, role: v }))}
+            />
+          </div>
+
+          <div className="mt-5 flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setAdding(false);
+                setNewDraft(EMPTY_DRAFT);
+              }}
+              disabled={busy === "__new__"}
+            >
+              Abbrechen
+            </Button>
+            <Button
+              size="sm"
+              onClick={addRow}
+              disabled={busy === "__new__"}
+            >
+              <UserPlus className="h-4 w-4" />
+              Speichern
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Table */}
+      <Card className="overflow-hidden p-0">
+        <Table className="min-w-[920px]">
+          <TableHeader>
+            <TableRow className="bg-surface/40 hover:bg-surface/40">
+              <TableHead className="w-[120px]">Anon-ID</TableHead>
+              <TableHead className="min-w-[220px]">E-Mail</TableHead>
+              <TableHead className="min-w-[160px]">Name</TableHead>
+              <TableHead className="min-w-[160px]">Abteilung</TableHead>
+              <TableHead className="min-w-[160px]">Rolle</TableHead>
+              <TableHead className="w-[150px]">Status</TableHead>
+              <TableHead className="w-[280px] text-right">Aktionen</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.length === 0 && !adding && (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={7}>
+                  <EmptyState onAdd={() => setAdding(true)} />
+                </TableCell>
+              </TableRow>
+            )}
+
+            {rows.map((p) => {
+              const isEditing = editing === p.id;
+              return (
+                <TableRow key={p.id} className={isEditing ? "bg-surface/40" : ""}>
+                  <TableCell>
+                    <span className="font-mono text-xs font-medium text-fg">
+                      {p.anon_id}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {isEditing ? (
+                      <Input
+                        type="email"
+                        className="h-9"
+                        value={draft.email}
+                        onChange={(e) =>
+                          setDraft((d) => ({ ...d, email: e.target.value }))
+                        }
+                      />
+                    ) : (
+                      <span className="font-mono text-xs text-fg-muted">
+                        {p.email}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {isEditing ? (
+                      <Input
+                        className="h-9"
+                        value={draft.name}
+                        onChange={(e) =>
+                          setDraft((d) => ({ ...d, name: e.target.value }))
+                        }
+                      />
+                    ) : (
+                      <CellText value={p.name} />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {isEditing ? (
+                      <Input
+                        className="h-9"
+                        value={draft.department}
+                        onChange={(e) =>
+                          setDraft((d) => ({ ...d, department: e.target.value }))
+                        }
+                      />
+                    ) : (
+                      <CellText value={p.department} />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {isEditing ? (
+                      <Input
+                        className="h-9"
+                        value={draft.role}
+                        onChange={(e) =>
+                          setDraft((d) => ({ ...d, role: e.target.value }))
+                        }
+                      />
+                    ) : (
+                      <CellText value={p.role} />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <ParticipantStatus p={p} />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
                       {isEditing ? (
                         <>
                           <Button
@@ -375,15 +433,122 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
                           onDelete={() => deleteRow(p)}
                         />
                       )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </Card>
+    </div>
+  );
+}
+
+// ─── Pieces ───────────────────────────────────────────────────────────────────
+
+function Field({
+  id,
+  label,
+  required,
+  type = "text",
+  placeholder,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  required?: boolean;
+  type?: string;
+  placeholder?: string;
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label
+        htmlFor={id}
+        className="flex items-center gap-1.5 text-xs font-medium text-fg-muted"
+      >
+        {label}
+        {required && <span className="text-pain">*</span>}
+      </label>
+      <Input
+        id={id}
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-11 text-base md:text-sm"
+      />
+    </div>
+  );
+}
+
+function CellText({ value }: { value?: string | null }) {
+  if (!value) return <span className="text-fg-subtle">—</span>;
+  return <span className="text-fg">{value}</span>;
+}
+
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-baseline gap-1.5">
+      <span className="font-mono text-base font-semibold tabular-nums text-fg">
+        {value}
+      </span>
+      <span className="text-xs text-fg-muted">{label}</span>
+    </div>
+  );
+}
+
+function Divider() {
+  return <span aria-hidden="true" className="h-3 w-px bg-line" />;
+}
+
+function FlashBanner({
+  type,
+  message,
+}: {
+  type: "ok" | "err";
+  message: string;
+}) {
+  const Icon = type === "ok" ? CheckCircle2 : AlertCircle;
+  return (
+    <div
+      role="status"
+      className={cn(
+        "flex items-start gap-2.5 rounded-ui border px-3 py-2.5 text-sm",
+        type === "ok"
+          ? "border-success/30 bg-success-soft text-success"
+          : "border-pain/30 bg-pain-soft text-pain",
+      )}
+    >
+      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+      <p className="leading-snug">{message}</p>
+    </div>
+  );
+}
+
+function EmptyState({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+      <div className="grid size-10 place-items-center rounded-full bg-surface-2 text-fg-muted">
+        <UserPlus className="h-5 w-5" />
       </div>
-    </>
+      <div className="space-y-1">
+        <p className="text-sm font-semibold text-fg">
+          Noch keine Teilnehmer in diesem Audit.
+        </p>
+        <p className="text-xs text-fg-muted">
+          Lege jemanden manuell an oder lade per CSV-Upload beim Erstellen
+          mehrere Personen auf einmal hoch.
+        </p>
+      </div>
+      <Button size="sm" variant="outline" onClick={onAdd} className="mt-1">
+        <UserPlus className="h-4 w-4" />
+        Teilnehmer hinzufügen
+      </Button>
+    </div>
   );
 }
 
@@ -408,7 +573,7 @@ function RowActions({
     <>
       {!emailSent && (
         <Button size="sm" onClick={onInvite} disabled={busy}>
-          <Send className="h-3.5 w-3.5" />
+          <Mail className="h-3.5 w-3.5" />
           Einladen
         </Button>
       )}
@@ -432,11 +597,11 @@ function RowActions({
           disabled={busy}
           title="Neuer Link, falls Teilnehmer nochmal teilnehmen soll"
         >
-          <Send className="h-3.5 w-3.5" />
+          <RotateCw className="h-3.5 w-3.5" />
           Neuen Link
         </Button>
       )}
-      <Button variant="ghost" size="sm" onClick={onEdit} disabled={busy}>
+      <Button variant="outline" size="sm" onClick={onEdit} disabled={busy}>
         <Pencil className="h-3.5 w-3.5" />
         Bearbeiten
       </Button>
@@ -445,10 +610,10 @@ function RowActions({
         size="sm"
         onClick={onDelete}
         disabled={busy}
-        className="hover:bg-pain-soft hover:text-pain"
+        className="text-fg-muted hover:bg-pain-soft hover:text-pain"
+        aria-label={`${p.email} löschen`}
       >
         <Trash2 className="h-3.5 w-3.5" />
-        <span className="sr-only">Löschen</span>
       </Button>
     </>
   );
@@ -493,3 +658,4 @@ function payloadFrom(d: DraftRow) {
     role: d.role.trim() || null,
   };
 }
+
