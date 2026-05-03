@@ -442,7 +442,7 @@ export default async function OrgDetailPage({
               </div>
 
               <div className="mt-2 flex justify-end gap-2">
-                <Button asChild variant="outline">
+                <Button asChild variant="accent">
                   <Link href={`/staff/orgs/${org.id}`}>Abbrechen</Link>
                 </Button>
                 <Button type="submit">Speichern</Button>
