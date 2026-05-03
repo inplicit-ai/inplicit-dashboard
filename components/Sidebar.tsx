@@ -7,12 +7,9 @@ import type { ComponentType, SVGProps } from "react";
 import type { Me } from "@/lib/api";
 import {
   IconBuilding,
-  IconFileText,
   IconFolderKanban,
   IconLayoutGrid,
   IconLogOut,
-  IconMap,
-  IconScale,
   IconSearch,
   IconSettings,
   IconUsers,
@@ -195,50 +192,11 @@ function customerNav(campaignId: string | null, hasAudits: boolean): NavSection[
     },
   ];
 
-  // Per-campaign sections. Until Phase 7 promotes these to dedicated
-  // org-level routes, they only have a meaningful destination when a
-  // specific audit is open. With no campaignId in the URL, the old code
-  // sent every link back to `/campaigns`, which made the sidebar feel
-  // frozen ("clicked Insights, now nothing else navigates"). The right
-  // call: render them as disabled placeholders explaining the
-  // requirement.
-  const noCampaignHint = "Öffne zuerst ein Audit, um diesen Bereich zu nutzen.";
+  // The per-audit items (Interviews, Teilnehmer, Knowledge Map, Cross-Validation)
+  // are accessible via the top tab bar once an audit is open — showing them
+  // here too would duplicate the navigation. They are intentionally omitted.
+
   const noAuditsHint = "Verfügbar, sobald der erste Audit angelegt ist.";
-  const perCampaignDisabled = !hasAudits || !campaignId;
-  const perCampaignHint = !hasAudits ? noAuditsHint : noCampaignHint;
-
-  const orgItems: NavItem[] = [
-    {
-      href: campaignId ? `/campaigns/${campaignId}/interviews` : "/campaigns",
-      label: "Interviews",
-      icon: IconFileText,
-      disabled: perCampaignDisabled,
-      disabledHint: perCampaignHint,
-    },
-    {
-      href: campaignId ? `/campaigns/${campaignId}/participants` : "/campaigns",
-      label: "Teilnehmer",
-      icon: IconUsers,
-      disabled: perCampaignDisabled,
-      disabledHint: perCampaignHint,
-    },
-    {
-      href: campaignId ? `/campaigns/${campaignId}/map` : "/campaigns",
-      label: "Knowledge Map",
-      icon: IconMap,
-      disabled: perCampaignDisabled,
-      disabledHint: perCampaignHint,
-    },
-    {
-      href: campaignId ? `/campaigns/${campaignId}/hypotheses` : "/campaigns",
-      label: "Cross-Validation",
-      icon: IconScale,
-      disabled: perCampaignDisabled,
-      disabledHint: perCampaignHint,
-    },
-  ];
-
-  sections.push({ label: "Wissen", items: orgItems });
 
   // Insights is org-level (RAG searches across every audit in the org),
   // so it stays enabled whenever at least one audit exists — even from
