@@ -33,19 +33,19 @@ const SUGGESTIONS: Array<{
   tone: "amber" | "green" | "violet";
 }> = [
   {
-    label: "Summarize",
+    label: "Zusammenfassen",
     prompt: "Fasse die zentralen Pain-Points der letzten Audits zusammen.",
     icon: Sparkles,
     tone: "amber",
   },
   {
-    label: "Correct Grammar",
+    label: "Reibungspunkte",
     prompt: "Wo gibt es Reibung zwischen Teams?",
     icon: CheckCircle2,
     tone: "green",
   },
   {
-    label: "Compress",
+    label: "Kernaussagen",
     prompt: "Welche Tools werden umgangen oder doppelt genutzt?",
     icon: Send,
     tone: "violet",
@@ -112,7 +112,7 @@ export function RagSearch() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Refine your message..."
+          placeholder="Finde Insights aus deinen Audits..."
           rows={2}
           className="rag__input"
         />

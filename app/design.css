@@ -1203,7 +1203,7 @@
 [data-theme="light"] .sidebar__item.is-active {
   background: var(--color-surface-3);
   color: var(--color-text-primary);
-  border-color: var(--color-border);
+  border-color: transparent;
   box-shadow: none;
 }
 [data-theme="light"] .sidebar__item.is-active .sidebar__item-icon { color: var(--color-text-primary); }
