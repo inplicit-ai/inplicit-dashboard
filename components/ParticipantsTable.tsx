@@ -291,7 +291,7 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
 
           <div className="mt-5 flex items-center justify-end gap-2">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => {
                 setAdding(false);
@@ -408,7 +408,7 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
                       {isEditing ? (
                         <>
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
                             onClick={cancelEdit}
                             disabled={busy === p.id}
@@ -544,7 +544,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
           mehrere Personen auf einmal hoch.
         </p>
       </div>
-      <Button size="sm" variant="outline" onClick={onAdd} className="mt-1">
+      <Button size="sm" variant="accent" onClick={onAdd} className="mt-1">
         <UserPlus className="h-4 w-4" />
         Teilnehmer hinzufügen
       </Button>
