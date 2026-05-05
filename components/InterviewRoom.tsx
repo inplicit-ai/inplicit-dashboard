@@ -1,7 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { XIcon } from "lucide-react";
 import { AgentOrb } from "@/components/AgentOrb";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface Props {
   wsUrl: string;
@@ -24,7 +35,35 @@ interface ServerMessage {
   phase?: string;
   summary?: string;
   message?: string;
+  language?: string;
 }
+
+type Lang = "de" | "en";
+
+const DEFAULT_LANG: Lang = "de";
+
+function normalizeLang(raw: string | undefined): Lang {
+  return raw && raw.toLowerCase().startsWith("en") ? "en" : "de";
+}
+
+const COPY: Record<Lang, {
+  endedEyebrow: string;
+  endedTitle: string;
+  endedBody: string;
+}> = {
+  de: {
+    endedEyebrow: "Abgeschlossen",
+    endedTitle: "Vielen Dank!",
+    endedBody:
+      "Das Interview ist abgeschlossen. Deine Antworten werden anonym ausgewertet. Du kannst dieses Fenster jetzt schließen.",
+  },
+  en: {
+    endedEyebrow: "Completed",
+    endedTitle: "Thank you!",
+    endedBody:
+      "The interview is complete. Your answers will be analyzed anonymously. You can close this window now.",
+  },
+};
 
 interface DebugStats {
   ws: ConnState;
@@ -77,6 +116,7 @@ export function InterviewRoom({ wsUrl }: Props) {
   const [phase, setPhase] = useState<"open" | "validation">("open");
   const [endedSummary, setEndedSummary] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [language, setLanguage] = useState<Lang>(DEFAULT_LANG);
   const [debugVisible, setDebugVisible] = useState(false);
   const [, forceDebugRender] = useState(0);
 
@@ -155,6 +195,9 @@ export function InterviewRoom({ wsUrl }: Props) {
 
   function handleServerMessage(msg: ServerMessage) {
     switch (msg.type) {
+      case "session_init":
+        setLanguage(normalizeLang(msg.language));
+        break;
       case "voice_starting":
         log("server: voice_starting");
         bumpDebug({ voiceStarting: true });
@@ -308,6 +351,32 @@ export function InterviewRoom({ wsUrl }: Props) {
     appendUserMessage(text);
     wsRef.current.send(JSON.stringify({ type: "text_message", text }));
     setDraft("");
+  }
+
+  function leaveInterview() {
+    if (stage === "ended") return;
+    log("client → leave");
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      try {
+        ws.send(JSON.stringify({ type: "leave" }));
+      } catch {
+        /* ignore */
+      }
+    }
+    stopRecording();
+    audioQueueRef.current?.cancel();
+    agentStreamingRef.current = false;
+    if (voiceStartTimeoutRef.current !== null) {
+      clearTimeout(voiceStartTimeoutRef.current);
+      voiceStartTimeoutRef.current = null;
+    }
+    setStage("ended");
+    try {
+      ws?.close(1000, "user_left");
+    } catch {
+      /* ignore */
+    }
   }
 
   // Voice activation
@@ -468,7 +537,13 @@ export function InterviewRoom({ wsUrl }: Props) {
 
   // Render
   if (stage === "ended") {
-    return <EndedView summary={endedSummary} debug={debugVisible ? debugRef.current : null} />;
+    return (
+      <EndedView
+        summary={endedSummary}
+        language={language}
+        debug={debugVisible ? debugRef.current : null}
+      />
+    );
   }
 
   if (stage === "intro") {
@@ -500,6 +575,7 @@ export function InterviewRoom({ wsUrl }: Props) {
             recording={recording}
             connOpen={state === "open"}
             onSwitchToChat={switchToChat}
+            onLeave={leaveInterview}
           />
         ) : (
           <ChatView
@@ -511,6 +587,7 @@ export function InterviewRoom({ wsUrl }: Props) {
             sendText={sendText}
             connOpen={state === "open"}
             onSwitchToVoice={switchToVoice}
+            onLeave={leaveInterview}
           />
         )}
 
@@ -556,12 +633,14 @@ function VoiceCenter({
   recording,
   connOpen,
   onSwitchToChat,
+  onLeave,
 }: {
   voiceStarting: boolean;
   voiceReady: boolean;
   recording: boolean;
   connOpen: boolean;
   onSwitchToChat: () => void;
+  onLeave: () => void;
 }) {
   return (
     <div className="iv-voice-center">
@@ -581,13 +660,26 @@ function VoiceCenter({
                   : "Mikrofon pausiert."}
         </span>
       </span>
-      <button
-        type="button"
-        onClick={onSwitchToChat}
-        className="btn btn--ghost btn--sm iv-switch"
-      >
-        Zu Chat wechseln
-      </button>
+      <div className="iv-voice-actions">
+        <button
+          type="button"
+          onClick={onSwitchToChat}
+          className="btn btn--ghost btn--sm iv-switch"
+        >
+          Zu Chat wechseln
+        </button>
+        <LeaveDialog onConfirm={onLeave}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Interview verlassen"
+            title="Interview verlassen"
+          >
+            <XIcon />
+          </Button>
+        </LeaveDialog>
+      </div>
     </div>
   );
 }
@@ -601,6 +693,7 @@ function ChatView({
   sendText,
   connOpen,
   onSwitchToVoice,
+  onLeave,
 }: {
   messages: Msg[];
   interimUser: string;
@@ -610,6 +703,7 @@ function ChatView({
   sendText: () => void;
   connOpen: boolean;
   onSwitchToVoice: () => void;
+  onLeave: () => void;
 }) {
   return (
     <div className="iv-chat">
@@ -648,6 +742,18 @@ function ChatView({
           className="iv-composer__textarea"
         />
         <div className="iv-composer__actions">
+          <LeaveDialog onConfirm={onLeave}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-label="Interview verlassen"
+              title="Interview verlassen"
+            >
+              <XIcon />
+              Verlassen
+            </Button>
+          </LeaveDialog>
           <button
             type="button"
             onClick={onSwitchToVoice}
@@ -774,6 +880,49 @@ function stateLabel(state: ConnState) {
         : "Verbindungsfehler";
 }
 
+function LeaveDialog({
+  onConfirm,
+  children,
+}: {
+  onConfirm: () => void;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>Interview wirklich verlassen?</DialogTitle>
+          <DialogDescription>
+            Wenn du jetzt verlässt, wird das Gespräch beendet und kann nicht
+            fortgesetzt werden.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(false)}
+          >
+            Abbrechen
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => {
+              setOpen(false);
+              onConfirm();
+            }}
+          >
+            Verlassen
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function MicIcon({ active }: { active: boolean }) {
   return (
     <svg
@@ -796,21 +945,23 @@ function MicIcon({ active }: { active: boolean }) {
 
 function EndedView({
   summary,
+  language,
   debug,
 }: {
   summary: string | null;
+  language: Lang;
   debug: DebugStats | null;
 }) {
+  const copy = COPY[language];
   return (
     <div className="iv-center">
       <div className="card iv-card">
         <span className="eyebrow" style={{ color: "var(--color-success)" }}>
-          Abgeschlossen
+          {copy.endedEyebrow}
         </span>
-        <h1 className="headline iv-card__title">Vielen Dank!</h1>
+        <h1 className="headline iv-card__title">{copy.endedTitle}</h1>
         <p className="page-header__meta iv-card__body">
-          {summary ??
-            "Das Interview ist abgeschlossen. Deine Antworten werden anonym ausgewertet. Du kannst dieses Fenster jetzt schließen."}
+          {summary ?? copy.endedBody}
         </p>
       </div>
       {debug && <DebugOverlay stats={debug} />}
@@ -882,7 +1033,8 @@ function InterviewStyles() {
         .iv-voice-status__dot--live { background: var(--color-success); animation: iv-pulse 1.6s var(--ease-smooth) infinite; }
         @keyframes iv-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(0.85); } }
 
-        .iv-switch { margin-top: var(--space-1); }
+        .iv-switch { margin-top: 0; }
+        .iv-voice-actions { display: inline-flex; align-items: center; gap: var(--space-2); margin-top: var(--space-1); }
 
         .iv-chat { display: flex; flex-direction: column; gap: var(--space-4); width: 100%; flex: 1; min-height: 0; }
         .iv-transcript { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-2) 0 var(--space-4); }
