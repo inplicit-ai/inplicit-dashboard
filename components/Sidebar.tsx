@@ -7,16 +7,14 @@ import type { ComponentType, SVGProps } from "react";
 import type { Me } from "@/lib/api";
 import {
   IconBuilding,
-  IconFileText,
   IconFolderKanban,
   IconLayoutGrid,
   IconLogOut,
-  IconMap,
-  IconScale,
   IconSearch,
   IconSettings,
   IconUsers,
 } from "@/components/icons";
+import { OrgAvatar } from "@/components/OrgAvatar";
 import { SettingsDialog } from "@/components/SettingsDialog";
 
 type Mode = "customer" | "staff";
@@ -26,6 +24,7 @@ interface SidebarProps {
   mode: Mode;
   me?: Me;
   orgLabel?: string;
+  orgLogoUrl?: string | null;
   /** When false, org-level sections (Insights, Knowledge Map, …) render
    *  as disabled placeholders — they need at least one audit before they
    *  hold meaningful data. */
@@ -48,7 +47,13 @@ interface NavSection {
   items: NavItem[];
 }
 
-export function Sidebar({ mode, me, orgLabel, hasAudits = false }: SidebarProps) {
+export function Sidebar({
+  mode,
+  me,
+  orgLabel,
+  orgLogoUrl,
+  hasAudits = false,
+}: SidebarProps) {
   const pathname = usePathname() ?? "";
   const params = useParams();
 
@@ -59,8 +64,6 @@ export function Sidebar({ mode, me, orgLabel, hasAudits = false }: SidebarProps)
       ? staffNav(me?.role === "INPLICIT_ADMIN")
       : customerNav(campaignId, hasAudits);
 
-  const avatarLetter =
-    mode === "staff" ? "I" : (orgLabel?.[0]?.toUpperCase() ?? "·");
   const orgName = orgLabel ?? (mode === "staff" ? "Inplicit Staff" : "Workspace");
   const roleLabel = mode === "staff" ? "Back-Office" : "Workspace";
 
@@ -88,7 +91,12 @@ export function Sidebar({ mode, me, orgLabel, hasAudits = false }: SidebarProps)
         </div>
 
         <div className="sidebar__org">
-          <span className="sidebar__avatar" aria-hidden="true">{avatarLetter}</span>
+          <OrgAvatar
+            name={mode === "staff" ? "Inplicit" : orgName}
+            logoUrl={mode === "staff" ? null : orgLogoUrl}
+            size={32}
+            className="sidebar__avatar"
+          />
           <span className="sidebar__org-text">
             <span className="sidebar__org-name">{orgName}</span>
             <span className="sidebar__org-role">{roleLabel}</span>
@@ -195,50 +203,11 @@ function customerNav(campaignId: string | null, hasAudits: boolean): NavSection[
     },
   ];
 
-  // Per-campaign sections. Until Phase 7 promotes these to dedicated
-  // org-level routes, they only have a meaningful destination when a
-  // specific audit is open. With no campaignId in the URL, the old code
-  // sent every link back to `/campaigns`, which made the sidebar feel
-  // frozen ("clicked Insights, now nothing else navigates"). The right
-  // call: render them as disabled placeholders explaining the
-  // requirement.
-  const noCampaignHint = "Öffne zuerst ein Audit, um diesen Bereich zu nutzen.";
+  // The per-audit items (Interviews, Teilnehmer, Knowledge Map, Cross-Validation)
+  // are accessible via the top tab bar once an audit is open — showing them
+  // here too would duplicate the navigation. They are intentionally omitted.
+
   const noAuditsHint = "Verfügbar, sobald der erste Audit angelegt ist.";
-  const perCampaignDisabled = !hasAudits || !campaignId;
-  const perCampaignHint = !hasAudits ? noAuditsHint : noCampaignHint;
-
-  const orgItems: NavItem[] = [
-    {
-      href: campaignId ? `/campaigns/${campaignId}/interviews` : "/campaigns",
-      label: "Interviews",
-      icon: IconFileText,
-      disabled: perCampaignDisabled,
-      disabledHint: perCampaignHint,
-    },
-    {
-      href: campaignId ? `/campaigns/${campaignId}/participants` : "/campaigns",
-      label: "Teilnehmer",
-      icon: IconUsers,
-      disabled: perCampaignDisabled,
-      disabledHint: perCampaignHint,
-    },
-    {
-      href: campaignId ? `/campaigns/${campaignId}/map` : "/campaigns",
-      label: "Knowledge Map",
-      icon: IconMap,
-      disabled: perCampaignDisabled,
-      disabledHint: perCampaignHint,
-    },
-    {
-      href: campaignId ? `/campaigns/${campaignId}/hypotheses` : "/campaigns",
-      label: "Cross-Validation",
-      icon: IconScale,
-      disabled: perCampaignDisabled,
-      disabledHint: perCampaignHint,
-    },
-  ];
-
-  sections.push({ label: "Wissen", items: orgItems });
 
   // Insights is org-level (RAG searches across every audit in the org),
   // so it stays enabled whenever at least one audit exists — even from

@@ -446,6 +446,7 @@ export interface Organization {
   default_voice_id: number;
   default_interview_length_min: number;
   status: "ACTIVE" | "SUSPENDED" | "DELETED";
+  logo_url?: string | null;
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
@@ -479,4 +480,6 @@ export interface UpdateOrgInput {
   default_locale?: string;
   default_voice_id?: number;
   default_interview_length_min?: number;
+  /** Empty string clears the logo. Omit the field to leave it untouched. */
+  logo_url?: string;
 }

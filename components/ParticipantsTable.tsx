@@ -291,7 +291,7 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
 
           <div className="mt-5 flex items-center justify-end gap-2">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => {
                 setAdding(false);
@@ -315,10 +315,9 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
 
       {/* Table */}
       <Card className="overflow-hidden p-0">
-        <Table className="min-w-[920px]">
+        <Table className="min-w-[820px]">
           <TableHeader>
             <TableRow className="bg-surface/40 hover:bg-surface/40">
-              <TableHead className="w-[120px]">Anon-ID</TableHead>
               <TableHead className="min-w-[220px]">E-Mail</TableHead>
               <TableHead className="min-w-[160px]">Name</TableHead>
               <TableHead className="min-w-[160px]">Abteilung</TableHead>
@@ -330,7 +329,7 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
           <TableBody>
             {rows.length === 0 && !adding && (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={7}>
+                <TableCell colSpan={6}>
                   <EmptyState onAdd={() => setAdding(true)} />
                 </TableCell>
               </TableRow>
@@ -340,11 +339,6 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
               const isEditing = editing === p.id;
               return (
                 <TableRow key={p.id} className={isEditing ? "bg-surface/40" : ""}>
-                  <TableCell>
-                    <span className="font-mono text-xs font-medium text-fg">
-                      {p.anon_id}
-                    </span>
-                  </TableCell>
                   <TableCell>
                     {isEditing ? (
                       <Input
@@ -408,7 +402,7 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
                       {isEditing ? (
                         <>
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
                             onClick={cancelEdit}
                             disabled={busy === p.id}
@@ -544,7 +538,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
           mehrere Personen auf einmal hoch.
         </p>
       </div>
-      <Button size="sm" variant="outline" onClick={onAdd} className="mt-1">
+      <Button size="sm" variant="accent" onClick={onAdd} className="mt-1">
         <UserPlus className="h-4 w-4" />
         Teilnehmer hinzufügen
       </Button>

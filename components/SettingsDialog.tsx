@@ -1,16 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import {
-  Bell,
-  ChevronRight,
-  Languages,
-  Mail,
+  // Bell,
+  // ChevronRight,
+  // Languages,
+  // Mail,
   Monitor,
   Moon,
   Settings as SettingsIcon,
-  ShieldCheck,
+  // ShieldCheck,
   Sparkles,
   Sun,
   type LucideIcon,
@@ -26,8 +25,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
+// import { Switch } from "@/components/ui/switch";
+// import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { Me } from "@/lib/api";
 
@@ -35,7 +34,6 @@ import type { Me } from "@/lib/api";
 
 type Theme = "light" | "dark" | "system";
 const THEME_KEY = "inplicit:theme";
-const PREFS_KEY = "inplicit:notif-prefs";
 
 function readTheme(): Theme {
   if (typeof window === "undefined") return "light";
@@ -56,25 +54,25 @@ function applyTheme(theme: Theme): void {
   html.dataset.theme = resolved;
 }
 
-interface NotifPrefs {
-  email: boolean;
-  inApp: boolean;
-  weekly: boolean;
-}
-
-const DEFAULT_PREFS: NotifPrefs = { email: true, inApp: true, weekly: false };
-
-function readPrefs(): NotifPrefs {
-  if (typeof window === "undefined") return DEFAULT_PREFS;
-  try {
-    const raw = window.localStorage.getItem(PREFS_KEY);
-    if (!raw) return DEFAULT_PREFS;
-    const parsed = JSON.parse(raw) as Partial<NotifPrefs>;
-    return { ...DEFAULT_PREFS, ...parsed };
-  } catch {
-    return DEFAULT_PREFS;
-  }
-}
+// ── Notifications (unwired — backend persistence pending) ──────────────────
+// const PREFS_KEY = "inplicit:notif-prefs";
+// interface NotifPrefs {
+//   email: boolean;
+//   inApp: boolean;
+//   weekly: boolean;
+// }
+// const DEFAULT_PREFS: NotifPrefs = { email: true, inApp: true, weekly: false };
+// function readPrefs(): NotifPrefs {
+//   if (typeof window === "undefined") return DEFAULT_PREFS;
+//   try {
+//     const raw = window.localStorage.getItem(PREFS_KEY);
+//     if (!raw) return DEFAULT_PREFS;
+//     const parsed = JSON.parse(raw) as Partial<NotifPrefs>;
+//     return { ...DEFAULT_PREFS, ...parsed };
+//   } catch {
+//     return DEFAULT_PREFS;
+//   }
+// }
 
 // ─── Dialog ───────────────────────────────────────────────────────────────────
 
@@ -88,7 +86,7 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
   // this in a useEffect+setState pair would cause an extra render on mount
   // and trip React 19's "set-state-in-effect" lint.
   const [theme, setTheme] = useState<Theme>(readTheme);
-  const [prefs, setPrefs] = useState<NotifPrefs>(readPrefs);
+  // const [prefs, setPrefs] = useState<NotifPrefs>(readPrefs);
 
   function pickTheme(next: Theme): void {
     setTheme(next);
@@ -98,19 +96,24 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
     applyTheme(next);
   }
 
-  function togglePref(key: keyof NotifPrefs, next: boolean): void {
-    const updated = { ...prefs, [key]: next };
-    setPrefs(updated);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(PREFS_KEY, JSON.stringify(updated));
-    }
-  }
+  // function togglePref(key: keyof NotifPrefs, next: boolean): void {
+  //   const updated = { ...prefs, [key]: next };
+  //   setPrefs(updated);
+  //   if (typeof window !== "undefined") {
+  //     window.localStorage.setItem(PREFS_KEY, JSON.stringify(updated));
+  //   }
+  // }
 
   return (
     <Dialog>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="overflow-hidden p-0 sm:max-w-[480px]">
-        <DialogHeader className="px-6 pt-6 pb-5">
+      <DialogContent
+        className={cn(
+          "flex max-h-[calc(100vh-4rem)] flex-col gap-0 overflow-hidden p-0",
+          "sm:max-w-xl",
+        )}
+      >
+        <DialogHeader className="shrink-0 px-6 pt-6 pb-5">
           <div className="flex items-center gap-3 pr-6">
             <span className="grid size-9 shrink-0 place-items-center rounded-ui border border-line bg-canvas text-fg shadow-sm">
               <SettingsIcon className="h-4 w-4" />
@@ -118,13 +121,13 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
             <div className="min-w-0 space-y-0.5">
               <DialogTitle className="text-base">Quick Settings</DialogTitle>
               <DialogDescription className="text-xs leading-snug">
-                Appearance, notifications and quick account access.
+                Appearance and quick account access.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="space-y-6 px-6 py-5">
+        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
           {me && <IdentityCard me={me} />}
 
           <Section title="Appearance" icon={Sparkles}>
@@ -135,59 +138,66 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
             </p>
           </Section>
 
-          <Separator />
+          {/*
+            ── Notifications (commented out — not wired to backend) ──
+            <Separator />
+            <Section title="Notifications" icon={Bell}>
+              <ToggleRow
+                icon={Mail}
+                label="Email updates"
+                hint="Audit completion and report delivery."
+                checked={prefs.email}
+                onChange={(v) => togglePref("email", v)}
+              />
+              <ToggleRow
+                icon={Bell}
+                label="In-app notifications"
+                hint="Real-time activity inside the dashboard."
+                checked={prefs.inApp}
+                onChange={(v) => togglePref("inApp", v)}
+              />
+              <ToggleRow
+                icon={Sparkles}
+                label="Weekly digest"
+                hint="Friday summary of insights across audits."
+                checked={prefs.weekly}
+                onChange={(v) => togglePref("weekly", v)}
+              />
+            </Section>
+          */}
 
-          <Section title="Notifications" icon={Bell}>
-            <ToggleRow
-              icon={Mail}
-              label="Email updates"
-              hint="Audit completion and report delivery."
-              checked={prefs.email}
-              onChange={(v) => togglePref("email", v)}
-            />
-            <ToggleRow
-              icon={Bell}
-              label="In-app notifications"
-              hint="Real-time activity inside the dashboard."
-              checked={prefs.inApp}
-              onChange={(v) => togglePref("inApp", v)}
-            />
-            <ToggleRow
-              icon={Sparkles}
-              label="Weekly digest"
-              hint="Friday summary of insights across audits."
-              checked={prefs.weekly}
-              onChange={(v) => togglePref("weekly", v)}
-            />
-          </Section>
-
-          <Separator />
-
-          <Section title="Account" icon={ShieldCheck}>
-            <LinkRow
-              icon={ShieldCheck}
-              label="Security & sessions"
-              hint="Password, active devices."
-              href="/account"
-            />
-            <LinkRow
-              icon={Languages}
-              label="Language & locale"
-              hint={me?.org?.default_locale ?? "Workspace default"}
-              href="/account"
-            />
-          </Section>
+          {/*
+            ── Account (commented out — /account route not implemented yet) ──
+            <Separator />
+            <Section title="Account" icon={ShieldCheck}>
+              <LinkRow
+                icon={ShieldCheck}
+                label="Security & sessions"
+                hint="Password, active devices."
+                href="/account"
+              />
+              <LinkRow
+                icon={Languages}
+                label="Language & locale"
+                hint={me?.org?.default_locale ?? "Workspace default"}
+                href="/account"
+              />
+            </Section>
+          */}
         </div>
 
-        <DialogFooter className="px-6">
+        <DialogFooter className="shrink-0 border-t border-line px-6 py-4">
           <DialogClose asChild>
             <Button type="button" variant="ghost" size="sm">
               Close
             </Button>
           </DialogClose>
-          <Button asChild size="sm">
-            <Link href="/account">Open full settings</Link>
-          </Button>
+          {/*
+            ── Full-settings link (commented out — /account route not implemented yet) ──
+            <Button asChild size="sm">
+              <Link href="/account">Open full settings</Link>
+            </Button>
+          */}
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -285,67 +295,68 @@ function ThemePicker({
   );
 }
 
-function ToggleRow({
-  icon: Icon,
-  label,
-  hint,
-  checked,
-  onChange,
-}: {
-  icon: LucideIcon;
-  label: string;
-  hint?: string;
-  checked: boolean;
-  onChange: (next: boolean) => void;
-}) {
-  return (
-    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-ui px-3 py-2.5 transition-colors hover:bg-surface-2/60">
-      <span className="flex min-w-0 items-start gap-3">
-        <Icon className="mt-0.5 h-4 w-4 shrink-0 text-fg-muted" />
-        <span className="min-w-0">
-          <span className="block text-sm font-medium text-fg">{label}</span>
-          {hint && (
-            <span className="mt-0.5 block text-xs leading-snug text-fg-muted">
-              {hint}
-            </span>
-          )}
-        </span>
-      </span>
-      <Switch checked={checked} onCheckedChange={onChange} className="mt-1" />
-    </label>
-  );
-}
-
-function LinkRow({
-  icon: Icon,
-  label,
-  hint,
-  href,
-}: {
-  icon: LucideIcon;
-  label: string;
-  hint?: string;
-  href: string;
-}) {
-  return (
-    <DialogClose asChild>
-      <Link
-        href={href}
-        className="group flex items-center justify-between gap-4 rounded-ui px-3 py-2.5 transition-colors hover:bg-surface-2/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <span className="flex min-w-0 items-start gap-3">
-          <Icon className="mt-0.5 h-4 w-4 shrink-0 text-fg-muted" />
-          <span className="min-w-0">
-            <span className="block text-sm font-medium text-fg">{label}</span>
-            {hint && (
-              <span className="mt-0.5 block truncate text-xs text-fg-muted">
-                {hint}
-              </span>
-            )}
-          </span>
-        </span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-fg" />
-      </Link>
-    </DialogClose>
-  );
-}
+// ── Reusable rows kept for when Notifications/Account are wired ──────────────
+// function ToggleRow({
+//   icon: Icon,
+//   label,
+//   hint,
+//   checked,
+//   onChange,
+// }: {
+//   icon: LucideIcon;
+//   label: string;
+//   hint?: string;
+//   checked: boolean;
+//   onChange: (next: boolean) => void;
+// }) {
+//   return (
+//     <label className="flex cursor-pointer items-start justify-between gap-4 rounded-ui px-3 py-2.5 transition-colors hover:bg-surface-2/60">
+//       <span className="flex min-w-0 items-start gap-3">
+//         <Icon className="mt-0.5 h-4 w-4 shrink-0 text-fg-muted" />
+//         <span className="min-w-0">
+//           <span className="block text-sm font-medium text-fg">{label}</span>
+//           {hint && (
+//             <span className="mt-0.5 block text-xs leading-snug text-fg-muted">
+//               {hint}
+//             </span>
+//           )}
+//         </span>
+//       </span>
+//       <Switch checked={checked} onCheckedChange={onChange} className="mt-1" />
+//     </label>
+//   );
+// }
+//
+// function LinkRow({
+//   icon: Icon,
+//   label,
+//   hint,
+//   href,
+// }: {
+//   icon: LucideIcon;
+//   label: string;
+//   hint?: string;
+//   href: string;
+// }) {
+//   return (
+//     <DialogClose asChild>
+//       <Link
+//         href={href}
+//         className="group flex items-center justify-between gap-4 rounded-ui px-3 py-2.5 transition-colors hover:bg-surface-2/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+//       >
+//         <span className="flex min-w-0 items-start gap-3">
+//           <Icon className="mt-0.5 h-4 w-4 shrink-0 text-fg-muted" />
+//           <span className="min-w-0">
+//             <span className="block text-sm font-medium text-fg">{label}</span>
+//             {hint && (
+//               <span className="mt-0.5 block truncate text-xs text-fg-muted">
+//                 {hint}
+//               </span>
+//             )}
+//           </span>
+//         </span>
+//         <ChevronRight className="h-4 w-4 shrink-0 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-fg" />
+//       </Link>
+//     </DialogClose>
+//   );
+// }

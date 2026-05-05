@@ -26,7 +26,13 @@ export default async function AdminLayout({
 
   return (
     <div className="shell shell--with-sidebar">
-      <Sidebar mode="customer" me={me} orgLabel={me.org?.name} hasAudits={hasAudits} />
+      <Sidebar
+        mode="customer"
+        me={me}
+        orgLabel={me.org?.name}
+        orgLogoUrl={me.org?.logo_url}
+        hasAudits={hasAudits}
+      />
       <main className="app-main">{children}</main>
     </div>
   );

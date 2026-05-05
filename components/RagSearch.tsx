@@ -2,7 +2,17 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowUp, CheckCircle2, Send, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUp,
+  GitBranch,
+  Network,
+  Search,
+  Sparkles,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Stage-1 vector search: embed → Qdrant → cited insight rows. Stage-2
 // (LLM-summarized cite-or-decline answer) hangs off the same endpoint later;
@@ -29,28 +39,42 @@ interface SearchResponse {
 const SUGGESTIONS: Array<{
   label: string;
   prompt: string;
-  icon: typeof Sparkles;
-  tone: "amber" | "green" | "violet";
+  icon: LucideIcon;
+  tone: "amber" | "green" | "violet" | "blue";
 }> = [
   {
-    label: "Summarize",
-    prompt: "Fasse die zentralen Pain-Points der letzten Audits zusammen.",
+    label: "Onboarding-Pain",
+    prompt: "Welche Onboarding-Probleme erwähnen neue Mitarbeitende?",
     icon: Sparkles,
     tone: "amber",
   },
   {
-    label: "Correct Grammar",
-    prompt: "Wo gibt es Reibung zwischen Teams?",
-    icon: CheckCircle2,
+    label: "Tool-Workarounds",
+    prompt: "Welche Tools werden umgangen, doppelt genutzt oder selbst gebaut?",
+    icon: Wrench,
     tone: "green",
   },
   {
-    label: "Compress",
-    prompt: "Welche Tools werden umgangen oder doppelt genutzt?",
-    icon: Send,
+    label: "Team-Reibung",
+    prompt: "Wo entsteht Reibung zwischen Abteilungen oder Teams?",
+    icon: Network,
     tone: "violet",
   },
+  {
+    label: "Top-Schmerzen",
+    prompt:
+      "Was sind die meistgenannten Pain-Points über alle Audits hinweg?",
+    icon: GitBranch,
+    tone: "blue",
+  },
 ];
+
+const TONE_CLASSES: Record<(typeof SUGGESTIONS)[number]["tone"], string> = {
+  amber: "text-[#d4891a] dark:text-[#f5a623]",
+  green: "text-success",
+  violet: "text-[#7c3aed] dark:text-[#b39bff]",
+  blue: "text-accent",
+};
 
 export function RagSearch() {
   const [query, setQuery] = useState("");
@@ -102,9 +126,21 @@ export function RagSearch() {
   }
 
   const canSend = query.trim().length > 0 && !loading;
+  const hasResults = response && response.results.length > 0;
+  const isEmpty = response && response.results.length === 0;
 
   return (
-    <div className="rag">
+    <div className="space-y-4">
+      {/* Results — rendered ABOVE the prompt card */}
+      {(error || response) && (
+        <ResultsArea
+          error={error}
+          response={response}
+          isEmpty={Boolean(isEmpty)}
+          hasResults={Boolean(hasResults)}
+        />
+      )}
+
       {/* Prompt card */}
       <div className="rag__card">
         <textarea
@@ -112,7 +148,7 @@ export function RagSearch() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Refine your message..."
+          placeholder="Finde Insights aus deinen Audits…"
           rows={2}
           className="rag__input"
         />
@@ -131,8 +167,8 @@ export function RagSearch() {
         </button>
       </div>
 
-      {/* Suggestion pills */}
-      <div className="rag__suggestions">
+      {/* Suggestion pills — concrete RAG examples */}
+      <div className="flex flex-wrap gap-2">
         {SUGGESTIONS.map((s) => {
           const Icon = s.icon;
           return (
@@ -140,53 +176,122 @@ export function RagSearch() {
               key={s.label}
               type="button"
               onClick={() => onSuggestion(s.prompt)}
-              className={`rag__pill rag__pill--${s.tone}`}
+              title={s.prompt}
+              className="group inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-medium text-fg-muted shadow-sm transition-colors hover:border-line-strong hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Icon className="rag__pill-icon" width={13} height={13} />
+              <Icon className={cn("h-3.5 w-3.5 shrink-0", TONE_CLASSES[s.tone])} />
               <span>{s.label}</span>
             </button>
           );
         })}
       </div>
+    </div>
+  );
+}
 
-      {error && <div className="rag__error">{error}</div>}
+// ─── Results ──────────────────────────────────────────────────────────────────
 
-      {response && (
-        <div className="rag__results">
-          <p className="rag__results-meta">
-            {response.results.length === 0
-              ? `Keine Belege in den Audits gefunden für „${response.query}".`
-              : `${response.results.length} Beleg${response.results.length === 1 ? "" : "e"} aus ${response.searched_campaigns} Audit${response.searched_campaigns === 1 ? "" : "s"}.`}
-          </p>
+function ResultsArea({
+  error,
+  response,
+  isEmpty,
+  hasResults,
+}: {
+  error: string | null;
+  response: SearchResponse | null;
+  isEmpty: boolean;
+  hasResults: boolean;
+}) {
+  if (error) {
+    return (
+      <div className="rounded-card border border-pain/30 bg-pain-soft px-4 py-3 text-sm text-pain">
+        {error}
+      </div>
+    );
+  }
 
-          <div className="rag__results-list">
-            {response.results.map((r) => (
-              <Link
-                key={r.vse_insight_id}
-                href={`/campaigns/${r.campaign_id}/interviews/${r.interview_id}`}
-                className="rag__result"
-              >
-                <div className="rag__result-head">
-                  <p className="rag__result-text">{r.problem_statement}</p>
-                  <span className="rag__result-score">
-                    {(r.score * 100).toFixed(0)}%
-                  </span>
-                </div>
-                {r.human_solution && (
-                  <p className="rag__result-quote">„{r.human_solution}"</p>
-                )}
-                <div className="rag__result-meta">
-                  <span className="rag__chip rag__chip--accent">{r.anon_id}</span>
-                  {r.department && (
-                    <span className="rag__chip">{r.department}</span>
-                  )}
-                  <span className="rag__open">Interview öffnen →</span>
-                </div>
-              </Link>
-            ))}
+  if (!response) return null;
+
+  // Empty: single small box with the message
+  if (isEmpty) {
+    return (
+      <div className="rounded-card border border-line bg-surface px-5 py-4 shadow-sm">
+        <div className="flex items-start gap-3">
+          <span
+            aria-hidden="true"
+            className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-2 text-fg-muted"
+          >
+            <Search className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 space-y-1">
+            <p className="text-sm font-medium text-fg">
+              Keine Belege gefunden
+            </p>
+            <p className="text-xs text-fg-muted">
+              Für „{response.query}&rdquo; konnten wir nichts in deinen Audits finden.
+            </p>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (!hasResults) return null;
+
+  const count = response.results.length;
+  const single = count === 1;
+
+  return (
+    <section className="space-y-3">
+      <p className="px-1 text-xs text-fg-muted">
+        {count} Beleg{count === 1 ? "" : "e"} aus {response.searched_campaigns}{" "}
+        Audit{response.searched_campaigns === 1 ? "" : "s"} für „{response.query}&rdquo;.
+      </p>
+
+      <div
+        className={cn(
+          "grid gap-3",
+          single ? "grid-cols-1 md:max-w-xl" : "sm:grid-cols-2 xl:grid-cols-3",
+        )}
+      >
+        {response.results.map((r) => (
+          <ResultCard key={r.vse_insight_id} r={r} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ResultCard({ r }: { r: SearchResult }) {
+  return (
+    <Link
+      href={`/campaigns/${r.campaign_id}/interviews/${r.interview_id}`}
+      className="group flex h-full flex-col gap-3 rounded-card border border-line bg-surface p-5 shadow-sm transition-colors hover:border-line-strong hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm leading-snug text-fg">{r.problem_statement}</p>
+        <span className="shrink-0 rounded-full border border-line bg-canvas px-2 py-0.5 font-mono text-[10px] font-semibold text-fg-muted">
+          {(r.score * 100).toFixed(0)}%
+        </span>
+      </div>
+
+      {r.human_solution && (
+        <p className="border-l-2 border-accent-muted pl-3 text-xs italic leading-snug text-fg-muted">
+          „{r.human_solution}&rdquo;
+        </p>
       )}
-    </div>
+
+      <div className="mt-auto flex items-center gap-2">
+        {r.department && (
+          <span className="rounded-full border border-line bg-canvas px-2 py-0.5 text-[10px] font-medium text-fg-muted">
+            {r.department}
+          </span>
+        )}
+        <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-medium text-fg-subtle transition-colors group-hover:text-fg">
+          Interview öffnen
+          <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+        </span>
+      </div>
+    </Link>
   );
 }

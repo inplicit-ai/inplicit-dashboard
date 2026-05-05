@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { ErrorState } from "@/components/ErrorState";
+import { OrgAvatar } from "@/components/OrgAvatar";
 import { Eyebrow, PageHeader, StatusBadge } from "@/components/PageChrome";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +78,9 @@ export default async function OrgDetailPage({
       const v = formData.get(k);
       return typeof v === "string" ? v.trim() : "";
     };
+    // logo_url: only forward when the field was present in the form; an
+    // empty string is meaningful — it clears the existing logo.
+    const logoRaw = formData.get("logo_url");
     const patch: UpdateOrgInput = {
       name: get("name") || undefined,
       company_context: get("company_context") || undefined,
@@ -86,6 +90,7 @@ export default async function OrgDetailPage({
       default_interview_length_min: parseIntOr(
         get("default_interview_length_min"),
       ),
+      logo_url: typeof logoRaw === "string" ? logoRaw.trim() : undefined,
     };
     const api = makeApi(await requestCookie());
     let redirectTo: string;
@@ -382,6 +387,25 @@ export default async function OrgDetailPage({
               </Field>
 
               <Field
+                id="edit-logo"
+                label="Profilbild (URL)"
+                hint="Hosted-Image-URL. Leer lassen, um das Logo zu entfernen."
+              >
+                <div className="flex items-start gap-3">
+                  <OrgAvatar name={org.name} logoUrl={org.logo_url} size={56} />
+                  <Input
+                    id="edit-logo"
+                    name="logo_url"
+                    type="url"
+                    inputMode="url"
+                    defaultValue={org.logo_url ?? ""}
+                    placeholder="https://cdn.example.com/logo.png"
+                    className="h-11 flex-1 text-base md:text-sm"
+                  />
+                </div>
+              </Field>
+
+              <Field
                 id="edit-context"
                 label="Unternehmenskontext"
                 hint="Wird in jeden Interview-System-Prompt eingespeist."
@@ -442,7 +466,7 @@ export default async function OrgDetailPage({
               </div>
 
               <div className="mt-2 flex justify-end gap-2">
-                <Button asChild variant="outline">
+                <Button asChild variant="accent">
                   <Link href={`/staff/orgs/${org.id}`}>Abbrechen</Link>
                 </Button>
                 <Button type="submit">Speichern</Button>
