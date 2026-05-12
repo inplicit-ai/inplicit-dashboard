@@ -22,13 +22,13 @@ export default async function CampaignsPage() {
   return (
     <>
       <PageHeader
-        title="Audits"
-        meta="Stichproben deiner Organisation. Jeder Audit bündelt eine Runde anonymer Interviews mit ausgewerteten Insights."
+        title="Kampagnes"
+        meta="Stichproben deiner Organisation. Jede Kampagne bündelt eine Runde anonymer Interviews mit ausgewerteten Insights."
         actions={
           <Button asChild size="sm">
             <Link href="/campaigns/new">
               <Plus className="h-4 w-4" />
-              Neuer Audit
+              Neue Kampagne
             </Link>
           </Button>
         }
@@ -52,7 +52,7 @@ export default async function CampaignsPage() {
             </div>
             <div className="space-y-1">
               <p className="text-base font-semibold text-fg">
-                Noch keine Audits.
+                Noch keine Kampagnes.
               </p>
               <p className="text-sm text-fg-muted">
                 Lege deinen ersten an, lade Teilnehmer ein, sieh dir die
@@ -62,7 +62,7 @@ export default async function CampaignsPage() {
             <Button asChild className="mt-2">
               <Link href="/campaigns/new">
                 <Plus className="h-4 w-4" />
-                Ersten Audit erstellen
+                Erste Kampagne erstellen
               </Link>
             </Button>
           </div>

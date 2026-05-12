@@ -56,7 +56,7 @@ export function CampaignTabs({ campaignId }: { campaignId: string }) {
   return (
     <div className="-mx-4 mb-8 border-b border-line sm:-mx-8">
       <nav
-        aria-label="Audit-Bereiche"
+        aria-label="Kampagnen-Bereiche"
         className="scrollbar-none mx-auto flex max-w-[1280px] gap-7 overflow-x-auto px-4 sm:px-8"
       >
         {TABS.map((t) => {

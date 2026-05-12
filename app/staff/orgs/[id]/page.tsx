@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { ErrorState } from "@/components/ErrorState";
+import { OrgAvatar } from "@/components/OrgAvatar";
 import { Eyebrow, PageHeader, StatusBadge } from "@/components/PageChrome";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +78,9 @@ export default async function OrgDetailPage({
       const v = formData.get(k);
       return typeof v === "string" ? v.trim() : "";
     };
+    // logo_url: only forward when the field was present in the form; an
+    // empty string is meaningful — it clears the existing logo.
+    const logoRaw = formData.get("logo_url");
     const patch: UpdateOrgInput = {
       name: get("name") || undefined,
       company_context: get("company_context") || undefined,
@@ -86,6 +90,7 @@ export default async function OrgDetailPage({
       default_interview_length_min: parseIntOr(
         get("default_interview_length_min"),
       ),
+      logo_url: typeof logoRaw === "string" ? logoRaw.trim() : undefined,
     };
     const api = makeApi(await requestCookie());
     let redirectTo: string;
@@ -235,8 +240,8 @@ export default async function OrgDetailPage({
           <Card className="mb-6 rounded-card border-line bg-surface p-6">
             <Eyebrow>Unternehmenskontext</Eyebrow>
             <p className="mt-3 text-xs text-fg-muted">
-              Wird in jeden Interview-System-Prompt der Org eingespeist. Audits
-              können das pro Audit überschreiben.
+              Wird in jeden Interview-System-Prompt der Org eingespeist. Kampagnes
+              können das pro Kampagne überschreiben.
             </p>
             <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-fg">
               {org.company_context}
@@ -249,7 +254,7 @@ export default async function OrgDetailPage({
           </Card>
 
           <Card className="mb-6 rounded-card border-line bg-surface p-6">
-            <Eyebrow>Defaults für neue Audits</Eyebrow>
+            <Eyebrow>Defaults für neue Kampagnes</Eyebrow>
             <DefList className="mt-4">
               <DefRow label="Sprache" value={org.default_locale.toUpperCase()} />
               <DefRow
@@ -311,7 +316,7 @@ export default async function OrgDetailPage({
               title="Suspendieren"
               description={
                 <>
-                  Org-Status auf <Mono>SUSPENDED</Mono>. Bestehende Audits
+                  Org-Status auf <Mono>SUSPENDED</Mono>. Bestehende Kampagnes
                   bleiben, aber der Customer kann sich nicht einloggen, bis du
                   sie reaktivierst.
                 </>
@@ -379,6 +384,25 @@ export default async function OrgDetailPage({
                   required
                   className="h-11 text-base md:text-sm"
                 />
+              </Field>
+
+              <Field
+                id="edit-logo"
+                label="Profilbild (URL)"
+                hint="Hosted-Image-URL. Leer lassen, um das Logo zu entfernen."
+              >
+                <div className="flex items-start gap-3">
+                  <OrgAvatar name={org.name} logoUrl={org.logo_url} size={56} />
+                  <Input
+                    id="edit-logo"
+                    name="logo_url"
+                    type="url"
+                    inputMode="url"
+                    defaultValue={org.logo_url ?? ""}
+                    placeholder="https://cdn.example.com/logo.png"
+                    className="h-11 flex-1 text-base md:text-sm"
+                  />
+                </div>
               </Field>
 
               <Field

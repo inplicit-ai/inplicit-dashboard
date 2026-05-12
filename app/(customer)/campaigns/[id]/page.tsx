@@ -78,7 +78,7 @@ export default async function CampaignOverview({
   }
 
   if (error || !campaign) {
-    return <ErrorState error={error ?? new Error("Audit nicht gefunden.")} />;
+    return <ErrorState error={error ?? new Error("Kampagne nicht gefunden.")} />;
   }
 
   const completionRate =
@@ -88,7 +88,7 @@ export default async function CampaignOverview({
 
   const isDraft = campaign.status === "DRAFT";
   const launchLabel = isDraft
-    ? "Audit starten — alle einladen"
+    ? "Kampagne starten — alle einladen"
     : "Ausstehende Einladungen versenden";
 
   return (

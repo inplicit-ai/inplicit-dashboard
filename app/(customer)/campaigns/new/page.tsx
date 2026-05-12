@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Eyebrow, PageHeader } from "@/components/PageChrome";
 import { cn } from "@/lib/utils";
+import { CampaignTypeSelector } from "./CampaignTypeSelector";
 
 const API_BASE = process.env.API_URL ?? "http://localhost:8080";
 
@@ -71,13 +72,13 @@ export default async function NewCampaignPage({
       <Button asChild variant="link" size="sm" className="mb-4 px-0 text-fg-muted">
         <Link href="/campaigns">
           <ArrowLeft className="h-3.5 w-3.5" />
-          Audits
+          Kampagnes
         </Link>
       </Button>
 
       <PageHeader
-        title="Neuer Audit"
-        meta="Ein Audit triggert eine neue Runde anonymer Interviews für deine Organisation. Unternehmenskontext und Standardeinstellungen werden aus den Org-Settings übernommen."
+        title="Neue Kampagne"
+        meta="Eine Kampagne triggert eine neue Runde anonymer Interviews für deine Organisation. Unternehmenskontext und Standardeinstellungen werden aus den Org-Settings übernommen."
       />
 
       {sp.error && (
@@ -95,7 +96,7 @@ export default async function NewCampaignPage({
           eyebrow="Kontext"
           title="Lernziele"
           optional
-          subtitle="Was wollen wir mit diesem Audit lernen? Lass es leer für ein breites, offenes Audit."
+          subtitle="Was wollen wir mit dieser Kampagne lernen? Lass es leer für ein breites, offenes Format."
         >
           <Textarea
             name="goals"
@@ -133,6 +134,14 @@ export default async function NewCampaignPage({
         </FormCard>
 
         <FormCard
+          eyebrow="Methode"
+          title="Kampagnen-Typ"
+          subtitle="Induktiv = offene Entdeckung ohne vorgegebene Fragen. Deduktiv = hypothesengeführt mit eigenen Leitfragen."
+        >
+          <CampaignTypeSelector />
+        </FormCard>
+
+        <FormCard
           eyebrow="Teilnehmer"
           title="CSV-Import"
           optional
@@ -163,7 +172,7 @@ export default async function NewCampaignPage({
             <Link href="/campaigns">Abbrechen</Link>
           </Button>
           <Button type="submit" size="lg">
-            Audit anlegen
+            Kampagne anlegen
           </Button>
         </div>
       </form>

@@ -33,7 +33,7 @@ export default async function InterviewsPage({
     <>
       <PageHeader
         title="Interviews"
-        meta={`${interviews.length} ${interviews.length === 1 ? "Gespräch" : "Gespräche"} in diesem Audit.`}
+        meta={`${interviews.length} ${interviews.length === 1 ? "Gespräch" : "Gespräche"} in dieser Kampagne.`}
       />
 
       {error && (

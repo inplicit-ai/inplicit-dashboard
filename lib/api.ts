@@ -198,6 +198,18 @@ export function makeApi(cookie?: string) {
       },
     },
     health: () => request<{ status: string }>("/health"),
+    orgMembers: {
+      list: () => request<OrgMember[]>("/api/orgs/me/members"),
+      invite: (email: string) =>
+        request<OrgMemberInvite>("/api/orgs/me/members", {
+          method: "POST",
+          body: JSON.stringify({ email }),
+        }),
+      remove: (id: string) =>
+        request<{ ok: boolean }>(`/api/orgs/me/members/${id}`, {
+          method: "DELETE",
+        }),
+    },
   };
 }
 
@@ -399,7 +411,21 @@ export interface InviteResult {
 
 // ─── Multi-tenancy types ───────────────────────────────────────────────────
 
-export type Role = "INPLICIT_ADMIN" | "INPLICIT_STAFF" | "ORG_OWNER";
+export type Role = "INPLICIT_ADMIN" | "INPLICIT_STAFF" | "ORG_OWNER" | "ORG_MEMBER";
+
+export interface OrgMember {
+  id: string;
+  email: string;
+  accepted_at: string | null;
+  expires_at: string;
+  created_at: string;
+}
+
+export interface OrgMemberInvite {
+  invite_id: string;
+  email: string;
+  magic_link?: string;
+}
 
 export interface StaffUserSummary {
   id: string;
@@ -446,6 +472,7 @@ export interface Organization {
   default_voice_id: number;
   default_interview_length_min: number;
   status: "ACTIVE" | "SUSPENDED" | "DELETED";
+  logo_url?: string | null;
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
@@ -479,4 +506,6 @@ export interface UpdateOrgInput {
   default_locale?: string;
   default_voice_id?: number;
   default_interview_length_min?: number;
+  /** Empty string clears the logo. Omit the field to leave it untouched. */
+  logo_url?: string;
 }

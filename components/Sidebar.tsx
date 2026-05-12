@@ -12,8 +12,10 @@ import {
   IconLogOut,
   IconSearch,
   IconSettings,
+  IconUserPlus,
   IconUsers,
 } from "@/components/icons";
+import { OrgAvatar } from "@/components/OrgAvatar";
 import { SettingsDialog } from "@/components/SettingsDialog";
 
 type Mode = "customer" | "staff";
@@ -23,6 +25,7 @@ interface SidebarProps {
   mode: Mode;
   me?: Me;
   orgLabel?: string;
+  orgLogoUrl?: string | null;
   /** When false, org-level sections (Insights, Knowledge Map, …) render
    *  as disabled placeholders — they need at least one audit before they
    *  hold meaningful data. */
@@ -45,7 +48,13 @@ interface NavSection {
   items: NavItem[];
 }
 
-export function Sidebar({ mode, me, orgLabel, hasAudits = false }: SidebarProps) {
+export function Sidebar({
+  mode,
+  me,
+  orgLabel,
+  orgLogoUrl,
+  hasAudits = false,
+}: SidebarProps) {
   const pathname = usePathname() ?? "";
   const params = useParams();
 
@@ -56,8 +65,6 @@ export function Sidebar({ mode, me, orgLabel, hasAudits = false }: SidebarProps)
       ? staffNav(me?.role === "INPLICIT_ADMIN")
       : customerNav(campaignId, hasAudits);
 
-  const avatarLetter =
-    mode === "staff" ? "I" : (orgLabel?.[0]?.toUpperCase() ?? "·");
   const orgName = orgLabel ?? (mode === "staff" ? "Inplicit Staff" : "Workspace");
   const roleLabel = mode === "staff" ? "Back-Office" : "Workspace";
 
@@ -85,7 +92,12 @@ export function Sidebar({ mode, me, orgLabel, hasAudits = false }: SidebarProps)
         </div>
 
         <div className="sidebar__org">
-          <span className="sidebar__avatar" aria-hidden="true">{avatarLetter}</span>
+          <OrgAvatar
+            name={mode === "staff" ? "Inplicit" : orgName}
+            logoUrl={mode === "staff" ? null : orgLogoUrl}
+            size={32}
+            className="sidebar__avatar"
+          />
           <span className="sidebar__org-text">
             <span className="sidebar__org-name">{orgName}</span>
             <span className="sidebar__org-role">{roleLabel}</span>
@@ -187,7 +199,8 @@ function customerNav(campaignId: string | null, hasAudits: boolean): NavSection[
       label: "Workspace",
       items: [
         { href: "/campaigns", label: "Überblick", icon: IconLayoutGrid },
-        { href: "/campaigns", label: "Audits", icon: IconFolderKanban },
+        { href: "/campaigns", label: "Kampagnes", icon: IconFolderKanban },
+        { href: "/campaigns/team", label: "Team", icon: IconUserPlus },
       ],
     },
   ];
@@ -196,7 +209,7 @@ function customerNav(campaignId: string | null, hasAudits: boolean): NavSection[
   // are accessible via the top tab bar once an audit is open — showing them
   // here too would duplicate the navigation. They are intentionally omitted.
 
-  const noAuditsHint = "Verfügbar, sobald der erste Audit angelegt ist.";
+  const noAuditsHint = "Verfügbar, sobald die erste Kampagne angelegt ist.";
 
   // Insights is org-level (RAG searches across every audit in the org),
   // so it stays enabled whenever at least one audit exists — even from

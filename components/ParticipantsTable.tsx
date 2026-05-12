@@ -315,10 +315,9 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
 
       {/* Table */}
       <Card className="overflow-hidden p-0">
-        <Table className="min-w-[920px]">
+        <Table className="min-w-[820px]">
           <TableHeader>
             <TableRow className="bg-surface/40 hover:bg-surface/40">
-              <TableHead className="w-[120px]">Anon-ID</TableHead>
               <TableHead className="min-w-[220px]">E-Mail</TableHead>
               <TableHead className="min-w-[160px]">Name</TableHead>
               <TableHead className="min-w-[160px]">Abteilung</TableHead>
@@ -330,7 +329,7 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
           <TableBody>
             {rows.length === 0 && !adding && (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={7}>
+                <TableCell colSpan={6}>
                   <EmptyState onAdd={() => setAdding(true)} />
                 </TableCell>
               </TableRow>
@@ -340,11 +339,6 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
               const isEditing = editing === p.id;
               return (
                 <TableRow key={p.id} className={isEditing ? "bg-surface/40" : ""}>
-                  <TableCell>
-                    <span className="font-mono text-xs font-medium text-fg">
-                      {p.anon_id}
-                    </span>
-                  </TableCell>
                   <TableCell>
                     {isEditing ? (
                       <Input
@@ -537,7 +531,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       </div>
       <div className="space-y-1">
         <p className="text-sm font-semibold text-fg">
-          Noch keine Teilnehmer in diesem Audit.
+          Noch keine Teilnehmer in dieser Kampagne.
         </p>
         <p className="text-xs text-fg-muted">
           Lege jemanden manuell an oder lade per CSV-Upload beim Erstellen
