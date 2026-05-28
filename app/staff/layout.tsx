@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Sidebar } from "@/components/Sidebar";
+import { ShellLayout } from "@/components/shell/ShellLayout";
 import { requireStaff } from "@/lib/auth";
 
 export default async function StaffLayout({
@@ -10,9 +10,8 @@ export default async function StaffLayout({
   const { me } = await requireStaff();
 
   return (
-    <div className="shell shell--with-sidebar">
-      <Sidebar mode="staff" me={me} orgLabel="Inplicit Staff" />
-      <main className="app-main">{children}</main>
-    </div>
+    <ShellLayout mode="staff" me={me} orgLabel="Inplicit Staff" hasAudits>
+      {children}
+    </ShellLayout>
   );
 }

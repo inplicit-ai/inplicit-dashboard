@@ -1,20 +1,18 @@
 import type { ReactNode } from "react";
-import { Sidebar } from "@/components/Sidebar";
+import { ShellLayout } from "@/components/shell/ShellLayout";
 import { makeApi } from "@/lib/api";
 import { requireOrgOwner, requestCookie } from "@/lib/auth";
 
-export default async function AdminLayout({
+export default async function CustomerLayout({
   children,
 }: {
   children: ReactNode;
 }) {
   const { me } = await requireOrgOwner();
 
-  // The sidebar grays out org-wide sections (Interviews, Participants,
-  // Knowledge Map, Cross-Validation, Insights) until at least one audit
-  // exists — they're aggregations across the org's audits, not audit-scoped,
-  // but they need *some* data before they're meaningful. A failure here
-  // shouldn't block the layout from rendering.
+  // Org-wide surfaces (Interviews, Knowledge Chat, Digital Twin) gray out
+  // until at least one campaign exists — they're aggregations across the org's
+  // campaigns. A failure here must not block the shell from rendering.
   let hasAudits = false;
   try {
     const cookie = await requestCookie();
@@ -25,9 +23,14 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="shell shell--with-sidebar">
-      <Sidebar mode="customer" me={me} orgLabel={me.org?.name} hasAudits={hasAudits} />
-      <main className="app-main">{children}</main>
-    </div>
+    <ShellLayout
+      mode="customer"
+      me={me}
+      orgLabel={me.org?.name}
+      orgLogoUrl={me.org?.logo_url}
+      hasAudits={hasAudits}
+    >
+      {children}
+    </ShellLayout>
   );
 }

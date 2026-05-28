@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 interface Tab {
   id: string;
-  label: string;
+  /** i18n key under the `breadcrumb` namespace. */
+  labelKey: string;
   href: (campaignId: string) => string;
   match: (pathname: string, campaignId: string) => boolean;
 }
@@ -14,37 +16,37 @@ interface Tab {
 const TABS: Tab[] = [
   {
     id: "overview",
-    label: "Übersicht",
+    labelKey: "overview",
     href: (id) => `/campaigns/${id}`,
     match: (p, id) => p === `/campaigns/${id}`,
   },
   {
     id: "participants",
-    label: "Teilnehmer",
+    labelKey: "participants",
     href: (id) => `/campaigns/${id}/participants`,
     match: (p, id) => p.startsWith(`/campaigns/${id}/participants`),
   },
   {
     id: "interviews",
-    label: "Interviews",
+    labelKey: "interviews",
     href: (id) => `/campaigns/${id}/interviews`,
     match: (p, id) => p.startsWith(`/campaigns/${id}/interviews`),
   },
   {
     id: "insights",
-    label: "Insights",
+    labelKey: "insights",
     href: (id) => `/campaigns/${id}/insights`,
     match: (p, id) => p.startsWith(`/campaigns/${id}/insights`),
   },
   {
     id: "hypotheses",
-    label: "Cross-Validation",
+    labelKey: "hypotheses",
     href: (id) => `/campaigns/${id}/hypotheses`,
     match: (p, id) => p.startsWith(`/campaigns/${id}/hypotheses`),
   },
   {
     id: "map",
-    label: "Knowledge Map",
+    labelKey: "map",
     href: (id) => `/campaigns/${id}/map`,
     match: (p, id) => p.startsWith(`/campaigns/${id}/map`),
   },
@@ -52,19 +54,20 @@ const TABS: Tab[] = [
 
 export function CampaignTabs({ campaignId }: { campaignId: string }) {
   const pathname = usePathname() ?? "";
+  const t = useTranslations("breadcrumb");
 
   return (
     <div className="-mx-4 mb-8 border-b border-line sm:-mx-8">
       <nav
-        aria-label="Kampagnen-Bereiche"
+        aria-label={t("campaign")}
         className="scrollbar-none mx-auto flex max-w-[1280px] gap-7 overflow-x-auto px-4 sm:px-8"
       >
-        {TABS.map((t) => {
-          const active = t.match(pathname, campaignId);
+        {TABS.map((tab) => {
+          const active = tab.match(pathname, campaignId);
           return (
             <Link
-              key={t.id}
-              href={t.href(campaignId)}
+              key={tab.id}
+              href={tab.href(campaignId)}
               aria-current={active ? "page" : undefined}
               className={cn(
                 "relative -mb-px whitespace-nowrap border-b-2 py-4 text-sm font-medium transition-colors",
@@ -74,7 +77,7 @@ export function CampaignTabs({ campaignId }: { campaignId: string }) {
                   : "border-transparent text-fg-muted hover:text-fg",
               )}
             >
-              {t.label}
+              {t(tab.labelKey)}
             </Link>
           );
         })}

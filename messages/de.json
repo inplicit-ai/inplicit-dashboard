@@ -1,0 +1,92 @@
+{
+  "nav": {
+    "sectionCreate": "Erstellen",
+    "sectionOrg": "Organisation",
+    "sectionBackOffice": "Back-Office",
+    "create": "Erstellen",
+    "campaigns": "Kampagnen",
+    "interviews": "Interviews",
+    "knowledgeChat": "Knowledge Chat",
+    "vaults": "Context Vaults",
+    "integrations": "Integrationen",
+    "twin": "Digital Twin",
+    "admin": "Admin",
+    "organizations": "Organisationen",
+    "team": "Team",
+    "more": "Mehr",
+    "needsAuditsHint": "Verfügbar, sobald die erste Kampagne angelegt ist."
+  },
+  "shell": {
+    "primaryNavLabel": "Hauptnavigation",
+    "workspaceLabel": "Workspace",
+    "staffLabel": "Staff",
+    "backOffice": "Back-Office",
+    "workspace": "Workspace",
+    "settings": "Einstellungen",
+    "logout": "Abmelden",
+    "openNav": "Navigation öffnen",
+    "collapseNav": "Navigation einklappen",
+    "expandNav": "Navigation ausklappen",
+    "openMenu": "Menü öffnen",
+    "userMenu": "Benutzermenü",
+    "language": "Sprache",
+    "replayTour": "Tour erneut starten"
+  },
+  "breadcrumb": {
+    "home": "Start",
+    "campaigns": "Kampagnen",
+    "campaignsNew": "Neue Kampagne",
+    "interviews": "Interviews",
+    "chat": "Knowledge Chat",
+    "vaults": "Context Vaults",
+    "integrations": "Integrationen",
+    "twin": "Digital Twin",
+    "admin": "Admin",
+    "team": "Team",
+    "staff": "Staff",
+    "orgs": "Organisationen",
+    "users": "Benutzer",
+    "new": "Neu",
+    "configure": "Konfigurieren",
+    "review": "Prüfen",
+    "launch": "Starten",
+    "overview": "Übersicht",
+    "insights": "Insights",
+    "participants": "Teilnehmer",
+    "hypotheses": "Cross-Validation",
+    "map": "Knowledge Map",
+    "campaign": "Kampagne"
+  },
+  "flows": {
+    "setup": {
+      "name": "Kampagnen-Setup",
+      "build": "Aufbauen",
+      "configure": "Konfigurieren",
+      "review": "Prüfen",
+      "launch": "Starten"
+    },
+    "stepLabel": "Schritt {current} von {total}"
+  },
+  "locale": {
+    "en": "English",
+    "de": "Deutsch",
+    "label": "Sprache"
+  },
+  "placeholder": {
+    "comingSoon": "Demnächst",
+    "interviewsTitle": "Interviews",
+    "interviewsBody": "Eine kampagnenübergreifende Ansicht aller Interviews deiner Organisation. Kommt mit dem Org-Dashboard.",
+    "chatTitle": "Knowledge Chat",
+    "chatBody": "Stelle freie Fragen über all deine Kampagnen hinweg. Antworten belegen ihre Quellen oder lehnen ab.",
+    "vaultsTitle": "Context Vaults",
+    "vaultsBody": "Speichere und kuratiere den Unternehmenskontext, der jedes Interview und jede Synthese fundiert.",
+    "integrationsTitle": "Integrationen",
+    "integrationsBody": "Verbinde Inplicit mit den Tools, die dein Team bereits nutzt.",
+    "twinTitle": "Digital Twin",
+    "twinBody": "Simuliere vor dem Interview das wahrscheinliche Denken jedes Teilnehmers aus seiner Rolle, und verfeinere das Rollenmodell anschließend mit echten Antworten.",
+    "twinRolesTitle": "Rollen & Hierarchie",
+    "twinRolesBody": "Der Rollengraph, der die Persona-Simulation antreibt. Reports-to- und Manages-Kanten definieren die Hierarchie.",
+    "adminTitle": "Admin",
+    "adminBody": "Verwalte deine Organisation, Mitglieder und Workspace-Einstellungen."
+  }
+}

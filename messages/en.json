@@ -1,0 +1,92 @@
+{
+  "nav": {
+    "sectionCreate": "Create",
+    "sectionOrg": "Organization",
+    "sectionBackOffice": "Back-Office",
+    "create": "Create",
+    "campaigns": "Campaigns",
+    "interviews": "Interviews",
+    "knowledgeChat": "Knowledge Chat",
+    "vaults": "Context Vaults",
+    "integrations": "Integrations",
+    "twin": "Digital Twin",
+    "admin": "Admin",
+    "organizations": "Organizations",
+    "team": "Team",
+    "more": "More",
+    "needsAuditsHint": "Available once your first campaign exists."
+  },
+  "shell": {
+    "primaryNavLabel": "Primary navigation",
+    "workspaceLabel": "Workspace",
+    "staffLabel": "Staff",
+    "backOffice": "Back-Office",
+    "workspace": "Workspace",
+    "settings": "Settings",
+    "logout": "Log out",
+    "openNav": "Open navigation",
+    "collapseNav": "Collapse navigation",
+    "expandNav": "Expand navigation",
+    "openMenu": "Open menu",
+    "userMenu": "User menu",
+    "language": "Language",
+    "replayTour": "Replay tour"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "campaigns": "Campaigns",
+    "campaignsNew": "New campaign",
+    "interviews": "Interviews",
+    "chat": "Knowledge Chat",
+    "vaults": "Context Vaults",
+    "integrations": "Integrations",
+    "twin": "Digital Twin",
+    "admin": "Admin",
+    "team": "Team",
+    "staff": "Staff",
+    "orgs": "Organizations",
+    "users": "Users",
+    "new": "New",
+    "configure": "Configure",
+    "review": "Review",
+    "launch": "Launch",
+    "overview": "Overview",
+    "insights": "Insights",
+    "participants": "Participants",
+    "hypotheses": "Cross-Validation",
+    "map": "Knowledge Map",
+    "campaign": "Campaign"
+  },
+  "flows": {
+    "setup": {
+      "name": "Campaign setup",
+      "build": "Build",
+      "configure": "Configure",
+      "review": "Review",
+      "launch": "Launch"
+    },
+    "stepLabel": "Step {current} of {total}"
+  },
+  "locale": {
+    "en": "English",
+    "de": "Deutsch",
+    "label": "Language"
+  },
+  "placeholder": {
+    "comingSoon": "Coming soon",
+    "interviewsTitle": "Interviews",
+    "interviewsBody": "A cross-campaign view of every interview your organization has run. Lands with the Org Dashboard.",
+    "chatTitle": "Knowledge Chat",
+    "chatBody": "Ask free-form questions across all of your campaigns. Answers cite their sources or decline.",
+    "vaultsTitle": "Context Vaults",
+    "vaultsBody": "Store and curate the company context that grounds every interview and synthesis.",
+    "integrationsTitle": "Integrations",
+    "integrationsBody": "Connect Inplicit to the tools your team already uses.",
+    "twinTitle": "Digital Twin",
+    "twinBody": "Pre-simulate each participant's likely thinking from their role before the interview, then refine the role model from real answers.",
+    "twinRolesTitle": "Roles & hierarchy",
+    "twinRolesBody": "The role graph that powers persona simulation. Reports-to and manages edges define the hierarchy.",
+    "adminTitle": "Admin",
+    "adminBody": "Manage your organization, members, and workspace settings."
+  }
+}

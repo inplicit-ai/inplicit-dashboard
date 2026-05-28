@@ -2,50 +2,39 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useParams } from "next/navigation";
-import type { ComponentType, SVGProps } from "react";
+import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { Me } from "@/lib/api";
 import {
-  IconBuilding,
-  IconFolderKanban,
-  IconLayoutGrid,
-  IconLogOut,
-  IconSearch,
-  IconSettings,
-  IconUserPlus,
-  IconUsers,
-} from "@/components/icons";
+  getNavSections,
+  type NavItem,
+  type NavMode,
+  type NavSection,
+} from "@/lib/shell/nav";
+import { IconLogOut, IconSettings } from "@/components/icons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { OrgAvatar } from "@/components/OrgAvatar";
 import { SettingsDialog } from "@/components/SettingsDialog";
-
-type Mode = "customer" | "staff";
-type IconCmp = ComponentType<SVGProps<SVGSVGElement> & { size?: number }>;
+import type { SidebarState } from "@/lib/shell/sidebar-policy";
 
 interface SidebarProps {
-  mode: Mode;
+  mode: NavMode;
   me?: Me;
   orgLabel?: string;
   orgLogoUrl?: string | null;
-  /** When false, org-level sections (Insights, Knowledge Map, …) render
-   *  as disabled placeholders — they need at least one audit before they
-   *  hold meaningful data. */
+  /** When false, items flagged `needsAudits` render disabled (need ≥1 audit). */
   hasAudits?: boolean;
-}
-
-interface NavItem {
-  href: string;
-  label: string;
-  icon: IconCmp;
-  badge?: string;
-  /** True → render as a non-clickable, dimmed row with an explanation. */
-  disabled?: boolean;
-  /** Hint shown via title attribute when disabled. */
-  disabledHint?: string;
-}
-
-interface NavSection {
-  label: string;
-  items: NavItem[];
+  /** Render state — drives label visibility (expanded vs. icon). */
+  state?: SidebarState;
+  /** Compact presentation for the mobile drawer (always shows labels). */
+  inDrawer?: boolean;
+  /** Called when a nav link is clicked (used to close the mobile drawer). */
+  onNavigate?: () => void;
 }
 
 export function Sidebar({
@@ -54,179 +43,199 @@ export function Sidebar({
   orgLabel,
   orgLogoUrl,
   hasAudits = false,
+  state = "expanded",
+  inDrawer = false,
+  onNavigate,
 }: SidebarProps) {
   const pathname = usePathname() ?? "";
-  const params = useParams();
+  const tNav = useTranslations("nav");
+  const tShell = useTranslations("shell");
 
-  const campaignId = typeof params?.id === "string" ? params.id : null;
+  const sections = getNavSections(mode, me?.role);
+  const iconOnly = state === "icon" && !inDrawer;
 
-  const navSections =
-    mode === "staff"
-      ? staffNav(me?.role === "INPLICIT_ADMIN")
-      : customerNav(campaignId, hasAudits);
-
-  const orgName = orgLabel ?? (mode === "staff" ? "Inplicit Staff" : "Workspace");
-  const roleLabel = mode === "staff" ? "Back-Office" : "Workspace";
+  const orgName =
+    orgLabel ?? (mode === "staff" ? "Inplicit Staff" : tShell("workspace"));
+  const roleLabel =
+    mode === "staff" ? tShell("backOffice") : tShell("workspace");
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <aside className="sidebar" aria-label="Hauptnavigation">
-      <div className="sidebar__inner">
-        <div className="sidebar__brand">
-          <Link
-            href={mode === "staff" ? "/staff/orgs" : "/campaigns"}
-            className="sidebar__brand-mark"
-            aria-label="Inplicit"
-          >
-            <Image
-              src="/logo.svg"
-              alt="Inplicit"
-              width={120}
-              height={24}
-              className="sidebar__brand-logo"
-              priority
-            />
-          </Link>
-        </div>
-
-        <div className="sidebar__org">
-          <OrgAvatar
-            name={mode === "staff" ? "Inplicit" : orgName}
-            logoUrl={mode === "staff" ? null : orgLogoUrl}
-            size={32}
-            className="sidebar__avatar"
-          />
-          <span className="sidebar__org-text">
-            <span className="sidebar__org-name">{orgName}</span>
-            <span className="sidebar__org-role">{roleLabel}</span>
-          </span>
-        </div>
-
-        <nav
-          className="sidebar__nav"
-          aria-label={mode === "staff" ? "Staff" : "Workspace"}
-        >
-          {navSections.map((section) => (
-            <div className="sidebar__section" key={section.label}>
-              <span className="sidebar__section-label">{section.label}</span>
-              {section.items.map((item) => {
-                const Icon = item.icon;
-                const className = `sidebar__item${
-                  isActive(item.href) && !item.disabled ? " is-active" : ""
-                }${item.disabled ? " is-disabled" : ""}`;
-                if (item.disabled) {
-                  return (
-                    <span
-                      key={item.href + item.label}
-                      className={className}
-                      title={item.disabledHint}
-                      aria-disabled="true"
-                    >
-                      <span className="sidebar__item-icon" aria-hidden="true">
-                        <Icon size={16} />
-                      </span>
-                      <span className="sidebar__item-label">{item.label}</span>
-                      {item.badge && (
-                        <span className="sidebar__item-badge">{item.badge}</span>
-                      )}
-                    </span>
-                  );
-                }
-                return (
-                  <Link
-                    key={item.href + item.label}
-                    href={item.href}
-                    className={className}
-                  >
-                    <span className="sidebar__item-icon" aria-hidden="true">
-                      <Icon size={16} />
-                    </span>
-                    <span className="sidebar__item-label">{item.label}</span>
-                    {item.badge && (
-                      <span className="sidebar__item-badge">{item.badge}</span>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
-        </nav>
-
-        <div className="sidebar__bottom">
-          <SettingsDialog
-            me={me}
-            trigger={
-              <button type="button" className="sidebar__item sidebar__item--bottom">
-                <span className="sidebar__item-icon" aria-hidden="true">
-                  <IconSettings size={16} />
-                </span>
-                <span className="sidebar__item-label">Einstellungen</span>
-              </button>
-            }
-          />
-          <form method="POST" action="/logout" className="sidebar__bottom-form">
-            <button
-              type="submit"
-              className="sidebar__item sidebar__item--bottom sidebar__item--logout"
+    <aside
+      className="sidebar"
+      data-state={state}
+      data-drawer={inDrawer ? "true" : undefined}
+      aria-label={tShell("primaryNavLabel")}
+    >
+      <TooltipProvider delayDuration={120}>
+        <div className="sidebar__inner">
+          <div className="sidebar__brand">
+            <Link
+              href={mode === "staff" ? "/staff/orgs" : "/campaigns"}
+              className="sidebar__brand-mark"
+              aria-label="Inplicit"
+              onClick={onNavigate}
             >
-              <span className="sidebar__item-icon" aria-hidden="true">
-                <IconLogOut size={16} />
+              <Image
+                src={iconOnly ? "/logo_icon.svg" : "/logo.svg"}
+                alt="Inplicit"
+                width={iconOnly ? 24 : 120}
+                height={24}
+                className="sidebar__brand-logo"
+                priority
+              />
+            </Link>
+          </div>
+
+          {!iconOnly && (
+            <div className="sidebar__org">
+              <OrgAvatar
+                name={mode === "staff" ? "Inplicit" : orgName}
+                logoUrl={mode === "staff" ? null : orgLogoUrl}
+                size={32}
+                className="sidebar__avatar"
+              />
+              <span className="sidebar__org-text">
+                <span className="sidebar__org-name">{orgName}</span>
+                <span className="sidebar__org-role">{roleLabel}</span>
               </span>
-              <span className="sidebar__item-label">Log Out</span>
-            </button>
-          </form>
+            </div>
+          )}
+
+          <nav className="sidebar__nav" aria-label={tShell("workspaceLabel")}>
+            {sections.map((section: NavSection) => (
+              <div className="sidebar__section" key={section.id}>
+                {!iconOnly && (
+                  <span className="sidebar__section-label">
+                    {tNav(section.id)}
+                  </span>
+                )}
+                {section.items.map((item) => (
+                  <SidebarRow
+                    key={item.id}
+                    item={item}
+                    label={tNav(item.id)}
+                    disabledHint={tNav("needsAuditsHint")}
+                    active={isActive(item.href)}
+                    disabled={Boolean(item.needsAudits && !hasAudits)}
+                    iconOnly={iconOnly}
+                    onNavigate={onNavigate}
+                  />
+                ))}
+              </div>
+            ))}
+          </nav>
+
+          <div className="sidebar__bottom">
+            <SettingsDialog
+              me={me}
+              trigger={
+                <button
+                  type="button"
+                  className="sidebar__item sidebar__item--bottom"
+                >
+                  <span className="sidebar__item-icon" aria-hidden="true">
+                    <IconSettings size={16} />
+                  </span>
+                  {!iconOnly && (
+                    <span className="sidebar__item-label">
+                      {tShell("settings")}
+                    </span>
+                  )}
+                </button>
+              }
+            />
+            <form
+              method="POST"
+              action="/logout"
+              className="sidebar__bottom-form"
+            >
+              <button
+                type="submit"
+                className="sidebar__item sidebar__item--bottom sidebar__item--logout"
+              >
+                <span className="sidebar__item-icon" aria-hidden="true">
+                  <IconLogOut size={16} />
+                </span>
+                {!iconOnly && (
+                  <span className="sidebar__item-label">
+                    {tShell("logout")}
+                  </span>
+                )}
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
+      </TooltipProvider>
     </aside>
   );
 }
 
-function staffNav(isAdmin: boolean): NavSection[] {
-  const items: NavItem[] = [
-    { href: "/staff/orgs", label: "Organisationen", icon: IconBuilding },
-  ];
-  if (isAdmin) {
-    items.push({ href: "/staff/users", label: "Team", icon: IconUsers });
-  }
-  return [{ label: "Back-Office", items }];
-}
+function SidebarRow({
+  item,
+  label,
+  disabledHint,
+  active,
+  disabled,
+  iconOnly,
+  onNavigate,
+}: {
+  item: NavItem;
+  label: string;
+  disabledHint: string;
+  active: boolean;
+  disabled: boolean;
+  iconOnly: boolean;
+  onNavigate?: () => void;
+}) {
+  const Icon = item.icon;
+  const className = `sidebar__item${active && !disabled ? " is-active" : ""}${
+    disabled ? " is-disabled" : ""
+  }`;
 
-function customerNav(campaignId: string | null, hasAudits: boolean): NavSection[] {
-  const sections: NavSection[] = [
-    {
-      label: "Workspace",
-      items: [
-        { href: "/campaigns", label: "Überblick", icon: IconLayoutGrid },
-        { href: "/campaigns", label: "Kampagnes", icon: IconFolderKanban },
-        { href: "/campaigns/team", label: "Team", icon: IconUserPlus },
-      ],
-    },
-  ];
+  const inner = (
+    <>
+      <span className="sidebar__item-icon" aria-hidden="true">
+        <Icon size={16} />
+      </span>
+      {!iconOnly && <span className="sidebar__item-label">{label}</span>}
+      {!iconOnly && item.badge && (
+        <span className="sidebar__item-badge">{item.badge}</span>
+      )}
+    </>
+  );
 
-  // The per-audit items (Interviews, Teilnehmer, Knowledge Map, Cross-Validation)
-  // are accessible via the top tab bar once an audit is open — showing them
-  // here too would duplicate the navigation. They are intentionally omitted.
+  const body = disabled ? (
+    <span
+      className={className}
+      title={iconOnly ? undefined : disabledHint}
+      aria-disabled="true"
+      data-tour={item.tourId}
+    >
+      {inner}
+    </span>
+  ) : (
+    <Link
+      href={item.href}
+      className={className}
+      onClick={onNavigate}
+      data-tour={item.tourId}
+    >
+      {inner}
+    </Link>
+  );
 
-  const noAuditsHint = "Verfügbar, sobald die erste Kampagne angelegt ist.";
+  if (!iconOnly) return body;
 
-  // Insights is org-level (RAG searches across every audit in the org),
-  // so it stays enabled whenever at least one audit exists — even from
-  // /campaigns, where it lives.
-  sections.push({
-    label: "Ask",
-    items: [
-      {
-        href: "/campaigns",
-        label: "Insights",
-        icon: IconSearch,
-        badge: "RAG",
-        disabled: !hasAudits,
-        disabledHint: !hasAudits ? noAuditsHint : undefined,
-      },
-    ],
-  });
-
-  return sections;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{body}</TooltipTrigger>
+      <TooltipContent side="right">
+        {label}
+        {disabled ? ` — ${disabledHint}` : ""}
+      </TooltipContent>
+    </Tooltip>
+  );
 }

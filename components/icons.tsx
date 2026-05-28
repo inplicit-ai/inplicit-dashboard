@@ -197,6 +197,70 @@ export function IconMap(p: IconProps) {
   );
 }
 
+export function IconPlug(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M12 22v-5" />
+      <path d="M9 8V2M15 8V2" />
+      <path d="M18 8a2 2 0 0 1 2 2v2a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-2a2 2 0 0 1 2-2z" />
+    </svg>
+  );
+}
+
+export function IconVault(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 9v0M14.5 10.5l.01-.01M9.5 10.5l-.01-.01M14.5 13.5l.01.01M9.5 13.5l-.01.01" />
+    </svg>
+  );
+}
+
+export function IconChevronLeft(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="m15 18-6-6 6-6" />
+    </svg>
+  );
+}
+
+export function IconChevronRight(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
+}
+
+export function IconMenu(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <line x1="4" x2="20" y1="6" y2="6" />
+      <line x1="4" x2="20" y1="12" y2="12" />
+      <line x1="4" x2="20" y1="18" y2="18" />
+    </svg>
+  );
+}
+
+export function IconCheck(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+export function IconGlobe(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M2 12h20" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+  );
+}
+
 export function IconScale(p: IconProps) {
   return (
     <svg {...base(p)}>
