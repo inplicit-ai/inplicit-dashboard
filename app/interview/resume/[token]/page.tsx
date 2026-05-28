@@ -2,7 +2,13 @@ import { InterviewRoom } from "@/components/InterviewRoom";
 
 const API_BASE = process.env.API_URL ?? "http://localhost:8080";
 
-export default async function InterviewPage({
+/**
+ * Resume route (O-6, doc 04 §7.3). Entered from the emailed resume link
+ * `/interview/resume/{resume_token}`. Connects to the resume WebSocket which
+ * validates + consumes the token, flips the interview back to IN_PROGRESS, and
+ * continues the conversation (context replay is a marked TODO server-side).
+ */
+export default async function ResumePage({
   params,
 }: {
   params: Promise<{ token: string }>;
@@ -14,12 +20,10 @@ export default async function InterviewPage({
     return <InvalidLink />;
   }
 
-  // The browser hits this WS directly — convert http(s):// → ws(s):// without
-  // proxying through Next, so the audio path stays under 1 hop.
   const wsBase = API_BASE.replace(/^http/, "ws");
-  const wsUrl = `${wsBase}/ws/interview/${token}`;
+  const wsUrl = `${wsBase}/ws/interview/resume/${token}`;
 
-  return <InterviewRoom wsUrl={wsUrl} token={token} apiBase={API_BASE} />;
+  return <InterviewRoom wsUrl={wsUrl} apiBase={API_BASE} isResume />;
 }
 
 function InvalidLink() {
@@ -31,19 +35,14 @@ function InvalidLink() {
         </span>
         <h1 className="title invalid-card__title">Ungültiger Link</h1>
         <p className="body-sm invalid-card__body">
-          Dieser Interview-Link ist nicht gültig. Bitte überprüfe die URL aus deiner E-Mail.
+          Dieser Fortsetzungs-Link ist nicht gültig oder abgelaufen. Bitte fordere
+          einen neuen Termin an.
         </p>
       </div>
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        .invalid-shell {
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: var(--space-8) var(--space-4);
-        }
+        .invalid-shell { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--space-8) var(--space-4); }
         .invalid-card { max-width: 440px; width: 100%; text-align: left; }
         .invalid-card__title { margin-top: var(--space-2); }
         .invalid-card__body { margin-top: var(--space-3); }

@@ -1,9 +1,29 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
-import { XIcon } from "lucide-react";
-import { AgentOrb } from "@/components/AgentOrb";
-import { Button } from "@/components/ui/button";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { TopBar } from "@/components/interview/TopBar";
+import { StatusHud } from "@/components/interview/StatusHud";
+import { VoiceControls } from "@/components/interview/VoiceControls";
+import { VoiceOrb } from "@/components/interview/VoiceOrb";
+import { Transcript } from "@/components/interview/Transcript";
+import { PreflightCard } from "@/components/interview/PreflightCard";
+import { EndedView } from "@/components/interview/EndedView";
+import { ResumeView } from "@/components/interview/ResumeView";
+import {
+  type Lang,
+  detectBrowserLang,
+  normalizeLang,
+  roomCopy,
+} from "@/components/interview/copy";
+import type {
+  AgentStatus,
+  ConnState,
+  Latency,
+  LiveView,
+  Msg,
+  ServerMessage,
+  Stage,
+} from "@/components/interview/types";
 import {
   Dialog,
   DialogContent,
@@ -11,85 +31,32 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface Props {
+  /** Live interview WebSocket URL. */
   wsUrl: string;
+  /** Invite token (used for the pause REST endpoint). */
+  token?: string;
+  /** API base for control endpoints (e.g. http://localhost:8080). */
+  apiBase?: string;
+  /** When set, this mount is a resume (arrived via /interview/resume/:t). */
+  isResume?: boolean;
+  /** Default interview length (minutes) for the top-bar ring fallback. */
+  lengthMin?: number;
 }
 
-type Msg =
-  | { id: string; role: "agent"; text: string; streaming: boolean }
-  | { id: string; role: "user"; text: string };
+const ORB_DESKTOP = 160;
+const ORB_MOBILE = 120;
 
-type ConnState = "connecting" | "open" | "closed" | "error";
-type Stage = "intro" | "live" | "ended";
-type LiveView = "voice" | "chat";
-
-interface ServerMessage {
-  type: string;
-  text?: string;
-  is_final?: boolean;
-  data?: string;
-  sample_rate?: number;
-  phase?: string;
-  summary?: string;
-  message?: string;
-  language?: string;
-}
-
-type Lang = "de" | "en";
-
-const DEFAULT_LANG: Lang = "de";
-
-function normalizeLang(raw: string | undefined): Lang {
-  return raw && raw.toLowerCase().startsWith("en") ? "en" : "de";
-}
-
-const COPY: Record<Lang, {
-  endedEyebrow: string;
-  endedTitle: string;
-  endedBody: string;
-}> = {
-  de: {
-    endedEyebrow: "Abgeschlossen",
-    endedTitle: "Vielen Dank!",
-    endedBody:
-      "Das Interview ist abgeschlossen. Deine Antworten werden anonym ausgewertet. Du kannst dieses Fenster jetzt schließen.",
-  },
-  en: {
-    endedEyebrow: "Completed",
-    endedTitle: "Thank you!",
-    endedBody:
-      "The interview is complete. Your answers will be analyzed anonymously. You can close this window now.",
-  },
-};
-
-interface DebugStats {
-  ws: ConnState;
-  voiceStarting: boolean;
-  voiceReady: boolean;
-  audioChunksSent: number;
-  audioBytesSent: number;
-  agentAudioFrames: number;
-  agentAudioBytes: number;
-  lastEvent: string;
-}
-
-const DEFAULT_DEBUG: DebugStats = {
-  ws: "connecting",
-  voiceStarting: false,
-  voiceReady: false,
-  audioChunksSent: 0,
-  audioBytesSent: 0,
-  agentAudioFrames: 0,
-  agentAudioBytes: 0,
-  lastEvent: "—",
-};
-
-const ORB_SIZE = 132;
-
-export function InterviewRoom({ wsUrl }: Props) {
+export function InterviewRoom({
+  wsUrl,
+  token,
+  apiBase,
+  isResume = false,
+  lengthMin = 25,
+}: Props) {
   const wsRef = useRef<WebSocket | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const audioQueueRef = useRef<AudioBufferQueue | null>(null);
@@ -99,68 +66,49 @@ export function InterviewRoom({ wsUrl }: Props) {
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const levelRef = useRef(0);
   const agentStreamingRef = useRef(false);
-  const debugRef = useRef<DebugStats>({ ...DEFAULT_DEBUG });
-  const debugTickRef = useRef(0);
+  const mutedRef = useRef(false);
+  const completedRef = useRef(false);
 
-  const [state, setState] = useState<ConnState>("connecting");
-  const [stage, setStage] = useState<Stage>("intro");
+  const [conn, setConn] = useState<ConnState>("connecting");
+  const [stage, setStage] = useState<Stage>(isResume ? "resume" : "preflight");
   const [liveView, setLiveView] = useState<LiveView>("voice");
-  const [voiceStarting, setVoiceStarting] = useState(false);
-  const [voiceReady, setVoiceReady] = useState(false);
-  const voiceReadyRef = useRef(false);
-  const voiceStartTimeoutRef = useRef<number | null>(null);
-  const [recording, setRecording] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
-  const [interimUser, setInterimUser] = useState<string>("");
+  const [interimUser, setInterimUser] = useState("");
   const [draft, setDraft] = useState("");
-  const [phase, setPhase] = useState<"open" | "validation">("open");
+  const [agentStatus, setAgentStatus] = useState<AgentStatus>("idle");
+  const [latency, setLatency] = useState<Latency>({});
+  const [elapsedS, setElapsedS] = useState(0);
+  const [remainingS, setRemainingS] = useState(lengthMin * 60);
   const [endedSummary, setEndedSummary] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [language, setLanguage] = useState<Lang>(DEFAULT_LANG);
-  const [debugVisible, setDebugVisible] = useState(false);
-  const [, forceDebugRender] = useState(0);
+  const [language, setLanguage] = useState<Lang>(detectBrowserLang());
+  const [langLocked, setLangLocked] = useState(false);
+  const [endDialog, setEndDialog] = useState(false);
 
-  // Debug overlay (?debug=1)
+  const c = roomCopy(language);
+
+  // ── WebSocket lifecycle ───────────────────────────────────────────────────
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const url = new URL(globalThis.location.href);
-    if (url.searchParams.get("debug") === "1") setDebugVisible(true);
-
-    const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "d") {
-        e.preventDefault();
-        setDebugVisible((v) => !v);
-      }
-    };
-    globalThis.addEventListener("keydown", handler);
-    return () => globalThis.removeEventListener("keydown", handler);
-  }, []);
-
-  // Establish WebSocket on mount.
-  useEffect(() => {
-    log("ws: connecting", { wsUrl });
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
     ws.onopen = () => {
-      log("ws: open");
-      bumpDebug({ ws: "open" });
-      setState("open");
+      setConn("open");
+      // Tell the server the chosen language before the first turn.
+      try {
+        ws.send(JSON.stringify({ type: "set_language", lang: language }));
+      } catch {
+        /* ignore */
+      }
     };
-    ws.onclose = () => {
-      log("ws: closed");
-      bumpDebug({ ws: "closed" });
-      setState("closed");
-    };
-    ws.onerror = (e) => {
-      log("ws: error", e);
-      bumpDebug({ ws: "error" });
-      setState("error");
-    };
+    ws.onclose = () => setConn((s) => (completedRef.current ? "closed" : "reconnecting"));
+    ws.onerror = () => setConn("error");
     ws.onmessage = (event) => {
       try {
-        handleServerMessage(JSON.parse(event.data));
-      } catch (err) {
-        log("ws: parse error", err);
+        handleServerMessage(JSON.parse(event.data) as ServerMessage);
+      } catch {
+        /* ignore malformed */
       }
     };
     return () => {
@@ -172,56 +120,53 @@ export function InterviewRoom({ wsUrl }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wsUrl]);
 
-  // Auto-scroll transcript on new content.
+  // Stick-to-bottom on new content.
   useEffect(() => {
     if (transcriptRef.current) {
       transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
     }
-  }, [messages, interimUser, endedSummary]);
+  }, [messages, interimUser]);
 
-  function bumpDebug(patch: Partial<DebugStats>) {
-    debugRef.current = { ...debugRef.current, ...patch };
-    const now = performance.now();
-    if (now - debugTickRef.current > 200) {
-      debugTickRef.current = now;
-      forceDebugRender((n) => n + 1);
-    }
-  }
-
-  function log(msg: string, data?: unknown) {
-    debugRef.current = { ...debugRef.current, lastEvent: msg };
-    console.info(`[interview] ${msg}`, data ?? "");
-  }
+  // Local clock fallback while live (server `time` overrides when it arrives).
+  useEffect(() => {
+    if (stage !== "live" || paused) return;
+    const id = setInterval(() => {
+      setElapsedS((e) => e + 1);
+      setRemainingS((r) => Math.max(0, r - 1));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [stage, paused]);
 
   function handleServerMessage(msg: ServerMessage) {
     switch (msg.type) {
       case "session_init":
         setLanguage(normalizeLang(msg.language));
         break;
-      case "voice_starting":
-        log("server: voice_starting");
-        bumpDebug({ voiceStarting: true });
-        setVoiceStarting(true);
+      case "agent_status":
+        if (isAgentStatus(msg.status)) setAgentStatus(msg.status);
+        break;
+      case "latency":
+        setLatency({
+          stt_ms: msg.stt_ms,
+          llm_ttft_ms: msg.llm_ttft_ms,
+          tts_ttfb_ms: msg.tts_ttfb_ms,
+          round_trip_ms: msg.round_trip_ms,
+        });
+        break;
+      case "time":
+        if (typeof msg.elapsed_s === "number") setElapsedS(msg.elapsed_s);
+        if (typeof msg.remaining_s === "number") setRemainingS(msg.remaining_s);
         break;
       case "voice_ready":
-        log("server: voice_ready");
-        bumpDebug({ voiceReady: true });
-        voiceReadyRef.current = true;
-        setVoiceReady(true);
-        if (voiceStartTimeoutRef.current !== null) {
-          clearTimeout(voiceStartTimeoutRef.current);
-          voiceStartTimeoutRef.current = null;
-        }
-        startRecording().catch((e) => {
-          log("recorder: start failed", e);
-          setErrorMsg(
-            "Mikrofon-Zugriff verweigert. Du kannst das Interview im Textmodus fortsetzen.",
-          );
+        setAgentStatus("listening");
+        startRecording().catch(() => {
+          setErrorMsg(c.micNotice);
           setLiveView("chat");
         });
         break;
       case "agent_text":
         appendAgentText(msg.text ?? "", msg.is_final ?? false);
+        setAgentStatus(msg.is_final ? "listening" : "speaking");
         break;
       case "transcript":
         if (msg.is_final && msg.text) {
@@ -229,29 +174,33 @@ export function InterviewRoom({ wsUrl }: Props) {
           setInterimUser("");
         } else if (!msg.is_final) {
           setInterimUser(msg.text ?? "");
+          setAgentStatus("listening");
         }
         break;
       case "agent_audio":
-        if (msg.data) {
-          enqueuePcm16(msg.data, msg.sample_rate ?? 24000);
-        }
+        if (msg.data) enqueuePcm16(msg.data, msg.sample_rate ?? 24000);
         break;
       case "interrupt":
         audioQueueRef.current?.cancel();
         agentStreamingRef.current = false;
-        markAgentInterrupted();
         break;
       case "phase_change":
-        if (msg.phase === "validation" || msg.phase === "open") {
-          setPhase(msg.phase);
-        }
+        // Phase surfaced via HUD/length only for participants; no extra UI.
+        break;
+      case "paused":
+        setPaused(true);
+        setConn("paused");
+        break;
+      case "resumed":
+        setPaused(false);
+        setConn("open");
+        if (typeof msg.elapsed_s === "number") setElapsedS(msg.elapsed_s);
         break;
       case "interview_end":
-        log("server: interview_end → closing room");
-        setEndedSummary(msg.summary ?? null);
+        completedRef.current = true;
+        setEndedSummary(msg.summary ?? msg.reason ?? null);
         setStage("ended");
         stopRecording();
-        agentStreamingRef.current = false;
         try {
           wsRef.current?.close(1000, "interview_end");
         } catch {
@@ -259,249 +208,101 @@ export function InterviewRoom({ wsUrl }: Props) {
         }
         break;
       case "error":
-        log("server: error", msg.message);
-        setErrorMsg(msg.message ?? "Es ist ein Fehler aufgetreten.");
+        setErrorMsg(msg.message ?? "Error.");
         break;
     }
   }
 
-  function appendAgentText(token: string, isFinal: boolean) {
+  function appendAgentText(tokenStr: string, isFinal: boolean) {
     agentStreamingRef.current = !isFinal;
     setMessages((prev) => {
       const last = prev[prev.length - 1];
       if (last && last.role === "agent" && last.streaming) {
-        if (isFinal && token === "") {
+        if (isFinal && tokenStr === "") {
           return [...prev.slice(0, -1), { ...last, streaming: false }];
         }
         return [
           ...prev.slice(0, -1),
-          { ...last, text: last.text + token, streaming: !isFinal },
+          { ...last, text: last.text + tokenStr, streaming: !isFinal },
         ];
       }
-      if (token === "" && isFinal) return prev;
+      if (tokenStr === "" && isFinal) return prev;
       return [
         ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "agent",
-          text: token,
-          streaming: !isFinal,
-        },
+        { id: crypto.randomUUID(), role: "agent", text: tokenStr, streaming: !isFinal },
       ];
     });
   }
 
-  function getOrbLevel(): number {
+  function appendUserMessage(text: string) {
+    setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "user", text }]);
+  }
+
+  const getOrbLevel = useCallback((): number => {
     const queue = audioQueueRef.current;
     let target = 0;
-    if (queue && queue.isPlaying()) {
-      target = queue.currentLevel();
-    } else if (agentStreamingRef.current) {
-      target = 0.28 + Math.sin(performance.now() * 0.004) * 0.06;
-    }
+    if (queue && queue.isPlaying()) target = queue.currentLevel();
+    else if (agentStreamingRef.current) target = 0.26;
     const prev = levelRef.current;
     const k = target > prev ? 0.35 : 0.08;
     levelRef.current = prev + (target - prev) * k;
     return levelRef.current;
-  }
-
-  function markAgentInterrupted() {
-    setMessages((prev) => {
-      const last = prev[prev.length - 1];
-      if (last && last.role === "agent" && last.streaming) {
-        return [
-          ...prev.slice(0, -1),
-          { ...last, text: last.text + " …", streaming: false },
-        ];
-      }
-      return prev;
-    });
-  }
-
-  function appendUserMessage(text: string) {
-    setMessages((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), role: "user", text },
-    ]);
-  }
+  }, []);
 
   function enqueuePcm16(b64: string, sampleRate: number) {
     const ctx = audioCtxRef.current;
-    if (!ctx) {
-      log("agent_audio: no AudioContext yet — dropping");
-      return;
-    }
-    if (ctx.state === "suspended") {
-      ctx.resume().catch(() => {});
-    }
-    if (!audioQueueRef.current) {
-      audioQueueRef.current = new AudioBufferQueue(ctx);
-    }
-    const bytes = audioQueueRef.current.enqueue(b64, sampleRate);
-    debugRef.current.agentAudioFrames += 1;
-    debugRef.current.agentAudioBytes += bytes;
-    bumpDebug({});
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    if (!audioQueueRef.current) audioQueueRef.current = new AudioBufferQueue(ctx);
+    audioQueueRef.current.enqueue(b64, sampleRate);
   }
 
-  function sendText() {
-    if (!draft.trim() || !wsRef.current) return;
-    if (wsRef.current.readyState !== WebSocket.OPEN) return;
-    if (stage === "ended") return;
-    const text = draft.trim();
-    appendUserMessage(text);
-    wsRef.current.send(JSON.stringify({ type: "text_message", text }));
-    setDraft("");
-  }
-
-  function leaveInterview() {
-    if (stage === "ended") return;
-    log("client → leave");
-    const ws = wsRef.current;
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      try {
-        ws.send(JSON.stringify({ type: "leave" }));
-      } catch {
-        /* ignore */
-      }
-    }
-    stopRecording();
-    audioQueueRef.current?.cancel();
-    agentStreamingRef.current = false;
-    if (voiceStartTimeoutRef.current !== null) {
-      clearTimeout(voiceStartTimeoutRef.current);
-      voiceStartTimeoutRef.current = null;
-    }
-    setStage("ended");
-    try {
-      ws?.close(1000, "user_left");
-    } catch {
-      /* ignore */
-    }
-  }
-
-  // Voice activation
+  // ── Voice activation + recording ──────────────────────────────────────────
   async function enterVoice() {
+    setLangLocked(true);
     try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new AudioContext();
-      }
-      if (audioCtxRef.current.state === "suspended") {
-        await audioCtxRef.current.resume();
-      }
+      if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
+      if (audioCtxRef.current.state === "suspended") await audioCtxRef.current.resume();
       audioQueueRef.current = new AudioBufferQueue(audioCtxRef.current);
-
-      log("client → mode_switch=voice");
       wsRef.current?.send(JSON.stringify({ type: "mode_switch", mode: "voice" }));
       setStage("live");
       setLiveView("voice");
-      setVoiceStarting(false);
-      setVoiceReady(false);
-      voiceReadyRef.current = false;
-
-      if (voiceStartTimeoutRef.current !== null) {
-        clearTimeout(voiceStartTimeoutRef.current);
-      }
-      voiceStartTimeoutRef.current = setTimeout(() => {
-        if (!voiceReadyRef.current) {
-          log("watchdog: no voice_ready within 12s");
-          setErrorMsg(
-            "Server antwortet nicht (kein voice_ready). Backend-Logs prüfen oder zu Chat wechseln.",
-          );
-        }
-      }, 12_000) as unknown as number;
-    } catch (e) {
-      log("enterVoice failed", e);
-      setErrorMsg(
-        "Konnte den Sprachmodus nicht starten. Du kannst das Interview im Textmodus fortsetzen.",
-      );
+      setAgentStatus("thinking");
+    } catch {
+      setErrorMsg(c.micNotice);
       setStage("live");
       setLiveView("chat");
     }
   }
 
-  function fallbackToText() {
+  function preferText() {
+    setLangLocked(true);
     setStage("live");
     setLiveView("chat");
     wsRef.current?.send(JSON.stringify({ type: "mode_switch", mode: "chat" }));
   }
 
-  function switchToChat() {
-    log("client → mode_switch=chat (from voice)");
-    stopRecording();
-    setVoiceReady(false);
-    setVoiceStarting(false);
-    voiceReadyRef.current = false;
-    if (voiceStartTimeoutRef.current !== null) {
-      clearTimeout(voiceStartTimeoutRef.current);
-      voiceStartTimeoutRef.current = null;
-    }
-    audioQueueRef.current?.cancel();
-    setLiveView("chat");
-    wsRef.current?.send(JSON.stringify({ type: "mode_switch", mode: "chat" }));
-  }
-
-  async function switchToVoice() {
-    setLiveView("voice");
-    await enterVoice();
-  }
-
   async function startRecording() {
-    log("recorder: requesting mic");
     const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-      },
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     });
     micStreamRef.current = stream;
-
     const ctx = audioCtxRef.current;
-    if (!ctx) {
-      throw new Error("AudioContext not initialised");
-    }
-    if (ctx.state === "suspended") {
-      await ctx.resume();
-    }
-
-    log("recorder: loading worklet", { contextRate: ctx.sampleRate });
-    try {
-      await ctx.audioWorklet.addModule("/pcm-worklet.js");
-    } catch (e) {
-      log("recorder: worklet load failed", e);
-      throw e;
-    }
-
+    if (!ctx) throw new Error("no audio ctx");
+    if (ctx.state === "suspended") await ctx.resume();
+    await ctx.audioWorklet.addModule("/pcm-worklet.js");
     const source = ctx.createMediaStreamSource(stream);
     const node = new AudioWorkletNode(ctx, "pcm-worklet");
-
     node.port.onmessage = (ev) => {
       const ws = wsRef.current;
       if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      if (mutedRef.current) return; // muted: no audio leaves the device
       const buffer = ev.data as ArrayBuffer;
-      const b64 = bytesToBase64(new Uint8Array(buffer));
-      ws.send(JSON.stringify({ type: "audio_chunk", data: b64 }));
-      debugRef.current.audioChunksSent += 1;
-      debugRef.current.audioBytesSent += buffer.byteLength;
-      if (
-        debugRef.current.audioChunksSent <= 3 ||
-        debugRef.current.audioChunksSent % 20 === 0
-      ) {
-        log("audio_chunk → server", {
-          n: debugRef.current.audioChunksSent,
-          bytes: buffer.byteLength,
-          format: "pcm16@16k",
-        });
-      }
-      bumpDebug({});
+      ws.send(JSON.stringify({ type: "audio_chunk", data: bytesToBase64(new Uint8Array(buffer)) }));
     };
-
     source.connect(node);
-
     micSourceRef.current = source;
     micWorkletRef.current = node;
-    log("recorder: started (PCM16 @ 16 kHz)");
-    setRecording(true);
   }
 
   function stopRecording() {
@@ -515,575 +316,317 @@ export function InterviewRoom({ wsUrl }: Props) {
       }
     }
     micWorkletRef.current = null;
-
-    const source = micSourceRef.current;
-    if (source) {
-      try {
-        source.disconnect();
-      } catch {
-        /* ignore */
-      }
+    try {
+      micSourceRef.current?.disconnect();
+    } catch {
+      /* ignore */
     }
     micSourceRef.current = null;
-
-    const stream = micStreamRef.current;
-    if (stream) {
-      stream.getTracks().forEach((t) => t.stop());
-    }
+    micStreamRef.current?.getTracks().forEach((t) => t.stop());
     micStreamRef.current = null;
-
-    setRecording(false);
   }
 
-  // Render
+  function toggleMute() {
+    setMuted((m) => {
+      const next = !m;
+      mutedRef.current = next;
+      return next;
+    });
+  }
+
+  function switchToChat() {
+    stopRecording();
+    setLiveView("chat");
+    wsRef.current?.send(JSON.stringify({ type: "mode_switch", mode: "chat" }));
+  }
+
+  async function switchToVoice() {
+    setLiveView("voice");
+    await enterVoice();
+  }
+
+  function sendText() {
+    if (!draft.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    const text = draft.trim();
+    appendUserMessage(text);
+    wsRef.current.send(JSON.stringify({ type: "text_message", text }));
+    setDraft("");
+  }
+
+  // ── Pause / resume (O-6) ──────────────────────────────────────────────────
+  async function pauseInterview() {
+    setPaused(true);
+    setConn("paused");
+    stopRecording();
+    audioQueueRef.current?.cancel();
+    // Tell the live socket (best-effort) and persist via REST so a disconnect
+    // after this still has the position + a resume token.
+    try {
+      wsRef.current?.send(JSON.stringify({ type: "pause" }));
+    } catch {
+      /* ignore */
+    }
+    if (token && apiBase) {
+      try {
+        await fetch(`${apiBase}/api/interview/${token}/pause`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ elapsed_seconds: elapsedS, phase: "open" }),
+        });
+      } catch {
+        /* link still valid via inline send; ignore */
+      }
+    }
+  }
+
+  async function resumeInterview() {
+    setPaused(false);
+    setConn("open");
+    try {
+      wsRef.current?.send(JSON.stringify({ type: "resume" }));
+    } catch {
+      /* ignore */
+    }
+    if (liveView === "voice") {
+      await startRecording().catch(() => setLiveView("chat"));
+    }
+  }
+
+  function endInterview() {
+    completedRef.current = true;
+    try {
+      wsRef.current?.send(JSON.stringify({ type: "leave" }));
+    } catch {
+      /* ignore */
+    }
+    stopRecording();
+    audioQueueRef.current?.cancel();
+    setStage("ended");
+    try {
+      wsRef.current?.close(1000, "user_left");
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
   if (stage === "ended") {
     return (
-      <EndedView
-        summary={endedSummary}
-        language={language}
-        debug={debugVisible ? debugRef.current : null}
-      />
+      <>
+        <EndedView lang={language} summary={endedSummary} />
+        <RoomStyles />
+      </>
     );
   }
 
-  if (stage === "intro") {
+  if (stage === "resume") {
+    // Arrived via a resume link — connecting re-enters the live socket.
     return (
-      <IntroView
-        connState={state}
-        onStartVoice={enterVoice}
-        onFallbackText={fallbackToText}
-        errorMsg={errorMsg}
-        getLevel={getOrbLevel}
-        debug={debugVisible ? debugRef.current : null}
-      />
+      <>
+        <ResumeView
+          lang={language}
+          elapsedS={elapsedS}
+          onResume={conn === "open" ? () => setStage("live") : undefined}
+        />
+        <RoomStyles />
+      </>
+    );
+  }
+
+  if (stage === "preflight") {
+    return (
+      <>
+        <PreflightCard
+          lang={language}
+          onLangChange={(l) => {
+            setLanguage(l);
+            try {
+              wsRef.current?.send(JSON.stringify({ type: "set_language", lang: l }));
+            } catch {
+              /* ignore */
+            }
+          }}
+          langLocked={langLocked}
+          ready={conn === "open"}
+          errorMsg={errorMsg}
+          onStartVoice={enterVoice}
+          onPreferText={preferText}
+        />
+        <RoomStyles />
+      </>
     );
   }
 
   return (
     <div className="iv-shell">
-      <Header connState={state} phase={phase} />
+      <TopBar
+        lang={language}
+        elapsedS={elapsedS}
+        remainingS={remainingS}
+        paused={paused}
+        onPause={pauseInterview}
+        onResume={resumeInterview}
+        onEnd={() => setEndDialog(true)}
+      />
 
       <main className={`iv-main iv-main--${liveView}`}>
-        <div className="iv-orb-wrap">
-          <AgentOrb size={ORB_SIZE} hue={210} getLevel={getOrbLevel} />
-        </div>
-
         {liveView === "voice" ? (
-          <VoiceCenter
-            voiceStarting={voiceStarting}
-            voiceReady={voiceReady}
-            recording={recording}
-            connOpen={state === "open"}
-            onSwitchToChat={switchToChat}
-            onLeave={leaveInterview}
-          />
+          <div className="iv-voice">
+            <div className="iv-orb-wrap iv-orb-wrap--desktop">
+              <VoiceOrb size={ORB_DESKTOP} getLevel={getOrbLevel} />
+            </div>
+            <div className="iv-orb-wrap iv-orb-wrap--mobile">
+              <VoiceOrb size={ORB_MOBILE} getLevel={getOrbLevel} />
+            </div>
+            <StatusHud lang={language} agentStatus={agentStatus} conn={conn} latency={latency} />
+          </div>
         ) : (
-          <ChatView
-            messages={messages}
-            interimUser={interimUser}
-            transcriptRef={transcriptRef}
-            draft={draft}
-            setDraft={setDraft}
-            sendText={sendText}
-            connOpen={state === "open"}
-            onSwitchToVoice={switchToVoice}
-            onLeave={leaveInterview}
-          />
+          <div className="iv-chat">
+            <Transcript
+              lang={language}
+              messages={messages}
+              interimUser={interimUser}
+              scrollRef={transcriptRef}
+            />
+            <div className="iv-composer">
+              <textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendText();
+                  }
+                }}
+                placeholder={c.composerPlaceholder}
+                rows={2}
+                disabled={conn !== "open"}
+                className="iv-composer__textarea"
+              />
+              <div className="iv-composer__actions">
+                <button
+                  type="button"
+                  onClick={switchToVoice}
+                  disabled={conn !== "open"}
+                  className="btn btn--ghost btn--sm"
+                >
+                  {c.toVoice}
+                </button>
+                <button
+                  type="button"
+                  onClick={sendText}
+                  disabled={conn !== "open" || !draft.trim()}
+                  className="btn btn--primary btn--sm"
+                >
+                  {c.send}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {errorMsg && <div className="flash flash--err iv-error">{errorMsg}</div>}
       </main>
 
-      {debugVisible && <DebugOverlay stats={debugRef.current} />}
-      <InterviewStyles />
-    </div>
-  );
-}
+      {liveView === "voice" && (
+        <footer className="iv-footer">
+          <VoiceControls
+            lang={language}
+            muted={muted}
+            onToggleMute={toggleMute}
+            onSwitchToChat={switchToChat}
+          />
+        </footer>
+      )}
 
-// ─── Subviews ────────────────────────────────────────────────────────────────
-
-function Header({
-  connState,
-  phase,
-}: {
-  connState: ConnState;
-  phase: "open" | "validation";
-}) {
-  return (
-    <header className="iv-header">
-      <div className="iv-header__inner">
-        <a href="/" className="iv-brand" aria-label="Inplicit">
-          <img src="/logo.svg" alt="Inplicit" className="iv-brand__logo" />
-        </a>
-        <div className="iv-status">
-          <ConnDot state={connState} />
-          <span className="iv-status__label">{stateLabel(connState)}</span>
-          {phase === "validation" && (
-            <span className="badge badge--gap iv-status__phase">Validierung</span>
-          )}
-        </div>
-      </div>
-    </header>
-  );
-}
-
-function VoiceCenter({
-  voiceStarting,
-  voiceReady,
-  recording,
-  connOpen,
-  onSwitchToChat,
-  onLeave,
-}: {
-  voiceStarting: boolean;
-  voiceReady: boolean;
-  recording: boolean;
-  connOpen: boolean;
-  onSwitchToChat: () => void;
-  onLeave: () => void;
-}) {
-  return (
-    <div className="iv-voice-center">
-      <span className="iv-voice-status">
-        <span
-          className={`iv-voice-status__dot ${recording ? "iv-voice-status__dot--live" : ""}`}
-        />
-        <span>
-          {!connOpen
-            ? "Verbinde …"
-            : !voiceStarting
-              ? "Anfrage gesendet — warte auf Server …"
-              : !voiceReady
-                ? "Server bereitet Spracherkennung vor …"
-                : recording
-                  ? "Hört zu — sprich frei."
-                  : "Mikrofon pausiert."}
-        </span>
-      </span>
-      <div className="iv-voice-actions">
-        <button
-          type="button"
-          onClick={onSwitchToChat}
-          className="btn btn--ghost btn--sm iv-switch"
-        >
-          Zu Chat wechseln
-        </button>
-        <LeaveDialog onConfirm={onLeave}>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Interview verlassen"
-            title="Interview verlassen"
-          >
-            <XIcon />
-          </Button>
-        </LeaveDialog>
-      </div>
-    </div>
-  );
-}
-
-function ChatView({
-  messages,
-  interimUser,
-  transcriptRef,
-  draft,
-  setDraft,
-  sendText,
-  connOpen,
-  onSwitchToVoice,
-  onLeave,
-}: {
-  messages: Msg[];
-  interimUser: string;
-  transcriptRef: RefObject<HTMLDivElement | null>;
-  draft: string;
-  setDraft: (s: string) => void;
-  sendText: () => void;
-  connOpen: boolean;
-  onSwitchToVoice: () => void;
-  onLeave: () => void;
-}) {
-  return (
-    <div className="iv-chat">
-      <div ref={transcriptRef} className="iv-transcript">
-        {messages.length === 0 && (
-          <p className="caption iv-transcript__empty">Hier erscheint dein Verlauf.</p>
-        )}
-        {messages.map((m) => (
-          <Bubble key={m.id} role={m.role}>
-            {m.role === "agent" ? cleanAgentText(m.text) : m.text}
-            {m.role === "agent" && m.streaming && <Cursor />}
-          </Bubble>
-        ))}
-        {interimUser && (
-          <div className="iv-bubble-row iv-bubble-row--right">
-            <div className="iv-bubble iv-bubble--user iv-bubble--interim">
-              {interimUser} <Cursor />
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="iv-composer">
-        <textarea
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              sendText();
-            }
-          }}
-          placeholder="Antworte hier …"
-          rows={2}
-          disabled={!connOpen}
-          className="iv-composer__textarea"
-        />
-        <div className="iv-composer__actions">
-          <LeaveDialog onConfirm={onLeave}>
+      <Dialog open={endDialog} onOpenChange={setEndDialog}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>{c.endConfirmTitle}</DialogTitle>
+            <DialogDescription>{c.endConfirmBody}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setEndDialog(false)}>
+              {c.cancel}
+            </Button>
             <Button
               type="button"
-              variant="ghost"
-              size="sm"
-              aria-label="Interview verlassen"
-              title="Interview verlassen"
+              variant="destructive"
+              onClick={() => {
+                setEndDialog(false);
+                endInterview();
+              }}
             >
-              <XIcon />
-              Verlassen
+              {c.confirmEnd}
             </Button>
-          </LeaveDialog>
-          <button
-            type="button"
-            onClick={onSwitchToVoice}
-            disabled={!connOpen}
-            title="Sprachmodus aktivieren"
-            className="btn btn--ghost btn--sm iv-mic"
-          >
-            <MicIcon active={false} />
-          </button>
-          <button
-            type="button"
-            onClick={sendText}
-            disabled={!connOpen || !draft.trim()}
-            className="btn btn--primary btn--sm"
-          >
-            Senden
-          </button>
-        </div>
-      </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <RoomStyles />
     </div>
   );
 }
 
-function IntroView({
-  connState,
-  onStartVoice,
-  onFallbackText,
-  errorMsg,
-  getLevel,
-  debug,
-}: {
-  connState: ConnState;
-  onStartVoice: () => void;
-  onFallbackText: () => void;
-  errorMsg: string | null;
-  getLevel: () => number;
-  debug: DebugStats | null;
-}) {
-  const ready = connState === "open";
-  return (
-    <div className="iv-center">
-      <div className="card iv-card">
-        <div className="iv-card__orb">
-          <AgentOrb size={140} hue={210} getLevel={getLevel} />
-        </div>
-        <span className="eyebrow">Interview</span>
-        <h1 className="headline iv-card__title">Bereit für ein Gespräch?</h1>
-        <p className="page-header__meta iv-card__body">
-          Du sprichst gleich mit einem KI-Interviewagenten. Das Gespräch dauert etwa 20–30
-          Minuten und ist vollständig anonym.
-        </p>
-
-        {errorMsg && <div className="flash flash--err iv-card__flash">{errorMsg}</div>}
-
-        <div className="iv-card__actions">
-          <button
-            type="button"
-            onClick={onStartVoice}
-            disabled={!ready}
-            className="btn btn--primary btn--lg iv-card__cta"
-          >
-            {ready ? "Mikrofon erlauben & starten" : "Verbindung wird aufgebaut …"}
-          </button>
-          <button
-            type="button"
-            onClick={onFallbackText}
-            disabled={!ready}
-            className="btn btn--link iv-card__alt"
-          >
-            Lieber tippen
-          </button>
-        </div>
-
-        <p className="caption iv-card__legal">
-          Wir verwenden dein Mikrofon nur während dieses Gesprächs. Audio wird nicht
-          gespeichert, nur die Transkription für die anonyme Auswertung.
-        </p>
-      </div>
-      {debug && <DebugOverlay stats={debug} />}
-      <InterviewStyles />
-    </div>
-  );
+function isAgentStatus(s: string | undefined): s is AgentStatus {
+  return s === "idle" || s === "listening" || s === "thinking" || s === "speaking";
 }
 
-function Bubble({
-  role,
-  children,
-}: {
-  role: "agent" | "user";
-  children: ReactNode;
-}) {
-  const klass =
-    role === "user" ? "iv-bubble iv-bubble--user" : "iv-bubble iv-bubble--agent";
-  const rowKlass =
-    role === "user" ? "iv-bubble-row iv-bubble-row--right" : "iv-bubble-row";
-  return (
-    <div className={rowKlass}>
-      <div className={klass}>{children}</div>
-    </div>
-  );
-}
+// ─── Shared room styles ──────────────────────────────────────────────────────
 
-function Cursor() {
-  return <span className="iv-cursor" />;
-}
-
-function ConnDot({ state }: { state: ConnState }) {
-  const klass =
-    state === "open"
-      ? "iv-conndot iv-conndot--ok"
-      : state === "connecting"
-        ? "iv-conndot iv-conndot--pending"
-        : "iv-conndot iv-conndot--err";
-  return <span className={klass} />;
-}
-
-function stateLabel(state: ConnState) {
-  return state === "open"
-    ? "Verbunden"
-    : state === "connecting"
-      ? "Verbindet …"
-      : state === "closed"
-        ? "Getrennt"
-        : "Verbindungsfehler";
-}
-
-function LeaveDialog({
-  onConfirm,
-  children,
-}: {
-  onConfirm: () => void;
-  children: ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>Interview wirklich verlassen?</DialogTitle>
-          <DialogDescription>
-            Wenn du jetzt verlässt, wird das Gespräch beendet und kann nicht
-            fortgesetzt werden.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setOpen(false)}
-          >
-            Abbrechen
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => {
-              setOpen(false);
-              onConfirm();
-            }}
-          >
-            Verlassen
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function MicIcon({ active }: { active: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="16"
-      height="16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={active ? "iv-mic__icon--pulse" : ""}
-    >
-      <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
-      <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
-      <line x1="12" y1="18" x2="12" y2="22" />
-    </svg>
-  );
-}
-
-function EndedView({
-  summary,
-  language,
-  debug,
-}: {
-  summary: string | null;
-  language: Lang;
-  debug: DebugStats | null;
-}) {
-  const copy = COPY[language];
-  return (
-    <div className="iv-center">
-      <div className="card iv-card">
-        <span className="eyebrow" style={{ color: "var(--color-success)" }}>
-          {copy.endedEyebrow}
-        </span>
-        <h1 className="headline iv-card__title">{copy.endedTitle}</h1>
-        <p className="page-header__meta iv-card__body">
-          {summary ?? copy.endedBody}
-        </p>
-      </div>
-      {debug && <DebugOverlay stats={debug} />}
-      <InterviewStyles />
-    </div>
-  );
-}
-
-function DebugOverlay({ stats }: { stats: DebugStats }) {
-  const sentKb = (stats.audioBytesSent / 1024).toFixed(1);
-  const recvKb = (stats.agentAudioBytes / 1024).toFixed(1);
-  return (
-    <aside className="iv-debug" aria-live="polite">
-      <header className="iv-debug__title">DEBUG (Cmd/Ctrl+Shift+D)</header>
-      <dl className="iv-debug__list">
-        <dt>WebSocket</dt>
-        <dd>{stats.ws}</dd>
-        <dt>voice_starting</dt>
-        <dd>{stats.voiceStarting ? "yes" : "no"}</dd>
-        <dt>voice_ready</dt>
-        <dd>{stats.voiceReady ? "yes" : "no"}</dd>
-        <dt>audio → server</dt>
-        <dd>
-          {stats.audioChunksSent} chunks · {sentKb} kB
-        </dd>
-        <dt>audio ← agent</dt>
-        <dd>
-          {stats.agentAudioFrames} frames · {recvKb} kB
-        </dd>
-        <dt>last event</dt>
-        <dd className="iv-debug__last">{stats.lastEvent}</dd>
-      </dl>
-    </aside>
-  );
-}
-
-// ─── Styles (scoped to this island) ──────────────────────────────────────────
-
-function InterviewStyles() {
+function RoomStyles() {
   return (
     <style
       dangerouslySetInnerHTML={{
         __html: `
         .iv-shell { height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; background: var(--color-surface); }
+        .iv-main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: var(--space-6); display: flex; flex-direction: column; min-height: 0; }
+        .iv-main--voice { justify-content: center; align-items: center; }
 
-        .iv-header { position: sticky; top: 0; z-index: 30; background: var(--color-bg); border-bottom: 1px solid var(--color-border-subtle); }
-        .iv-header__inner { max-width: 760px; margin: 0 auto; padding: 0 var(--space-6); height: var(--header-h); display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
-        .iv-brand { display: inline-flex; align-items: center; color: var(--color-text-primary); }
-        .iv-brand__logo { height: 26px; width: auto; display: block; }
-        .iv-status { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-body-sm); color: var(--color-text-secondary); }
-        .iv-status__label { font-size: var(--text-caption); }
-        .iv-status__phase { margin-left: var(--space-2); }
-
-        .iv-conndot { width: 6px; height: 6px; border-radius: var(--radius-full); display: inline-block; }
-        .iv-conndot--ok { background: var(--color-success); }
-        .iv-conndot--pending { background: var(--color-warning); }
-        .iv-conndot--err { background: var(--color-danger); }
-
-        .iv-main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: var(--space-6) var(--space-6) var(--space-8); display: flex; flex-direction: column; align-items: center; min-height: 0; }
-
-        .iv-orb-wrap { width: ${ORB_SIZE}px; height: ${ORB_SIZE}px; flex: 0 0 ${ORB_SIZE}px; display: flex; align-items: center; justify-content: center; margin-top: var(--space-4); margin-bottom: var(--space-5); overflow: hidden; }
-
-        .iv-main--voice { justify-content: center; }
-        .iv-main--voice .iv-orb-wrap { margin-top: clamp(var(--space-6), 8vh, var(--space-12)); margin-bottom: var(--space-6); }
-
-        .iv-voice-center { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
-        .iv-voice-status { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-caption); color: var(--color-text-secondary); }
-        .iv-voice-status__dot { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--color-text-quaternary); }
-        .iv-voice-status__dot--live { background: var(--color-success); animation: iv-pulse 1.6s var(--ease-smooth) infinite; }
-        @keyframes iv-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(0.85); } }
-
-        .iv-switch { margin-top: 0; }
-        .iv-voice-actions { display: inline-flex; align-items: center; gap: var(--space-2); margin-top: var(--space-1); }
+        .iv-voice { display: flex; flex-direction: column; align-items: center; gap: var(--space-5); }
+        .iv-orb-wrap { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .iv-orb-wrap--mobile { display: none; }
+        @media (max-width: 767px) {
+          .iv-orb-wrap--desktop { display: none; }
+          .iv-orb-wrap--mobile { display: flex; }
+        }
 
         .iv-chat { display: flex; flex-direction: column; gap: var(--space-4); width: 100%; flex: 1; min-height: 0; }
         .iv-transcript { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-2) 0 var(--space-4); }
         .iv-transcript__empty { margin: var(--space-4) 0; color: var(--color-text-tertiary); text-align: center; }
-
         .iv-bubble-row { display: flex; justify-content: flex-start; }
         .iv-bubble-row--right { justify-content: flex-end; }
-
         .iv-bubble { max-width: min(78%, 620px); padding: var(--space-3) var(--space-4); font-size: var(--text-body); line-height: 1.6; white-space: pre-wrap; border-radius: var(--radius-card); }
         .iv-bubble--agent { background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-text-primary); }
         .iv-bubble--user { background: var(--color-cta-bg); border: 1px solid var(--color-cta-bg); color: var(--color-cta-text); }
         .iv-bubble--interim { background: var(--color-surface-2); border: 1px dashed var(--color-border); color: var(--color-text-secondary); font-style: italic; }
-
         .iv-cursor { display: inline-block; width: 2px; height: 0.95em; margin-left: 2px; vertical-align: -2px; background: currentColor; opacity: 0.65; animation: iv-blink 1s steps(2) infinite; }
         @keyframes iv-blink { to { opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { .iv-cursor { animation: none; } }
 
-        .iv-error { margin-top: var(--space-3); align-self: stretch; }
-
-        .iv-composer { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-card); padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); display: flex; align-items: flex-end; gap: var(--space-3); transition: border-color 0.15s var(--ease-smooth); }
+        .iv-composer { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-card); padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); display: flex; align-items: flex-end; gap: var(--space-3); }
         .iv-composer:focus-within { border-color: var(--color-text-primary); }
         .iv-composer__textarea { flex: 1; font-family: var(--font-family); font-size: var(--text-body); line-height: 1.6; color: var(--color-text-primary); background: transparent; border: 0; resize: none; padding: var(--space-2) 0; min-height: 40px; max-height: 160px; }
         .iv-composer__textarea:focus { outline: none; }
         .iv-composer__textarea::placeholder { color: var(--color-text-quaternary); }
-        .iv-composer__textarea:disabled { color: var(--color-text-tertiary); cursor: not-allowed; }
         .iv-composer__actions { display: inline-flex; align-items: center; gap: var(--space-2); }
 
-        .iv-mic { width: 36px; padding: 0; }
-        .iv-mic__icon--pulse { animation: iv-pulse 1.6s var(--ease-smooth) infinite; }
+        .iv-footer { display: flex; align-items: center; justify-content: center; padding: var(--space-4) var(--space-5); padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom)); border-top: 1px solid var(--color-border-subtle); background: var(--color-bg); }
 
-        .iv-center { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--space-8) var(--space-4); background: var(--color-surface); }
+        .iv-error { margin-top: var(--space-3); align-self: stretch; }
+
+        .iv-center { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: var(--space-8) var(--space-4); background: var(--color-surface); }
         .iv-card { max-width: 460px; width: 100%; padding: var(--space-10); background: var(--color-bg); text-align: left; }
-        .iv-card__orb { display: flex; justify-content: center; margin-bottom: var(--space-6); }
         .iv-card__title { margin-top: var(--space-3); font-size: clamp(1.75rem, 3vw, 2.25rem); }
         .iv-card__body { margin-top: var(--space-3); }
-        .iv-card__flash { margin-top: var(--space-6); }
-        .iv-card__actions { margin-top: var(--space-8); display: flex; flex-direction: column; gap: var(--space-2); }
+        .iv-card__flash { margin-top: var(--space-5); }
+        .iv-card__actions { margin-top: var(--space-7); display: flex; flex-direction: column; gap: var(--space-2); }
         .iv-card__cta { width: 100%; }
         .iv-card__alt { align-self: center; font-size: var(--text-caption); }
         .iv-card__legal { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border-subtle); line-height: 1.55; }
 
-        .iv-debug { position: fixed; right: var(--space-4); bottom: var(--space-4); z-index: 50; width: 280px; padding: var(--space-3) var(--space-4); background: rgba(10, 10, 10, 0.92); color: #f0f0f0; border-radius: var(--radius-card); font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5; backdrop-filter: blur(6px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
-        .iv-debug__title { font-weight: 600; letter-spacing: 0.04em; color: #9ee07e; margin-bottom: var(--space-2); }
-        .iv-debug__list { display: grid; grid-template-columns: 9rem 1fr; gap: 2px var(--space-3); margin: 0; }
-        .iv-debug__list dt { color: #9aa0a6; }
-        .iv-debug__list dd { margin: 0; }
-        .iv-debug__last { word-break: break-word; color: #ffd479; }
-
         @media (max-width: 640px) {
-          .iv-header__inner, .iv-main { padding-left: var(--space-4); padding-right: var(--space-4); }
+          .iv-main { padding: var(--space-4); }
           .iv-card { padding: var(--space-8); }
           .iv-bubble { max-width: 88%; }
         }
@@ -1093,7 +636,7 @@ function InterviewStyles() {
   );
 }
 
-// ─── AudioBufferQueue ────────────────────────────────────────────────────────
+// ─── AudioBufferQueue (PCM16 playback, level metering) ───────────────────────
 
 class AudioBufferQueue {
   private ctx: AudioContext;
@@ -1113,27 +656,20 @@ class AudioBufferQueue {
     this.freqBuf = new Uint8Array(this.analyser.frequencyBinCount);
   }
 
-  /** Returns the byte length consumed (for debug counters). */
   enqueue(b64: string, sampleRate: number): number {
     const bytes = base64ToBytes(b64);
     const sampleCount = bytes.length / 2;
     if (sampleCount === 0) return 0;
-
     const buffer = this.ctx.createBuffer(1, sampleCount, sampleRate);
     const channel = buffer.getChannelData(0);
     const view = new DataView(bytes.buffer);
-    for (let i = 0; i < sampleCount; i++) {
-      channel[i] = view.getInt16(i * 2, true) / 0x8000;
-    }
-
+    for (let i = 0; i < sampleCount; i++) channel[i] = view.getInt16(i * 2, true) / 0x8000;
     const source = this.ctx.createBufferSource();
     source.buffer = buffer;
     source.connect(this.analyser);
-
     const startAt = Math.max(this.ctx.currentTime, this.playbackTime);
     source.start(startAt);
     this.playbackTime = startAt + buffer.duration;
-
     this.active.push(source);
     source.onended = () => {
       this.active = this.active.filter((s) => s !== source);
@@ -1142,9 +678,7 @@ class AudioBufferQueue {
   }
 
   isPlaying(): boolean {
-    return (
-      this.active.length > 0 || this.playbackTime > this.ctx.currentTime + 0.005
-    );
+    return this.active.length > 0 || this.playbackTime > this.ctx.currentTime + 0.005;
   }
 
   currentLevel(): number {
@@ -1154,8 +688,7 @@ class AudioBufferQueue {
       const v = this.freqBuf[i] / 255;
       sum += v * v;
     }
-    const rms = Math.sqrt(sum / this.freqBuf.length);
-    return Math.min(rms * 2.2, 1);
+    return Math.min(Math.sqrt(sum / this.freqBuf.length) * 2.2, 1);
   }
 
   cancel() {
@@ -1163,19 +696,13 @@ class AudioBufferQueue {
       try {
         source.stop();
       } catch {
-        /* node may have already ended */
+        /* already ended */
       }
       source.disconnect();
     }
     this.active = [];
     this.playbackTime = this.ctx.currentTime;
   }
-}
-
-// ─── helpers ────────────────────────────────────────────────────────────────
-
-function cleanAgentText(s: string): string {
-  return s.replace(/<\/?spell>/gi, "").replace(/<\/?[a-z]*$/i, "");
 }
 
 function bytesToBase64(bytes: Uint8Array): string {
