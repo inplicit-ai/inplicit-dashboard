@@ -11,7 +11,10 @@
 
 import type {
   CampaignDraft,
+  EmailTemplate,
   Goal,
+  Person,
+  ScheduleConfig,
   SetupToolCall,
   TopicGraph,
 } from "@/lib/api";
@@ -28,6 +31,9 @@ export const KNOWN_TOOLS = [
   "set_success_criteria",
   "add_must_ask",
   "set_audience",
+  "set_people",
+  "set_schedule",
+  "set_email_template",
   "request_input",
 ] as const;
 
@@ -140,6 +146,35 @@ export function applyPatch(
       const filters =
         arg<Record<string, unknown>>(args, "filters") ?? {};
       return { ...draft, audience: { segments, filters } };
+    }
+    case "set_people": {
+      // Accept a full people[] (manual editor or agent import). Each row needs
+      // a valid-ish email; rows without one are dropped at the boundary.
+      const people = arg<Person[]>(args, "people");
+      if (!Array.isArray(people)) return draft;
+      const clean = people
+        .map((p) => ({ name: p.name?.trim() || undefined, email: p.email?.trim() ?? "" }))
+        .filter((p) => p.email.includes("@"));
+      return { ...draft, people: clean };
+    }
+    case "set_schedule": {
+      const prev = draft.schedule;
+      const mode = arg<string>(args, "mode");
+      const next: ScheduleConfig = {
+        mode: mode === "instant" ? "instant" : "slots",
+        windowStart: arg<string>(args, "windowStart") ?? prev?.windowStart,
+        windowEnd: arg<string>(args, "windowEnd") ?? prev?.windowEnd,
+        slotLengthMin: arg<number>(args, "slotLengthMin") ?? prev?.slotLengthMin ?? 30,
+        timezone: arg<string>(args, "timezone") ?? prev?.timezone ?? "Europe/Berlin",
+        slots: arg<ScheduleConfig["slots"]>(args, "slots") ?? prev?.slots ?? [],
+      };
+      return { ...draft, schedule: next };
+    }
+    case "set_email_template": {
+      const subject = arg<string>(args, "subject") ?? draft.emailTemplate?.subject ?? "";
+      const body = arg<string>(args, "body") ?? draft.emailTemplate?.body ?? "";
+      const tpl: EmailTemplate = { subject, body };
+      return { ...draft, emailTemplate: tpl };
     }
     case "request_input":
       // No catalog change — the agent is asking the user to refine.

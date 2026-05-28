@@ -119,6 +119,39 @@ export function makeApi(cookie?: string) {
     },
     stats: (campaignId: string) =>
       request<CampaignStats>(`/api/campaigns/${campaignId}/stats`),
+    scheduling: {
+      listSlots: (campaignId: string) =>
+        request<{ slots: BookingSlot[] }>(`/api/campaigns/${campaignId}/slots`),
+      createSlots: (campaignId: string, slots: SlotInput[]) =>
+        request<{ slots: BookingSlot[] }>(`/api/campaigns/${campaignId}/slots`, {
+          method: "POST",
+          body: JSON.stringify({ slots }),
+        }),
+      deleteSlot: (campaignId: string, slotId: string) =>
+        request<{ ok: boolean }>(
+          `/api/campaigns/${campaignId}/slots/${slotId}`,
+          { method: "DELETE" },
+        ),
+      createBooking: (campaignId: string, body: CreateBookingInput) =>
+        request<BookingResult>(`/api/campaigns/${campaignId}/bookings`, {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      cancelBooking: (campaignId: string, bookingId: string) =>
+        request<BookingResult>(
+          `/api/campaigns/${campaignId}/bookings/${bookingId}`,
+          { method: "PATCH", body: JSON.stringify({ action: "cancel" }) },
+        ),
+      listTemplates: (campaignId: string) =>
+        request<{ templates: CampaignEmailTemplate[] }>(
+          `/api/campaigns/${campaignId}/email-templates`,
+        ),
+      putTemplate: (campaignId: string, body: PutTemplateInput) =>
+        request<{ template: CampaignEmailTemplate }>(
+          `/api/campaigns/${campaignId}/email-templates`,
+          { method: "PUT", body: JSON.stringify(body) },
+        ),
+    },
     auth: {
       sendMagicLink: (email: string) =>
         request<{ ok: boolean; dev_link?: string }>("/api/auth/magic-link", {
@@ -548,7 +581,92 @@ export interface CampaignDraft {
   mustAsk?: { mode: "questions" | "prove_hypothesis"; items: MustAskItem[] };
   proveHypothesisMode?: boolean;
   audience?: { segments: string[]; filters: Record<string, unknown> };
+  people?: Person[];
+  schedule?: ScheduleConfig;
+  emailTemplate?: EmailTemplate;
   [key: string]: unknown;
+}
+
+/** A participant entry in the audience editor (O-5). PII stays client-side
+ *  until launch materialises participants on the backend. */
+export interface Person {
+  name?: string;
+  email: string;
+}
+
+/** Booking-based scheduling (O-5). `mode: "instant"` keeps the legacy
+ *  per-upload instant-link flow; `mode: "slots"` requires a booked slot. */
+export interface ScheduleConfig {
+  mode: "slots" | "instant";
+  /** ISO 8601 window the slots are generated within. */
+  windowStart?: string;
+  windowEnd?: string;
+  slotLengthMin?: number;
+  timezone?: string;
+  /** Locally-generated preview slots before launch persists them. */
+  slots?: ScheduleSlot[];
+}
+export interface ScheduleSlot {
+  startsAt: string;
+  endsAt: string;
+}
+
+/** Editable invite-email template with token placeholders rendered live. */
+export interface EmailTemplate {
+  subject: string;
+  body: string;
+}
+
+// ── Backend scheduling DTOs (mirror backend/src/db/scheduling.rs) ──────────
+export interface BookingSlot {
+  id: string;
+  campaign_id: string;
+  starts_at: string;
+  ends_at: string;
+  capacity: number;
+  booked_count: number;
+  timezone: string;
+  created_at: string;
+}
+export interface SlotInput {
+  starts_at: string;
+  ends_at: string;
+  capacity?: number;
+  timezone?: string;
+}
+export interface CreateBookingInput {
+  slot_id: string;
+  participant_id: string;
+  send_invite?: boolean;
+}
+export interface BookingResult {
+  ok: boolean;
+  sent?: boolean;
+  booking: {
+    id: string;
+    slot_id: string;
+    participant_id: string;
+    status: string;
+    ics_uid: string;
+    ics_sequence: number;
+  };
+  dev_link?: string;
+  error?: string;
+}
+export interface CampaignEmailTemplate {
+  id: string;
+  campaign_id: string;
+  kind: "INVITE" | "REMINDER" | "RESUME" | "THANK_YOU";
+  locale: string;
+  subject: string;
+  body: string;
+  updated_at: string;
+}
+export interface PutTemplateInput {
+  kind: "INVITE" | "REMINDER" | "RESUME" | "THANK_YOU";
+  locale?: string;
+  subject: string;
+  body: string;
 }
 
 export interface Goal {

@@ -9,6 +9,9 @@ import { Eyebrow } from "@/components/PageChrome";
 import { cn } from "@/lib/utils";
 import type { CampaignDraft, SetupToolCall } from "@/lib/api";
 import { TopicGraph } from "./TopicGraph";
+import { PeopleSection } from "./PeopleSection";
+import { ScheduleSection } from "./ScheduleSection";
+import { EmailTemplateSection } from "./EmailTemplateSection";
 
 /**
  * The catalog (right pane, doc 03 §4). Boxed section cards, all user-editable
@@ -236,6 +239,27 @@ export function Catalog({
       >
         <TopicGraph data={draft.topics} />
       </Section>
+
+      {/* 10 — People (name+email rows + CSV upload) */}
+      <PeopleSection
+        draft={draft}
+        onPatch={onPatch}
+        touched={recentlyTouched?.has("set_people")}
+      />
+
+      {/* 11 — Schedule (booking slots, not open-anytime) */}
+      <ScheduleSection
+        draft={draft}
+        onPatch={onPatch}
+        touched={recentlyTouched?.has("set_schedule")}
+      />
+
+      {/* 12 — Invite email template (live preview) */}
+      <EmailTemplateSection
+        draft={draft}
+        onPatch={onPatch}
+        touched={recentlyTouched?.has("set_email_template")}
+      />
     </div>
   );
 }
