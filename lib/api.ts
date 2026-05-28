@@ -139,6 +139,35 @@ export function makeApi(cookie?: string) {
           body: JSON.stringify(body),
         }),
     },
+    setup: {
+      /** Create a draft from the launchpad prompt. */
+      createSession: (body: CreateSetupSessionInput) =>
+        request<SetupSessionCreated>("/api/orgs/me/setup-sessions", {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      /** Load a draft + chat history (restore split state). */
+      getSession: (id: string) =>
+        request<SetupSession>(`/api/orgs/me/setup-sessions/${id}`),
+      /** Apply a user-originated catalog edit as a new immutable revision. */
+      patchDraft: (id: string, body: SetupPatchInput) =>
+        request<SetupDraftState>(`/api/orgs/me/setup-drafts/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        }),
+      /** Validate + materialize the draft into a campaign row. */
+      launchDraft: (id: string) =>
+        request<SetupLaunchResult>(`/api/orgs/me/setup-drafts/${id}/launch`, {
+          method: "POST",
+        }),
+      /**
+       * SSE URL for an agent turn. The browser POSTs the message here and reads
+       * the event stream directly (via the same-origin /dapi proxy is not used —
+       * SSE needs an unbuffered passthrough, see SetupChat).
+       */
+      messagesPath: (id: string) =>
+        `/api/orgs/me/setup-sessions/${id}/messages`,
+    },
     me: () => request<Me>("/api/me"),
     staff: {
       orgs: {
@@ -497,6 +526,117 @@ export interface ProvisionOrgResponse {
   magic_link?: string;
   email_sent?: boolean;
   email_error?: string;
+}
+
+// ─── Setup agent (O-3) ──────────────────────────────────────────────────────
+
+export type Locale = "de" | "en";
+
+/** Immutable campaign-config draft. Patched by both user and agent tool calls
+ *  via the pure `applyPatch` reducer (lib/setup/draftReducer.ts). */
+export interface CampaignDraft {
+  status?: "drafting" | "review" | "launched";
+  interviewType?: "voice" | "chat";
+  durationMin?: number;
+  language?: { default: Locale; allowSwitch: boolean };
+  prompt?: string;
+  goals?: Goal[];
+  background?: { notes: string; files: FileRef[] };
+  topics?: TopicGraph;
+  successCriteria?: SuccessCriteria;
+  inductiveFlag?: boolean;
+  mustAsk?: { mode: "questions" | "prove_hypothesis"; items: MustAskItem[] };
+  proveHypothesisMode?: boolean;
+  audience?: { segments: string[]; filters: Record<string, unknown> };
+  [key: string]: unknown;
+}
+
+export interface Goal {
+  id: string;
+  text: string;
+  needsNarrowing?: boolean;
+}
+export interface FileRef {
+  id: string;
+  name: string;
+  s3_key?: string;
+}
+export interface TopicGraph {
+  nodes: TopicNode[];
+  edges: TopicEdge[];
+}
+export interface TopicNode {
+  id: string;
+  title: string;
+  summary?: string;
+}
+export interface TopicEdge {
+  a: string;
+  b: string;
+  relation: string;
+}
+export interface SuccessCriteria {
+  mode: "deductive" | "inductive";
+  questions: string[];
+  hypotheses: string[];
+}
+export interface MustAskItem {
+  id: string;
+  text: string;
+}
+
+/** A field-scoped tool call — the unit both the agent and the user produce. */
+export interface SetupToolCall {
+  tool: string;
+  args: Record<string, unknown>;
+}
+
+export interface SetupMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  tool_calls: SetupToolCallCard[];
+  created_at?: string;
+}
+
+/** A tool call as rendered in the chat (carries the applied revision). */
+export interface SetupToolCallCard {
+  tool: string;
+  args: Record<string, unknown>;
+  revision?: number;
+  applied?: boolean;
+}
+
+export interface CreateSetupSessionInput {
+  prompt?: string;
+  locale?: Locale;
+}
+export interface SetupSessionCreated {
+  session_id: string;
+  draft_id: string;
+  revision: number;
+  config: CampaignDraft;
+}
+export interface SetupSession {
+  session_id: string;
+  draft_id: string;
+  revision: number;
+  status: string;
+  config: CampaignDraft;
+  messages: SetupMessage[];
+}
+export interface SetupPatchInput {
+  patch: SetupToolCall;
+  base_rev?: number;
+}
+export interface SetupDraftState {
+  revision: number;
+  config: CampaignDraft;
+}
+export interface SetupLaunchResult {
+  ok: boolean;
+  campaign_id: string;
+  status: string;
 }
 
 export interface UpdateOrgInput {

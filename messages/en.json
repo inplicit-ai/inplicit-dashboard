@@ -88,5 +88,98 @@
     "twinRolesBody": "The role graph that powers persona simulation. Reports-to and manages edges define the hierarchy.",
     "adminTitle": "Admin",
     "adminBody": "Manage your organization, members, and workspace settings."
+  },
+  "setup": {
+    "ai": {
+      "badge": "AI assistant",
+      "disclaimer": "I'm an AI assistant drafting configuration — every field stays editable by you."
+    },
+    "launchpad": {
+      "eyebrow": "New campaign",
+      "title": "What do you want to learn?",
+      "subtitle": "Describe your research goal in your own words. The setup assistant will draft a configurable campaign catalog you can refine.",
+      "placeholder": "e.g. Why are mid-market customers churning after onboarding?",
+      "cta": "Create campaign",
+      "examplesLabel": "Examples",
+      "firstHint": "This is your first campaign — type a learning goal to begin.",
+      "creating": "Creating session…"
+    },
+    "chat": {
+      "title": "Setup assistant",
+      "placeholder": "Reply or ask the assistant to adjust the catalog…",
+      "send": "Send",
+      "thinking": "Drafting…",
+      "you": "You",
+      "assistant": "Assistant",
+      "refineExamplesLabel": "Try one of these"
+    },
+    "toolCard": {
+      "applied": "Updated catalog",
+      "rejected": "Couldn't apply",
+      "requestInput": "Needs your input",
+      "set_interview_type": "Set interview type",
+      "set_duration": "Set duration",
+      "set_language": "Set language",
+      "set_goals": "Drafted goals",
+      "refine_goal": "Refined a goal",
+      "set_background": "Captured background",
+      "add_topic": "Added topic",
+      "link_topics": "Connected topics",
+      "set_success_criteria": "Set success criteria",
+      "add_must_ask": "Added must-ask questions",
+      "set_audience": "Set audience",
+      "request_input": "Asked you to refine"
+    },
+    "catalog": {
+      "title": "Campaign catalog",
+      "subtitle": "Everything the assistant drafts lands here — edit any field directly.",
+      "updatedByAgent": "Updated by assistant",
+      "interviewType": "Interview type",
+      "voice": "Voice",
+      "chatType": "Chat",
+      "duration": "Duration",
+      "minutes": "min",
+      "language": "Language",
+      "allowSwitch": "Let participants switch language",
+      "goals": "Campaign goals",
+      "goalsEmpty": "No goals yet — describe your question in the chat.",
+      "parentQuestion": "Your question",
+      "background": "Background",
+      "backgroundPlaceholder": "Context the assistant and interviewer should know…",
+      "successCriteria": "Success criteria",
+      "inductive": "Inductive (open discovery)",
+      "deductive": "Deductive (hypothesis-led)",
+      "questions": "Questions to answer",
+      "hypotheses": "Hypotheses",
+      "topics": "Topics",
+      "topicsEmpty": "No topics yet.",
+      "audience": "Audience",
+      "addGoal": "Add goal",
+      "addQuestion": "Add question"
+    },
+    "review": {
+      "eyebrow": "Review & launch",
+      "title": "Review your campaign",
+      "essentials": "Essentials",
+      "delivery": "Audience & delivery",
+      "launchpad": "Launch",
+      "checklist": "Validation",
+      "ok": "Ready",
+      "blocked": "Blocked",
+      "launch": "Launch campaign",
+      "back": "Back to edit",
+      "launching": "Launching…",
+      "noGoals": "Add at least one goal.",
+      "noSuccessCriteria": "Add at least one success question or hypothesis.",
+      "peopleCount": "{count} participants"
+    },
+    "errors": {
+      "agent_unavailable": "The assistant is temporarily unavailable. Showing a draft instead.",
+      "backend_unreachable": "Backend not reachable.",
+      "stream_failed": "The connection was interrupted.",
+      "patch_rejected": "That change couldn't be applied.",
+      "duration_out_of_range": "Duration must be 5–90 minutes.",
+      "generic": "Something went wrong."
+    }
   }
 }

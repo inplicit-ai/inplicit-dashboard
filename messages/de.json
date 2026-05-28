@@ -88,5 +88,98 @@
     "twinRolesBody": "Der Rollengraph, der die Persona-Simulation antreibt. Reports-to- und Manages-Kanten definieren die Hierarchie.",
     "adminTitle": "Admin",
     "adminBody": "Verwalte deine Organisation, Mitglieder und Workspace-Einstellungen."
+  },
+  "setup": {
+    "ai": {
+      "badge": "KI-Assistent",
+      "disclaimer": "Ich bin ein KI-Assistent und entwerfe nur die Konfiguration — alle Felder bleiben editierbar."
+    },
+    "launchpad": {
+      "eyebrow": "Neue Kampagne",
+      "title": "Was möchtest du lernen?",
+      "subtitle": "Beschreibe dein Forschungsziel in eigenen Worten. Der Setup-Assistent entwirft einen konfigurierbaren Kampagnen-Katalog.",
+      "placeholder": "z. B. Warum kündigen Mid-Market-Kunden nach dem Onboarding?",
+      "cta": "Kampagne erstellen",
+      "examplesLabel": "Beispiele",
+      "firstHint": "Das ist deine erste Kampagne — gib ein Lernziel ein, um zu starten.",
+      "creating": "Sitzung wird erstellt…"
+    },
+    "chat": {
+      "title": "Setup-Assistent",
+      "placeholder": "Antworte oder bitte den Assistenten, den Katalog anzupassen…",
+      "send": "Senden",
+      "thinking": "Entwerfe…",
+      "you": "Du",
+      "assistant": "Assistent",
+      "refineExamplesLabel": "Probiere eines davon"
+    },
+    "toolCard": {
+      "applied": "Katalog aktualisiert",
+      "rejected": "Konnte nicht angewendet werden",
+      "requestInput": "Deine Eingabe nötig",
+      "set_interview_type": "Interview-Typ gesetzt",
+      "set_duration": "Dauer gesetzt",
+      "set_language": "Sprache gesetzt",
+      "set_goals": "Ziele entworfen",
+      "refine_goal": "Ziel verfeinert",
+      "set_background": "Hintergrund erfasst",
+      "add_topic": "Thema hinzugefügt",
+      "link_topics": "Themen verbunden",
+      "set_success_criteria": "Erfolgskriterien gesetzt",
+      "add_must_ask": "Pflichtfragen hinzugefügt",
+      "set_audience": "Zielgruppe gesetzt",
+      "request_input": "Um Verfeinerung gebeten"
+    },
+    "catalog": {
+      "title": "Kampagnen-Katalog",
+      "subtitle": "Alles, was der Assistent entwirft, landet hier — jedes Feld direkt editierbar.",
+      "updatedByAgent": "Vom Assistenten aktualisiert",
+      "interviewType": "Interview-Typ",
+      "voice": "Sprache",
+      "chatType": "Chat",
+      "duration": "Dauer",
+      "minutes": "Min",
+      "language": "Sprache",
+      "allowSwitch": "Teilnehmer dürfen Sprache wechseln",
+      "goals": "Kampagnenziele",
+      "goalsEmpty": "Noch keine Ziele — beschreibe deine Frage im Chat.",
+      "parentQuestion": "Deine Frage",
+      "background": "Hintergrund",
+      "backgroundPlaceholder": "Kontext, den Assistent und Interviewer kennen sollten…",
+      "successCriteria": "Erfolgskriterien",
+      "inductive": "Induktiv (offene Entdeckung)",
+      "deductive": "Deduktiv (hypothesengeführt)",
+      "questions": "Zu beantwortende Fragen",
+      "hypotheses": "Hypothesen",
+      "topics": "Themen",
+      "topicsEmpty": "Noch keine Themen.",
+      "audience": "Zielgruppe",
+      "addGoal": "Ziel hinzufügen",
+      "addQuestion": "Frage hinzufügen"
+    },
+    "review": {
+      "eyebrow": "Prüfen & starten",
+      "title": "Kampagne prüfen",
+      "essentials": "Grundlagen",
+      "delivery": "Zielgruppe & Versand",
+      "launchpad": "Start",
+      "checklist": "Validierung",
+      "ok": "Bereit",
+      "blocked": "Blockiert",
+      "launch": "Kampagne starten",
+      "back": "Zurück zum Bearbeiten",
+      "launching": "Wird gestartet…",
+      "noGoals": "Füge mindestens ein Ziel hinzu.",
+      "noSuccessCriteria": "Füge mindestens eine Erfolgsfrage oder Hypothese hinzu.",
+      "peopleCount": "{count} Teilnehmer"
+    },
+    "errors": {
+      "agent_unavailable": "Der Assistent ist vorübergehend nicht verfügbar. Es wird ein Entwurf angezeigt.",
+      "backend_unreachable": "Backend nicht erreichbar.",
+      "stream_failed": "Die Verbindung wurde unterbrochen.",
+      "patch_rejected": "Diese Änderung konnte nicht angewendet werden.",
+      "duration_out_of_range": "Dauer muss 5–90 Minuten betragen.",
+      "generic": "Etwas ist schiefgelaufen."
+    }
   }
 }
