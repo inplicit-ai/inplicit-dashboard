@@ -21,11 +21,11 @@ interface MapLink extends d3.SimulationLinkDatum<MapNode> {
   weight: number;
 }
 
-const CATEGORY_COLOR: Record<string, string> = {
-  operational: "#6366f1",
-  innovation: "#10b981",
-  automation: "#f59e0b",
-  risk: "#ef4444",
+const CATEGORY_TOKEN: Record<string, { name: string; fallback: string }> = {
+  operational: { name: "--color-accent", fallback: "#c2660c" },
+  innovation: { name: "--color-success", fallback: "#15803d" },
+  automation: { name: "--color-gap", fallback: "#5b21b6" },
+  risk: { name: "--color-pain", fallback: "#c2410c" },
 };
 
 function radiusFor(d: MapNode): number {
@@ -40,6 +40,11 @@ function tokenColor(name: string, fallback: string): string {
   return v || fallback;
 }
 
+function categoryColor(category: string): string {
+  const token = CATEGORY_TOKEN[category] ?? CATEGORY_TOKEN.operational;
+  return tokenColor(token.name, token.fallback);
+}
+
 export function KnowledgeMap({ clusters }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -51,9 +56,9 @@ export function KnowledgeMap({ clusters }: Props) {
     const width = container.clientWidth;
     const height = 600;
 
-    const linkColor = tokenColor("--color-border", "#e5e7eb");
+    const linkColor = tokenColor("--color-border", "rgba(0,0,0,.08)");
     const haloColor = tokenColor("--color-bg", "#ffffff");
-    const labelColor = tokenColor("--color-text-secondary", "#374151");
+    const labelColor = tokenColor("--color-text-secondary", "#525252");
 
     const nodes: MapNode[] = clusters.map((c) => ({
       id: c.id,
@@ -136,7 +141,7 @@ export function KnowledgeMap({ clusters }: Props) {
     node
       .append("circle")
       .attr("r", radiusFor)
-      .attr("fill", (d) => CATEGORY_COLOR[d.category] ?? "#6366f1")
+      .attr("fill", (d) => categoryColor(d.category))
       .attr("fill-opacity", 0.9)
       .attr("stroke", haloColor)
       .attr("stroke-width", 2);
@@ -188,10 +193,10 @@ export function KnowledgeMap({ clusters }: Props) {
     <div className="rounded-card border border-line bg-canvas p-5 shadow-card">
       <div ref={ref} className="w-full" style={{ minHeight: 600 }} />
       <div className="mt-5 flex flex-wrap items-center gap-4 border-t border-line-subtle pt-4 text-xs">
-        <Legend color="#6366f1" label="Operativ" />
-        <Legend color="#10b981" label="Innovation" />
-        <Legend color="#f59e0b" label="Automatisierung" />
-        <Legend color="#ef4444" label="Risiko" />
+        <Legend color={categoryColor("operational")} label="Operativ" />
+        <Legend color={categoryColor("innovation")} label="Innovation" />
+        <Legend color={categoryColor("automation")} label="Automatisierung" />
+        <Legend color={categoryColor("risk")} label="Risiko" />
       </div>
     </div>
   );

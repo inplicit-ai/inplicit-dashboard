@@ -48,13 +48,22 @@ function renderError(message: string): string {
   <meta charset="UTF-8" />
   <title>Anmeldung fehlgeschlagen</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --color-bg: #ffffff;
+      --color-text-primary: #0a0a0a;
+      --color-danger: #b91c1c;
+      --color-danger-soft: rgba(185, 28, 28, 0.06);
+      --color-danger-muted: rgba(185, 28, 28, 0.22);
+    }
+  </style>
 </head>
-<body style="font-family:Inter,system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem">
-  <div style="max-width:440px;width:100%;border:1px solid #fca5a5;background:#fef2f2;padding:2rem;border-radius:8px">
-    <span style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:#dc2626">Fehler</span>
+<body style="font-family:Inter,system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;background:var(--color-bg);color:var(--color-text-primary)">
+  <div style="max-width:440px;width:100%;border:1px solid var(--color-danger-muted);background:var(--color-danger-soft);padding:2rem;border-radius:8px">
+    <span style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-danger)">Fehler</span>
     <h1 style="margin-top:0.5rem;font-size:1.5rem">Anmeldung fehlgeschlagen</h1>
     <p style="margin-top:0.75rem">${message}</p>
-    <a href="/login" style="display:inline-block;margin-top:1.25rem;color:#0a0a0a;text-decoration:underline">Erneut versuchen</a>
+    <a href="/login" style="display:inline-block;margin-top:1.25rem;color:var(--color-text-primary);text-decoration:underline">Erneut versuchen</a>
   </div>
 </body>
 </html>`;

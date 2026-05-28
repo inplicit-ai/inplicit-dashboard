@@ -70,9 +70,9 @@ const SUGGESTIONS: Array<{
 ];
 
 const TONE_CLASSES: Record<(typeof SUGGESTIONS)[number]["tone"], string> = {
-  amber: "text-[#d4891a] dark:text-[#f5a623]",
+  amber: "text-accent",
   green: "text-success",
-  violet: "text-[#7c3aed] dark:text-[#b39bff]",
+  violet: "text-gap",
   blue: "text-accent",
 };
 

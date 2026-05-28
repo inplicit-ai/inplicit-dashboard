@@ -2,15 +2,138 @@
  * design.css — Inplicit dashboard design system
  * Single source of truth.
  *
- * Default theme: dark. Light is opt-in via [data-theme="light"].
+ * Default theme: light (white-first). Dark is opt-in via [data-theme="dark"].
  * ========================================================================== */
 
-/* ─── Tokens — Dark (DEFAULT) ────────────────────────────────────────────── */
+/* ─── Tokens — Light (DEFAULT, white-first) ──────────────────────────────── */
 :root,
+[data-theme="light"] {
+  /* Color system — white-first, layered neutral surfaces.
+     Depth comes from hairline borders + surface steps, never shadows.
+     The warm amber accent reads as a focused signal, never decoration. */
+  --color-bg: #ffffff;
+  --color-surface: #fafafa;
+  --color-surface-2: #f4f4f3;
+  --color-surface-3: #ebebe9;
+  --color-elevated: #ffffff;
+
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-subtle: rgba(0, 0, 0, 0.045);
+  --color-border-strong: rgba(0, 0, 0, 0.16);
+
+  --color-text-primary: #0a0a0a;
+  --color-text-secondary: #525252;
+  --color-text-tertiary: #8a8a8a;
+  --color-text-quaternary: #b5b5b5;
+
+  --color-accent: #c2660c;
+  --color-accent-strong: #a8560a;
+  --color-accent-soft: rgba(194, 102, 12, 0.10);
+  --color-accent-muted: rgba(194, 102, 12, 0.22);
+  --color-accent-glow: rgba(194, 102, 12, 0.18);
+
+  --color-pain: #c2410c;
+  --color-pain-soft: rgba(194, 65, 12, 0.06);
+  --color-pain-muted: rgba(194, 65, 12, 0.22);
+
+  --color-gap: #5b21b6;
+  --color-gap-soft: rgba(91, 33, 182, 0.06);
+  --color-gap-muted: rgba(91, 33, 182, 0.22);
+
+  --color-success: #15803d;
+  --color-success-soft: rgba(21, 128, 61, 0.08);
+  --color-warning: #b45309;
+  --color-danger: #b91c1c;
+  --color-danger-soft: rgba(185, 28, 28, 0.06);
+
+  --color-cta-bg: #0a0a0a;
+  --color-cta-text: #ffffff;
+
+  /* Typography ramp — body floor of 18px. */
+  --font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --text-display: clamp(2.75rem, 5.5vw, 4.5rem);
+  --text-headline: clamp(2.25rem, 4vw, 3rem);
+  --text-title: 1.625rem;
+  --text-subtitle: 1.25rem;
+  --text-body-lg: 1.1875rem;   /* 19px */
+  --text-body: 1.125rem;       /* 18px floor */
+  --text-body-sm: 1rem;        /* 16px */
+  --text-meta: 0.9375rem;      /* 15px */
+  --text-caption: 0.875rem;    /* 14px */
+  --text-eyebrow: 0.75rem;     /* 12px */
+  --text-mono: 0.9375rem;      /* 15px */
+
+  /* Spacing — 4-pt base */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Radius — tightened to Rams-spec. Cards 16px, UI 10px, pills full. */
+  --radius-sm: 6px;
+  --radius-ui: 10px;
+  --radius-card: 16px;
+  --radius-popover: 16px;
+  --radius-full: 9999px;
+
+  /* Easing */
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+  /* Layout */
+  --container-max: 1280px;
+  --header-h: 64px;
+  --tabs-h: 48px;
+  --sidebar-w: 248px;
+
+  /* Shadows — white-first: NO card shadows in light mode (depth = border +
+     surface step). Shadows reserved for transient popovers/menus only. */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-card: none;
+  --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --shadow-elevation: 0 16px 48px rgba(0, 0, 0, 0.10);
+  --shadow-focus: 0 0 0 3px rgba(194, 102, 12, 0.18);
+
+  /* shadcn-bridge tokens — solid colors so /<alpha> modifiers compile. */
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f4;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f5f5f4;
+  --muted-foreground: #6e6e6e;
+  --shadcn-accent: #f5f5f4;
+  --shadcn-accent-foreground: #0a0a0a;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --shadcn-border: #e7e5e4;
+  --input: #e7e5e4;
+  --ring: #c2660c;
+  --radius: 10px;
+}
+
+/* ─── Tokens — Dark (opt-in) ──────────────────────────────────────────────── */
 [data-theme="dark"] {
-  /* Color system — layered neutral surfaces.
-     The palette uses cool near-blacks (#0b0c10 → #1a1d24) so the warm amber
-     accent reads as a focused signal, not as decoration. */
+  /* Cool near-blacks (#0b0c10 → #1f242f) so the warm amber accent reads as a
+     focused signal. Shadows allowed here for depth on the dark canvas. */
   --color-bg: #0b0c10;
   --color-surface: #111319;
   --color-surface-2: #161922;
@@ -49,56 +172,6 @@
   --color-cta-bg: #f5f6f8;
   --color-cta-text: #0b0c10;
 
-  /* Typography ramp — body floor of 18px. */
-  --font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  --text-display: clamp(2.75rem, 5.5vw, 4.5rem);
-  --text-headline: clamp(2.25rem, 4vw, 3rem);
-  --text-title: 1.625rem;
-  --text-subtitle: 1.25rem;
-  --text-body-lg: 1.1875rem;   /* 19px */
-  --text-body: 1.125rem;       /* 18px floor */
-  --text-body-sm: 1rem;        /* 16px */
-  --text-meta: 0.9375rem;      /* 15px */
-  --text-caption: 0.875rem;    /* 14px */
-  --text-eyebrow: 0.75rem;     /* 12px */
-  --text-mono: 0.9375rem;      /* 15px */
-
-  /* Spacing — 4-pt base */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-7: 1.75rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
-  --space-20: 5rem;
-  --space-24: 6rem;
-
-  /* Radius — softer / more modern. Cards/inputs sit at 14–18px, pills full. */
-  --radius-sm: 8px;
-  --radius-ui: 14px;
-  --radius-card: 20px;
-  --radius-popover: 24px;
-  --radius-full: 9999px;
-
-  /* Easing */
-  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-out: cubic-bezier(0, 0, 0.2, 1);
-
-  /* Layout */
-  --container-max: 1280px;
-  --header-h: 64px;
-  --tabs-h: 48px;
-  --sidebar-w: 248px;
-
-  /* Shadows — dark palette uses depth + faint accent glow on focus surfaces. */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.5);
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px rgba(0, 0, 0, 0.42);
@@ -106,7 +179,6 @@
   --shadow-elevation: 0 24px 64px rgba(0, 0, 0, 0.65), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
   --shadow-focus: 0 0 0 3px rgba(245, 166, 35, 0.22);
 
-  /* shadcn-bridge tokens — solid colors so /<alpha> modifiers compile. */
   --background: #0b0c10;
   --foreground: #f5f6f8;
   --card: #131620;
@@ -126,75 +198,6 @@
   --shadcn-border: #232734;
   --input: #232734;
   --ring: #f5a623;
-  --radius: 14px;
-}
-
-/* ─── Tokens — Light (opt-in) ─────────────────────────────────────────────── */
-[data-theme="light"] {
-  --color-bg: #ffffff;
-  --color-surface: #f7f7f6;
-  --color-surface-2: #f2f2f0;
-  --color-surface-3: #ebebe9;
-  --color-elevated: #ffffff;
-
-  --color-border: rgba(0, 0, 0, 0.10);
-  --color-border-subtle: rgba(0, 0, 0, 0.05);
-  --color-border-strong: rgba(0, 0, 0, 0.16);
-
-  --color-text-primary: #0a0a0a;
-  --color-text-secondary: rgba(0, 0, 0, 0.62);
-  --color-text-tertiary: rgba(0, 0, 0, 0.40);
-  --color-text-quaternary: rgba(0, 0, 0, 0.26);
-
-  --color-accent: #d4891a;
-  --color-accent-strong: #b87515;
-  --color-accent-soft: rgba(245, 166, 35, 0.10);
-  --color-accent-muted: rgba(245, 166, 35, 0.22);
-  --color-accent-glow: rgba(245, 166, 35, 0.18);
-
-  --color-pain: #c2410c;
-  --color-pain-soft: rgba(194, 65, 12, 0.06);
-  --color-pain-muted: rgba(194, 65, 12, 0.22);
-
-  --color-gap: #5b21b6;
-  --color-gap-soft: rgba(91, 33, 182, 0.06);
-  --color-gap-muted: rgba(91, 33, 182, 0.22);
-
-  --color-success: #15803d;
-  --color-success-soft: rgba(21, 128, 61, 0.08);
-  --color-warning: #b45309;
-  --color-danger: #b91c1c;
-  --color-danger-soft: rgba(185, 28, 28, 0.06);
-
-  --color-cta-bg: #0a0a0a;
-  --color-cta-text: #ffffff;
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 12px rgba(0, 0, 0, 0.04);
-  --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
-  --shadow-elevation: 0 16px 48px rgba(0, 0, 0, 0.10);
-  --shadow-focus: 0 0 0 3px rgba(245, 166, 35, 0.18);
-
-  --background: #ffffff;
-  --foreground: #0a0a0a;
-  --card: #ffffff;
-  --card-foreground: #0a0a0a;
-  --popover: #ffffff;
-  --popover-foreground: #0a0a0a;
-  --primary: #0a0a0a;
-  --primary-foreground: #ffffff;
-  --secondary: #f5f5f4;
-  --secondary-foreground: #0a0a0a;
-  --muted: #f5f5f4;
-  --muted-foreground: #6e6e6e;
-  --shadcn-accent: #f5f5f4;
-  --shadcn-accent-foreground: #0a0a0a;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --shadcn-border: #e7e5e4;
-  --input: #e7e5e4;
-  --ring: #d4891a;
 }
 
 /* ─── Reset ───────────────────────────────────────────────────────────────── */
@@ -215,25 +218,24 @@
     text-rendering: geometricPrecision;
     font-feature-settings: "ss01", "cv11", "tnum";
     font-variant-ligatures: contextual;
-    color-scheme: dark;
+    color-scheme: light;
   }
 
-  [data-theme="light"] { color-scheme: light; }
+  [data-theme="dark"] { color-scheme: dark; }
 
   body {
     min-height: 100vh;
     line-height: 1.6;
     font-size: var(--text-body);
+    background: var(--color-bg);
+  }
+
+  [data-theme="dark"] body {
     background:
       radial-gradient(1200px 600px at 80% -10%, rgba(245, 166, 35, 0.06), transparent 60%),
       radial-gradient(900px 500px at -10% 20%, rgba(99, 102, 241, 0.05), transparent 60%),
       var(--color-bg);
     background-attachment: fixed;
-  }
-
-  [data-theme="light"] body {
-    background: var(--color-bg);
-    background-attachment: initial;
   }
 
   a { color: inherit; text-decoration: none; }
@@ -410,13 +412,12 @@
   display: block;
 }
 
-[data-theme="dark"] .wordmark__logo,
-:root .wordmark__logo {
-  filter: invert(1);
+.wordmark__logo {
+  filter: none;
 }
 
-[data-theme="light"] .wordmark__logo {
-  filter: none;
+[data-theme="dark"] .wordmark__logo {
+  filter: invert(1);
 }
 
 .app-tabs {
@@ -587,15 +588,20 @@
   background: var(--color-cta-bg);
   color: var(--color-cta-text);
   border-color: var(--color-cta-bg);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset, 0 4px 14px rgba(0, 0, 0, 0.45);
+  box-shadow: none;
 }
 .btn--primary:hover {
+  background: #1a1a1a;
+  border-color: #1a1a1a;
+}
+[data-theme="dark"] .btn--primary {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset, 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+[data-theme="dark"] .btn--primary:hover {
   background: #ffffff;
   border-color: #ffffff;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.24) inset, 0 8px 22px rgba(0, 0, 0, 0.55);
 }
-[data-theme="light"] .btn--primary { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18); }
-[data-theme="light"] .btn--primary:hover { background: #1a1a1a; border-color: #1a1a1a; }
 
 .btn--ghost {
   background: var(--color-surface);
@@ -1086,9 +1092,8 @@
   display: block;
 }
 
-[data-theme="dark"] .sidebar__brand-logo,
-:root .sidebar__brand-logo { filter: invert(1); }
-[data-theme="light"] .sidebar__brand-logo { filter: none; }
+.sidebar__brand-logo { filter: none; }
+[data-theme="dark"] .sidebar__brand-logo { filter: invert(1); }
 
 .sidebar__org {
   display: flex;
