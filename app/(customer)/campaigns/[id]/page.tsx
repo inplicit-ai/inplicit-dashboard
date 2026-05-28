@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/ErrorState";
 import { Eyebrow, PageHeader, StatusBadge } from "@/components/PageChrome";
+import { RefineButton } from "@/components/campaign-chat/RefineButton";
 import { cn } from "@/lib/utils";
 
 interface CampaignPageSearchParams {
@@ -95,7 +96,12 @@ export default async function CampaignOverview({
     <>
       <PageHeader
         title={campaign.org_name}
-        actions={<StatusBadge status={campaign.status} />}
+        actions={
+          <div className="flex items-center gap-3">
+            <RefineButton campaignId={id} />
+            <StatusBadge status={campaign.status} />
+          </div>
+        }
       />
 
       {sp.flash && (

@@ -55,7 +55,36 @@
     "participants": "Teilnehmer",
     "hypotheses": "Cross-Validation",
     "map": "Knowledge Map",
+    "ask": "Fragen",
     "campaign": "Kampagne"
+  },
+  "campaignChat": {
+    "newChat": "Neuer Chat",
+    "threadsTitle": "Gespräche",
+    "emptyThreads": "Noch keine Gespräche.",
+    "emptyTitle": "Diese Kampagne fragen",
+    "emptyBody": "Stelle eine Frage zu den Interviews dieser Kampagne. Antworten zitieren die anonymisierte Person und Aussage, aus der sie stammen – oder lehnen ab, wenn es keine Belege gibt.",
+    "aiLabel": "KI-generiert aus anonymisierten Interviewdaten",
+    "placeholder": "z. B. Hat jemand im Rechtsbereich Onboarding-Probleme erwähnt?",
+    "send": "Senden",
+    "thinking": "Durchsuche Interviews…",
+    "you": "Du",
+    "assistant": "Assistent",
+    "declinedPrefix": "Keine Belege gefunden",
+    "cachedNote": "Antwort aus Cache",
+    "citationsLabel": "Quellen",
+    "deleteThread": "Gespräch löschen",
+    "errorGeneric": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+    "refine": "Kampagne verfeinern",
+    "refineTitle": "Diese Kampagne verfeinern",
+    "refineBody": "Öffne den Setup-Assistenten erneut, um Kontext umzuformulieren, Ziele anzupassen oder Teilnehmende zu ergänzen. Änderungen gelten nur für Interviews, die nach der Änderung starten – abgeschlossene Interviews und ihre Insights bleiben unverändert.",
+    "refineLocked": "Gesperrt, sobald Interviews existieren",
+    "refineMode": {
+      "editable": "Bearbeitbar",
+      "append_only": "Nur hinzufügen",
+      "future_only": "Nur künftige Interviews",
+      "locked": "Gesperrt"
+    }
   },
   "flows": {
     "setup": {

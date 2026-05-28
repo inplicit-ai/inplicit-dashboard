@@ -50,6 +50,12 @@ const TABS: Tab[] = [
     href: (id) => `/campaigns/${id}/map`,
     match: (p, id) => p.startsWith(`/campaigns/${id}/map`),
   },
+  {
+    id: "chat",
+    labelKey: "ask",
+    href: (id) => `/campaigns/${id}/chat`,
+    match: (p, id) => p.startsWith(`/campaigns/${id}/chat`),
+  },
 ];
 
 export function CampaignTabs({ campaignId }: { campaignId: string }) {

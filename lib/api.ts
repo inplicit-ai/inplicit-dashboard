@@ -272,6 +272,36 @@ export function makeApi(cookie?: string) {
           method: "DELETE",
         }),
     },
+    // ── Per-campaign RAG chat (O-7) ─────────────────────────────────────
+    campaignChat: {
+      listThreads: (campaignId: string) =>
+        request<ChatThreadSummary[]>(
+          `/api/campaigns/${campaignId}/chat/threads`,
+        ),
+      createThread: (campaignId: string) =>
+        request<ChatThreadSummary>(
+          `/api/campaigns/${campaignId}/chat/threads`,
+          { method: "POST" },
+        ),
+      getThread: (campaignId: string, threadId: string) =>
+        request<ChatThreadDetail>(
+          `/api/campaigns/${campaignId}/chat/threads/${threadId}`,
+        ),
+      sendMessage: (campaignId: string, threadId: string, content: string) =>
+        request<SendChatMessageResponse>(
+          `/api/campaigns/${campaignId}/chat/threads/${threadId}/messages`,
+          { method: "POST", body: JSON.stringify({ content }) },
+        ),
+      deleteThread: (campaignId: string, threadId: string) =>
+        request<void>(
+          `/api/campaigns/${campaignId}/chat/threads/${threadId}`,
+          { method: "DELETE" },
+        ),
+    },
+    refine: {
+      info: (campaignId: string) =>
+        request<RefineInfo>(`/api/campaigns/${campaignId}/refine`),
+    },
   };
 }
 
@@ -766,4 +796,58 @@ export interface UpdateOrgInput {
   default_interview_length_min?: number;
   /** Empty string clears the logo. Omit the field to leave it untouched. */
   logo_url?: string;
+}
+
+// ── RAG chat DTOs (mirror backend/src/api/campaign_chat.rs) ────────────────
+/** One inline citation chip. Pseudonymous — never participant email/name. */
+export interface ChatCitation {
+  vse_insight_id: string;
+  utterance_index: number;
+  anon_id: string;
+}
+export interface ChatThreadSummary {
+  id: string;
+  title: string;
+  updated_at: string;
+}
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  citations: ChatCitation[];
+  declined: boolean;
+  cached: boolean;
+  created_at: string;
+}
+export interface ChatThreadDetail {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+}
+export interface SendChatMessageResponse {
+  user_message: ChatMessage;
+  assistant_message: ChatMessage;
+}
+
+// ── Refine lock matrix DTOs (mirror backend/src/api/refine.rs) ─────────────
+export type RefineFieldKey =
+  | "company_context"
+  | "objectives"
+  | "interview_length"
+  | "phase_split"
+  | "embedding_model"
+  | "clustering_thresholds"
+  | "participant_list"
+  | "stt_tts_provider"
+  | "language";
+export interface RefineFieldLock {
+  field: RefineFieldKey;
+  locked: boolean;
+  mode: "editable" | "append_only" | "future_only" | "locked";
+}
+export interface RefineInfo {
+  campaign_id: string;
+  status: string;
+  has_interviews: boolean;
+  fields: RefineFieldLock[];
 }

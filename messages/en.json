@@ -55,7 +55,36 @@
     "participants": "Participants",
     "hypotheses": "Cross-Validation",
     "map": "Knowledge Map",
+    "ask": "Ask",
     "campaign": "Campaign"
+  },
+  "campaignChat": {
+    "newChat": "New chat",
+    "threadsTitle": "Conversations",
+    "emptyThreads": "No conversations yet.",
+    "emptyTitle": "Ask this campaign",
+    "emptyBody": "Ask a question about this campaign's interviews. Answers cite the anonymized participant and utterance they came from, or decline when there's no evidence.",
+    "aiLabel": "AI-generated from anonymized interview data",
+    "placeholder": "e.g. Did anyone in Legal mention onboarding pain?",
+    "send": "Send",
+    "thinking": "Searching interviews…",
+    "you": "You",
+    "assistant": "Assistant",
+    "declinedPrefix": "No evidence found",
+    "cachedNote": "Cached answer",
+    "citationsLabel": "Sources",
+    "deleteThread": "Delete conversation",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "refine": "Refine campaign",
+    "refineTitle": "Refine this campaign",
+    "refineBody": "Re-open the setup assistant to reword context, adjust objectives, or add participants. Changes apply only to interviews that start after the change — completed interviews and their insights stay immutable.",
+    "refineLocked": "Locked once interviews exist",
+    "refineMode": {
+      "editable": "Editable",
+      "append_only": "Append only",
+      "future_only": "Future interviews only",
+      "locked": "Locked"
+    }
   },
   "flows": {
     "setup": {
