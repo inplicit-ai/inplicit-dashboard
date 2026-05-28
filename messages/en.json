@@ -160,18 +160,34 @@
     "review": {
       "eyebrow": "Review & launch",
       "title": "Review your campaign",
+      "subtitle": "Confirm the catalog below, then launch. Everything stays editable from the campaign once it's live.",
       "essentials": "Essentials",
       "delivery": "Audience & delivery",
       "launchpad": "Launch",
       "checklist": "Validation",
-      "ok": "Ready",
-      "blocked": "Blocked",
+      "ready": "Ready to launch",
+      "reviewCta": "Review & launch",
       "launch": "Launch campaign",
       "back": "Back to edit",
       "launching": "Launching…",
-      "noGoals": "Add at least one goal.",
-      "noSuccessCriteria": "Add at least one success question or hypothesis.",
-      "peopleCount": "{count} participants"
+      "launchFailed": "Couldn't launch the campaign. Please try again.",
+      "flashLaunched": "Campaign launched.",
+      "flashInviteFailed": "Campaign created, but invites couldn't be sent. Retry from here.",
+      "peopleLabel": "Participants",
+      "peopleCount": "{count} participants",
+      "advisoryNoPeople": "No participants yet — add people before inviting.",
+      "gates": {
+        "no_goals": "Add at least one goal.",
+        "no_success_criteria": "Add at least one success question or hypothesis.",
+        "bad_duration": "Set a duration between 5 and 90 minutes.",
+        "no_interview_type": "Choose an interview type."
+      },
+      "gatesOk": {
+        "no_goals": "Goals defined",
+        "no_success_criteria": "Success criteria set",
+        "bad_duration": "Duration is valid",
+        "no_interview_type": "Interview type chosen"
+      }
     },
     "errors": {
       "agent_unavailable": "The assistant is temporarily unavailable. Showing a draft instead.",

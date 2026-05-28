@@ -10,7 +10,7 @@ import type {
   SetupMessage,
   SetupToolCall,
 } from "@/lib/api";
-import { applyPatch } from "@/lib/setup/draftReducer";
+import { applyPatch, validateForLaunch } from "@/lib/setup/draftReducer";
 import { useSetupStream } from "@/lib/setup/useSetupStream";
 import { SetupChat, type ChatTurn } from "./SetupChat";
 import { Catalog } from "./Catalog";
@@ -157,17 +157,14 @@ export function SplitAuthor({
     [sessionId],
   );
 
-  const onLaunch = useCallback(() => {
+  // Author screen does NOT launch directly (doc 03 §8). "Save" advances to the
+  // condensed review + launch pad, which owns the terminal launch step.
+  const onReview = useCallback(() => {
     setLaunching(true);
-    api.setup
-      .launchDraft(sessionId)
-      .then((res) => {
-        router.push(`/campaigns/${res.campaign_id}`);
-      })
-      .catch(() => setLaunching(false));
+    router.push(`/campaigns/new/${sessionId}/review`);
   }, [sessionId, router]);
 
-  const reasons = launchBlockers(draft);
+  const reasons = validateForLaunch(draft);
 
   return (
     <div className="flex h-[calc(100vh-9rem)] flex-col gap-4 lg:flex-row">
@@ -184,11 +181,11 @@ export function SplitAuthor({
         <div className="flex items-center justify-between gap-3 rounded-card border border-line bg-surface px-4 py-3">
           <ChecklistSummary reasons={reasons} />
           <Button
-            onClick={onLaunch}
+            onClick={onReview}
             disabled={reasons.length > 0 || launching}
             size="lg"
           >
-            {launching ? tReview("launching") : tReview("launch")}
+            {tReview("reviewCta")}
           </Button>
         </div>
       </div>
@@ -200,24 +197,14 @@ function ChecklistSummary({ reasons }: { reasons: string[] }) {
   const t = useTranslations("setup.review");
   if (reasons.length === 0) {
     return (
-      <span className="text-sm font-medium text-success">{t("ok")}</span>
+      <span className="text-sm font-medium text-success">{t("ready")}</span>
     );
   }
   return (
     <ul className="text-xs text-fg-muted">
       {reasons.map((r) => (
-        <li key={r}>• {t(r === "no_goals" ? "noGoals" : "noSuccessCriteria")}</li>
+        <li key={r}>• {t(`gates.${r}`)}</li>
       ))}
     </ul>
   );
-}
-
-function launchBlockers(draft: CampaignDraft): string[] {
-  const reasons: string[] = [];
-  if (!draft.goals || draft.goals.length === 0) reasons.push("no_goals");
-  const sc = draft.successCriteria;
-  const hasCriteria =
-    (sc?.questions?.length ?? 0) > 0 || (sc?.hypotheses?.length ?? 0) > 0;
-  if (!hasCriteria) reasons.push("no_success_criteria");
-  return reasons;
 }

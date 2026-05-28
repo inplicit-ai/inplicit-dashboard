@@ -157,13 +157,31 @@ export function applyAll(
   return calls.reduce((acc, c) => applyPatch(acc, c), draft);
 }
 
-/** Launch gates — mirrors `validate_for_launch` server-side. */
+/**
+ * Launch gates (doc 03 §8) — mirrors `validate_for_launch` server-side.
+ * Returns a stable, ordered list of blocking reason codes; an empty list means
+ * the draft is launch-ready. The order is fixed so the review checklist renders
+ * deterministically. Codes are i18n keys under `setup.review.gates.*`.
+ *
+ * People + schedule gates land in O-5 (see backend comment); we surface them as
+ * non-blocking advisories there. For O-4 the blocking set is: ≥1 goal, ≥1
+ * success question/hypothesis, a sane duration, and a chosen interview type.
+ */
 export function validateForLaunch(draft: CampaignDraft): string[] {
   const reasons: string[] = [];
+
   if (!draft.goals || draft.goals.length === 0) reasons.push("no_goals");
+
   const sc = draft.successCriteria;
   const hasCriteria =
     (sc?.questions?.length ?? 0) > 0 || (sc?.hypotheses?.length ?? 0) > 0;
   if (!hasCriteria) reasons.push("no_success_criteria");
+
+  const duration = draft.durationMin ?? 25;
+  if (duration < 5 || duration > 90) reasons.push("bad_duration");
+
+  const type = draft.interviewType ?? "voice";
+  if (type !== "voice" && type !== "chat") reasons.push("no_interview_type");
+
   return reasons;
 }

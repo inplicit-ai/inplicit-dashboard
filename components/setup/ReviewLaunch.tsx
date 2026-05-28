@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Check, X, ArrowLeft } from "lucide-react";
+import { Check, X, ArrowLeft, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/PageChrome";
@@ -12,9 +12,18 @@ import { validateForLaunch } from "@/lib/setup/draftReducer";
 import { TopicGraph } from "./TopicGraph";
 
 /**
- * Review + launch pad (doc 03 §8). 3-row grid: essentials, audience & delivery,
- * launch pad with a validation checklist and the near-black primary launch CTA
- * (accent is never a button bg — design tokens).
+ * Review + launch pad (doc 03 §8). A condensed 3-row grid:
+ *   1. Essentials      — interview type, duration, language, success mode, goals
+ *   2. Audience & delivery — topic graph, audience, background, people (advisory)
+ *   3. Launch pad      — blocking validation checklist + near-black launch CTA
+ *
+ * Launch is a two-step bridge to the existing terminal write path:
+ *   a) `launchDraft` materializes the draft → a DRAFT campaign row (snapshots
+ *      the expanded config, marks the draft LAUNCHED).
+ *   b) `campaigns.launch` sends invites + flips the campaign to ACTIVE.
+ * Then we route into the campaign dashboard with a success flash. Accent is
+ * never a button background (design tokens); the launch CTA is the near-black
+ * primary button.
  */
 export function ReviewLaunch({
   draftId,
@@ -27,14 +36,46 @@ export function ReviewLaunch({
   const tc = useTranslations("setup.catalog");
   const router = useRouter();
   const [launching, setLaunching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const reasons = validateForLaunch(draft);
+  const blocked = reasons.length > 0;
 
-  function launch() {
+  const peopleCount = Array.isArray(draft.people) ? draft.people.length : 0;
+
+  async function launch() {
+    if (blocked) return;
+    setError(null);
     setLaunching(true);
-    api.setup
-      .launchDraft(draftId)
-      .then((res) => router.push(`/campaigns/${res.campaign_id}`))
-      .catch(() => setLaunching(false));
+    try {
+      // Step 1 — materialize the draft into a DRAFT campaign row.
+      const materialized = await api.setup.launchDraft(draftId);
+      const campaignId = materialized.campaign_id;
+
+      // Step 2 — send invites + flip to ACTIVE via the existing terminal path.
+      // With no people imported yet (O-5) this is a no-op that just goes ACTIVE.
+      try {
+        await api.campaigns.launch(campaignId);
+      } catch {
+        // Materialization succeeded; invite send is recoverable from the
+        // campaign dashboard, so route there with a warning flash rather than
+        // stranding the user on the review screen.
+        router.push(
+          `/campaigns/${campaignId}?flashType=error&flash=${encodeURIComponent(
+            t("flashInviteFailed"),
+          )}`,
+        );
+        return;
+      }
+
+      router.push(
+        `/campaigns/${campaignId}?flashType=success&flash=${encodeURIComponent(
+          t("flashLaunched"),
+        )}`,
+      );
+    } catch {
+      setError(t("launchFailed"));
+      setLaunching(false);
+    }
   }
 
   return (
@@ -44,6 +85,7 @@ export function ReviewLaunch({
         <h1 className="text-2xl font-medium tracking-tight text-fg">
           {t("title")}
         </h1>
+        <p className="text-sm text-fg-muted">{t("subtitle")}</p>
       </div>
 
       {/* Row 1 — essentials */}
@@ -58,6 +100,7 @@ export function ReviewLaunch({
           </Field>
           <Field label={tc("language")}>
             {(draft.language?.default ?? "de").toUpperCase()}
+            {draft.language?.allowSwitch ? " · ⇄" : ""}
           </Field>
           <Field label={tc("successCriteria")}>
             {draft.successCriteria?.mode === "deductive"
@@ -65,31 +108,50 @@ export function ReviewLaunch({
               : tc("inductive")}
           </Field>
         </dl>
-        {(draft.goals?.length ?? 0) > 0 && (
-          <ul className="flex flex-col gap-1 border-t border-line pt-3 text-sm text-fg">
-            {draft.goals!.map((g) => (
-              <li key={g.id}>• {g.text}</li>
-            ))}
-          </ul>
-        )}
+        {(draft.goals?.length ?? 0) > 0 ? (
+          <div className="border-t border-line pt-3">
+            <p className="mb-1 text-xs font-medium text-fg-subtle">
+              {tc("goals")}
+            </p>
+            <ul className="flex flex-col gap-1 text-sm text-fg">
+              {draft.goals!.map((g) => (
+                <li key={g.id}>• {g.text}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </Card>
 
       {/* Row 2 — audience & delivery */}
       <Card className="gap-4 rounded-card border-line bg-elevated p-5 shadow-none">
         <h2 className="text-sm font-semibold text-fg">{t("delivery")}</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
             <p className="mb-1 text-xs font-medium text-fg-subtle">
               {tc("topics")}
             </p>
-            <TopicGraph data={draft.topics} />
+            {draft.topics?.nodes?.length ? (
+              <TopicGraph data={draft.topics} />
+            ) : (
+              <p className="text-sm text-fg-muted">{tc("topicsEmpty")}</p>
+            )}
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Field label={tc("audience")}>
               {draft.audience?.segments?.length
                 ? draft.audience.segments.join(", ")
                 : "—"}
             </Field>
+            <Field label={t("peopleLabel")}>
+              {t("peopleCount", { count: peopleCount })}
+            </Field>
+            {draft.background?.notes?.trim() ? (
+              <Field label={tc("background")}>
+                <span className="line-clamp-3 text-fg-muted">
+                  {draft.background.notes}
+                </span>
+              </Field>
+            ) : null}
           </div>
         </div>
       </Card>
@@ -102,14 +164,42 @@ export function ReviewLaunch({
             {t("checklist")}
           </p>
           <ul className="space-y-1.5 text-sm">
-            <Gate ok={!reasons.includes("no_goals")} label={t("noGoals")} okLabel={t("ok")} />
+            <Gate
+              ok={!reasons.includes("no_goals")}
+              label={t("gates.no_goals")}
+              okLabel={t("gatesOk.no_goals")}
+            />
             <Gate
               ok={!reasons.includes("no_success_criteria")}
-              label={t("noSuccessCriteria")}
-              okLabel={t("ok")}
+              label={t("gates.no_success_criteria")}
+              okLabel={t("gatesOk.no_success_criteria")}
+            />
+            <Gate
+              ok={!reasons.includes("bad_duration")}
+              label={t("gates.bad_duration")}
+              okLabel={t("gatesOk.bad_duration")}
+            />
+            <Gate
+              ok={!reasons.includes("no_interview_type")}
+              label={t("gates.no_interview_type")}
+              okLabel={t("gatesOk.no_interview_type")}
             />
           </ul>
+          {/* Advisory (non-blocking) — people/schedule are O-5. */}
+          {peopleCount === 0 ? (
+            <p className="mt-3 flex items-center gap-2 text-xs text-fg-muted">
+              <AlertTriangle className="h-3.5 w-3.5 text-accent" />
+              {t("advisoryNoPeople")}
+            </p>
+          ) : null}
         </div>
+
+        {error ? (
+          <p className="text-sm text-pain" role="alert">
+            {error}
+          </p>
+        ) : null}
+
         <div className="flex items-center justify-between gap-3 border-t border-line pt-4">
           <Button asChild variant="link" size="sm" className="px-0 text-fg-muted">
             <a href={`/campaigns/new/${draftId}`}>
@@ -117,11 +207,7 @@ export function ReviewLaunch({
               {t("back")}
             </a>
           </Button>
-          <Button
-            onClick={launch}
-            disabled={reasons.length > 0 || launching}
-            size="lg"
-          >
+          <Button onClick={launch} disabled={blocked || launching} size="lg">
             {launching ? t("launching") : t("launch")}
           </Button>
         </div>

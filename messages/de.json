@@ -160,18 +160,34 @@
     "review": {
       "eyebrow": "Prüfen & starten",
       "title": "Kampagne prüfen",
+      "subtitle": "Prüfe den Katalog unten und starte dann. Alles bleibt nach dem Start in der Kampagne bearbeitbar.",
       "essentials": "Grundlagen",
       "delivery": "Zielgruppe & Versand",
       "launchpad": "Start",
       "checklist": "Validierung",
-      "ok": "Bereit",
-      "blocked": "Blockiert",
+      "ready": "Startbereit",
+      "reviewCta": "Prüfen & starten",
       "launch": "Kampagne starten",
       "back": "Zurück zum Bearbeiten",
       "launching": "Wird gestartet…",
-      "noGoals": "Füge mindestens ein Ziel hinzu.",
-      "noSuccessCriteria": "Füge mindestens eine Erfolgsfrage oder Hypothese hinzu.",
-      "peopleCount": "{count} Teilnehmer"
+      "launchFailed": "Kampagne konnte nicht gestartet werden. Bitte erneut versuchen.",
+      "flashLaunched": "Kampagne gestartet.",
+      "flashInviteFailed": "Kampagne erstellt, aber Einladungen konnten nicht versendet werden. Hier erneut versuchen.",
+      "peopleLabel": "Teilnehmer",
+      "peopleCount": "{count} Teilnehmer",
+      "advisoryNoPeople": "Noch keine Teilnehmer — füge Personen hinzu, bevor du einlädst.",
+      "gates": {
+        "no_goals": "Füge mindestens ein Ziel hinzu.",
+        "no_success_criteria": "Füge mindestens eine Erfolgsfrage oder Hypothese hinzu.",
+        "bad_duration": "Lege eine Dauer zwischen 5 und 90 Minuten fest.",
+        "no_interview_type": "Wähle einen Interviewtyp."
+      },
+      "gatesOk": {
+        "no_goals": "Ziele definiert",
+        "no_success_criteria": "Erfolgskriterien gesetzt",
+        "bad_duration": "Dauer ist gültig",
+        "no_interview_type": "Interviewtyp gewählt"
+      }
     },
     "errors": {
       "agent_unavailable": "Der Assistent ist vorübergehend nicht verfügbar. Es wird ein Entwurf angezeigt.",
