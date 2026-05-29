@@ -302,6 +302,65 @@ export function makeApi(cookie?: string) {
       info: (campaignId: string) =>
         request<RefineInfo>(`/api/campaigns/${campaignId}/refine`),
     },
+    // ── Org dashboard (O-8) ─────────────────────────────────────────────
+    org: {
+      interviews: () => request<OrgInterviewRow[]>("/api/orgs/me/interviews"),
+      stats: () => request<OrgStats>("/api/orgs/me/stats"),
+    },
+    // ── Cross-campaign Knowledge Chat (O-8) ─────────────────────────────
+    knowledgeChat: {
+      listThreads: () =>
+        request<ChatThreadSummary[]>("/api/orgs/me/rag-threads"),
+      createThread: () =>
+        request<ChatThreadSummary>("/api/orgs/me/rag-threads", {
+          method: "POST",
+        }),
+      getThread: (threadId: string) =>
+        request<OrgThreadDetail>(`/api/orgs/me/rag-threads/${threadId}`),
+      sendMessage: (threadId: string, content: string) =>
+        request<SendOrgChatResponse>(
+          `/api/orgs/me/rag-threads/${threadId}/messages`,
+          { method: "POST", body: JSON.stringify({ content }) },
+        ),
+      deleteThread: (threadId: string) =>
+        request<void>(`/api/orgs/me/rag-threads/${threadId}`, {
+          method: "DELETE",
+        }),
+    },
+    // ── Context Vaults (O-8) ────────────────────────────────────────────
+    vaults: {
+      list: () => request<Vault[]>("/api/orgs/me/vaults"),
+      create: (body: NewVaultInput) =>
+        request<Vault>("/api/orgs/me/vaults", {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      remove: (id: string) =>
+        request<void>(`/api/orgs/me/vaults/${id}`, { method: "DELETE" }),
+      listItems: (id: string) =>
+        request<VaultItem[]>(`/api/orgs/me/vaults/${id}/items`),
+      addItem: (id: string, body: NewVaultItemInput) =>
+        request<VaultItem>(`/api/orgs/me/vaults/${id}/items`, {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+    },
+    // ── Integrations registry (O-8) ─────────────────────────────────────
+    integrations: {
+      list: () => request<IntegrationView[]>("/api/orgs/me/integrations"),
+      install: (body: InstallIntegrationInput) =>
+        request<{ id: string; provider: string; status: string }>(
+          "/api/orgs/me/integrations",
+          { method: "POST", body: JSON.stringify(body) },
+        ),
+      setStatus: (id: string, status: IntegrationStatus) =>
+        request<{ id: string; status: string }>(
+          `/api/orgs/me/integrations/${id}`,
+          { method: "PATCH", body: JSON.stringify({ status }) },
+        ),
+      remove: (id: string) =>
+        request<void>(`/api/orgs/me/integrations/${id}`, { method: "DELETE" }),
+    },
   };
 }
 
@@ -827,6 +886,111 @@ export interface ChatThreadDetail {
 export interface SendChatMessageResponse {
   user_message: ChatMessage;
   assistant_message: ChatMessage;
+}
+
+// ── Org dashboard DTOs (mirror backend/src/api/org_dashboard.rs) ───────────
+export interface OrgInterviewRow {
+  id: string;
+  campaign_id: string;
+  campaign_label: string;
+  anon_id: string;
+  status: string;
+  language?: string;
+  duration_seconds?: number;
+  department?: string;
+  created_at?: string;
+  ended_at?: string;
+}
+export interface OrgStats {
+  campaigns: number;
+  interviews_total: number;
+  interviews_completed: number;
+  interviews_in_progress: number;
+  insights: number;
+  hypotheses: number;
+}
+
+// ── Knowledge Chat DTOs (mirror backend/src/api/knowledge_chat.rs) ─────────
+/** Org citation carries the campaign so the UI can label + link across campaigns. */
+export interface OrgCitation {
+  vse_insight_id: string;
+  utterance_index: number;
+  anon_id: string;
+  campaign_id: string;
+}
+export interface OrgChatMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  citations: OrgCitation[];
+  declined: boolean;
+  cached: boolean;
+  created_at: string;
+}
+export interface OrgThreadDetail {
+  id: string;
+  title: string;
+  scope_campaigns: number;
+  messages: OrgChatMessage[];
+}
+export interface SendOrgChatResponse {
+  user_message: OrgChatMessage;
+  assistant_message: OrgChatMessage;
+}
+
+// ── Context Vault DTOs (mirror backend/src/api/vaults.rs) ──────────────────
+export interface Vault {
+  id: string;
+  name: string;
+  description?: string;
+  scope: "ORG" | "CAMPAIGN";
+  campaign_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+export interface NewVaultInput {
+  name: string;
+  description?: string;
+  scope?: "ORG" | "CAMPAIGN";
+  campaign_id?: string;
+}
+export interface VaultItem {
+  id: string;
+  kind: "TEXT" | "URL" | "FILE";
+  title?: string;
+  content?: string;
+  mime?: string;
+  byte_size?: number;
+  embedded: boolean;
+  created_at: string;
+}
+export interface NewVaultItemInput {
+  kind: "TEXT" | "URL" | "FILE";
+  title?: string;
+  content?: string;
+  s3_key?: string;
+  mime?: string;
+  byte_size?: number;
+}
+
+// ── Integration DTOs (mirror backend/src/api/integrations.rs) ──────────────
+export type IntegrationStatus = "CONNECTED" | "DISABLED" | "ERROR";
+export interface IntegrationView {
+  key: string;
+  name: string;
+  description: string;
+  category: string;
+  requires_secret: boolean;
+  installed: boolean;
+  install_id?: string;
+  status?: IntegrationStatus;
+  config?: Record<string, unknown>;
+  has_secret: boolean;
+}
+export interface InstallIntegrationInput {
+  provider: string;
+  config?: Record<string, unknown>;
+  secret?: string;
 }
 
 // ── Refine lock matrix DTOs (mirror backend/src/api/refine.rs) ─────────────

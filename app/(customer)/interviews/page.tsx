@@ -1,8 +1,147 @@
-import { SurfacePlaceholder } from "@/components/SurfacePlaceholder";
+import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { ArrowRight, MessagesSquare } from "lucide-react";
+import { makeApi, type OrgInterviewRow, type OrgStats } from "@/lib/api";
+import { requestCookie } from "@/lib/auth";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ErrorState } from "@/components/ErrorState";
+import { PageHeader, StatusBadge } from "@/components/PageChrome";
+import { StatsCard, StatsRow } from "@/components/StatsCard";
 
-// O-8: cross-campaign Interviews surface (06-org-dashboard-and-vaults).
-export default function InterviewsPage() {
+function fmtDuration(seconds?: number): string {
+  if (!seconds || seconds <= 0) return "—";
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+// O-8: cross-campaign Interviews surface (doc 06 §3). PII-stripped — anon_id only.
+export default async function OrgInterviewsPage() {
+  const t = await getTranslations("orgInterviews");
+  const api = makeApi(await requestCookie());
+
+  let rows: OrgInterviewRow[] = [];
+  let stats: OrgStats | null = null;
+  let error: unknown = null;
+  try {
+    [rows, stats] = await Promise.all([api.org.interviews(), api.org.stats()]);
+  } catch (e) {
+    error = e;
+  }
+
   return (
-    <SurfacePlaceholder titleKey="interviewsTitle" bodyKey="interviewsBody" />
+    <>
+      <PageHeader
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        meta={t("count", { count: rows.length })}
+      />
+
+      {error && (
+        <div className="mb-6">
+          <ErrorState error={error} />
+        </div>
+      )}
+
+      {stats && (
+        <StatsRow>
+          <StatsCard label={t("statCampaigns")} value={stats.campaigns} />
+          <StatsCard label={t("statTotal")} value={stats.interviews_total} />
+          <StatsCard
+            label={t("statCompleted")}
+            value={stats.interviews_completed}
+          />
+          <StatsCard label={t("statInsights")} value={stats.insights} />
+          <StatsCard label={t("statHypotheses")} value={stats.hypotheses} />
+        </StatsRow>
+      )}
+
+      {rows.length === 0 && !error ? (
+        <Card className="rounded-card border-dashed bg-surface/40 p-10 shadow-none">
+          <div className="flex flex-col items-center justify-center gap-3 text-center">
+            <div className="grid size-11 place-items-center rounded-full bg-surface-2 text-fg-muted">
+              <MessagesSquare className="h-5 w-5" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-base font-semibold text-fg">
+                {t("emptyTitle")}
+              </p>
+              <p className="text-sm text-fg-muted">{t("emptyBody")}</p>
+            </div>
+          </div>
+        </Card>
+      ) : (
+        rows.length > 0 && (
+          <Card className="overflow-hidden p-0 shadow-none">
+            <Table className="min-w-[820px]">
+              <TableHeader>
+                <TableRow className="bg-surface/40 hover:bg-surface/40">
+                  <TableHead>{t("colCampaign")}</TableHead>
+                  <TableHead>{t("colAnon")}</TableHead>
+                  <TableHead>{t("colStatus")}</TableHead>
+                  <TableHead>{t("colDuration")}</TableHead>
+                  <TableHead>{t("colLanguage")}</TableHead>
+                  <TableHead>{t("colDate")}</TableHead>
+                  <TableHead className="w-12 text-right" aria-label="" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((i) => {
+                  const href = `/campaigns/${i.campaign_id}/interviews/${i.id}`;
+                  return (
+                    <TableRow key={i.id} className="group">
+                      <TableCell className="font-medium text-fg">
+                        <Link href={`/campaigns/${i.campaign_id}`}>
+                          {i.campaign_label}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          href={href}
+                          className="font-mono text-xs font-medium text-fg hover:text-accent"
+                        >
+                          {i.anon_id}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={i.status} />
+                      </TableCell>
+                      <TableCell className="text-fg-muted tabular-nums">
+                        {fmtDuration(i.duration_seconds)}
+                      </TableCell>
+                      <TableCell className="uppercase text-fg-muted">
+                        {i.language ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-xs text-fg-muted">
+                        {i.created_at
+                          ? new Date(i.created_at).toLocaleString()
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Link
+                          href={href}
+                          aria-label={t("open", { anon: i.anon_id })}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full text-fg-subtle transition-colors group-hover:text-fg hover:bg-surface-2"
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </Card>
+        )
+      )}
+    </>
   );
 }
