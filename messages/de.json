@@ -56,7 +56,8 @@
     "hypotheses": "Cross-Validation",
     "map": "Knowledge Map",
     "ask": "Fragen",
-    "campaign": "Kampagne"
+    "campaign": "Kampagne",
+    "role": "Rolle"
   },
   "campaignChat": {
     "newChat": "Neuer Chat",
@@ -312,6 +313,24 @@
     "contentPlaceholder": "Kontext, Notizen oder eine URL einfügen…",
     "addEntry": "Eintrag hinzufügen",
     "selectPrompt": "Wähle einen Vault, um seine Einträge zu sehen."
+  },
+  "twin": {
+    "eyebrow": "Organisation",
+    "title": "Digital Twin",
+    "meta": "Simuliere das wahrscheinliche Denken jeder Rolle vor den Interviews und verfeinere das Rollenmodell anhand echter Antworten. Simuliert, rollenbezogen, nie personenbezogen.",
+    "simulationBadge": "SIMULATION",
+    "legendValidated": "Validiert ({count})",
+    "legendPredicted": "Nur vorhergesagt",
+    "empty": "Noch keine Rollen. Rollen werden aus der Berufstaxonomie befüllt und beim Upload den Teilnehmenden zugeordnet.",
+    "predicted": "Vorhergesagt",
+    "validated": "Validiert",
+    "predictedCount": "{count} aus Simulation",
+    "validatedCount": "{count} aus Interviews",
+    "noPredicted": "Noch keine vorhergesagten Pains — starte eine Simulation für diese Kampagne.",
+    "noValidated": "Noch keine validierten Pains — nur vorhergesagt, bis echte Interviews vorliegen.",
+    "divergence": "Divergenz (Überraschung: vorhergesagt vs. validiert)",
+    "coldMeta": "Nur vorhergesagt. Der Twin dieser Rolle hat noch keine validierten Daten aus echten Interviews.",
+    "refinedMeta": "Twin v{version} · {confidence}% Konfidenz aus echten Interviews."
   },
   "integrations": {
     "eyebrow": "Organisation",

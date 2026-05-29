@@ -56,7 +56,8 @@
     "hypotheses": "Cross-Validation",
     "map": "Knowledge Map",
     "ask": "Ask",
-    "campaign": "Campaign"
+    "campaign": "Campaign",
+    "role": "Role"
   },
   "campaignChat": {
     "newChat": "New chat",
@@ -312,6 +313,24 @@
     "contentPlaceholder": "Paste context, notes, or a URL…",
     "addEntry": "Add entry",
     "selectPrompt": "Select a vault to view its entries."
+  },
+  "twin": {
+    "eyebrow": "Organization",
+    "title": "Digital Twin",
+    "meta": "Pre-simulate each role's likely thinking before interviews, then refine the role model from real answers. Simulated, role-keyed, never per-person.",
+    "simulationBadge": "SIMULATION",
+    "legendValidated": "Validated ({count})",
+    "legendPredicted": "Predicted only",
+    "empty": "No roles yet. Roles are seeded from the occupation taxonomy and mapped to participants on upload.",
+    "predicted": "Predicted",
+    "validated": "Validated",
+    "predictedCount": "{count} from simulation",
+    "validatedCount": "{count} from interviews",
+    "noPredicted": "No predicted pains yet — run a simulation for this campaign.",
+    "noValidated": "No validated pains yet — predicted only until real interviews land.",
+    "divergence": "Divergence (predicted vs. validated surprise)",
+    "coldMeta": "Predicted only. This role's twin has no validated data from real interviews yet.",
+    "refinedMeta": "Twin v{version} · {confidence}% confidence from real interviews."
   },
   "integrations": {
     "eyebrow": "Organization",

@@ -81,6 +81,10 @@ export function buildBreadcrumb(
             ? { key: ctx.campaignName, isLiteral: true, href: isLast ? undefined : acc }
             : { key: "campaign", href: isLast ? undefined : acc },
         );
+      } else if (prev === "twin") {
+        // Twin drill-in: the id is a role id — resolve to a generic "Role"
+        // crumb, never the raw id (no PII, role-keyed).
+        crumbs.push({ key: "role", href: isLast ? undefined : acc });
       } else {
         // Unknown dynamic segment — fall back to a generic key.
         crumbs.push({ key: "campaign", href: isLast ? undefined : acc });

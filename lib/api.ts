@@ -361,6 +361,24 @@ export function makeApi(cookie?: string) {
       remove: (id: string) =>
         request<void>(`/api/orgs/me/integrations/${id}`, { method: "DELETE" }),
     },
+    // ── Digital Twin (O-9) ──────────────────────────────────────────────
+    twin: {
+      listRoles: () => request<TwinRole[]>("/api/orgs/me/roles"),
+      createRole: (body: NewTwinRoleInput) =>
+        request<TwinRole>("/api/orgs/me/roles", {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      graph: () => request<TwinGraph>("/api/orgs/me/twin/graph"),
+      detail: (roleId: string) =>
+        request<TwinDetail>(`/api/orgs/me/twin/${roleId}`),
+      simulate: (campaignId: string) =>
+        request<SimulateResult>(`/api/campaigns/${campaignId}/simulate`, {
+          method: "POST",
+        }),
+      personas: (campaignId: string) =>
+        request<SimulatedPersona[]>(`/api/campaigns/${campaignId}/personas`),
+    },
   };
 }
 
@@ -1014,4 +1032,69 @@ export interface RefineInfo {
   status: string;
   has_interviews: boolean;
   fields: RefineFieldLock[];
+}
+
+// ── Digital Twin DTOs (mirror backend/src/api/twins.rs) ────────────────────
+export interface TwinRole {
+  id: string;
+  name: string;
+  description: string | null;
+  source: "ESCO" | "GENERATED" | "MANUAL";
+  confirmed: boolean;
+  embedded: boolean;
+  /** True once the role's twin has VALIDATED data from real interviews. */
+  has_validated: boolean;
+}
+export interface NewTwinRoleInput {
+  name: string;
+  description?: string;
+  esco_uri?: string;
+  source?: "ESCO" | "GENERATED" | "MANUAL";
+}
+export interface TwinGraphNode {
+  id: string;
+  name: string;
+  /** "validated" = solid node; "predicted" = dashed (predicted-only). */
+  kind: "validated" | "predicted";
+  confidence: number;
+}
+export interface TwinGraphEdge {
+  from: string;
+  to: string;
+  relation: "reports_to" | "manages";
+}
+export interface TwinGraph {
+  nodes: TwinGraphNode[];
+  edges: TwinGraphEdge[];
+}
+export interface TwinDetail {
+  role_id: string;
+  role_name: string;
+  /** null when the role has never been refined (predicted-only / cold). */
+  model: TwinModel | null;
+  confidence: number;
+  version: number;
+  /** Always true for the simulated layer — drives the SIMULATION badge. */
+  is_simulation: boolean;
+}
+export interface TwinPain {
+  pain: string;
+  confidence?: number;
+  source?: string;
+}
+export interface TwinModel {
+  predicted_pains?: TwinPain[];
+  validated_pains?: TwinPain[];
+  divergence?: { pain: string; kind: string }[];
+}
+export interface SimulateResult {
+  run_id: string;
+  persona_count: number;
+  seed_hypotheses: string[];
+}
+export interface SimulatedPersona {
+  id: string;
+  role_id: string;
+  synthetic_profile: Record<string, unknown>;
+  is_simulation: boolean;
 }
