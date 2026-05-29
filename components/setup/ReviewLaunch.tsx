@@ -7,7 +7,8 @@ import { Check, X, ArrowLeft, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/PageChrome";
-import { api, type CampaignDraft } from "@/lib/api";
+import { type CampaignDraft } from "@/lib/api";
+import { clientApi } from "@/lib/client-api";
 import { validateForLaunch } from "@/lib/setup/draftReducer";
 import { TopicGraph } from "./TopicGraph";
 
@@ -48,13 +49,13 @@ export function ReviewLaunch({
     setLaunching(true);
     try {
       // Step 1 — materialize the draft into a DRAFT campaign row.
-      const materialized = await api.setup.launchDraft(draftId);
+      const materialized = await clientApi.setup.launchDraft(draftId);
       const campaignId = materialized.campaign_id;
 
       // Step 2 — send invites + flip to ACTIVE via the existing terminal path.
       // With no people imported yet (O-5) this is a no-op that just goes ACTIVE.
       try {
-        await api.campaigns.launch(campaignId);
+        await clientApi.campaigns.launch(campaignId);
       } catch {
         // Materialization succeeded; invite send is recoverable from the
         // campaign dashboard, so route there with a warning flash rather than

@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
+import { clientApi } from "@/lib/client-api";
 import type {
   CampaignDraft,
   SetupMessage,
@@ -137,7 +137,7 @@ export function SplitAuthor({
   const onPatch = useCallback(
     (call: SetupToolCall) => {
       setDraft((d) => applyPatch(d, call));
-      api.setup
+      clientApi.setup
         .patchDraft(sessionId, { patch: call, base_rev: revRef.current })
         .then((res) => {
           revRef.current = res.revision;
@@ -145,7 +145,7 @@ export function SplitAuthor({
         })
         .catch(() => {
           // On conflict/failure, re-fetch authoritative state.
-          api.setup
+          clientApi.setup
             .getSession(sessionId)
             .then((s) => {
               revRef.current = s.revision;

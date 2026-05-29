@@ -12,7 +12,8 @@ import {
 import { PromptSuggestion } from "@/components/ui/prompt-suggestion";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/PageChrome";
-import { api, type Locale } from "@/lib/api";
+import { type Locale } from "@/lib/api";
+import { clientApi } from "@/lib/client-api";
 
 /**
  * Prompt launchpad (doc 03 §1.1). Centered prompt box + example chips. The
@@ -33,7 +34,7 @@ export function Launchpad({ suggestions }: { suggestions: string[] }) {
     setCreating(true);
     setError(null);
     try {
-      const res = await api.setup.createSession({
+      const res = await clientApi.setup.createSession({
         prompt: trimmed,
         locale: (locale === "de" ? "de" : "en") as Locale,
       });
