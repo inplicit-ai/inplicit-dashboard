@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, makeDurationOptions } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type {
   CampaignDraft,
@@ -11,6 +12,9 @@ import type {
   SetupToolCall,
 } from "@/lib/api";
 import { SectionCard } from "./SectionCard";
+
+/** Slot-length options on the 5-minute grid (5..60). */
+const SLOT_LENGTH_OPTIONS = makeDurationOptions(5, 60, 5);
 
 /**
  * Schedule section (doc 03 §4 #11): the interview timeframe with BOOKING SLOTS
@@ -54,18 +58,23 @@ export function ScheduleSection({
 
   return (
     <SectionCard title={t("schedule")} touched={touched}>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {/* Booking mode */}
-        <div className="inline-flex rounded-ui border border-line p-0.5">
+        <div
+          role="radiogroup"
+          className="inline-flex w-full rounded-ui border border-line bg-surface p-0.5 sm:w-auto sm:self-start"
+        >
           {(["slots", "instant"] as const).map((mode) => {
             const active = schedule.mode === mode;
             return (
               <button
                 key={mode}
                 type="button"
+                role="radio"
+                aria-checked={active}
                 onClick={() => patch({ mode })}
                 className={cn(
-                  "rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors",
+                  "flex-1 rounded-sm px-3 py-1.5 text-sm font-medium transition-colors sm:flex-none",
                   active ? "bg-fg text-canvas" : "text-fg-muted hover:text-fg",
                 )}
               >
@@ -75,52 +84,58 @@ export function ScheduleSection({
           })}
         </div>
 
-        {schedule.mode === "slots" && (
+        {schedule.mode === "slots" ? (
           <>
-            <p className="text-[11px] leading-snug text-fg-subtle">
+            <p className="text-xs leading-snug text-fg-subtle">
               {t("scheduleHint")}
             </p>
-            <div className="grid grid-cols-2 gap-2">
-              <label className="flex flex-col gap-1">
-                <span className="text-xs text-fg-subtle">{t("windowStart")}</span>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-fg-subtle">
+                  {t("windowStart")}
+                </span>
                 <Input
                   type="datetime-local"
                   value={schedule.windowStart ?? ""}
                   onChange={(e) => patch({ windowStart: e.target.value })}
-                  className="h-8 text-sm"
+                  className="h-10 text-sm"
                 />
               </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-xs text-fg-subtle">{t("windowEnd")}</span>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-fg-subtle">
+                  {t("windowEnd")}
+                </span>
                 <Input
                   type="datetime-local"
                   value={schedule.windowEnd ?? ""}
                   onChange={(e) => patch({ windowEnd: e.target.value })}
-                  className="h-8 text-sm"
+                  className="h-10 text-sm"
                 />
               </label>
             </div>
-            <div className="flex items-end justify-between gap-2">
-              <label className="flex flex-col gap-1">
-                <span className="text-xs text-fg-subtle">{t("slotLength")}</span>
-                <Input
-                  type="number"
-                  min={5}
-                  step={5}
-                  value={schedule.slotLengthMin ?? 30}
-                  onChange={(e) =>
-                    patch({ slotLengthMin: Number(e.target.value) || 30 })
+
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <label className="flex flex-col gap-1.5 sm:w-40">
+                <span className="text-xs font-medium text-fg-subtle">
+                  {t("slotLength")}
+                </span>
+                <Select
+                  aria-label={t("slotLength")}
+                  value={String(schedule.slotLengthMin ?? 30)}
+                  onValueChange={(v) =>
+                    patch({ slotLengthMin: Number(v) || 30 })
                   }
-                  className="h-8 w-24 text-sm"
+                  options={SLOT_LENGTH_OPTIONS}
+                  size="md"
                 />
               </label>
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
+                size="lg"
                 onClick={generate}
                 disabled={!schedule.windowStart || !schedule.windowEnd}
-                className="h-8"
               >
                 {t("generateSlots")}
               </Button>
@@ -129,15 +144,15 @@ export function ScheduleSection({
             {slots.length === 0 ? (
               <p className="text-sm text-fg-muted">{t("noSlots")}</p>
             ) : (
-              <div className="flex flex-col gap-1">
-                <span className="text-xs tabular-nums text-fg-subtle">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium tabular-nums text-fg-subtle">
                   {t("slotsCount", { count: slots.length })}
                 </span>
-                <ul className="max-h-40 overflow-auto rounded-ui border border-line p-2">
+                <ul className="flex max-h-44 flex-col gap-0.5 overflow-y-auto rounded-ui border border-line bg-surface-2 p-2">
                   {slots.map((s, i) => (
                     <li
                       key={i}
-                      className="py-0.5 text-xs tabular-nums text-fg-muted"
+                      className="rounded-sm px-1.5 py-1 text-xs tabular-nums text-fg-muted"
                     >
                       {fmtSlot(s)}
                     </li>
@@ -146,7 +161,7 @@ export function ScheduleSection({
               </div>
             )}
           </>
-        )}
+        ) : null}
       </div>
     </SectionCard>
   );

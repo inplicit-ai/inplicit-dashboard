@@ -2,7 +2,6 @@ import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { makeApi, ApiError, type TwinDetail, type TwinPain } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/PageChrome";
 import { ErrorState } from "@/components/ErrorState";
@@ -57,26 +56,31 @@ export default async function TwinDetailPage({
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Predicted — hairline / muted (dashed accent). */}
-        <Card className="rounded-card border-dashed p-5 shadow-none">
-          <div className="mb-4 flex items-center gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-accent">
-              {t("predicted")}
-            </span>
+      <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+        {/* Predicted — hairline / muted (dashed accent = simulated, not yet real). */}
+        <section className="card card--compact card--opportunity flex flex-col gap-5 border-dashed">
+          <header className="flex items-center justify-between gap-3">
+            <span className="label-eyebrow text-accent">{t("predicted")}</span>
             <span className="text-xs text-fg-subtle">
               {t("predictedCount", { count: predicted.length })}
             </span>
-          </div>
+          </header>
           {predicted.length === 0 ? (
-            <p className="text-sm text-fg-muted">{t("noPredicted")}</p>
+            <p className="text-sm leading-relaxed text-fg-muted">
+              {t("noPredicted")}
+            </p>
           ) : (
-            <ul className="space-y-3">
+            <ul className="flex flex-col gap-3">
               {predicted.map((p, i) => (
-                <li key={i} className="flex items-start justify-between gap-3">
-                  <span className="text-sm text-fg-muted">{p.pain}</span>
+                <li
+                  key={i}
+                  className="flex items-start justify-between gap-3 border-t border-line-subtle pt-3 first:border-t-0 first:pt-0"
+                >
+                  <span className="text-sm leading-relaxed text-fg-muted">
+                    {p.pain}
+                  </span>
                   {typeof p.confidence === "number" && (
-                    <span className="shrink-0 font-mono text-[11px] text-fg-subtle">
+                    <span className="shrink-0 font-mono text-[11px] tabular-nums text-fg-subtle">
                       {Math.round(p.confidence * 100)}%
                     </span>
                   )}
@@ -84,49 +88,50 @@ export default async function TwinDetailPage({
               ))}
             </ul>
           )}
-        </Card>
+        </section>
 
         {/* Validated — solid (real-interview evidence). */}
-        <Card className="rounded-card p-5 shadow-none">
-          <div className="mb-4 flex items-center gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-fg">
-              {t("validated")}
-            </span>
+        <section className="card card--compact flex flex-col gap-5">
+          <header className="flex items-center justify-between gap-3">
+            <span className="label-eyebrow text-fg">{t("validated")}</span>
             <span className="text-xs text-fg-subtle">
               {t("validatedCount", { count: validated.length })}
             </span>
-          </div>
+          </header>
           {validated.length === 0 ? (
-            <p className="text-sm text-fg-muted">{t("noValidated")}</p>
+            <p className="text-sm leading-relaxed text-fg-muted">
+              {t("noValidated")}
+            </p>
           ) : (
-            <ul className="space-y-3">
+            <ul className="flex flex-col gap-3">
               {validated.map((p, i) => (
-                <li key={i} className="text-sm text-fg">
+                <li
+                  key={i}
+                  className="border-t border-line-subtle pt-3 text-sm leading-relaxed text-fg first:border-t-0 first:pt-0"
+                >
                   {p.pain}
                 </li>
               ))}
             </ul>
           )}
-        </Card>
+        </section>
       </div>
 
-      {/* Divergence — the most valuable signal (surprise). */}
+      {/* Divergence — the most valuable signal (predicted vs. validated surprise). */}
       {divergence.length > 0 && (
-        <Card className="mt-6 rounded-card p-5 shadow-none">
-          <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">
-            {t("divergence")}
-          </div>
-          <ul className="space-y-2">
+        <section className="card card--compact mt-6 flex flex-col gap-4">
+          <span className="label-eyebrow">{t("divergence")}</span>
+          <ul className="flex flex-col gap-2">
             {divergence.map((d, i) => (
-              <li key={i} className="flex items-center gap-2 text-sm">
-                <Badge variant="outline" className="font-mono text-[10px]">
+              <li key={i} className="flex items-center gap-3 text-sm">
+                <span className="badge badge--knowledge shrink-0 font-mono text-[10px] uppercase">
                   {d.kind}
-                </Badge>
-                <span className="text-fg-muted">{d.pain}</span>
+                </span>
+                <span className="leading-relaxed text-fg-muted">{d.pain}</span>
               </li>
             ))}
           </ul>
-        </Card>
+        </section>
       )}
     </>
   );

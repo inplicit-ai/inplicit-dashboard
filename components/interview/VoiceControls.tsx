@@ -42,10 +42,10 @@ export function VoiceControls({ lang, muted, onToggleMute, onSwitchToChat }: Pro
         dangerouslySetInnerHTML={{
           __html: `
         .iv-controls { display: inline-flex; align-items: center; gap: var(--space-3); }
-        .iv-ctrl { display: inline-grid; place-items: center; width: 56px; height: 56px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text-primary); cursor: pointer; transition: border-color 0.15s var(--ease-smooth), background 0.15s var(--ease-smooth); }
-        .iv-ctrl:hover { border-color: var(--color-text-primary); }
-        .iv-ctrl:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-        .iv-ctrl--off { color: var(--color-text-tertiary); background: var(--color-surface-2); }
+        .iv-ctrl { display: inline-grid; place-items: center; width: 56px; height: 56px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text-primary); cursor: pointer; transition: border-color 0.15s var(--ease-smooth), background 0.15s var(--ease-smooth), box-shadow 0.15s var(--ease-smooth); }
+        .iv-ctrl:hover { border-color: var(--color-border-strong); background: var(--color-surface-2); }
+        .iv-ctrl:focus-visible { outline: none; border-color: var(--color-accent); box-shadow: var(--shadow-focus); }
+        .iv-ctrl--off { color: var(--color-text-tertiary); background: var(--color-surface-2); border-color: var(--color-border-strong); }
         @media (max-width: 640px) { .iv-ctrl { width: 56px; height: 56px; } }
       `,
         }}

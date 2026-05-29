@@ -6,10 +6,10 @@ import { requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, makeDurationOptions } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/PageChrome";
-import { cn } from "@/lib/utils";
 
 export default async function NewOrgPage({
   searchParams,
@@ -20,6 +20,14 @@ export default async function NewOrgPage({
   const sticky: Partial<ProvisionOrgInput> = sp.sticky
     ? JSON.parse(decodeURIComponent(sp.sticky))
     : {};
+
+  // Org-level locale supports DE/EN only (not the FR interview option).
+  const LOCALE_OPTIONS = [
+    { value: "de", label: "Deutsch" },
+    { value: "en", label: "English" },
+  ];
+  // Interview duration on the 5-min grid, 10–60 min.
+  const DURATION_OPTIONS = makeDurationOptions(10, 60, 5);
 
   async function createOrg(formData: FormData) {
     "use server";
@@ -90,14 +98,14 @@ export default async function NewOrgPage({
       {sp.error && (
         <div
           role="alert"
-          className="mb-6 flex items-start gap-2.5 rounded-ui border border-pain/30 bg-pain-soft px-3.5 py-2.5 text-sm text-pain"
+          className="mb-6 flex items-start gap-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-sm text-danger"
         >
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <p className="leading-snug">{sp.error}</p>
         </div>
       )}
 
-      <Card className="rounded-card border-line bg-surface p-6">
+      <Card className="rounded-card border border-line bg-surface p-8">
         <form action={createOrg} className="flex flex-col gap-5">
           <SectionHeading
             title="Unternehmen"
@@ -111,7 +119,7 @@ export default async function NewOrgPage({
               required
               placeholder="Acme GmbH"
               defaultValue={sticky.name}
-              className="h-11 text-base md:text-sm"
+              className="h-10 text-base md:text-sm"
             />
           </Field>
 
@@ -133,7 +141,7 @@ export default async function NewOrgPage({
               pattern="[a-z0-9\-]+"
               placeholder="acme-gmbh"
               defaultValue={sticky.slug}
-              className="h-11 font-mono text-base md:text-sm"
+              className="h-10 font-mono text-base md:text-sm"
             />
           </Field>
 
@@ -161,18 +169,17 @@ export default async function NewOrgPage({
                 name="industry"
                 placeholder="Logistik-SaaS"
                 defaultValue={sticky.industry}
-                className="h-11 text-base md:text-sm"
+                className="h-10 text-base md:text-sm"
               />
             </Field>
             <Field id="default_locale" label="Standardsprache">
-              <NativeSelect
+              <Select
                 id="default_locale"
                 name="default_locale"
                 defaultValue={sticky.default_locale ?? "de"}
-              >
-                <option value="de">Deutsch</option>
-                <option value="en">English</option>
-              </NativeSelect>
+                options={LOCALE_OPTIONS}
+                size="md"
+              />
             </Field>
           </div>
 
@@ -184,21 +191,19 @@ export default async function NewOrgPage({
                 type="number"
                 min={1}
                 defaultValue={String(sticky.default_voice_id ?? 438)}
-                className="h-11 font-mono text-base md:text-sm"
+                className="h-10 font-mono text-base md:text-sm"
               />
             </Field>
             <Field
               id="default_interview_length_min"
-              label="Standard-Interviewdauer (Min)"
+              label="Standard-Interviewdauer"
             >
-              <Input
+              <Select
                 id="default_interview_length_min"
                 name="default_interview_length_min"
-                type="number"
-                min={10}
-                max={60}
                 defaultValue={String(sticky.default_interview_length_min ?? 25)}
-                className="h-11 text-base md:text-sm"
+                options={DURATION_OPTIONS}
+                size="md"
               />
             </Field>
           </div>
@@ -219,7 +224,7 @@ export default async function NewOrgPage({
                 required
                 placeholder="max@acme.de"
                 defaultValue={sticky.owner_email}
-                className="h-11 text-base md:text-sm"
+                className="h-10 text-base md:text-sm"
               />
             </Field>
             <Field id="owner_name" label="Owner-Name" required>
@@ -229,12 +234,12 @@ export default async function NewOrgPage({
                 required
                 placeholder="Max Mustermann"
                 defaultValue={sticky.owner_name}
-                className="h-11 text-base md:text-sm"
+                className="h-10 text-base md:text-sm"
               />
             </Field>
           </div>
 
-          <label className="flex items-start gap-3 rounded-ui border border-line bg-canvas p-3.5 text-sm text-fg">
+          <label className="flex cursor-pointer items-start gap-3 rounded-ui border border-line bg-canvas p-4 text-sm text-fg transition-colors hover:border-line-strong">
             <input
               type="checkbox"
               name="issue_magic_link"
@@ -306,22 +311,6 @@ function Mono({ children }: { children: React.ReactNode }) {
     <code className="rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-fg">
       {children}
     </code>
-  );
-}
-
-function NativeSelect({
-  className,
-  ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <select
-      {...props}
-      className={cn(
-        "flex h-11 w-full appearance-none rounded-ui border border-line bg-canvas px-3 py-2 pr-8 text-base text-fg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%221.75%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-[position:right_0.625rem_center] bg-[size:1rem] bg-no-repeat",
-        className,
-      )}
-    />
   );
 }
 

@@ -18,6 +18,7 @@ import { requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, makeDurationOptions } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { ErrorState } from "@/components/ErrorState";
@@ -46,6 +47,14 @@ export default async function OrgDetailPage({
   const { id } = await params;
   const sp = await searchParams;
   const api = makeApi(await requestCookie());
+
+  // Org-level locale supports DE/EN only (not the FR interview option).
+  const LOCALE_OPTIONS = [
+    { value: "de", label: "Deutsch" },
+    { value: "en", label: "English" },
+  ];
+  // Interview duration on the 5-min grid, 10–60 min.
+  const DURATION_OPTIONS = makeDurationOptions(10, 60, 5);
 
   let org: Organization | null = null;
   let error: unknown = null;
@@ -191,7 +200,7 @@ export default async function OrgDetailPage({
           )}
 
           {sp.magic_link && (
-            <Card className="mb-6 rounded-card border-success/30 bg-success-soft/40 p-5">
+            <Card className="card--opportunity mb-6 rounded-card border border-accent-muted bg-accent-soft p-6">
               <p className="text-base font-semibold text-fg">
                 Magic-Link bereit
                 {sp.reissued_for && (
@@ -206,7 +215,7 @@ export default async function OrgDetailPage({
                   ? " Eine Email mit dem Link wurde an den Owner verschickt."
                   : ""}
               </p>
-              <div className="mt-3 break-all rounded-ui border border-line bg-canvas p-3 font-mono text-xs">
+              <div className="mt-4 break-all rounded-ui border border-line bg-canvas p-3 font-mono text-xs">
                 <a
                   className="text-accent-strong hover:underline"
                   href={sp.magic_link}
@@ -222,7 +231,7 @@ export default async function OrgDetailPage({
           )}
 
           {sp.email_error && (
-            <Card className="mb-6 rounded-card border-pain/30 bg-pain-soft/40 p-5">
+            <Card className="card--pain mb-6 rounded-card border border-pain-muted bg-pain-soft p-6">
               <p className="text-base font-semibold text-pain">
                 Welcome-Email konnte nicht versendet werden
               </p>
@@ -237,7 +246,7 @@ export default async function OrgDetailPage({
             </Card>
           )}
 
-          <Card className="mb-6 rounded-card border-line bg-surface p-6">
+          <Card className="mb-6 rounded-card border border-line bg-surface p-8">
             <Eyebrow>Unternehmenskontext</Eyebrow>
             <p className="mt-3 text-xs text-fg-muted">
               Wird in jeden Interview-System-Prompt der Org eingespeist. Kampagnes
@@ -253,7 +262,7 @@ export default async function OrgDetailPage({
             )}
           </Card>
 
-          <Card className="mb-6 rounded-card border-line bg-surface p-6">
+          <Card className="mb-6 rounded-card border border-line bg-surface p-8">
             <Eyebrow>Defaults für neue Kampagnes</Eyebrow>
             <DefList className="mt-4">
               <DefRow label="Sprache" value={org.default_locale.toUpperCase()} />
@@ -269,7 +278,7 @@ export default async function OrgDetailPage({
             </DefList>
           </Card>
 
-          <Card className="mb-6 rounded-card border-line bg-surface p-6">
+          <Card className="mb-6 rounded-card border border-line bg-surface p-8">
             <Eyebrow>Metadaten</Eyebrow>
             <DefList className="mt-4">
               <DefRow
@@ -296,9 +305,9 @@ export default async function OrgDetailPage({
             </DefList>
           </Card>
 
-          <Card className="rounded-card border-pain/30 bg-pain-soft/30 p-6">
+          <Card className="card--pain rounded-card border border-pain-muted bg-pain-soft p-8">
             <header className="mb-5 flex items-start gap-3">
-              <span className="grid size-8 place-items-center rounded-full bg-pain/15 text-pain">
+              <span className="grid size-8 place-items-center rounded-full bg-pain-soft text-pain">
                 <AlertTriangle className="h-4 w-4" />
               </span>
               <div>
@@ -329,7 +338,7 @@ export default async function OrgDetailPage({
               </form>
             </DangerRow>
 
-            <Separator className="my-5 bg-pain/20" />
+            <Separator className="my-5 bg-pain-muted" />
 
             <DangerRow
               title="Löschen"
@@ -374,7 +383,7 @@ export default async function OrgDetailPage({
             muted={org.slug}
           />
 
-          <Card className="rounded-card border-line bg-surface p-6">
+          <Card className="rounded-card border border-line bg-surface p-8">
             <form action={updateOrgAction} className="flex flex-col gap-5">
               <Field id="edit-name" label="Name" required>
                 <Input
@@ -382,7 +391,7 @@ export default async function OrgDetailPage({
                   name="name"
                   defaultValue={org.name}
                   required
-                  className="h-11 text-base md:text-sm"
+                  className="h-10 text-base md:text-sm"
                 />
               </Field>
 
@@ -400,7 +409,7 @@ export default async function OrgDetailPage({
                     inputMode="url"
                     defaultValue={org.logo_url ?? ""}
                     placeholder="https://cdn.example.com/logo.png"
-                    className="h-11 flex-1 text-base md:text-sm"
+                    className="h-10 flex-1 text-base md:text-sm"
                   />
                 </div>
               </Field>
@@ -426,18 +435,17 @@ export default async function OrgDetailPage({
                     name="industry"
                     defaultValue={org.industry ?? ""}
                     placeholder="Logistik-SaaS"
-                    className="h-11 text-base md:text-sm"
+                    className="h-10 text-base md:text-sm"
                   />
                 </Field>
                 <Field id="edit-locale" label="Standardsprache">
-                  <NativeSelect
+                  <Select
                     id="edit-locale"
                     name="default_locale"
                     defaultValue={org.default_locale}
-                  >
-                    <option value="de">Deutsch</option>
-                    <option value="en">English</option>
-                  </NativeSelect>
+                    options={LOCALE_OPTIONS}
+                    size="md"
+                  />
                 </Field>
               </div>
 
@@ -449,24 +457,22 @@ export default async function OrgDetailPage({
                     type="number"
                     min={1}
                     defaultValue={String(org.default_voice_id)}
-                    className="h-11 font-mono text-base md:text-sm"
+                    className="h-10 font-mono text-base md:text-sm"
                   />
                 </Field>
-                <Field id="edit-length" label="Interviewdauer (Min)">
-                  <Input
+                <Field id="edit-length" label="Interviewdauer">
+                  <Select
                     id="edit-length"
                     name="default_interview_length_min"
-                    type="number"
-                    min={10}
-                    max={60}
                     defaultValue={String(org.default_interview_length_min)}
-                    className="h-11 text-base md:text-sm"
+                    options={DURATION_OPTIONS}
+                    size="md"
                   />
                 </Field>
               </div>
 
               <div className="mt-2 flex justify-end gap-2">
-                <Button asChild variant="accent">
+                <Button asChild variant="outline">
                   <Link href={`/staff/orgs/${org.id}`}>Abbrechen</Link>
                 </Button>
                 <Button type="submit">Speichern</Button>
@@ -500,8 +506,8 @@ function Flash({ type, message }: { type: "ok" | "err"; message: string }) {
       className={cn(
         "mb-6 flex items-start gap-2.5 rounded-ui border px-3.5 py-2.5 text-sm",
         type === "ok"
-          ? "border-success/30 bg-success-soft text-success"
-          : "border-pain/30 bg-pain-soft text-pain",
+          ? "border-success/22 bg-success-soft text-success"
+          : "border-danger/22 bg-danger-soft text-danger",
       )}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" />
@@ -612,22 +618,6 @@ function Mono({
     >
       {children}
     </code>
-  );
-}
-
-function NativeSelect({
-  className,
-  ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <select
-      {...props}
-      className={cn(
-        "flex h-11 w-full appearance-none rounded-ui border border-line bg-canvas px-3 py-2 pr-8 text-base text-fg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%221.75%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-[position:right_0.625rem_center] bg-[size:1rem] bg-no-repeat",
-        className,
-      )}
-    />
   );
 }
 

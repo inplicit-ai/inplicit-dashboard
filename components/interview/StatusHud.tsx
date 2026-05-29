@@ -54,7 +54,7 @@ export function StatusHud({ lang, agentStatus, conn, latency }: Props) {
         dangerouslySetInnerHTML={{
           __html: `
         .iv-hud { display: inline-flex; align-items: center; gap: var(--space-3); font-size: var(--text-caption); color: var(--color-text-secondary); }
-        .iv-pill { display: inline-flex; align-items: center; gap: var(--space-2); padding: 4px 10px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-bg); }
+        .iv-pill { display: inline-flex; align-items: center; gap: var(--space-2); padding: 4px 10px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); }
         .iv-pill__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-text-quaternary); }
         .iv-pill--idle .iv-pill__dot { background: var(--color-text-quaternary); }
         .iv-pill--listening { border-color: var(--color-accent); }

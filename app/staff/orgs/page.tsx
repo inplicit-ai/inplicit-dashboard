@@ -5,6 +5,7 @@ import { requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/ErrorState";
+import { OrgAvatar } from "@/components/OrgAvatar";
 import { PageHeader, StatusBadge } from "@/components/PageChrome";
 
 export default async function StaffOrgsPage() {
@@ -40,7 +41,7 @@ export default async function StaffOrgsPage() {
       )}
 
       {!error && orgs.length === 0 && (
-        <Card className="rounded-card border-dashed bg-surface/40 p-10">
+        <Card className="rounded-card border border-dashed border-line-strong bg-surface p-10">
           <div className="flex flex-col items-center justify-center gap-3 text-center">
             <div className="grid size-11 place-items-center rounded-full bg-accent-soft text-accent">
               <Building2 className="h-5 w-5" />
@@ -65,30 +66,33 @@ export default async function StaffOrgsPage() {
       )}
 
       {orgs.length > 0 && (
-        <div className="space-y-2.5">
+        <div className="surface-bleed space-y-3">
           {orgs.map((o) => (
             <Link
               key={o.id}
               href={`/staff/orgs/${o.id}`}
-              className="group flex items-center justify-between gap-4 rounded-card border border-line bg-surface p-5 shadow-sm transition-colors hover:border-line-strong hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="group flex items-center justify-between gap-4 rounded-card border border-line bg-surface p-6 transition-colors hover:border-line-strong hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <div className="min-w-0 space-y-1.5">
-                <p className="truncate text-base font-medium text-fg">
-                  {o.name}
-                </p>
-                <p className="text-xs text-fg-muted">
-                  <span className="font-mono">{o.slug}</span>
-                  {o.industry && <> · {o.industry}</>}{" "}
-                  · {o.default_locale.toUpperCase()}{" "}
-                  · {o.default_interview_length_min} Min
-                  {o.created_at && (
-                    <>
-                      {" "}
-                      · seit{" "}
-                      {new Date(o.created_at).toLocaleDateString("de-DE")}
-                    </>
-                  )}
-                </p>
+              <div className="flex min-w-0 items-center gap-4">
+                <OrgAvatar name={o.name} logoUrl={o.logo_url} size={40} />
+                <div className="min-w-0 space-y-1.5">
+                  <p className="truncate text-base font-medium text-fg">
+                    {o.name}
+                  </p>
+                  <p className="text-xs text-fg-muted">
+                    <span className="font-mono">{o.slug}</span>
+                    {o.industry && <> · {o.industry}</>}{" "}
+                    · {o.default_locale.toUpperCase()}{" "}
+                    · {o.default_interview_length_min} Min
+                    {o.created_at && (
+                      <>
+                        {" "}
+                        · seit{" "}
+                        {new Date(o.created_at).toLocaleDateString("de-DE")}
+                      </>
+                    )}
+                  </p>
+                </div>
               </div>
               <div className="flex shrink-0 items-center gap-3">
                 <StatusBadge status={o.status} />

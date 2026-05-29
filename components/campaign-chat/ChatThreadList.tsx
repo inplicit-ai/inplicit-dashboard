@@ -37,9 +37,9 @@ export function ChatThreadList({
   const t = useTranslations("campaignChat");
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between px-3 py-3">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex shrink-0 items-center justify-between border-b border-line-subtle px-3 py-3">
+        <span className="label-eyebrow text-fg-subtle">
           {t("threadsTitle")}
         </span>
         <button
@@ -53,7 +53,7 @@ export function ChatThreadList({
         </button>
       </div>
 
-      <div className="scrollbar-none flex-1 overflow-y-auto px-2 pb-2">
+      <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto px-2 py-2">
         {threads.length === 0 ? (
           <p className="px-2 py-3 text-xs text-fg-subtle">{t("emptyThreads")}</p>
         ) : (
@@ -84,7 +84,7 @@ export function ChatThreadList({
                     type="button"
                     onClick={() => onDelete(thread.id)}
                     aria-label={t("deleteThread")}
-                    className="absolute right-1 top-1/2 hidden -translate-y-1/2 rounded-ui p-1 text-fg-subtle hover:text-pain focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:block"
+                    className="absolute right-1 top-1/2 hidden -translate-y-1/2 rounded-ui p-1 text-fg-subtle hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:block"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>

@@ -3,17 +3,8 @@ import { redirect } from "next/navigation";
 import { AlertCircle, CheckCircle2, KeyRound, Plus, Trash2, Users } from "lucide-react";
 import { ApiError, makeApi, type StaffUserSummary } from "@/lib/api";
 import { requireAdmin, requestCookie } from "@/lib/auth";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { ErrorState } from "@/components/ErrorState";
 import { PageHeader } from "@/components/PageChrome";
 import { cn } from "@/lib/utils";
@@ -109,7 +100,7 @@ export default async function StaffUsersPage({
       {sp.flash && <Flash type={sp.flashType ?? "ok"} message={sp.flash} />}
 
       {sp.magic_link && (
-        <Card className="mb-6 rounded-card border-success/30 bg-success-soft/40 p-5">
+        <Card className="card--opportunity mb-6 rounded-card border border-accent-muted bg-accent-soft p-6">
           <p className="text-base font-semibold text-fg">
             Magic-Link bereit
             {sp.reissued_for && (
@@ -124,14 +115,14 @@ export default async function StaffUsersPage({
               ? " Email an den Staff-User wurde verschickt."
               : ""}
           </p>
-          <div className="mt-3 break-all rounded-ui border border-line bg-canvas p-3 font-mono text-xs">
+          <div className="mt-4 break-all rounded-ui border border-line bg-canvas p-3 font-mono text-xs">
             <a className="text-accent-strong hover:underline" href={sp.magic_link}>
               {sp.magic_link}
             </a>
           </div>
           {sp.email_error && (
             <p className="mt-3 text-xs text-fg-muted">
-              <strong className="text-pain">Email konnte nicht versendet werden:</strong>{" "}
+              <strong className="text-danger">Email konnte nicht versendet werden:</strong>{" "}
               <span className="font-mono">{sp.email_error}</span>
             </p>
           )}
@@ -139,7 +130,7 @@ export default async function StaffUsersPage({
       )}
 
       {!error && users.length === 0 && (
-        <Card className="rounded-card border-dashed bg-surface/40 p-10">
+        <Card className="rounded-card border border-dashed border-line-strong bg-surface p-10">
           <div className="flex flex-col items-center justify-center gap-3 text-center">
             <div className="grid size-11 place-items-center rounded-full bg-accent-soft text-accent">
               <Users className="h-5 w-5" />
@@ -165,43 +156,39 @@ export default async function StaffUsersPage({
       )}
 
       {users.length > 0 && (
-        <Card className="overflow-hidden p-0">
-          <Table className="min-w-[800px]">
-            <TableHeader>
-              <TableRow className="bg-surface/40 hover:bg-surface/40">
-                <TableHead>Name</TableHead>
-                <TableHead>E-Mail</TableHead>
-                <TableHead>Letzter Login</TableHead>
-                <TableHead>Verifiziert</TableHead>
-                <TableHead className="w-[260px] text-right">Aktionen</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+        <div className="surface-bleed card card--flush overflow-x-auto">
+          <table className="table min-w-[800px]">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>E-Mail</th>
+                <th>Letzter Login</th>
+                <th>Verifiziert</th>
+                <th className="w-[260px] text-right">Aktionen</th>
+              </tr>
+            </thead>
+            <tbody>
               {users.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.name}</TableCell>
-                  <TableCell>
+                <tr key={u.id}>
+                  <td className="font-medium text-fg">{u.name}</td>
+                  <td>
                     <span className="font-mono text-xs text-fg-muted">
                       {u.email}
                     </span>
-                  </TableCell>
-                  <TableCell className="text-xs text-fg-muted">
+                  </td>
+                  <td className="text-xs text-fg-muted">
                     {u.last_login_at
                       ? new Date(u.last_login_at).toLocaleString("de-DE")
                       : "—"}
-                  </TableCell>
-                  <TableCell>
+                  </td>
+                  <td>
                     {u.email_verified_at ? (
-                      <Badge className="bg-success-soft text-success border-transparent">
-                        Verifiziert
-                      </Badge>
+                      <span className="badge badge--success">Verifiziert</span>
                     ) : (
-                      <Badge className="bg-accent-soft text-accent-strong border-accent-muted">
-                        Eingeladen
-                      </Badge>
+                      <span className="badge badge--opportunity">Eingeladen</span>
                     )}
-                  </TableCell>
-                  <TableCell>
+                  </td>
+                  <td>
                     <div className="flex items-center justify-end gap-2">
                       <form action={issueMagicLinkAction}>
                         <input type="hidden" name="id" value={u.id} />
@@ -221,19 +208,19 @@ export default async function StaffUsersPage({
                           type="submit"
                           variant="ghost"
                           size="sm"
-                          className="text-fg-muted hover:bg-pain-soft hover:text-pain"
+                          className="text-fg-muted hover:bg-danger-soft hover:text-danger"
                           aria-label={`${u.email} löschen`}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </form>
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               ))}
-            </TableBody>
-          </Table>
-        </Card>
+            </tbody>
+          </table>
+        </div>
       )}
     </>
   );
@@ -247,8 +234,8 @@ function Flash({ type, message }: { type: "ok" | "err"; message: string }) {
       className={cn(
         "mb-6 flex items-start gap-2.5 rounded-ui border px-3.5 py-2.5 text-sm",
         type === "ok"
-          ? "border-success/30 bg-success-soft text-success"
-          : "border-pain/30 bg-pain-soft text-pain",
+          ? "border-success/22 bg-success-soft text-success"
+          : "border-danger/22 bg-danger-soft text-danger",
       )}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" />

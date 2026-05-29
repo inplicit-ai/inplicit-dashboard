@@ -9,9 +9,9 @@ import {
 } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/ErrorState";
 import { Eyebrow, PageHeader, StatusBadge } from "@/components/PageChrome";
+import { StatsCard } from "@/components/StatsCard";
 import { RefineButton } from "@/components/campaign-chat/RefineButton";
 import { cn } from "@/lib/utils";
 
@@ -113,86 +113,77 @@ export default async function CampaignOverview({
 
       {/* Stat grid */}
       <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Teilnehmer" value={stats?.participants ?? 0} />
-        <Stat
+        <StatsCard label="Teilnehmer" value={stats?.participants ?? 0} />
+        <StatsCard
           label="Abgeschlossen"
           value={stats?.interviews_completed ?? 0}
-          sub={`${completionRate}% Abdeckung`}
+          hint={`${completionRate}% Abdeckung`}
         />
-        <Stat label="Insights" value={stats?.insights ?? 0} />
-        <Stat label="Hypothesen" value={stats?.hypotheses ?? 0} />
+        <StatsCard label="Insights" value={stats?.insights ?? 0} />
+        <StatsCard label="Hypothesen" value={stats?.hypotheses ?? 0} />
       </div>
 
-      {/* CTA */}
-      <Card className="mb-8 flex flex-col items-start justify-between gap-6 rounded-card border-line bg-surface p-6 sm:flex-row sm:items-center sm:gap-8">
-        <div className="max-w-[48ch] space-y-2">
-          <Eyebrow>Step 01 · Einladen</Eyebrow>
-          <h2 className="text-xl font-semibold tracking-tight text-fg">
-            Teilnehmer aktivieren.
-          </h2>
+      {/* Dashboard body — primary action column + context rail */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+        {/* CTA */}
+        <section className="card flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center sm:gap-8">
+          <div className="max-w-[48ch] space-y-2">
+            <Eyebrow>Step 01 · Einladen</Eyebrow>
+            <h2 className="text-xl font-semibold tracking-tight text-fg">
+              Teilnehmer aktivieren.
+            </h2>
+            <p className="text-sm leading-relaxed text-fg-muted">
+              Bulk-Versand an alle, die noch nicht eingeladen wurden. Bereits
+              versendete werden übersprungen.
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+            <form action={launchCampaign}>
+              <Button type="submit">{launchLabel}</Button>
+            </form>
+            <Button
+              asChild
+              variant="link"
+              size="sm"
+              className="px-0 text-fg-muted"
+            >
+              <Link href={`/campaigns/${id}/participants`}>
+                Einzeln verwalten
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </div>
+        </section>
+
+        {/* Progress */}
+        <section className="card card--compact flex flex-col gap-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <Eyebrow>Fortschritt</Eyebrow>
+            <span className="text-2xl-tabular font-medium tracking-tight text-fg">
+              {completionRate}%
+            </span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
+            <div
+              className="h-full rounded-full bg-accent transition-[width] duration-500"
+              style={{ width: `${completionRate}%` }}
+            />
+          </div>
           <p className="text-sm text-fg-muted">
-            Bulk-Versand an alle, die noch nicht eingeladen wurden. Bereits
-            versendete werden übersprungen.
+            {stats?.interviews_completed ?? 0} von {stats?.participants ?? 0}{" "}
+            Interviews abgeschlossen
           </p>
-        </div>
-        <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
-          <form action={launchCampaign}>
-            <Button type="submit">{launchLabel}</Button>
-          </form>
-          <Button asChild variant="link" size="sm" className="px-0 text-fg-muted">
-            <Link href={`/campaigns/${id}/participants`}>
-              Einzeln verwalten
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </Button>
-        </div>
-      </Card>
+        </section>
 
-      {/* Company context */}
-      <Card className="mb-8 rounded-card border-line bg-surface p-6">
-        <Eyebrow>Unternehmenskontext</Eyebrow>
-        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-fg-muted">
-          {campaign.company_context}
-        </p>
-      </Card>
-
-      {/* Progress */}
-      <Card className="rounded-card border-line bg-surface p-6">
-        <Eyebrow>Fortschritt</Eyebrow>
-        <p className="mt-3 mb-4 text-sm text-fg-muted">
-          {stats?.interviews_completed ?? 0} von {stats?.participants ?? 0}{" "}
-          Interviews abgeschlossen
-        </p>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
-          <div
-            className="h-full rounded-full bg-accent transition-[width] duration-500"
-            style={{ width: `${completionRate}%` }}
-          />
-        </div>
-      </Card>
+        {/* Company context — spans both columns */}
+        <section className="card lg:col-span-2">
+          <Eyebrow>Unternehmenskontext</Eyebrow>
+          <p className="mt-3 max-w-[72ch] whitespace-pre-wrap text-sm leading-relaxed text-fg-muted">
+            {campaign.company_context}
+          </p>
+        </section>
+      </div>
     </>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  sub,
-}: {
-  label: string;
-  value: number;
-  sub?: string;
-}) {
-  return (
-    <Card className="rounded-card border-line bg-surface p-5 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">
-        {label}
-      </p>
-      <p className="mt-2 font-mono text-3xl font-medium tabular-nums tracking-tight text-fg">
-        {value}
-      </p>
-      {sub && <p className="mt-1 text-xs text-fg-muted">{sub}</p>}
-    </Card>
   );
 }
 
@@ -208,10 +199,10 @@ function FlashBanner({
     <div
       role="status"
       className={cn(
-        "mb-6 flex items-start gap-2.5 rounded-ui border px-3.5 py-2.5 text-sm",
+        "mb-6 flex items-start gap-3 rounded-ui border px-4 py-3 text-sm",
         type === "ok"
-          ? "border-success/30 bg-success-soft text-success"
-          : "border-pain/30 bg-pain-soft text-pain",
+          ? "border-success/22 bg-success-soft text-success"
+          : "border-pain-muted bg-pain-soft text-pain",
       )}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" />

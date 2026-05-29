@@ -4,9 +4,10 @@ import { useTranslations } from "next-intl";
 import type { TopicGraph as TopicGraphData } from "@/lib/api";
 
 /**
- * Lightweight topic graph (doc 03 §5). Hand-rolled SVG (no D3), re-themed to
- * tokens. Topics are laid out in a gentle vertical cluster; edges are hairlines.
- * Orphan nodes (no edges) render with a dashed border to signal "connect me".
+ * Lightweight topic graph (doc 03 §5). Hand-rolled SVG (no D3), themed entirely
+ * to design tokens via CSS vars. Topics sit in a gentle two-column cluster;
+ * edges are hairline dashed connectors (design-contract §4). Orphan nodes (no
+ * edges) render with a dashed border to signal "connect me".
  *
  * Constraint surfacing only — overlap/merge proposals come from the agent as
  * tool-call cards (doc 03 §5); this view is read-focused for the MVP slice.
@@ -58,8 +59,9 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
             y1={a.y}
             x2={b.x}
             y2={b.y}
-            stroke="var(--color-border-strong, rgba(0,0,0,.16))"
-            strokeWidth={1}
+            stroke="var(--color-border-strong)"
+            strokeWidth={1.5}
+            strokeDasharray="4 3"
           />
         );
       })}
@@ -72,8 +74,12 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
               width={180}
               height={36}
               rx={10}
-              fill="var(--color-surface, #fafafa)"
-              stroke="var(--color-border, rgba(0,0,0,.08))"
+              fill="var(--color-surface)"
+              stroke={
+                orphan
+                  ? "var(--color-border-strong)"
+                  : "var(--color-border)"
+              }
               strokeWidth={1}
               strokeDasharray={orphan ? "4 3" : undefined}
             />
@@ -82,7 +88,7 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
               y={22}
               fontSize={12}
               fontWeight={600}
-              fill="var(--color-text-primary, #0a0a0a)"
+              fill="var(--color-text-primary)"
             >
               {truncate(n.title, 22)}
             </text>

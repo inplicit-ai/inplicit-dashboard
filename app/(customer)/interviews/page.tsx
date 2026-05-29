@@ -3,15 +3,6 @@ import { getTranslations } from "next-intl/server";
 import { ArrowRight, MessagesSquare } from "lucide-react";
 import { makeApi, type OrgInterviewRow, type OrgStats } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
-import { Card } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { ErrorState } from "@/components/ErrorState";
 import { PageHeader, StatusBadge } from "@/components/PageChrome";
 import { StatsCard, StatsRow } from "@/components/StatsCard";
@@ -65,8 +56,8 @@ export default async function OrgInterviewsPage() {
       )}
 
       {rows.length === 0 && !error ? (
-        <Card className="rounded-card border-dashed bg-surface/40 p-10 shadow-none">
-          <div className="flex flex-col items-center justify-center gap-3 text-center">
+        <div className="card card--flush">
+          <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
             <div className="grid size-11 place-items-center rounded-full bg-surface-2 text-fg-muted">
               <MessagesSquare className="h-5 w-5" />
             </div>
@@ -77,69 +68,74 @@ export default async function OrgInterviewsPage() {
               <p className="text-sm text-fg-muted">{t("emptyBody")}</p>
             </div>
           </div>
-        </Card>
+        </div>
       ) : (
         rows.length > 0 && (
-          <Card className="overflow-hidden p-0 shadow-none">
-            <Table className="min-w-[820px]">
-              <TableHeader>
-                <TableRow className="bg-surface/40 hover:bg-surface/40">
-                  <TableHead>{t("colCampaign")}</TableHead>
-                  <TableHead>{t("colAnon")}</TableHead>
-                  <TableHead>{t("colStatus")}</TableHead>
-                  <TableHead>{t("colDuration")}</TableHead>
-                  <TableHead>{t("colLanguage")}</TableHead>
-                  <TableHead>{t("colDate")}</TableHead>
-                  <TableHead className="w-12 text-right" aria-label="" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((i) => {
-                  const href = `/campaigns/${i.campaign_id}/interviews/${i.id}`;
-                  return (
-                    <TableRow key={i.id} className="group">
-                      <TableCell className="font-medium text-fg">
-                        <Link href={`/campaigns/${i.campaign_id}`}>
-                          {i.campaign_label}
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        <Link
-                          href={href}
-                          className="font-mono text-xs font-medium text-fg hover:text-accent"
-                        >
-                          {i.anon_id}
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={i.status} />
-                      </TableCell>
-                      <TableCell className="text-fg-muted tabular-nums">
-                        {fmtDuration(i.duration_seconds)}
-                      </TableCell>
-                      <TableCell className="uppercase text-fg-muted">
-                        {i.language ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-xs text-fg-muted">
-                        {i.created_at
-                          ? new Date(i.created_at).toLocaleString()
-                          : "—"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Link
-                          href={href}
-                          aria-label={t("open", { anon: i.anon_id })}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-full text-fg-subtle transition-colors group-hover:text-fg hover:bg-surface-2"
-                        >
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </Card>
+          <div className="surface-bleed card card--flush">
+            <div className="w-full overflow-x-auto">
+              <table className="table min-w-[820px]">
+                <thead>
+                  <tr>
+                    <th>{t("colCampaign")}</th>
+                    <th>{t("colAnon")}</th>
+                    <th>{t("colStatus")}</th>
+                    <th>{t("colDuration")}</th>
+                    <th>{t("colLanguage")}</th>
+                    <th>{t("colDate")}</th>
+                    <th className="text-right" aria-label="" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((i) => {
+                    const href = `/campaigns/${i.campaign_id}/interviews/${i.id}`;
+                    return (
+                      <tr key={i.id} className="group">
+                        <td className="font-medium text-fg">
+                          <Link
+                            href={`/campaigns/${i.campaign_id}`}
+                            className="hover:text-accent"
+                          >
+                            {i.campaign_label}
+                          </Link>
+                        </td>
+                        <td>
+                          <Link
+                            href={href}
+                            className="font-mono text-xs font-medium text-fg hover:text-accent"
+                          >
+                            {i.anon_id}
+                          </Link>
+                        </td>
+                        <td>
+                          <StatusBadge status={i.status} />
+                        </td>
+                        <td className="text-fg-muted tabular-nums">
+                          {fmtDuration(i.duration_seconds)}
+                        </td>
+                        <td className="uppercase text-fg-muted">
+                          {i.language ?? "—"}
+                        </td>
+                        <td className="text-xs text-fg-muted">
+                          {i.created_at
+                            ? new Date(i.created_at).toLocaleString()
+                            : "—"}
+                        </td>
+                        <td className="text-right">
+                          <Link
+                            href={href}
+                            aria-label={t("open", { anon: i.anon_id })}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-full text-fg-subtle transition-colors group-hover:text-fg hover:bg-surface-2"
+                          >
+                            <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )
       )}
     </>

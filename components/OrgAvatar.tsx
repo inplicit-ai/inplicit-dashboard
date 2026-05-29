@@ -27,7 +27,7 @@ export function OrgAvatar({
     return (
       <span
         className={cn(
-          "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-md border border-line bg-canvas",
+          "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-ui border border-line bg-canvas",
           className,
         )}
         style={dim}
@@ -48,7 +48,7 @@ export function OrgAvatar({
     <span
       aria-hidden="true"
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-md border border-line bg-accent-soft text-sm font-semibold text-accent",
+        "inline-flex shrink-0 items-center justify-center rounded-ui border border-line bg-accent-soft text-sm font-semibold text-accent",
         className,
       )}
       style={dim}

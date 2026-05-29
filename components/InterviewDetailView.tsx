@@ -12,7 +12,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Eyebrow } from "@/components/PageChrome";
 import { cn } from "@/lib/utils";
@@ -128,8 +127,8 @@ export function InterviewDetailView({
           count={insights.length}
         />
         {insights.length === 0 ? (
-          <Card className="rounded-card border-dashed bg-surface/40 p-10">
-            <div className="flex flex-col items-center justify-center gap-2 text-center">
+          <div className="card card--compact">
+            <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
               <p className="text-sm font-semibold text-fg">
                 Noch keine Insights extrahiert.
               </p>
@@ -138,9 +137,9 @@ export function InterviewDetailView({
                 {processingStatus && ` (aktuell: ${processingStatus})`}.
               </p>
             </div>
-          </Card>
+          </div>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             {insights.map((insight) => (
               <InsightCard
                 key={insight.id}
@@ -176,9 +175,9 @@ export function InterviewDetailView({
           count={utterances.length}
         />
 
-        <Card className="overflow-hidden p-0">
+        <div className="card card--flush">
           {/* Toolbar */}
-          <div className="flex flex-col gap-3 border-b border-line bg-surface/50 p-4 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-3 border-b border-line bg-surface-2 p-4 sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
               <Input
@@ -197,14 +196,14 @@ export function InterviewDetailView({
               <FilterIcon className="h-4 w-4" />
               <span className="ml-2">Filter</span>
               {activeFiltersCount > 0 && (
-                <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-xs text-destructive-foreground">
+                <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-soft px-1.5 text-xs font-medium text-accent-strong">
                   {activeFiltersCount}
                 </span>
               )}
             </Button>
           </div>
 
-          <div className="flex">
+          <div className="flex min-h-0">
             {/* Filter panel */}
             <AnimatePresence initial={false}>
               {showFilters && (
@@ -214,7 +213,7 @@ export function InterviewDetailView({
                   animate={{ width: 240, opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="overflow-hidden border-r border-line bg-surface/50"
+                  className="overflow-hidden border-r border-line bg-surface-2"
                 >
                   <FilterPanel
                     filters={filters}
@@ -226,7 +225,7 @@ export function InterviewDetailView({
             </AnimatePresence>
 
             {/* Log rows */}
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <AnimatePresence mode="popLayout" initial={false}>
                 {filteredUtterances.length > 0 ? (
                   filteredUtterances.map((u, index) => (
@@ -267,7 +266,7 @@ export function InterviewDetailView({
               </AnimatePresence>
             </div>
           </div>
-        </Card>
+        </div>
       </section>
     </>
   );
@@ -291,10 +290,10 @@ function InsightCard({
       onClick={onSelect}
       aria-pressed={selected}
       className={cn(
-        "w-full rounded-card border bg-canvas p-5 text-left shadow-card transition-all hover:-translate-y-0.5 hover:shadow-md",
+        "w-full rounded-card border bg-surface p-6 text-left transition-all hover:-translate-y-0.5",
         selected
-          ? "border-accent-strong shadow-md ring-1 ring-accent-strong"
-          : "border-line hover:border-fg-subtle",
+          ? "border-accent-strong ring-1 ring-accent-strong"
+          : "border-line hover:border-line-strong",
       )}
     >
       <div className="mb-3 flex items-center gap-2">
@@ -383,13 +382,13 @@ function UtteranceRow({
     <div
       ref={registerRef}
       className={cn(
-        "border-b border-line/60 last:border-b-0 scroll-m-24 transition-colors",
-        highlighted && "bg-accent-soft/40",
+        "border-b border-line-subtle last:border-b-0 scroll-m-24 transition-colors",
+        highlighted && "bg-accent-soft",
       )}
     >
       <motion.button
         onClick={onToggle}
-        className="w-full p-4 text-left transition-colors hover:bg-surface/60 active:bg-surface"
+        className="w-full p-4 text-left transition-colors hover:bg-surface-2"
       >
         <div className="flex items-center gap-4">
           <motion.div
@@ -440,14 +439,14 @@ function UtteranceRow({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden border-t border-line bg-surface/50"
+            className="overflow-hidden border-t border-line-subtle bg-surface-2"
           >
             <div className="space-y-4 p-4">
               <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-fg-subtle">
                   Wortlaut
                 </p>
-                <p className="rounded-ui bg-canvas p-3 text-sm leading-relaxed text-fg whitespace-pre-wrap">
+                <p className="rounded-ui border border-line-subtle bg-surface p-3 text-sm leading-relaxed text-fg whitespace-pre-wrap">
                   {u.text}
                 </p>
               </div>
@@ -467,7 +466,7 @@ function UtteranceRow({
                     {relatedInsights.map((ins) => (
                       <div
                         key={ins.id}
-                        className="rounded-ui border border-line bg-canvas p-3"
+                        className="rounded-ui border border-line bg-surface p-3"
                       >
                         <div className="mb-1 flex items-center gap-2 text-xs">
                           <Sparkles className="h-3 w-3 text-accent-strong" />

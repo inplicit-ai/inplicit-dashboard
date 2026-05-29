@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { useTranslations } from "next-intl";
+import { Plus, Upload, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { CampaignDraft, Person, SetupToolCall } from "@/lib/api";
@@ -47,51 +48,51 @@ export function PeopleSection({
 
   return (
     <SectionCard title={t("people")} touched={touched}>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         {people.length === 0 ? (
           <p className="text-sm text-fg-muted">{t("peopleEmpty")}</p>
         ) : (
-          <ul className="flex flex-col gap-1.5">
+          <ul className="flex flex-col gap-2">
             {people.map((p, i) => (
-              <li key={i} className="flex items-center gap-2">
+              <li
+                key={i}
+                className="flex flex-col gap-2 sm:flex-row sm:items-center"
+              >
                 <Input
                   value={p.name ?? ""}
                   placeholder={t("personName")}
                   onChange={(e) => setRow(i, { name: e.target.value })}
-                  className="h-8 flex-[2] text-sm"
+                  className="h-10 text-sm sm:flex-[2]"
                 />
-                <Input
-                  value={p.email}
-                  placeholder={t("personEmail")}
-                  type="email"
-                  onChange={(e) => setRow(i, { email: e.target.value })}
-                  className="h-8 flex-[3] text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeRow(i)}
-                  className="shrink-0 rounded-sm px-2 py-1 text-xs text-fg-muted hover:text-fg"
-                  aria-label={t("removePerson")}
-                >
-                  ✕
-                </button>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={p.email}
+                    placeholder={t("personEmail")}
+                    type="email"
+                    onChange={(e) => setRow(i, { email: e.target.value })}
+                    className="h-10 flex-1 text-sm sm:min-w-[14rem]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeRow(i)}
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-ui text-fg-subtle transition-colors hover:bg-surface-2 hover:text-danger"
+                    aria-label={t("removePerson")}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
         )}
 
-        <div className="flex items-center justify-between gap-2 pt-1">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addRow}
-            className="h-8"
-          >
+        <div className="flex flex-col gap-3 border-t border-line-subtle pt-3 sm:flex-row sm:items-center sm:justify-between">
+          <Button type="button" variant="outline" size="sm" onClick={addRow}>
+            <Plus className="h-4 w-4" />
             {t("addPerson")}
           </Button>
-          <div className="flex items-center gap-2">
-            <span className="text-xs tabular-nums text-fg-subtle">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium tabular-nums text-fg-subtle">
               {t("peopleCount", { count: people.length })}
             </span>
             <input
@@ -109,13 +110,13 @@ export function PeopleSection({
               variant="outline"
               size="sm"
               onClick={() => fileRef.current?.click()}
-              className="h-8"
             >
+              <Upload className="h-4 w-4" />
               {t("uploadCsv")}
             </Button>
           </div>
         </div>
-        <p className="text-[11px] leading-snug text-fg-subtle">{t("csvHint")}</p>
+        <p className="text-xs leading-snug text-fg-subtle">{t("csvHint")}</p>
       </div>
     </SectionCard>
   );

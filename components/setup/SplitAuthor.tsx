@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { clientApi } from "@/lib/client-api";
 import type {
@@ -133,6 +134,29 @@ export function SplitAuthor({
     [stream],
   );
 
+  // Proactive opening turn (doc 03 §7): when the conversation has no assistant
+  // turn yet, kick off the agent's first message on mount so the user lands in
+  // an active, guided session rather than an empty pane. No user bubble is
+  // rendered — only an assistant placeholder that the SSE stream fills in.
+  // Runs at most once via the ref guard.
+  const initiatedRef = useRef(false);
+  useEffect(() => {
+    if (initiatedRef.current) return;
+    const hasAssistant = turns.some((t) => t.role === "assistant");
+    if (hasAssistant || stream.streaming) return;
+    initiatedRef.current = true;
+    const assistantTurn: ChatTurn = {
+      id: `a-open-${Date.now()}`,
+      role: "assistant",
+      content: "",
+      toolCalls: [],
+    };
+    streamTurnId.current = assistantTurn.id;
+    setTurns((prev) => [...prev, assistantTurn]);
+    // Empty/kickoff message: the backend opens with its greeting + first probe.
+    void stream.send("");
+  }, [turns, stream]);
+
   // User-originated catalog edit: optimistic local apply + persist.
   const onPatch = useCallback(
     (call: SetupToolCall) => {
@@ -167,18 +191,23 @@ export function SplitAuthor({
   const reasons = validateForLaunch(draft);
 
   return (
-    <div className="flex h-[calc(100vh-9rem)] flex-col gap-4 lg:flex-row">
+    // surface-bleed opts this single route child out of the .app-work reading
+    // cap → full available width for the dense split author (design-contract §7).
+    // Height is anchored to the topbar-only chat token — no hardcoded 100vh math
+    // (design-contract §3/§6.1). Stacks on mobile; the chat pane caps at 50vh
+    // below md and fills height from md up.
+    <div className="surface-bleed flex min-h-0 flex-col gap-4 md:h-[var(--chat-height-bare)] md:flex-row">
       {/* Left — chat */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-elevated lg:max-w-[44%]">
+      <div className="flex max-h-[50vh] min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-surface md:max-h-none md:max-w-[44%]">
         <SetupChat turns={turns} streaming={stream.streaming} onSend={onSend} />
       </div>
 
       {/* Right — catalog + launch bar */}
       <div className="flex min-h-0 flex-1 flex-col gap-3">
-        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+        <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto pr-0.5">
           <Catalog draft={draft} onPatch={onPatch} recentlyTouched={touched} />
         </div>
-        <div className="flex items-center justify-between gap-3 rounded-card border border-line bg-surface px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between gap-3 rounded-card border border-line bg-surface px-4 py-3">
           <ChecklistSummary reasons={reasons} />
           <Button
             onClick={onReview}
@@ -197,11 +226,14 @@ function ChecklistSummary({ reasons }: { reasons: string[] }) {
   const t = useTranslations("setup.review");
   if (reasons.length === 0) {
     return (
-      <span className="text-sm font-medium text-success">{t("ready")}</span>
+      <span className="flex items-center gap-1.5 text-sm font-medium text-success">
+        <CheckCircle2 className="size-4" aria-hidden />
+        {t("ready")}
+      </span>
     );
   }
   return (
-    <ul className="text-xs text-fg-muted">
+    <ul className="space-y-0.5 text-xs text-fg-muted">
       {reasons.map((r) => (
         <li key={r}>• {t(`gates.${r}`)}</li>
       ))}

@@ -1,5 +1,6 @@
 "use client";
 
+import { RotateCcw } from "lucide-react";
 import type { Lang } from "./copy";
 import { roomCopy } from "./copy";
 
@@ -22,9 +23,13 @@ export function ResumeView({ lang, elapsedS, onResume, emailed }: Props) {
   return (
     <div className="iv-center">
       <div className="card iv-card">
-        <span className="eyebrow" style={{ color: "var(--color-accent)" }}>
-          {c.resumeEyebrow}
+        <span
+          className="grid size-11 place-items-center rounded-full bg-accent-soft text-accent"
+          aria-hidden
+        >
+          <RotateCcw size={20} strokeWidth={2} />
         </span>
+        <span className="eyebrow text-accent iv-card__eyebrow">{c.resumeEyebrow}</span>
         <h1 className="headline iv-card__title">{c.resumeTitle}</h1>
         <p className="page-header__meta iv-card__body">{c.resumeBody(mins)}</p>
 

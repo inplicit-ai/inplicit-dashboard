@@ -1,7 +1,6 @@
 import { Lightbulb } from "lucide-react";
 import { makeApi, type VseInsight } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
-import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/ErrorState";
 import { PageHeader } from "@/components/PageChrome";
 import { cn } from "@/lib/utils";
@@ -28,13 +27,14 @@ export default async function InsightsPage({
   };
 
   return (
-    <>
+    // surface-bleed opts this work surface into the full gutter width (contract §7).
+    <div className="surface-bleed">
       <PageHeader
         title="Insights"
         meta="VSE-Triaden — Problem · Lösungsidee · Business-Chance — extrahiert aus den abgeschlossenen Interviews."
       />
 
-      {error && (
+      {!!error && (
         <div className="mb-6">
           <ErrorState error={error} />
         </div>
@@ -47,21 +47,19 @@ export default async function InsightsPage({
       </div>
 
       {insights.length === 0 ? (
-        <Card className="rounded-card border-dashed bg-surface/40 p-10">
-          <div className="flex flex-col items-center justify-center gap-3 text-center">
-            <div className="grid size-11 place-items-center rounded-full bg-surface-2 text-fg-muted">
-              <Lightbulb className="h-5 w-5" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-base font-semibold text-fg">
-                Noch keine Insights extrahiert.
-              </p>
-              <p className="text-sm text-fg-muted">
-                Sie erscheinen hier nach abgeschlossenen Interviews.
-              </p>
-            </div>
+        <div className="card flex flex-col items-center justify-center gap-3 border-dashed py-16 text-center">
+          <div className="grid size-11 place-items-center rounded-full bg-surface-2 text-fg-muted">
+            <Lightbulb className="h-5 w-5" />
           </div>
-        </Card>
+          <div className="space-y-1">
+            <p className="text-base font-semibold text-fg">
+              Noch keine Insights extrahiert.
+            </p>
+            <p className="text-sm text-fg-muted">
+              Sie erscheinen hier nach abgeschlossenen Interviews.
+            </p>
+          </div>
+        </div>
       ) : (
         <div className="space-y-3">
           {insights.map((i) => (
@@ -69,36 +67,37 @@ export default async function InsightsPage({
           ))}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
 function Metric({ label, value }: { label: string; value: number }) {
   return (
-    <Card className="rounded-card border-line bg-surface p-5 shadow-sm">
+    <div className="card card--compact">
       <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">
         {label}
       </p>
       <p className="mt-2 font-mono text-3xl font-medium tabular-nums tracking-tight text-fg">
         {value}
       </p>
-    </Card>
+    </div>
   );
 }
 
 function TriadRow({ insight }: { insight: VseInsight }) {
   return (
-    <Card className="rounded-card border-line bg-surface p-6">
+    <div className="card card--compact transition-colors hover:border-line-strong">
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-        <TriadCell label="Problem" body={insight.problem_statement} />
+        <TriadCell tone="pain" label="Problem" body={insight.problem_statement} />
         <TriadCell
+          tone="accent"
           label={insight.origin_solution === "AI" ? "Idee (AI)" : "Idee"}
           body={insight.human_solution}
         />
-        <TriadCell label="Chance" body={insight.business_opportunity} />
+        <TriadCell tone="gap" label="Chance" body={insight.business_opportunity} />
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-x-4 gap-y-1 border-t border-line-subtle pt-4 text-xs text-fg-muted">
+      <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line-subtle pt-4 text-xs text-fg-muted">
         {insight.department && (
           <span>
             <span className="text-fg-subtle">Department: </span>
@@ -112,36 +111,46 @@ function TriadRow({ insight }: { insight: VseInsight }) {
           </span>
         )}
         {typeof insight.confidence === "number" && (
-          <span>
-            <span className="text-fg-subtle">Konfidenz: </span>
-            <span className="font-mono tabular-nums text-fg">
-              {Math.round(insight.confidence * 100)}%
-            </span>
+          <span className="badge badge--knowledge ml-auto font-medium">
+            {Math.round(insight.confidence * 100)}% Konfidenz
           </span>
         )}
       </div>
-    </Card>
+    </div>
   );
 }
+
+const CELL_LABEL_TONE: Record<"pain" | "accent" | "gap", string> = {
+  pain: "text-pain",
+  accent: "text-accent",
+  gap: "text-gap",
+};
 
 function TriadCell({
   label,
   body,
+  tone,
 }: {
   label: string;
   body?: string | null;
+  tone: "pain" | "accent" | "gap";
 }) {
   const empty = !body;
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">
+      <span
+        className={cn(
+          "text-[11px] font-semibold uppercase tracking-[0.12em]",
+          CELL_LABEL_TONE[tone],
+        )}
+      >
         {label}
       </span>
       <p
         className={cn(
           "text-sm leading-relaxed",
           empty
-            ? "rounded-sm border border-dashed border-line p-3 italic text-fg-subtle"
+            ? "rounded-ui border border-dashed border-line p-3 italic text-fg-faint"
             : "text-fg",
         )}
       >

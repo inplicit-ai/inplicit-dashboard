@@ -26,13 +26,12 @@ export default async function ResumePage({
   return <InterviewRoom wsUrl={wsUrl} apiBase={API_BASE} isResume />;
 }
 
+/** Server-safe invalid-link state — narrow centered card, token-styled. */
 function InvalidLink() {
   return (
     <div className="invalid-shell">
       <div className="card invalid-card">
-        <span className="eyebrow" style={{ color: "var(--color-pain)" }}>
-          Fehler
-        </span>
+        <span className="eyebrow text-pain">Fehler</span>
         <h1 className="title invalid-card__title">Ungültiger Link</h1>
         <p className="body-sm invalid-card__body">
           Dieser Fortsetzungs-Link ist nicht gültig oder abgelaufen. Bitte fordere
@@ -42,9 +41,9 @@ function InvalidLink() {
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        .invalid-shell { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--space-8) var(--space-4); }
+        .invalid-shell { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: var(--space-8) var(--space-4); background: var(--color-surface); }
         .invalid-card { max-width: 440px; width: 100%; text-align: left; }
-        .invalid-card__title { margin-top: var(--space-2); }
+        .invalid-card__title { margin-top: var(--space-3); }
         .invalid-card__body { margin-top: var(--space-3); }
       `,
         }}

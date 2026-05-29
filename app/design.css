@@ -95,8 +95,30 @@
   /* Layout */
   --container-max: 1280px;
   --header-h: 64px;
+  --shell-topbar-h: 56px;   /* the app shell's sticky topbar (.shell-topbar) */
   --tabs-h: 48px;
   --sidebar-w: 248px;
+
+  /* Chat surfaces — canonical available-height envelope. Pages must NOT compute
+     100vh - <rem> internally; use h-[var(--chat-height)] (under topbar + tabs)
+     or h-[var(--chat-height-bare)] (topbar only), or flex-1 min-h-0 when nested.
+     Anchored to the real shell topbar height so panes fill exactly to the edge.
+     See docs/plans/overhaul/design-contract.md §6. */
+  --chat-height: calc(100dvh - var(--shell-topbar-h) - var(--tabs-h));
+  --chat-height-bare: calc(100dvh - var(--shell-topbar-h));
+
+  /* Safe-area insets (mobile notch). Fall back to 0 on non-notched devices. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  /* Interaction timing tokens — replace hard-coded 0.15s/0.22s/0.2s in components.
+     interactive = hover/focus, control = sidebar/larger transitions,
+     overlay = modal/popover entrances. */
+  --duration-interactive: 150ms;
+  --duration-control: 220ms;
+  --duration-overlay: 200ms;
 
   /* Shadows — white-first: NO card shadows in light mode (depth = border +
      surface step). Shadows reserved for transient popovers/menus only. */
@@ -411,6 +433,31 @@
   margin-inline: auto;
 }
 
+/* ── Full-width opt-in (design-contract §7) ───────────────────────────────────
+   The `.app-work > *` rule above caps every direct child to --container-max
+   (comfortable reading width). Two escape hatches, both backwards-compatible —
+   default narrow behavior is unchanged:
+
+   1. `.app-work--wide` on the work area → ALL children may use full width
+      (children may still self-constrain with their own max-w-*). Use for
+      dashboards, tables, chat, the create flow, and the D3 map.
+   2. `.surface-bleed` on a SINGLE child → that one child goes full width while
+      its siblings stay narrow. Use for a full-width block inside a prose page.
+
+   NOTE: this is distinct from the TRUE full-bleed canvas escape hatch — a route
+   whose sidebar policy is `hidden` removes the rail and sets .app-main
+   max-width:none (used by the orb canvas + D3 map for edge-to-edge). Reach for
+   `.app-work--wide` when you just want the gutter width but keep the sidebar. */
+.app-work--wide > * {
+  max-width: none;
+}
+.app-work > .surface-bleed,
+.app-work--wide > .surface-bleed {
+  max-width: none;
+  margin-inline: 0;
+  width: 100%;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .shell__rail { transition: none; }
 }
@@ -459,7 +506,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  height: 56px;
+  height: var(--shell-topbar-h);
   padding: 0 var(--space-6);
   background: color-mix(in srgb, var(--color-bg) 88%, transparent);
   backdrop-filter: saturate(160%) blur(14px);
@@ -1717,6 +1764,60 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* Hide scrollbars while keeping scroll. `.scrollbar-none` is the legacy name
+   used by CampaignTabs; `.scrollbar-hide` is the alias. */
+.scrollbar-none,
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar,
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* Consistent focus ring (token-driven) for custom interactive elements that
+   bypass the global :focus-visible (e.g. div role="button"). */
+.focus-ring:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Eyebrow label without the ::before line — for inline form/section labels. */
+.label-eyebrow {
+  font-size: var(--text-eyebrow);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+/* Tabular numeric value at 2xl — for stat-style figures. */
+.text-2xl-tabular {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dark-mode card elevation without re-declaring the full .card recipe. Light
+   mode stays flat (depth = border + surface step); dark mode gets the shadow. */
+[data-theme="dark"] .card-elevated { box-shadow: var(--shadow-card); }
+
+/* Chat surface envelope — flex column that fills its parent. Pair with
+   .chat-scroll (the single overflow region) per design-contract §6. Prefer the
+   React helpers in components/ui/chat-shell.tsx; these classes are the CSS-only
+   equivalent for surfaces that can't import the helper. */
+.chat-surface {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+.chat-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* ─── Glass surface (used by hero panels, modals) ────────────────────────── */

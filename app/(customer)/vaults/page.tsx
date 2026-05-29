@@ -5,12 +5,13 @@ import { Vault as VaultIcon } from "lucide-react";
 import { makeApi, type Vault, type VaultItem, ApiError } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Select } from "@/components/ui/select";
 import { PageHeader } from "@/components/PageChrome";
 import { ErrorState } from "@/components/ErrorState";
+import { cn } from "@/lib/utils";
 
 interface SearchParams {
   vault?: string;
@@ -125,12 +126,12 @@ export default async function VaultsPage({
 
       {sp.flash && (
         <div
-          className={
-            "mb-6 rounded-card border px-4 py-3 text-sm " +
-            (sp.flashType === "err"
-              ? "border-pain/30 bg-pain-soft text-pain"
-              : "border-success/30 bg-success-soft/40 text-fg")
-          }
+          className={cn(
+            "mb-6 rounded-card border px-4 py-3 text-sm",
+            sp.flashType === "err"
+              ? "border-pain-muted bg-pain-soft text-pain"
+              : "border-success/30 bg-success-soft text-success",
+          )}
         >
           {sp.flash}
         </div>
@@ -140,32 +141,35 @@ export default async function VaultsPage({
         {/* Vault list + create */}
         <div className="space-y-4">
           {canWrite && (
-            <Card className="rounded-card p-4 shadow-none">
-              <form action={createVault} className="space-y-2">
-                <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">
-                  {t("newVault")}
+            <div className="card card--compact">
+              <form action={createVault} className="space-y-3">
+                <label className="field">
+                  <span className="field__label">{t("newVault")}</span>
+                  <Input
+                    name="name"
+                    placeholder={t("namePlaceholder")}
+                    required
+                  />
                 </label>
-                <Input name="name" placeholder={t("namePlaceholder")} required />
-                <Input
-                  name="description"
-                  placeholder={t("descPlaceholder")}
-                />
+                <Input name="description" placeholder={t("descPlaceholder")} />
                 <Button type="submit" className="w-full">
                   {t("createVault")}
                 </Button>
               </form>
-            </Card>
+            </div>
           )}
 
           {vaults.length === 0 ? (
-            <Card className="rounded-card border-dashed bg-surface/40 p-8 text-center shadow-none">
+            <div className="card card--compact border-dashed text-center">
               <div className="flex flex-col items-center gap-3">
-                <div className="grid size-10 place-items-center rounded-full bg-surface-2 text-fg-muted">
+                <span className="grid size-10 place-items-center rounded-full bg-surface-2 text-fg-muted">
                   <VaultIcon className="h-5 w-5" />
-                </div>
-                <p className="text-sm text-fg-muted">{t("empty")}</p>
+                </span>
+                <p className="text-sm leading-relaxed text-fg-muted">
+                  {t("empty")}
+                </p>
               </div>
-            </Card>
+            </div>
           ) : (
             <ul className="space-y-1">
               {vaults.map((v) => (
@@ -173,12 +177,12 @@ export default async function VaultsPage({
                   <a
                     href={`/vaults?vault=${v.id}`}
                     aria-current={v.id === activeId ? "true" : undefined}
-                    className={
-                      "flex flex-col gap-0.5 rounded-card border-l-2 px-3 py-2.5 transition-colors " +
-                      (v.id === activeId
+                    className={cn(
+                      "flex flex-col gap-0.5 rounded-ui border-l-2 px-3 py-2.5 transition-colors",
+                      v.id === activeId
                         ? "border-accent bg-surface-2"
-                        : "border-transparent hover:bg-surface-2")
-                    }
+                        : "border-transparent hover:bg-surface-2",
+                    )}
                   >
                     <span className="text-sm font-medium text-fg">{v.name}</span>
                     {v.description && (
@@ -196,8 +200,8 @@ export default async function VaultsPage({
         {/* Vault detail */}
         <div>
           {activeId ? (
-            <Card className="rounded-card p-0 shadow-none">
-              <div className="flex items-center justify-between border-b border-line px-5 py-4">
+            <div className="card card--flush flex flex-col">
+              <div className="flex items-center justify-between gap-3 border-b border-line-subtle px-6 py-4">
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">
                     {vaults.find((v) => v.id === activeId)?.scope ?? "ORG"}
@@ -211,7 +215,7 @@ export default async function VaultsPage({
                     <input type="hidden" name="id" value={activeId} />
                     <button
                       type="submit"
-                      className="text-xs text-fg-subtle hover:text-pain"
+                      className="text-xs text-fg-subtle transition-colors hover:text-pain"
                     >
                       {t("delete")}
                     </button>
@@ -219,16 +223,19 @@ export default async function VaultsPage({
                 )}
               </div>
 
-              <ul className="divide-y divide-line">
+              <ul className="divide-y divide-line-subtle">
                 {items.length === 0 ? (
-                  <li className="px-5 py-6 text-sm text-fg-muted">
+                  <li className="px-6 py-6 text-sm text-fg-muted">
                     {t("noEntries")}
                   </li>
                 ) : (
                   items.map((it) => (
-                    <li key={it.id} className="px-5 py-4">
+                    <li key={it.id} className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono text-[10px]">
+                        <Badge
+                          variant="outline"
+                          className="font-mono text-[10px]"
+                        >
                           {it.kind}
                         </Badge>
                         {it.title && (
@@ -238,7 +245,7 @@ export default async function VaultsPage({
                         )}
                       </div>
                       {it.content && (
-                        <p className="mt-1.5 line-clamp-3 whitespace-pre-wrap text-sm text-fg-muted">
+                        <p className="mt-1.5 line-clamp-3 whitespace-pre-wrap text-sm leading-relaxed text-fg-muted">
                           {it.content}
                         </p>
                       )}
@@ -250,17 +257,21 @@ export default async function VaultsPage({
               {canWrite && (
                 <form
                   action={addItem}
-                  className="space-y-2 border-t border-line px-5 py-4"
+                  className="space-y-2 border-t border-line-subtle px-6 py-4"
                 >
                   <input type="hidden" name="vault_id" value={activeId} />
                   <div className="flex gap-2">
-                    <select
-                      name="kind"
-                      className="rounded-ui border border-line bg-surface px-2 py-1.5 text-sm text-fg"
-                    >
-                      <option value="TEXT">{t("kindText")}</option>
-                      <option value="URL">{t("kindUrl")}</option>
-                    </select>
+                    <div className="w-32 shrink-0">
+                      <Select
+                        name="kind"
+                        defaultValue="TEXT"
+                        size="sm"
+                        aria-label={t("kindText")}
+                      >
+                        <option value="TEXT">{t("kindText")}</option>
+                        <option value="URL">{t("kindUrl")}</option>
+                      </Select>
+                    </div>
                     <Input
                       name="title"
                       placeholder={t("titlePlaceholder")}
@@ -273,14 +284,16 @@ export default async function VaultsPage({
                     rows={3}
                     required
                   />
-                  <Button type="submit">{t("addEntry")}</Button>
+                  <Button type="submit" className="self-start">
+                    {t("addEntry")}
+                  </Button>
                 </form>
               )}
-            </Card>
+            </div>
           ) : (
-            <Card className="rounded-card border-dashed bg-surface/40 p-10 text-center shadow-none">
+            <div className="card border-dashed text-center">
               <p className="text-sm text-fg-muted">{t("selectPrompt")}</p>
-            </Card>
+            </div>
           )}
         </div>
       </div>

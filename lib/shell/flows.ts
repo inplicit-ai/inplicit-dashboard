@@ -30,22 +30,27 @@ const SETUP_FLOW: Flow = {
     {
       id: "build",
       labelKey: "build",
+      // The launchpad prompt screen.
       matchesStep: (p) => p === "/campaigns/new",
     },
     {
       id: "configure",
       labelKey: "configure",
-      matchesStep: (p) => /^\/campaigns\/[^/]+\/configure/.test(p),
+      // The split author: /campaigns/new/<draftId> (but not its /review child).
+      matchesStep: (p) => /^\/campaigns\/new\/[^/]+$/.test(p),
     },
     {
       id: "review",
       labelKey: "review",
-      matchesStep: (p) => /^\/campaigns\/[^/]+\/review/.test(p),
+      // The condensed review + launch pad: /campaigns/new/<draftId>/review.
+      matchesStep: (p) => /^\/campaigns\/new\/[^/]+\/review/.test(p),
     },
     {
       id: "launch",
       labelKey: "launch",
-      matchesStep: (p) => /^\/campaigns\/[^/]+\/launch/.test(p),
+      // Terminal action (no dedicated route — fired from the review screen),
+      // so it never matches a path; it renders as the final upcoming step.
+      matchesStep: () => false,
     },
   ],
 };

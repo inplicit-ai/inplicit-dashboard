@@ -5,11 +5,11 @@ import { Plug } from "lucide-react";
 import { makeApi, type IntegrationView, ApiError } from "@/lib/api";
 import { requireOrgOwner, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { PageHeader } from "@/components/PageChrome";
 import { ErrorState } from "@/components/ErrorState";
+import { cn } from "@/lib/utils";
 
 interface SearchParams {
   flash?: string;
@@ -95,50 +95,56 @@ export default async function IntegrationsPage({
 
       {sp.flash && (
         <div
-          className={
-            "mb-6 rounded-card border px-4 py-3 text-sm " +
-            (sp.flashType === "err"
-              ? "border-pain/30 bg-pain-soft text-pain"
-              : "border-success/30 bg-success-soft/40 text-fg")
-          }
+          className={cn(
+            "mb-6 rounded-card border px-4 py-3 text-sm",
+            sp.flashType === "err"
+              ? "border-pain-muted bg-pain-soft text-pain"
+              : "border-success/30 bg-success-soft text-success",
+          )}
         >
           {sp.flash}
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {connectors.map((c) => (
-          <Card key={c.key} className="rounded-card p-5 shadow-none">
+          <div
+            key={c.key}
+            className="card card--compact flex flex-col gap-4"
+          >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="grid size-10 place-items-center rounded-card border border-line bg-surface text-fg-muted">
+                <span className="grid size-10 shrink-0 place-items-center rounded-ui border border-line bg-surface-2 text-fg-muted">
                   <Plug className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-fg">{c.name}</p>
-                  <p className="text-xs text-fg-muted">{c.category}</p>
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-fg">
+                    {c.name}
+                  </p>
+                  <p className="label-eyebrow text-fg-subtle">{c.category}</p>
                 </div>
               </div>
               {c.installed && (
-                <Badge
-                  variant={c.status === "CONNECTED" ? "default" : "secondary"}
-                >
-                  {c.status === "CONNECTED" ? t("connected") : t("disabled")}
-                </Badge>
+                <StatusBadge
+                  status={c.status === "CONNECTED" ? "ACTIVE" : "DRAFT"}
+                  label={c.status === "CONNECTED" ? t("connected") : t("disabled")}
+                />
               )}
             </div>
 
-            <p className="mt-3 text-sm text-fg-muted">{c.description}</p>
+            <p className="text-sm leading-relaxed text-fg-muted">
+              {c.description}
+            </p>
 
             {c.installed ? (
-              <form action={disconnect} className="mt-4">
+              <form action={disconnect} className="mt-auto pt-1">
                 <input type="hidden" name="id" value={c.install_id} />
                 <Button type="submit" variant="outline" size="sm">
                   {t("disconnect")}
                 </Button>
               </form>
             ) : (
-              <form action={install} className="mt-4 space-y-2">
+              <form action={install} className="mt-auto flex flex-col gap-2 pt-1">
                 <input type="hidden" name="provider" value={c.key} />
                 {c.requires_secret && (
                   <Input
@@ -153,12 +159,12 @@ export default async function IntegrationsPage({
                   placeholder={t("configPlaceholder")}
                   className="font-mono text-xs"
                 />
-                <Button type="submit" size="sm">
+                <Button type="submit" size="sm" className="self-start">
                   {t("connect")}
                 </Button>
               </form>
             )}
-          </Card>
+          </div>
         ))}
       </div>
 

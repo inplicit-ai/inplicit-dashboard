@@ -1,5 +1,6 @@
 "use client";
 
+import { MicIcon } from "lucide-react";
 import type { Lang } from "./copy";
 import { roomCopy } from "./copy";
 import { LanguagePicker } from "./LanguagePicker";
@@ -32,7 +33,13 @@ export function PreflightCard({
   return (
     <div className="iv-center">
       <div className="card iv-card">
-        <span className="eyebrow">{c.preflightEyebrow}</span>
+        <span
+          className="grid size-11 place-items-center rounded-full bg-accent-soft text-accent"
+          aria-hidden
+        >
+          <MicIcon size={20} strokeWidth={2} />
+        </span>
+        <span className="eyebrow iv-card__eyebrow">{c.preflightEyebrow}</span>
         <h1 className="headline iv-card__title">{c.preflightTitle}</h1>
         <p className="page-header__meta iv-card__body">{c.preflightBody}</p>
 
@@ -47,7 +54,7 @@ export function PreflightCard({
 
         <div className="iv-card__notice" role="note">
           <span className="iv-card__notice-dot" aria-hidden />
-          {c.aiNotice}
+          <span>{c.aiNotice}</span>
         </div>
 
         {errorMsg && <div className="flash flash--err iv-card__flash">{errorMsg}</div>}
@@ -78,8 +85,8 @@ export function PreflightCard({
         dangerouslySetInnerHTML={{
           __html: `
         .iv-card__lang { margin-top: var(--space-6); }
-        .iv-card__notice { margin-top: var(--space-5); display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-3) var(--space-3); border: 1px solid var(--color-accent-muted); background: var(--color-accent-soft); border-radius: var(--radius-card); font-size: var(--text-body-sm); line-height: 1.5; color: var(--color-text-primary); }
-        .iv-card__notice-dot { flex: 0 0 auto; width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: var(--color-accent); }
+        .iv-card__notice { margin-top: var(--space-5); display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-accent-muted); background: var(--color-accent-soft); border-radius: var(--radius-card); font-size: var(--text-body-sm); line-height: 1.55; color: var(--color-text-primary); }
+        .iv-card__notice-dot { flex: 0 0 auto; width: 7px; height: 7px; margin-top: 7px; border-radius: 50%; background: var(--color-accent); }
       `,
         }}
       />

@@ -18,8 +18,12 @@ import { SidebarTrigger } from "@/components/shell/SidebarTrigger";
 import { LocaleSwitcher } from "@/components/shell/LocaleSwitcher";
 
 /**
- * Sticky, step-aware topbar (02 §4). Always answers "where am I?":
- * [trigger] · breadcrumb · stepper (flow only) · locale + user.
+ * Sticky, step-aware topbar (02 §4 / design-contract §9). Always answers
+ * "where am I?": [trigger] · breadcrumb · stepper (flow only) · locale + user.
+ *
+ * When a multi-step flow is active the breadcrumb collapses to its trail and
+ * the stepper takes the visual lead in the center — the two never compete for
+ * attention. All chrome is token-driven (no raw palette colors).
  */
 export function Topbar({
   pathname,
@@ -47,29 +51,34 @@ export function Topbar({
         {sidebarState !== "expanded" && (
           <SidebarTrigger state={sidebarState} onToggle={onToggleSidebar} />
         )}
-        <Breadcrumb data-tour="topbar-breadcrumb">
-          <BreadcrumbList>
+        <Breadcrumb
+          data-tour="topbar-breadcrumb"
+          className="min-w-0 overflow-hidden"
+        >
+          <BreadcrumbList className="flex-nowrap text-fg-muted">
             {crumbs.map((crumb, i) => {
               const isLast = i === crumbs.length - 1;
               return (
-                <span
-                  key={`${crumb.key}-${i}`}
-                  className="contents"
-                >
-                  <BreadcrumbItem>
+                <span key={`${crumb.key}-${i}`} className="contents">
+                  <BreadcrumbItem className="min-w-0">
                     {isLast || !crumb.href ? (
-                      <BreadcrumbPage>
+                      <BreadcrumbPage className="truncate text-fg">
                         {label(crumb.key, crumb.isLiteral)}
                       </BreadcrumbPage>
                     ) : (
                       <BreadcrumbLink asChild>
-                        <Link href={crumb.href}>
+                        <Link
+                          href={crumb.href}
+                          className="truncate text-fg-muted transition-colors hover:text-fg"
+                        >
                           {label(crumb.key, crumb.isLiteral)}
                         </Link>
                       </BreadcrumbLink>
                     )}
                   </BreadcrumbItem>
-                  {!isLast && <BreadcrumbSeparator />}
+                  {!isLast && (
+                    <BreadcrumbSeparator className="text-fg-faint" />
+                  )}
                 </span>
               );
             })}

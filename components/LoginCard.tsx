@@ -37,8 +37,8 @@ export function LoginCard({
           <Image src="/logo.svg" alt="Inplicit" width={110} height={22} priority className="h-5 w-auto" />
         </Link>
 
-        <Card className="w-full overflow-hidden rounded-2xl border-line bg-surface shadow-lg">
-          <div className="px-7 pb-7 pt-8">
+        <Card className="card-elevated w-full overflow-hidden rounded-card border border-line bg-surface">
+          <div className="px-8 pb-8 pt-9">
             <div className="mb-6 space-y-1">
               <h1 className="text-xl font-semibold tracking-tight text-fg">
                 Willkommen zurück
@@ -55,7 +55,7 @@ export function LoginCard({
               <StatusBanner type="ok">
                 <p>{message}</p>
                 {devLink && (
-                  <div className="mt-2.5 border-t border-success/20 pt-2.5">
+                  <div className="mt-2.5 border-t border-success/22 pt-2.5">
                     <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider opacity-70">
                       Dev-Link
                     </p>
@@ -166,10 +166,10 @@ function StatusBanner({
     <div
       role={type === "err" ? "alert" : "status"}
       className={cn(
-        "mb-4 flex items-start gap-2.5 rounded-lg border px-3.5 py-3 text-sm",
+        "mb-4 flex items-start gap-2.5 rounded-ui border px-3.5 py-3 text-sm",
         type === "ok"
-          ? "border-success/30 bg-success-soft text-success"
-          : "border-pain/30 bg-pain-soft text-pain",
+          ? "border-success/22 bg-success-soft text-success"
+          : "border-danger/22 bg-danger-soft text-danger",
       )}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" />

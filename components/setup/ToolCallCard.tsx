@@ -1,17 +1,20 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Check, AlertCircle, HelpCircle } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Check, CircleAlert, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SetupToolCallCard } from "@/lib/api";
 
 /**
- * The "AI explains itself" surface (Rams #4, doc 03 §3). Renders a single agent
- * tool call as a compact card: icon + human label + a one-line field diff.
- * White-first, hairline border, accent only on the just-applied eyebrow.
+ * The "AI explains itself" surface (Rams #4, doc 03 §3), restyled to the
+ * agent-plan card aesthetic (design-contract §2/§3): hairline `rounded-card`
+ * surface, a tinted status disc on the left, human label + one-line field diff.
+ * Tokens only — accent for request-input, pain-soft for a rejected patch.
  */
 export function ToolCallCard({ card }: { card: SetupToolCallCard }) {
   const t = useTranslations("setup.toolCard");
+  const prefersReducedMotion = useReducedMotion();
   const label = labelFor(card.tool, t);
   const summary = summarize(card);
 
@@ -19,38 +22,44 @@ export function ToolCallCard({ card }: { card: SetupToolCallCard }) {
   const rejected = card.applied === false && !isRequestInput;
 
   return (
-    <div
+    <motion.div
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 6, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={
+        prefersReducedMotion
+          ? { duration: 0.15 }
+          : { type: "spring", stiffness: 500, damping: 28 }
+      }
       className={cn(
-        "flex items-start gap-2.5 rounded-ui border border-line bg-surface px-3 py-2 text-sm",
-        rejected && "border-pain/30 bg-pain-soft",
+        "flex items-start gap-2.5 rounded-card border border-line bg-surface px-3 py-2.5 text-sm transition-colors",
+        isRequestInput && "border-accent-muted bg-accent-soft",
+        rejected && "border-pain-muted bg-pain-soft",
       )}
     >
       <span
         className={cn(
-          "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
+          "mt-px flex size-5 shrink-0 items-center justify-center rounded-full",
           rejected
-            ? "bg-pain/10 text-pain"
+            ? "bg-pain-soft text-pain"
             : isRequestInput
-              ? "bg-accent/10 text-accent"
-              : "bg-fg/5 text-fg-muted",
+              ? "bg-accent-soft text-accent"
+              : "bg-surface-2 text-fg-subtle",
         )}
         aria-hidden
       >
         {rejected ? (
-          <AlertCircle className="h-3 w-3" />
+          <CircleAlert className="size-3" />
         ) : isRequestInput ? (
-          <HelpCircle className="h-3 w-3" />
+          <HelpCircle className="size-3" />
         ) : (
-          <Check className="h-3 w-3" />
+          <Check className="size-3" />
         )}
       </span>
       <div className="min-w-0">
         <p className="font-medium text-fg">{label}</p>
-        {summary && (
-          <p className="truncate text-xs text-fg-muted">{summary}</p>
-        )}
+        {summary && <p className="truncate text-xs text-fg-muted">{summary}</p>}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

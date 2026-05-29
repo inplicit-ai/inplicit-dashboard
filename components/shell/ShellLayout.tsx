@@ -21,6 +21,34 @@ import { GuidedTour } from "@/components/shell/GuidedTour";
 import { useGuidedTour } from "@/lib/shell/use-guided-tour";
 
 /**
+ * Dense "work" surfaces want the full gutter width via the design-contract §7
+ * `.app-work--wide` opt-in (the default caps children at the reading width).
+ * These are: the create/setup flow, every dashboard/insights/hypotheses view,
+ * both chat surfaces, the D3 map, and the participants/interviews tables.
+ * Reading-heavy surfaces (settings, single-record prose, vaults, login, staff)
+ * stay narrow by NOT matching here. Pure string check — keep it allocation-free.
+ */
+function isWideRoute(pathname: string): boolean {
+  // Create / setup flow (build → configure → review → launch).
+  if (pathname.startsWith("/campaigns/new")) return true;
+  // Org-level work surfaces: dashboard, knowledge chat, interviews, twin.
+  if (
+    pathname === "/admin" ||
+    pathname.startsWith("/chat") ||
+    pathname.startsWith("/interviews") ||
+    pathname.startsWith("/twin")
+  ) {
+    return true;
+  }
+  // Campaign work surfaces: dashboard + every analytical tab + tables + chat.
+  const campaign = pathname.match(/^\/campaigns\/([^/]+)(\/.*)?$/);
+  if (campaign && campaign[1] !== "team") {
+    return true;
+  }
+  return false;
+}
+
+/**
  * The app shell (02 §2/§3). Owns the sidebar reducer + route policy and renders
  * the grid (sidebar | topbar + main). Responsive recomposition: on phones the
  * rail is replaced by a bottom-nav + drawer.
@@ -56,6 +84,7 @@ export function ShellLayout({
 
   const sidebarState = effectiveSidebarState(state);
   const sections = getNavSections(mode, me?.role);
+  const wide = isWideRoute(pathname);
 
   // O-10: first-visit guided overview. Only customers get the tour (staff have
   // their own console); it auto-opens once when the completion flag is unset.
@@ -97,7 +126,9 @@ export function ShellLayout({
           onToggleSidebar={onToggle}
           crumbContext={crumbContext}
         />
-        <div className="app-work">{children}</div>
+        <div className={wide ? "app-work app-work--wide" : "app-work"}>
+          {children}
+        </div>
       </div>
 
       {/* Mobile bottom-nav + drawer — shown on phone via CSS. */}

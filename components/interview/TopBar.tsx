@@ -65,14 +65,14 @@ export function TopBar({
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        .iv-topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); height: var(--header-h); padding: 0 var(--space-5); padding-top: env(safe-area-inset-top); background: var(--color-bg); border-bottom: 1px solid var(--color-border-subtle); }
+        .iv-topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); height: var(--header-h); padding: 0 var(--space-5); padding-top: var(--safe-top); background: var(--color-surface); border-bottom: 1px solid var(--color-border-subtle); }
         .iv-topbar__time { display: inline-flex; align-items: center; gap: var(--space-2); font-variant-numeric: tabular-nums; font-size: var(--text-body-sm); color: var(--color-text-secondary); }
         .iv-topbar__clock { letter-spacing: 0.01em; }
         .iv-topbar__sep { color: var(--color-text-quaternary); }
         .iv-ring { width: 16px; height: 16px; border-radius: 50%; background: conic-gradient(var(--color-accent) calc(var(--pct) * 1%), var(--color-border) 0); -webkit-mask: radial-gradient(circle, transparent 5px, #000 6px); mask: radial-gradient(circle, transparent 5px, #000 6px); }
-        .iv-topbar__actions { display: inline-flex; align-items: center; gap: var(--space-1); }
+        .iv-topbar__actions { display: inline-flex; align-items: center; gap: var(--space-2); }
         .iv-topbar__end { color: var(--color-text-secondary); }
-        @media (max-width: 640px) { .iv-topbar { padding: 0 var(--space-3); padding-top: env(safe-area-inset-top); } }
+        @media (max-width: 640px) { .iv-topbar { padding: 0 var(--space-3); padding-top: var(--safe-top); } }
       `,
         }}
       />

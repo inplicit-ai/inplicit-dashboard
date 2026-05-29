@@ -80,16 +80,16 @@ export default async function NewStaffUserPage({
       {sp.error && (
         <div
           role="alert"
-          className="mb-6 flex items-start gap-2.5 rounded-ui border border-pain/30 bg-pain-soft px-3.5 py-2.5 text-sm text-pain"
+          className="mb-6 flex items-start gap-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-sm text-danger"
         >
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <p className="leading-snug">{sp.error}</p>
         </div>
       )}
 
-      <Card className="rounded-card border-line bg-surface p-6">
+      <Card className="rounded-card border border-line bg-surface p-8">
         <form action={createStaff} className="flex flex-col gap-5">
-          <p className="text-sm text-fg-muted">
+          <p className="text-sm leading-relaxed text-fg-muted">
             Neuer Staff-User bekommt einen Magic-Link per Email (15 Min gültig).
             Die Person loggt sich damit ein und nutzt für jeden weiteren Login
             ebenfalls den Magic-Link-Flow. Passwort gibt&apos;s nur für dich als
@@ -103,7 +103,7 @@ export default async function NewStaffUserPage({
               required
               placeholder="Max Mustermann"
               defaultValue={sticky.name ?? ""}
-              className="h-11 text-base md:text-sm"
+              className="h-10 text-base md:text-sm"
             />
           </Field>
 
@@ -116,11 +116,11 @@ export default async function NewStaffUserPage({
               placeholder="max@inplicit.ai"
               defaultValue={sticky.email ?? ""}
               autoComplete="off"
-              className="h-11 text-base md:text-sm"
+              className="h-10 text-base md:text-sm"
             />
           </Field>
 
-          <label className="flex items-start gap-3 rounded-ui border border-line bg-canvas p-3.5 text-sm text-fg">
+          <label className="flex cursor-pointer items-start gap-3 rounded-ui border border-line bg-canvas p-4 text-sm text-fg transition-colors hover:border-line-strong">
             <input
               type="checkbox"
               name="issue_magic_link"

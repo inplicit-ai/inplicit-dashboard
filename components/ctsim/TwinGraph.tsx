@@ -9,11 +9,12 @@
  * into a central hub with subordinates dangling — here it is a proper top-down
  * org chart, the user's "clearer vertical hierarchy" requirement.)
  *
- * Design (01): hairline edges, NO shadows. The single warm accent (#c2660c via
- * var(--color-accent)) is used only on the active/selected node. Solid nodes =
- * roles with VALIDATED twin data; dashed = predicted-only (ct-sim's dashed-
- * subordinate convention, repurposed). A check marks roles whose twin has
- * validated data from real interviews.
+ * Design (01): dashed hairline connectors (the design-system tree idiom), NO
+ * shadows. The single warm accent (var(--color-accent)) tints the active/
+ * selected node (accent-soft fill + accent border) and is echoed on hover.
+ * Solid node borders = roles with VALIDATED twin data; dashed borders =
+ * predicted-only (ct-sim's dashed-subordinate convention, repurposed). A check
+ * marks roles whose twin has validated data from real interviews.
  */
 
 import { useMemo } from "react";
@@ -116,14 +117,14 @@ export function TwinGraph({
 
   if (nodes.length === 0) {
     return (
-      <div className="rounded-card border border-dashed border-line bg-surface/40 p-12 text-center">
-        <p className="text-sm text-fg-muted">{emptyLabel}</p>
+      <div className="card rounded-card border-dashed py-16 text-center">
+        <p className="text-sm leading-relaxed text-fg-muted">{emptyLabel}</p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-auto rounded-card border border-line bg-surface p-2">
+    <div className="card card--flush w-full overflow-auto p-3">
       <svg
         width={width}
         height={height}
@@ -131,7 +132,7 @@ export function TwinGraph({
         role="img"
         className="mx-auto block"
       >
-        {/* Edges: hairline, downward. */}
+        {/* Edges: dashed hairline, downward — matches the design connector idiom. */}
         {data.edges.map((e, i) => {
           // Draw parent → child top-down regardless of edge direction.
           const childId = e.relation === "manages" ? e.to : e.from;
@@ -149,8 +150,9 @@ export function TwinGraph({
               key={i}
               d={`M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`}
               fill="none"
-              stroke="var(--color-line)"
-              strokeWidth={1}
+              stroke="var(--color-line-strong)"
+              strokeWidth={1.5}
+              strokeDasharray="4 3"
             />
           );
         })}
@@ -163,19 +165,33 @@ export function TwinGraph({
             <g
               key={n.id}
               transform={`translate(${n.x}, ${n.y})`}
-              className="cursor-pointer"
+              className="group cursor-pointer outline-none"
+              role="button"
+              tabIndex={0}
+              aria-label={n.name}
               onClick={() => router.push(`/twin/${n.id}`)}
+              onKeyDown={(ev) => {
+                if (ev.key === "Enter" || ev.key === " ") {
+                  ev.preventDefault();
+                  router.push(`/twin/${n.id}`);
+                }
+              }}
             >
               <rect
                 width={NODE_W}
                 height={NODE_H}
-                rx={10}
-                fill="var(--color-surface)"
+                rx={12}
+                fill={
+                  isActive ? "var(--color-accent-soft)" : "var(--color-surface)"
+                }
                 stroke={
-                  isActive ? "var(--color-accent)" : "var(--color-line)"
+                  isActive
+                    ? "var(--color-accent)"
+                    : "var(--color-line-strong)"
                 }
                 strokeWidth={isActive ? 1.5 : 1}
                 strokeDasharray={validated ? undefined : "4 3"}
+                className="transition-[stroke,fill] duration-150 group-hover:[stroke:var(--color-accent)]"
               />
               {/* Check = role twin has VALIDATED data. */}
               {validated && (
@@ -195,7 +211,9 @@ export function TwinGraph({
                 x={14}
                 y={NODE_H / 2 + 4}
                 fontSize={13}
-                fill="var(--color-fg)"
+                fill={
+                  isActive ? "var(--color-accent-strong)" : "var(--color-fg)"
+                }
                 className="select-none"
               >
                 {n.name.length > 20 ? `${n.name.slice(0, 19)}…` : n.name}

@@ -3,9 +3,8 @@ import { redirect } from "next/navigation";
 import { AlertCircle, CheckCircle2, Clock, UserPlus, Users } from "lucide-react";
 import { makeApi, type OrgMember, ApiError } from "@/lib/api";
 import { requireOrgOwner, requestCookie } from "@/lib/auth";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -106,7 +105,7 @@ export default async function TeamPage({
       {sp.flash && <Flash type={sp.flashType ?? "ok"} message={sp.flash} />}
 
       {sp.magic_link && (
-        <Card className="mb-6 rounded-card border-success/30 bg-success-soft/40 p-5">
+        <div className="mb-6 rounded-card border border-success/30 bg-success-soft p-5">
           <p className="text-sm font-semibold text-fg">
             Einladungs-Link
             {sp.invited_email && (
@@ -124,13 +123,13 @@ export default async function TeamPage({
               {sp.magic_link}
             </a>
           </div>
-        </Card>
+        </div>
       )}
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="rounded-card border-line bg-surface p-6 lg:col-span-1">
+        <div className="card card--compact lg:col-span-1">
           <p className="text-sm font-semibold text-fg">Mitglied einladen</p>
-          <p className="mt-1 text-xs text-fg-muted">
+          <p className="mt-1 text-xs leading-relaxed text-fg-muted">
             Das Mitglied erhält einen Einladungs-Link per E-Mail und kann
             danach nur den Insights-Search nutzen.
           </p>
@@ -140,73 +139,77 @@ export default async function TeamPage({
               type="email"
               required
               placeholder="kollegin@firma.de"
-              className="h-10 text-sm"
+              className="text-sm"
             />
             <Button type="submit" size="sm" className="w-full">
               <UserPlus className="h-4 w-4" />
               Einladen
             </Button>
           </form>
-        </Card>
+        </div>
 
         <div className="lg:col-span-2">
           {listError && (
-            <div className="mb-4 flex items-start gap-2.5 rounded-ui border border-pain/30 bg-pain-soft px-3.5 py-2.5 text-sm text-pain">
+            <div className="mb-4 flex items-start gap-2.5 rounded-ui border border-pain-muted bg-pain-soft px-3.5 py-2.5 text-sm text-pain">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <p>{listError}</p>
             </div>
           )}
 
           {!listError && members.length === 0 && (
-            <Card className="rounded-card border-dashed bg-surface/40 p-10">
-              <div className="flex flex-col items-center justify-center gap-3 text-center">
-                <div className="grid size-11 place-items-center rounded-full bg-accent-soft text-accent">
+            <div className="card border-dashed">
+              <div className="flex flex-col items-center justify-center gap-3 py-4 text-center">
+                <span className="grid size-11 place-items-center rounded-full bg-accent-soft text-accent">
                   <Users className="h-5 w-5" />
-                </div>
+                </span>
                 <div className="space-y-1">
                   <p className="text-sm font-semibold text-fg">
                     Noch keine Mitglieder eingeladen.
                   </p>
-                  <p className="max-w-[44ch] text-xs text-fg-muted">
+                  <p className="max-w-[44ch] text-xs leading-relaxed text-fg-muted">
                     Lade Kolleginnen ein — sie können den Insights-Search
                     nutzen, ohne Kampagnes verwalten zu müssen.
                   </p>
                 </div>
               </div>
-            </Card>
+            </div>
           )}
 
           {members.length > 0 && (
-            <Card className="overflow-hidden p-0">
+            <div className="card card--flush">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-surface/40 hover:bg-surface/40">
-                    <TableHead>E-Mail</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Datum</TableHead>
-                    <TableHead className="w-[80px] text-right">
+                  <TableRow className="border-line-subtle bg-surface-2 hover:bg-surface-2">
+                    <TableHead className="px-4 py-3 text-fg-muted">
+                      E-Mail
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-fg-muted">
+                      Status
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-fg-muted">
+                      Datum
+                    </TableHead>
+                    <TableHead className="w-[88px] px-4 py-3 text-right text-fg-muted">
                       Aktion
                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {members.map((m) => (
-                    <TableRow key={m.id}>
-                      <TableCell className="font-mono text-xs text-fg-muted">
+                    <TableRow
+                      key={m.id}
+                      className="border-line-subtle hover:bg-surface-2"
+                    >
+                      <TableCell className="px-4 py-3 font-mono text-xs text-fg-muted">
                         {m.email}
                       </TableCell>
-                      <TableCell>
-                        {m.accepted_at ? (
-                          <Badge className="border-transparent bg-success-soft text-success">
-                            Aktiv
-                          </Badge>
-                        ) : (
-                          <Badge className="border-accent-muted bg-accent-soft text-accent-strong">
-                            Eingeladen
-                          </Badge>
-                        )}
+                      <TableCell className="px-4 py-3">
+                        <StatusBadge
+                          status={m.accepted_at ? "ACTIVE" : "PENDING"}
+                          label={m.accepted_at ? "Aktiv" : "Eingeladen"}
+                        />
                       </TableCell>
-                      <TableCell className="text-xs text-fg-muted">
+                      <TableCell className="px-4 py-3 text-xs text-fg-muted">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {m.accepted_at
@@ -216,7 +219,7 @@ export default async function TeamPage({
                             : `läuft ab ${new Date(m.expires_at).toLocaleDateString("de-DE")}`}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="px-4 py-3 text-right">
                         <form action={removeMember}>
                           <input type="hidden" name="id" value={m.id} />
                           <Button
@@ -233,7 +236,7 @@ export default async function TeamPage({
                   ))}
                 </TableBody>
               </Table>
-            </Card>
+            </div>
           )}
         </div>
       </div>
@@ -250,7 +253,7 @@ function Flash({ type, message }: { type: "ok" | "err"; message: string }) {
         "mb-6 flex items-start gap-2.5 rounded-ui border px-3.5 py-2.5 text-sm",
         type === "ok"
           ? "border-success/30 bg-success-soft text-success"
-          : "border-pain/30 bg-pain-soft text-pain",
+          : "border-pain-muted bg-pain-soft text-pain",
       )}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" />

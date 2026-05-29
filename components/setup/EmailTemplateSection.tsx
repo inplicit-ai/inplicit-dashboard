@@ -42,17 +42,21 @@ export function EmailTemplateSection({
 
   return (
     <SectionCard title={t("emailTemplate")} touched={touched}>
-      <div className="flex flex-col gap-3">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-fg-subtle">{t("emailSubject")}</span>
+      <div className="flex flex-col gap-4">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-fg-subtle">
+            {t("emailSubject")}
+          </span>
           <Input
             value={tpl.subject}
             onChange={(e) => patch({ subject: e.target.value })}
-            className="h-8 text-sm"
+            className="h-10 text-sm"
           />
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-fg-subtle">{t("emailBody")}</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-fg-subtle">
+            {t("emailBody")}
+          </span>
           <Textarea
             rows={4}
             value={tpl.body}
@@ -60,18 +64,18 @@ export function EmailTemplateSection({
             className="min-h-[96px] text-sm"
           />
         </label>
-        <p className="text-[11px] leading-snug text-fg-subtle">
+        <p className="text-xs leading-snug text-fg-subtle">
           {t("emailVarsHint")}
         </p>
 
-        {/* Live preview */}
-        <div className="rounded-ui border border-line bg-canvas">
-          <div className="border-b border-line px-3 py-1.5">
-            <span className="text-[10px] font-medium uppercase tracking-wide text-accent">
+        {/* Live preview — single hairline card, one inner divider */}
+        <div className="overflow-hidden rounded-card border border-line bg-surface-2">
+          <div className="border-b border-line-subtle px-4 py-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-accent">
               {t("preview")}
             </span>
           </div>
-          <div className="px-3 py-2.5">
+          <div className="px-4 py-3">
             <p className="mb-1 text-sm font-semibold text-fg">
               {previewSubject || "—"}
             </p>

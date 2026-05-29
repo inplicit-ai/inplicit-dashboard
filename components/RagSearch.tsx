@@ -177,7 +177,7 @@ export function RagSearch() {
               type="button"
               onClick={() => onSuggestion(s.prompt)}
               title={s.prompt}
-              className="group inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-medium text-fg-muted shadow-sm transition-colors hover:border-line-strong hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-medium text-fg-muted transition-colors hover:border-line-strong hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <Icon className={cn("h-3.5 w-3.5 shrink-0", TONE_CLASSES[s.tone])} />
               <span>{s.label}</span>
@@ -204,7 +204,7 @@ function ResultsArea({
 }) {
   if (error) {
     return (
-      <div className="rounded-card border border-pain/30 bg-pain-soft px-4 py-3 text-sm text-pain">
+      <div className="rounded-card border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
         {error}
       </div>
     );
@@ -215,7 +215,7 @@ function ResultsArea({
   // Empty: single small box with the message
   if (isEmpty) {
     return (
-      <div className="rounded-card border border-line bg-surface px-5 py-4 shadow-sm">
+      <div className="rounded-card border border-line bg-surface px-5 py-4">
         <div className="flex items-start gap-3">
           <span
             aria-hidden="true"
@@ -266,7 +266,7 @@ function ResultCard({ r }: { r: SearchResult }) {
   return (
     <Link
       href={`/campaigns/${r.campaign_id}/interviews/${r.interview_id}`}
-      className="group flex h-full flex-col gap-3 rounded-card border border-line bg-surface p-5 shadow-sm transition-colors hover:border-line-strong hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      className="group flex h-full flex-col gap-3 rounded-card border border-line bg-surface p-5 transition-colors hover:border-line-strong hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm leading-snug text-fg">{r.problem_statement}</p>

@@ -2,15 +2,6 @@ import Link from "next/link";
 import { ArrowRight, MessagesSquare } from "lucide-react";
 import { makeApi, type Interview } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
-import { Card } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { ErrorState } from "@/components/ErrorState";
 import { PageHeader, StatusBadge } from "@/components/PageChrome";
 
@@ -43,8 +34,8 @@ export default async function InterviewsPage({
       )}
 
       {interviews.length === 0 ? (
-        <Card className="rounded-card border-dashed bg-surface/40 p-10">
-          <div className="flex flex-col items-center justify-center gap-3 text-center">
+        <div className="card card--flush">
+          <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
             <div className="grid size-11 place-items-center rounded-full bg-surface-2 text-fg-muted">
               <MessagesSquare className="h-5 w-5" />
             </div>
@@ -57,68 +48,68 @@ export default async function InterviewsPage({
               </p>
             </div>
           </div>
-        </Card>
+        </div>
       ) : (
-        <Card className="overflow-hidden p-0">
-          <Table className="min-w-[820px]">
-            <TableHeader>
-              <TableRow className="bg-surface/40 hover:bg-surface/40">
-                <TableHead>Anonyme ID</TableHead>
-                <TableHead>Abteilung</TableHead>
-                <TableHead>Modus</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Auswertung</TableHead>
-                <TableHead>Gestartet</TableHead>
-                <TableHead className="w-12 text-right" aria-label="" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {interviews.map((i) => {
-                const href = `/campaigns/${id}/interviews/${i.id}`;
-                return (
-                  <TableRow key={i.id} className="group">
-                    <TableCell>
-                      <Link
-                        href={href}
-                        className="font-mono text-xs font-medium text-fg hover:text-accent"
-                      >
-                        {i.anon_id}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{i.department ?? "—"}</TableCell>
-                    <TableCell className="capitalize text-fg-muted">
-                      {i.mode}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={i.status} />
-                    </TableCell>
-                    <TableCell>
-                      {i.processing_status && i.status === "COMPLETED" ? (
-                        <StatusBadge status={i.processing_status} />
-                      ) : (
-                        <span className="text-fg-subtle">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs text-fg-muted">
-                      {i.started_at
-                        ? new Date(i.started_at).toLocaleString("de-DE")
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Link
-                        href={href}
-                        aria-label={`Interview ${i.anon_id} öffnen`}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-full text-fg-subtle transition-colors group-hover:text-fg hover:bg-surface-2"
-                      >
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </Card>
+        <div className="surface-bleed card card--flush">
+          <div className="w-full overflow-x-auto">
+            <table className="table min-w-[820px]">
+              <thead>
+                <tr>
+                  <th>Anonyme ID</th>
+                  <th>Abteilung</th>
+                  <th>Modus</th>
+                  <th>Status</th>
+                  <th>Auswertung</th>
+                  <th>Gestartet</th>
+                  <th className="text-right" aria-label="" />
+                </tr>
+              </thead>
+              <tbody>
+                {interviews.map((i) => {
+                  const href = `/campaigns/${id}/interviews/${i.id}`;
+                  return (
+                    <tr key={i.id} className="group">
+                      <td>
+                        <Link
+                          href={href}
+                          className="font-mono text-xs font-medium text-fg hover:text-accent"
+                        >
+                          {i.anon_id}
+                        </Link>
+                      </td>
+                      <td className="text-fg-muted">{i.department ?? "—"}</td>
+                      <td className="capitalize text-fg-muted">{i.mode}</td>
+                      <td>
+                        <StatusBadge status={i.status} />
+                      </td>
+                      <td>
+                        {i.processing_status && i.status === "COMPLETED" ? (
+                          <StatusBadge status={i.processing_status} />
+                        ) : (
+                          <span className="text-fg-subtle">—</span>
+                        )}
+                      </td>
+                      <td className="text-xs text-fg-muted">
+                        {i.started_at
+                          ? new Date(i.started_at).toLocaleString("de-DE")
+                          : "—"}
+                      </td>
+                      <td className="text-right">
+                        <Link
+                          href={href}
+                          aria-label={`Interview ${i.anon_id} öffnen`}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full text-fg-subtle transition-colors group-hover:text-fg hover:bg-surface-2"
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </>
   );

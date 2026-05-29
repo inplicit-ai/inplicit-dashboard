@@ -1,6 +1,5 @@
 import { makeApi, type Cluster } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
-import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/ErrorState";
 import { PageHeader } from "@/components/PageChrome";
 import { KnowledgeMap } from "@/components/KnowledgeMap";
@@ -21,19 +20,19 @@ export default async function MapPage({
   }
 
   return (
-    <>
+    // surface-bleed gives the D3 canvas the full gutter width (contract §7).
+    <div className="surface-bleed">
       <PageHeader
         title="Knowledge Map"
         meta="Geclusterte Insights, gewichtet nach Signal-Stärke und Abteilungs-Abdeckung."
       />
-      {error && (
+      {!!error && (
         <div className="mb-6">
           <ErrorState error={error} />
         </div>
       )}
-      <Card className="overflow-hidden p-0">
-        <KnowledgeMap clusters={clusters} />
-      </Card>
-    </>
+      {/* KnowledgeMap owns its own single-border card container. */}
+      <KnowledgeMap clusters={clusters} />
+    </div>
   );
 }

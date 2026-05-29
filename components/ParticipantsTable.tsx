@@ -13,18 +13,8 @@ import {
   X,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { Participant } from "@/lib/api";
 
@@ -209,7 +199,7 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header / KPI strip */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
@@ -231,11 +221,11 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
       {/* Flash banner */}
       {flash && <FlashBanner type={flash.type} message={flash.message} />}
 
-      {/* Inline create form — separate Card so the inputs have room to breathe */}
+      {/* Inline create form — its own card so the inputs have room to breathe */}
       {adding && (
-        <Card className="border-dashed border-line bg-surface/40 p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
+        <div className="card card--compact">
+          <div className="mb-4 flex items-start justify-between gap-4">
+            <div className="space-y-1">
               <p className="text-sm font-semibold text-fg">Neuer Teilnehmer</p>
               <p className="text-xs text-fg-muted">
                 E-Mail ist Pflicht. Name, Abteilung und Rolle helfen bei der
@@ -256,7 +246,7 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field
               id="new-email"
               label="E-Mail"
@@ -301,140 +291,139 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
             >
               Abbrechen
             </Button>
-            <Button
-              size="sm"
-              onClick={addRow}
-              disabled={busy === "__new__"}
-            >
+            <Button size="sm" onClick={addRow} disabled={busy === "__new__"}>
               <UserPlus className="h-4 w-4" />
               Speichern
             </Button>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Table */}
-      <Card className="overflow-hidden p-0">
-        <Table className="min-w-[820px]">
-          <TableHeader>
-            <TableRow className="bg-surface/40 hover:bg-surface/40">
-              <TableHead className="min-w-[220px]">E-Mail</TableHead>
-              <TableHead className="min-w-[160px]">Name</TableHead>
-              <TableHead className="min-w-[160px]">Abteilung</TableHead>
-              <TableHead className="min-w-[160px]">Rolle</TableHead>
-              <TableHead className="w-[150px]">Status</TableHead>
-              <TableHead className="w-[280px] text-right">Aktionen</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.length === 0 && !adding && (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={6}>
-                  <EmptyState onAdd={() => setAdding(true)} />
-                </TableCell>
-              </TableRow>
-            )}
-
-            {rows.map((p) => {
-              const isEditing = editing === p.id;
-              return (
-                <TableRow key={p.id} className={isEditing ? "bg-surface/40" : ""}>
-                  <TableCell>
-                    {isEditing ? (
-                      <Input
-                        type="email"
-                        className="h-9"
-                        value={draft.email}
-                        onChange={(e) =>
-                          setDraft((d) => ({ ...d, email: e.target.value }))
-                        }
-                      />
-                    ) : (
-                      <span className="font-mono text-xs text-fg-muted">
-                        {p.email}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {isEditing ? (
-                      <Input
-                        className="h-9"
-                        value={draft.name}
-                        onChange={(e) =>
-                          setDraft((d) => ({ ...d, name: e.target.value }))
-                        }
-                      />
-                    ) : (
-                      <CellText value={p.name} />
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {isEditing ? (
-                      <Input
-                        className="h-9"
-                        value={draft.department}
-                        onChange={(e) =>
-                          setDraft((d) => ({ ...d, department: e.target.value }))
-                        }
-                      />
-                    ) : (
-                      <CellText value={p.department} />
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {isEditing ? (
-                      <Input
-                        className="h-9"
-                        value={draft.role}
-                        onChange={(e) =>
-                          setDraft((d) => ({ ...d, role: e.target.value }))
-                        }
-                      />
-                    ) : (
-                      <CellText value={p.role} />
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <ParticipantStatus p={p} />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap items-center justify-end gap-2">
-                      {isEditing ? (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={cancelEdit}
-                            disabled={busy === p.id}
-                          >
-                            Abbrechen
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => saveEdit(p.id)}
-                            disabled={busy === p.id}
-                          >
-                            Speichern
-                          </Button>
-                        </>
-                      ) : (
-                        <RowActions
-                          p={p}
-                          busy={busy === p.id}
-                          onEdit={() => startEdit(p)}
-                          onInvite={() => inviteRow(p, false)}
-                          onResend={() => inviteRow(p, true)}
-                          onDelete={() => deleteRow(p)}
-                        />
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </Card>
+      {rows.length === 0 && !adding ? (
+        <div className="card card--flush">
+          <EmptyState onAdd={() => setAdding(true)} />
+        </div>
+      ) : (
+        <div className="card card--flush">
+          <div className="w-full overflow-x-auto">
+            <table className="table min-w-[820px]">
+              <thead>
+                <tr>
+                  <th className="min-w-[220px]">E-Mail</th>
+                  <th className="min-w-[160px]">Name</th>
+                  <th className="min-w-[160px]">Abteilung</th>
+                  <th className="min-w-[160px]">Rolle</th>
+                  <th className="w-[150px]">Status</th>
+                  <th className="w-[280px] text-right">Aktionen</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((p) => {
+                  const isEditing = editing === p.id;
+                  return (
+                    <tr key={p.id} className={isEditing ? "bg-surface-2" : ""}>
+                      <td>
+                        {isEditing ? (
+                          <Input
+                            type="email"
+                            className="h-9"
+                            value={draft.email}
+                            onChange={(e) =>
+                              setDraft((d) => ({ ...d, email: e.target.value }))
+                            }
+                          />
+                        ) : (
+                          <span className="font-mono text-xs text-fg-muted">
+                            {p.email}
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <Input
+                            className="h-9"
+                            value={draft.name}
+                            onChange={(e) =>
+                              setDraft((d) => ({ ...d, name: e.target.value }))
+                            }
+                          />
+                        ) : (
+                          <CellText value={p.name} />
+                        )}
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <Input
+                            className="h-9"
+                            value={draft.department}
+                            onChange={(e) =>
+                              setDraft((d) => ({
+                                ...d,
+                                department: e.target.value,
+                              }))
+                            }
+                          />
+                        ) : (
+                          <CellText value={p.department} />
+                        )}
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <Input
+                            className="h-9"
+                            value={draft.role}
+                            onChange={(e) =>
+                              setDraft((d) => ({ ...d, role: e.target.value }))
+                            }
+                          />
+                        ) : (
+                          <CellText value={p.role} />
+                        )}
+                      </td>
+                      <td>
+                        <ParticipantStatus p={p} />
+                      </td>
+                      <td className="text-right">
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                          {isEditing ? (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={cancelEdit}
+                                disabled={busy === p.id}
+                              >
+                                Abbrechen
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => saveEdit(p.id)}
+                                disabled={busy === p.id}
+                              >
+                                Speichern
+                              </Button>
+                            </>
+                          ) : (
+                            <RowActions
+                              p={p}
+                              busy={busy === p.id}
+                              onEdit={() => startEdit(p)}
+                              onInvite={() => inviteRow(p, false)}
+                              onResend={() => inviteRow(p, true)}
+                              onDelete={() => deleteRow(p)}
+                            />
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -459,7 +448,7 @@ function Field({
   onChange: (next: string) => void;
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <label
         htmlFor={id}
         className="flex items-center gap-1.5 text-xs font-medium text-fg-muted"
@@ -473,7 +462,7 @@ function Field({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-11 text-base md:text-sm"
+        className="h-10 text-base md:text-sm"
       />
     </div>
   );
@@ -511,7 +500,7 @@ function FlashBanner({
     <div
       role="status"
       className={cn(
-        "flex items-start gap-2.5 rounded-ui border px-3 py-2.5 text-sm",
+        "flex items-start gap-2.5 rounded-card border px-4 py-3 text-sm",
         type === "ok"
           ? "border-success/30 bg-success-soft text-success"
           : "border-pain/30 bg-pain-soft text-pain",
@@ -525,15 +514,15 @@ function FlashBanner({
 
 function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-      <div className="grid size-10 place-items-center rounded-full bg-surface-2 text-fg-muted">
+    <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
+      <div className="grid size-11 place-items-center rounded-full bg-surface-2 text-fg-muted">
         <UserPlus className="h-5 w-5" />
       </div>
       <div className="space-y-1">
-        <p className="text-sm font-semibold text-fg">
+        <p className="text-base font-semibold text-fg">
           Noch keine Teilnehmer in dieser Kampagne.
         </p>
-        <p className="text-xs text-fg-muted">
+        <p className="max-w-sm text-sm text-fg-muted">
           Lege jemanden manuell an oder lade per CSV-Upload beim Erstellen
           mehrere Personen auf einmal hoch.
         </p>
@@ -618,30 +607,18 @@ function ParticipantStatus({ p }: { p: Participant }) {
     case "COMPLETED":
     case "PROCESSING":
     case "PROCESSED":
-      return (
-        <Badge className="bg-success-soft text-success border-transparent">
-          Abgeschlossen
-        </Badge>
-      );
+      return <span className="badge badge--success">Abgeschlossen</span>;
     case "IN_PROGRESS":
-      return <Badge variant="secondary">Läuft</Badge>;
+      return <span className="badge badge--opportunity">Läuft</span>;
     case "ABANDONED":
-      return (
-        <Badge className="bg-pain-soft text-pain border-transparent">
-          Abgebrochen
-        </Badge>
-      );
+      return <span className="badge badge--warning">Abgebrochen</span>;
     case "FAILED":
-      return <Badge variant="destructive">Fehler</Badge>;
+      return <span className="badge badge--danger">Fehler</span>;
   }
   if (p.email_sent) {
-    return (
-      <Badge className="bg-accent-soft text-accent-strong border-accent-muted">
-        Eingeladen
-      </Badge>
-    );
+    return <span className="badge badge--opportunity">Eingeladen</span>;
   }
-  return <Badge variant="outline">Nicht eingeladen</Badge>;
+  return <span className="badge badge--knowledge">Nicht eingeladen</span>;
 }
 
 function payloadFrom(d: DraftRow) {
@@ -652,4 +629,3 @@ function payloadFrom(d: DraftRow) {
     role: d.role.trim() || null,
   };
 }
-

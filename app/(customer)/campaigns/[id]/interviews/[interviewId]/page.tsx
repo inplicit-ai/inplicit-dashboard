@@ -68,11 +68,13 @@ export default async function InterviewDetailPage({
             }
           />
 
-          <InterviewDetailView
-            utterances={detail.utterances}
-            insights={detail.insights}
-            processingStatus={detail.interview.processing_status ?? undefined}
-          />
+          <div className="surface-bleed">
+            <InterviewDetailView
+              utterances={detail.utterances}
+              insights={detail.insights}
+              processingStatus={detail.interview.processing_status ?? undefined}
+            />
+          </div>
         </>
       )}
     </>

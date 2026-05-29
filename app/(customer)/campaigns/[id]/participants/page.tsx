@@ -22,7 +22,13 @@ export default async function ParticipantsPage({
   return (
     <>
       <PageHeader title="Teilnehmer" />
-      {error ? <ErrorState error={error} /> : <ParticipantsTable campaignId={id} initial={participants} />}
+      {error ? (
+        <ErrorState error={error} />
+      ) : (
+        <div className="surface-bleed">
+          <ParticipantsTable campaignId={id} initial={participants} />
+        </div>
+      )}
     </>
   );
 }

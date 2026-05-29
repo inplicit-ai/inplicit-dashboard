@@ -112,7 +112,7 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
       <DialogContent className="overflow-hidden p-0 sm:max-w-[480px]">
         <DialogHeader className="px-6 pt-6 pb-5">
           <div className="flex items-center gap-3 pr-6">
-            <span className="grid size-9 shrink-0 place-items-center rounded-ui border border-line bg-canvas text-fg shadow-sm">
+            <span className="grid size-9 shrink-0 place-items-center rounded-ui border border-line bg-surface-2 text-fg">
               <SettingsIcon className="h-4 w-4" />
             </span>
             <div className="min-w-0 space-y-0.5">
@@ -272,8 +272,8 @@ function ThemePicker({
               "inline-flex items-center justify-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               active
-                ? "bg-canvas text-fg shadow-sm"
-                : "text-fg-muted hover:text-fg",
+                ? "border border-line bg-canvas text-fg"
+                : "border border-transparent text-fg-muted hover:text-fg",
             )}
           >
             <o.icon className="h-3.5 w-3.5" />

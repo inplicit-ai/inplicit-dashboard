@@ -2,7 +2,6 @@ import { getTranslations } from "next-intl/server";
 import { Network } from "lucide-react";
 import { makeApi, type TwinGraph as TwinGraphData } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/PageChrome";
 import { ErrorState } from "@/components/ErrorState";
@@ -42,31 +41,30 @@ export default async function DigitalTwinPage() {
       {error ? (
         <ErrorState error={error} />
       ) : (
-        <div className="space-y-6">
-          <div className="flex flex-wrap items-center gap-4 text-sm text-fg-muted">
-            <span className="inline-flex items-center gap-2">
-              <span className="inline-block h-3 w-5 rounded-sm border border-line bg-surface" />
+        <div className="surface-bleed flex flex-col gap-6">
+          {/* Legend — chips describing the two node treatments. */}
+          <div className="flex flex-wrap items-center gap-3 text-sm text-fg-muted">
+            <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1">
+              <span className="inline-block h-3 w-5 rounded-sm border border-line-strong bg-surface-2" />
               {t("legendValidated", { count: validatedCount })}
             </span>
-            <span className="inline-flex items-center gap-2">
-              <span
-                className="inline-block h-3 w-5 rounded-sm border border-dashed border-line bg-surface"
-              />
+            <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1">
+              <span className="inline-block h-3 w-5 rounded-sm border border-dashed border-line-strong bg-surface-2" />
               {t("legendPredicted")}
             </span>
           </div>
 
           {graph.nodes.length === 0 ? (
-            <Card className="rounded-card border-dashed bg-surface/40 p-12 text-center shadow-none">
-              <div className="flex flex-col items-center gap-3">
-                <div className="grid size-10 place-items-center rounded-full bg-surface-2 text-fg-muted">
+            <div className="card rounded-card border-dashed py-16 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="grid size-12 place-items-center rounded-full border border-line bg-surface-2 text-fg-subtle">
                   <Network className="h-5 w-5" />
                 </div>
-                <p className="max-w-[48ch] text-sm text-fg-muted">
+                <p className="max-w-[48ch] text-sm leading-relaxed text-fg-muted">
                   {t("empty")}
                 </p>
               </div>
-            </Card>
+            </div>
           ) : (
             <TwinGraph data={graph} emptyLabel={t("empty")} />
           )}

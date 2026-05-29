@@ -3,7 +3,6 @@ import { getTranslations } from "next-intl/server";
 import { ArrowRight, Users, Plug, Vault as VaultIcon } from "lucide-react";
 import { makeApi, type OrgMember } from "@/lib/api";
 import { requireOrgOwner, requestCookie } from "@/lib/auth";
-import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/PageChrome";
 import { StatsCard, StatsRow } from "@/components/StatsCard";
 
@@ -61,19 +60,23 @@ export default async function AdminPage() {
         {tiles.map((tile) => {
           const Icon = tile.icon;
           return (
-            <Link key={tile.href} href={tile.href} className="group">
-              <Card className="flex h-full flex-col gap-3 rounded-card p-5 shadow-none transition-colors hover:border-line-strong">
-                <div className="flex items-center justify-between">
-                  <div className="grid size-10 place-items-center rounded-card border border-line bg-surface text-fg-muted">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-fg-subtle transition-colors group-hover:text-accent" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-fg">{tile.title}</p>
-                  <p className="mt-1 text-sm text-fg-muted">{tile.body}</p>
-                </div>
-              </Card>
+            <Link
+              key={tile.href}
+              href={tile.href}
+              className="card card--compact group flex h-full flex-col gap-4 transition-[border-color,transform] hover:-translate-y-0.5 hover:border-line-strong"
+            >
+              <div className="flex items-center justify-between">
+                <span className="grid size-10 place-items-center rounded-ui border border-line bg-surface-2 text-fg-muted transition-colors group-hover:border-accent-muted group-hover:text-accent">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <ArrowRight className="h-4 w-4 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-accent" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-fg">{tile.title}</p>
+                <p className="text-sm leading-relaxed text-fg-muted">
+                  {tile.body}
+                </p>
+              </div>
             </Link>
           );
         })}

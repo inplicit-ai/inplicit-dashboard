@@ -60,13 +60,13 @@ export function RefineButton({ campaignId }: { campaignId: string }) {
         </DialogHeader>
 
         {error && (
-          <p className="rounded-ui border border-pain/30 bg-pain-soft px-3 py-2 text-sm text-pain">
+          <p className="rounded-ui border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger">
             {error}
           </p>
         )}
 
         {info && (
-          <ul className="divide-y divide-line rounded-card border border-line">
+          <ul className="divide-y divide-line-subtle overflow-hidden rounded-card border border-line">
             {info.fields.map((f) => (
               <FieldRow key={f.field} field={f} />
             ))}
@@ -80,14 +80,16 @@ export function RefineButton({ campaignId }: { campaignId: string }) {
 function FieldRow({ field }: { field: RefineFieldLock }) {
   const t = useTranslations("campaignChat");
   return (
-    <li className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-      <span className="text-fg-muted">{field.field.replace(/_/g, " ")}</span>
+    <li className="flex items-center justify-between gap-3 bg-surface px-3 py-2.5 text-sm">
+      <span className="capitalize text-fg">
+        {field.field.replace(/_/g, " ")}
+      </span>
       <span
         className={cn(
           "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
           field.locked
             ? "border-line bg-surface-2 text-fg-subtle"
-            : "border-accent-muted text-accent",
+            : "border-accent-muted bg-accent-soft text-accent",
         )}
       >
         {field.locked && <Lock className="h-3 w-3" />}
