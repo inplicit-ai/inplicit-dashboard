@@ -17,6 +17,8 @@ import { Topbar } from "@/components/shell/Topbar";
 import { SidebarTrigger } from "@/components/shell/SidebarTrigger";
 import { MobileTabBar } from "@/components/shell/MobileTabBar";
 import { NavDrawer } from "@/components/shell/NavDrawer";
+import { GuidedTour } from "@/components/shell/GuidedTour";
+import { useGuidedTour } from "@/lib/shell/use-guided-tour";
 
 /**
  * The app shell (02 §2/§3). Owns the sidebar reducer + route policy and renders
@@ -54,6 +56,13 @@ export function ShellLayout({
 
   const sidebarState = effectiveSidebarState(state);
   const sections = getNavSections(mode, me?.role);
+
+  // O-10: first-visit guided overview. Only customers get the tour (staff have
+  // their own console); it auto-opens once when the completion flag is unset.
+  const tour = useGuidedTour({
+    enabled: mode === "customer",
+    completedAt: me?.onboarding_tour_completed_at ?? null,
+  });
 
   const onToggle = () =>
     dispatch({ type: "USER_TOGGLED", next: nextToggleState(sidebarState) });
@@ -108,6 +117,11 @@ export function ShellLayout({
         orgLogoUrl={orgLogoUrl}
         hasAudits={hasAudits}
       />
+
+      {/* O-10: first-visit guided overview (spotlight tour). */}
+      {mode === "customer" && (
+        <GuidedTour open={tour.open} onClose={tour.close} />
+      )}
     </div>
   );
 }

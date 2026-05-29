@@ -1940,3 +1940,111 @@
   margin-top: var(--space-8);
   flex-wrap: wrap;
 }
+
+/* ── O-10 first-visit guided overview (spotlight tour) ──────────────────── */
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+/* The card is a popover surface — the one place a soft elevation is allowed
+   (it floats above a dimmed scrim, not on the white canvas). */
+.tour-card {
+  z-index: 1001;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-popover);
+  box-shadow: var(--shadow-popover);
+  padding: var(--space-5);
+}
+
+.tour-card__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.tour-card__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+}
+
+.tour-card__title {
+  margin: var(--space-3) 0 var(--space-2);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-text-primary);
+}
+
+.tour-card__body {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.tour-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.tour-card__nav {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tour-card__skip,
+.tour-card__back {
+  background: transparent;
+  border: none;
+  font-size: 0.8125rem;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+}
+.tour-card__skip:hover,
+.tour-card__back:hover {
+  color: var(--color-text-primary);
+}
+
+/* Primary action is near-black (never accent background — Braun rule). */
+.tour-card__next {
+  background: var(--color-text-primary);
+  color: var(--color-bg);
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 7px 14px;
+  border-radius: var(--radius-ui);
+}
+.tour-card__next:hover {
+  opacity: 0.9;
+}
+.tour-card__next:focus-visible,
+.tour-card__skip:focus-visible,
+.tour-card__back:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-spotlight,
+  .tour-card {
+    transition: none !important;
+  }
+}

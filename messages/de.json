@@ -356,5 +356,59 @@
     "vaultsBody": "Pflege wiederverwendbaren Unternehmenskontext für neue Kampagnen.",
     "integrationsTitle": "Integrationen",
     "integrationsBody": "Verbinde Benachrichtigungen und Datenexporte."
+  },
+  "tour": {
+    "ariaLabel": "Produktüberblick",
+    "progress": "Schritt {current} von {total}",
+    "skip": "Tour überspringen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "finish": "Fertig",
+    "step": {
+      "welcome": {
+        "title": "Willkommen bei Inplicit",
+        "body": "Inplicit führt KI-Sprachinterviews durch und macht daraus validierte Erkenntnisse. Hier ist eine kurze Tour durch die Oberfläche."
+      },
+      "sidebar": {
+        "title": "Deine Navigation",
+        "body": "Die Seitenleiste ist deine Basis. Sie passt sich deiner Position an und klappt auf fokussierten Bildschirmen ein."
+      },
+      "create": {
+        "title": "Kampagne erstellen",
+        "body": "Starte hier: Beschreibe, was du herausfinden möchtest, und der Setup-Agent baut die Kampagne mit dir auf."
+      },
+      "campaigns": {
+        "title": "Deine Kampagnen",
+        "body": "Jede Studie liegt hier. Öffne eine, um Insights, Teilnehmende, Hypothesen und die Wissenskarte zu sehen."
+      },
+      "breadcrumb": {
+        "title": "Immer wissen, wo du bist",
+        "body": "Der Brotkrumenpfad zeigt deinen genauen Ort und lässt dich jederzeit zurückspringen."
+      },
+      "stepper": {
+        "title": "Mehrstufige Abläufe",
+        "body": "Wenn eine Aufgabe Phasen hat – etwa eine Kampagne aufbauen und starten – zeigt der Stepper deinen Fortschritt."
+      },
+      "interviews": {
+        "title": "Interviews",
+        "body": "Durchsuche abgeschlossene und laufende Interviews aus allen Kampagnen an einem Ort."
+      },
+      "chat": {
+        "title": "Wissens-Chat",
+        "body": "Stelle Fragen über alle Interviews hinweg. Antworten nennen immer ihre Quellen oder verweigern die Aussage."
+      },
+      "vaults": {
+        "title": "Kontext-Vaults",
+        "body": "Pflege wiederverwendbaren Unternehmenskontext, damit jede neue Kampagne mit dem nötigen Wissen startet."
+      },
+      "twin": {
+        "title": "Digital Twin",
+        "body": "Simuliere vorab, wie Teilnehmende aus ihrer Rolle heraus denken könnten, um deine Fragen vor dem Start zu schärfen."
+      },
+      "finish": {
+        "title": "Alles bereit",
+        "body": "Das war die Tour. Du kannst sie jederzeit über die Seitenleiste erneut starten. Bereit für deine erste Kampagne?"
+      }
+    }
   }
 }

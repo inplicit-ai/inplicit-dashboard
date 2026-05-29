@@ -11,7 +11,8 @@ import {
   type NavMode,
   type NavSection,
 } from "@/lib/shell/nav";
-import { IconLogOut, IconSettings } from "@/components/icons";
+import { IconHelp, IconLogOut, IconSettings } from "@/components/icons";
+import { replayTour } from "@/lib/shell/use-guided-tour";
 import {
   Tooltip,
   TooltipContent,
@@ -129,6 +130,25 @@ export function Sidebar({
           </nav>
 
           <div className="sidebar__bottom">
+            {mode === "customer" && (
+              <button
+                type="button"
+                className="sidebar__item sidebar__item--bottom"
+                onClick={() => {
+                  onNavigate?.();
+                  replayTour();
+                }}
+              >
+                <span className="sidebar__item-icon" aria-hidden="true">
+                  <IconHelp size={16} />
+                </span>
+                {!iconOnly && (
+                  <span className="sidebar__item-label">
+                    {tShell("replayTour")}
+                  </span>
+                )}
+              </button>
+            )}
             <SettingsDialog
               me={me}
               trigger={

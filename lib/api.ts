@@ -202,6 +202,9 @@ export function makeApi(cookie?: string) {
         `/api/orgs/me/setup-sessions/${id}/messages`,
     },
     me: () => request<Me>("/api/me"),
+    /** O-10: mark the first-visit guided overview as completed/skipped. */
+    completeTour: () =>
+      request<{ ok: boolean }>("/api/me/tour-complete", { method: "POST" }),
     staff: {
       orgs: {
         list: () => request<Organization[]>("/api/staff/orgs"),
@@ -629,6 +632,8 @@ export interface Me {
   email_verified_at?: string | null;
   last_login_at?: string | null;
   must_set_password?: boolean | null;
+  /** O-10: NULL → first-visit guided overview not yet seen. */
+  onboarding_tour_completed_at?: string | null;
 }
 
 export interface Organization {

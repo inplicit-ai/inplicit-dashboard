@@ -356,5 +356,59 @@
     "vaultsBody": "Curate reusable company context for new campaigns.",
     "integrationsTitle": "Integrations",
     "integrationsBody": "Connect notifications and data exports."
+  },
+  "tour": {
+    "ariaLabel": "Product overview",
+    "progress": "Step {current} of {total}",
+    "skip": "Skip tour",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Done",
+    "step": {
+      "welcome": {
+        "title": "Welcome to Inplicit",
+        "body": "Inplicit runs AI voice interviews and turns them into validated insights. Here is a quick tour of where everything lives."
+      },
+      "sidebar": {
+        "title": "Your navigation",
+        "body": "The sidebar is your home base. It adapts to where you are and collapses on focused screens."
+      },
+      "create": {
+        "title": "Create a campaign",
+        "body": "Start here: describe what you want to learn and the setup agent builds the campaign with you."
+      },
+      "campaigns": {
+        "title": "Your campaigns",
+        "body": "Every study lives here. Open one to see its insights, participants, hypotheses, and knowledge map."
+      },
+      "breadcrumb": {
+        "title": "Always know where you are",
+        "body": "The breadcrumb shows your exact location and lets you jump back up at any time."
+      },
+      "stepper": {
+        "title": "Multi-step flows",
+        "body": "When a task has stages — like building and launching a campaign — the stepper shows your progress."
+      },
+      "interviews": {
+        "title": "Interviews",
+        "body": "Browse completed and in-progress interviews across all of your campaigns in one place."
+      },
+      "chat": {
+        "title": "Knowledge Chat",
+        "body": "Ask questions across all your interviews. Answers always cite their sources or decline."
+      },
+      "vaults": {
+        "title": "Context Vaults",
+        "body": "Curate reusable company context so every new campaign starts with what the agent should know."
+      },
+      "twin": {
+        "title": "Digital Twin",
+        "body": "Pre-simulate how participants might think from their role to sharpen your questions before you launch."
+      },
+      "finish": {
+        "title": "You are all set",
+        "body": "That's the tour. You can replay it anytime from the sidebar. Ready to create your first campaign?"
+      }
+    }
   }
 }
