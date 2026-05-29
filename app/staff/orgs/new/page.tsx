@@ -98,7 +98,7 @@ export default async function NewOrgPage({
       {sp.error && (
         <div
           role="alert"
-          className="mb-6 flex items-start gap-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-sm text-danger"
+          className="mb-6 flex items-start gap-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-meta text-danger"
         >
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <p className="leading-snug">{sp.error}</p>
@@ -119,7 +119,7 @@ export default async function NewOrgPage({
               required
               placeholder="Acme GmbH"
               defaultValue={sticky.name}
-              className="h-10 text-base md:text-sm"
+              className="h-9 text-base md:text-sm"
             />
           </Field>
 
@@ -141,7 +141,7 @@ export default async function NewOrgPage({
               pattern="[a-z0-9\-]+"
               placeholder="acme-gmbh"
               defaultValue={sticky.slug}
-              className="h-10 font-mono text-base md:text-sm"
+              className="h-9 font-mono text-base md:text-sm"
             />
           </Field>
 
@@ -169,7 +169,7 @@ export default async function NewOrgPage({
                 name="industry"
                 placeholder="Logistik-SaaS"
                 defaultValue={sticky.industry}
-                className="h-10 text-base md:text-sm"
+                className="h-9 text-base md:text-sm"
               />
             </Field>
             <Field id="default_locale" label="Standardsprache">
@@ -191,7 +191,7 @@ export default async function NewOrgPage({
                 type="number"
                 min={1}
                 defaultValue={String(sticky.default_voice_id ?? 438)}
-                className="h-10 font-mono text-base md:text-sm"
+                className="h-9 font-mono text-base md:text-sm"
               />
             </Field>
             <Field
@@ -224,7 +224,7 @@ export default async function NewOrgPage({
                 required
                 placeholder="max@acme.de"
                 defaultValue={sticky.owner_email}
-                className="h-10 text-base md:text-sm"
+                className="h-9 text-base md:text-sm"
               />
             </Field>
             <Field id="owner_name" label="Owner-Name" required>
@@ -234,12 +234,12 @@ export default async function NewOrgPage({
                 required
                 placeholder="Max Mustermann"
                 defaultValue={sticky.owner_name}
-                className="h-10 text-base md:text-sm"
+                className="h-9 text-base md:text-sm"
               />
             </Field>
           </div>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-ui border border-line bg-canvas p-4 text-sm text-fg transition-colors hover:border-line-strong">
+          <label className="flex cursor-pointer items-start gap-3 rounded-ui border border-line bg-canvas p-4 text-body-sm text-fg transition-colors hover:border-line-strong hover:bg-surface-2">
             <input
               type="checkbox"
               name="issue_magic_link"
@@ -248,7 +248,7 @@ export default async function NewOrgPage({
             />
             <span className="space-y-0.5">
               <span className="block font-medium">Magic-Link sofort ausgeben</span>
-              <span className="block text-xs text-fg-muted">
+              <span className="block text-caption text-fg-muted">
                 Der Owner bekommt eine Welcome-Email mit dem Login-Link (15 Min
                 gültig, single-use).
               </span>
@@ -275,8 +275,8 @@ function SectionHeading({
 }) {
   return (
     <div className="space-y-1">
-      <h2 className="text-base font-semibold tracking-tight text-fg">{title}</h2>
-      <p className="text-sm text-fg-muted">{subtitle}</p>
+      <h2 className="subtitle font-semibold text-fg">{title}</h2>
+      <p className="body-sm text-fg-muted">{subtitle}</p>
     </div>
   );
 }
@@ -296,11 +296,11 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="flex items-center gap-1.5 text-xs font-medium text-fg-muted">
+      <label htmlFor={id} className="label-eyebrow flex items-center gap-1.5">
         {label}
         {required && <span className="text-pain">*</span>}
       </label>
-      {hint && <p className="text-xs leading-relaxed text-fg-subtle">{hint}</p>}
+      {hint && <p className="text-caption leading-relaxed text-fg-subtle">{hint}</p>}
       {children}
     </div>
   );
@@ -308,7 +308,7 @@ function Field({
 
 function Mono({ children }: { children: React.ReactNode }) {
   return (
-    <code className="rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-fg">
+    <code className="rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono text-mono tabular-nums text-fg">
       {children}
     </code>
   );

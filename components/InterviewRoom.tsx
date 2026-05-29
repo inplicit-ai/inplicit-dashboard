@@ -579,7 +579,7 @@ function RoomStyles() {
     <style
       dangerouslySetInnerHTML={{
         __html: `
-        .iv-shell { height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; background: var(--color-surface); }
+        .iv-shell { height: 100dvh; overflow: hidden; display: flex; flex-direction: column; min-height: 0; background: var(--color-surface); }
         .iv-main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: var(--space-6); display: flex; flex-direction: column; min-height: 0; }
         .iv-main--voice { justify-content: center; align-items: center; }
 
@@ -596,39 +596,39 @@ function RoomStyles() {
         .iv-transcript__empty { margin: auto 0; color: var(--color-text-tertiary); text-align: center; }
         .iv-bubble-row { display: flex; justify-content: flex-start; }
         .iv-bubble-row--right { justify-content: flex-end; }
-        .iv-bubble { max-width: min(78%, 620px); padding: var(--space-3) var(--space-4); font-size: var(--text-body); line-height: 1.6; white-space: pre-wrap; border-radius: var(--radius-card); }
+        .iv-bubble { max-width: min(80%, 680px); padding: var(--space-3) var(--space-5); font-size: var(--text-body-lg); line-height: 1.6; white-space: pre-wrap; border-radius: var(--radius-card); }
         .iv-bubble--agent { background: var(--color-surface-2); color: var(--color-text-primary); }
         .iv-bubble--user { background: var(--color-accent-soft); color: var(--color-text-primary); }
-        .iv-bubble--interim { background: var(--color-surface-2); border: 1px dashed var(--color-border); color: var(--color-text-secondary); font-style: italic; }
+        .iv-bubble--interim { background: var(--color-surface-2); border: 1px dashed var(--color-border-strong); color: var(--color-text-secondary); font-style: italic; }
         .iv-cursor { display: inline-block; width: 2px; height: 0.95em; margin-left: 2px; vertical-align: -2px; background: currentColor; opacity: 0.65; animation: iv-blink 1s steps(2) infinite; }
         @keyframes iv-blink { to { opacity: 0; } }
         @media (prefers-reduced-motion: reduce) { .iv-cursor { animation: none; } }
 
         .iv-composer { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); display: flex; align-items: flex-end; gap: var(--space-3); transition: border-color 0.15s var(--ease-smooth), box-shadow 0.15s var(--ease-smooth); }
         .iv-composer:focus-within { border-color: var(--color-accent); box-shadow: var(--shadow-focus); }
-        .iv-composer__textarea { flex: 1; font-family: var(--font-family); font-size: var(--text-body); line-height: 1.6; color: var(--color-text-primary); background: transparent; border: 0; resize: none; padding: var(--space-2) 0; min-height: 40px; max-height: 160px; }
+        .iv-composer__textarea { flex: 1; font-family: var(--font-family); font-size: var(--text-body-lg); line-height: 1.6; color: var(--color-text-primary); background: transparent; border: 0; resize: none; padding: var(--space-2) 0; min-height: 40px; max-height: 160px; }
         .iv-composer__textarea:focus { outline: none; }
         .iv-composer__textarea::placeholder { color: var(--color-text-quaternary); }
         .iv-composer__actions { display: inline-flex; align-items: center; gap: var(--space-2); }
 
-        .iv-footer { display: flex; align-items: center; justify-content: center; padding: var(--space-4) var(--space-5); padding-bottom: calc(var(--space-4) + var(--safe-bottom)); border-top: 1px solid var(--color-border-subtle); background: var(--color-surface); }
+        .iv-footer { display: flex; align-items: center; justify-content: center; padding: var(--space-4) var(--space-5); padding-bottom: calc(var(--space-4) + var(--safe-bottom)); border-top: 1px solid var(--color-border); background: var(--color-surface); }
 
         .iv-error { margin-top: var(--space-3); align-self: stretch; }
 
-        .iv-center { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: var(--space-8) var(--space-4); background: var(--color-surface); }
-        .iv-card { max-width: 460px; width: 100%; padding: var(--space-10); text-align: left; }
+        .iv-center { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: var(--space-8) var(--space-4); background: var(--color-surface); }
+        .iv-card { max-width: 460px; width: 100%; padding: var(--space-8); text-align: left; }
         .iv-card__eyebrow { margin-top: var(--space-5); }
-        .iv-card__title { margin-top: var(--space-3); font-size: clamp(1.75rem, 3vw, 2.25rem); }
-        .iv-card__body { margin-top: var(--space-3); }
+        .iv-card__title { margin-top: var(--space-3); font-size: var(--text-title); line-height: 1.3; letter-spacing: -0.02em; font-weight: 600; }
+        .iv-card__body { margin-top: var(--space-3); font-size: var(--text-body-lg); line-height: 1.6; max-width: 60ch; }
         .iv-card__flash { margin-top: var(--space-5); }
-        .iv-card__actions { margin-top: var(--space-7); display: flex; flex-direction: column; gap: var(--space-3); }
+        .iv-card__actions { margin-top: var(--space-6); display: flex; flex-direction: column; gap: var(--space-3); }
         .iv-card__cta { width: 100%; }
-        .iv-card__alt { align-self: center; font-size: var(--text-caption); }
-        .iv-card__legal { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border-subtle); line-height: 1.55; }
+        .iv-card__alt { align-self: center; font-size: var(--text-meta); }
+        .iv-card__legal { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border-subtle); line-height: 1.55; color: var(--color-text-tertiary); }
 
         @media (max-width: 640px) {
           .iv-main { padding: var(--space-4); }
-          .iv-card { padding: var(--space-8); }
+          .iv-card { padding: var(--space-6); }
           .iv-bubble { max-width: 88%; }
         }
       `,

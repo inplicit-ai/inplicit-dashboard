@@ -73,13 +73,9 @@ export default async function InsightsPage({
 
 function Metric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="card card--compact">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">
-        {label}
-      </p>
-      <p className="mt-2 font-mono text-3xl font-medium tabular-nums tracking-tight text-fg">
-        {value}
-      </p>
+    <div className="stat">
+      <span className="stat__label">{label}</span>
+      <span className="stat__value">{value}</span>
     </div>
   );
 }
@@ -111,8 +107,11 @@ function TriadRow({ insight }: { insight: VseInsight }) {
           </span>
         )}
         {typeof insight.confidence === "number" && (
-          <span className="badge badge--knowledge ml-auto font-medium">
-            {Math.round(insight.confidence * 100)}% Konfidenz
+          <span className="badge badge--knowledge ml-auto">
+            <span className="font-mono tabular-nums">
+              {Math.round(insight.confidence * 100)}%
+            </span>{" "}
+            Konfidenz
           </span>
         )}
       </div>
@@ -140,7 +139,7 @@ function TriadCell({
     <div className="flex flex-col gap-2">
       <span
         className={cn(
-          "text-[11px] font-semibold uppercase tracking-[0.12em]",
+          "text-[11px] font-semibold uppercase tracking-[0.10em]",
           CELL_LABEL_TONE[tone],
         )}
       >

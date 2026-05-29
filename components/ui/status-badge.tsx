@@ -116,7 +116,7 @@ export function StatusBadge({
   const { badgeClass, iconClass, Icon } = TONE[tone];
   return (
     <span className={cn(badgeClass, className)} {...props}>
-      {withIcon && <Icon aria-hidden className={cn("size-3.5", iconClass)} />}
+      {withIcon && <Icon aria-hidden className={cn("size-3", iconClass)} />}
       {label ?? status}
     </span>
   );

@@ -161,8 +161,8 @@ export function KnowledgeMap({ clusters }: Props) {
       node
         .append("text")
         .attr("text-anchor", "middle")
-        .attr("dy", (d) => radiusFor(d) + 14)
-        .attr("font-size", "12px")
+        .attr("dy", (d) => radiusFor(d) + 15)
+        .attr("font-size", "13px")
         .attr("font-family", "Inter, sans-serif")
         .attr("fill", labelColor)
         .attr("font-weight", 500)
@@ -205,11 +205,11 @@ export function KnowledgeMap({ clusters }: Props) {
 
   if (clusters.length === 0) {
     return (
-      <div className="card flex flex-col items-center justify-center gap-3 border-dashed py-16 text-center">
-        <div className="grid size-11 place-items-center rounded-full bg-surface-2 text-fg-muted">
+      <div className="card flex flex-col items-center justify-center gap-4 border-dashed py-16 text-center">
+        <div className="grid size-12 place-items-center rounded-full border border-line bg-surface-2 text-fg-subtle">
           <Network className="h-5 w-5" />
         </div>
-        <p className="max-w-[42ch] text-sm text-fg-muted">
+        <p className="max-w-[48ch] text-base leading-relaxed text-fg-muted">
           Noch keine Cluster. Die Wissenslandkarte erscheint, sobald Insights
           gruppiert werden.
         </p>
@@ -220,17 +220,17 @@ export function KnowledgeMap({ clusters }: Props) {
   return (
     <div className="card card--flush">
       {/* Header bar — fixed height, hairline divider, never scrolls. */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-subtle px-6 py-4">
-        <div className="flex items-center gap-2 text-sm text-fg-muted">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-subtle px-5 py-3">
+        <div className="flex items-center gap-2 text-[13px] text-fg-muted">
           <Network className="h-4 w-4 text-fg-subtle" aria-hidden />
           <span>
             <span className="font-mono tabular-nums text-fg">
               {clusters.length}
             </span>{" "}
-            {clusters.length === 1 ? "Cluster" : "Cluster"}
+            Cluster
           </span>
         </div>
-        <div className="flex flex-wrap items-center gap-4 text-xs">
+        <div className="flex flex-wrap items-center gap-4">
           <Legend color={categoryColor("operational")} label="Operativ" />
           <Legend color={categoryColor("innovation")} label="Innovation" />
           <Legend color={categoryColor("automation")} label="Automatisierung" />
@@ -252,10 +252,11 @@ function Legend({ color, label }: { color: string; label: string }) {
   return (
     <div className="flex items-center gap-1.5">
       <span
-        className="inline-block h-2.5 w-2.5 rounded-full"
+        className="status-disc"
         style={{ background: color }}
+        aria-hidden
       />
-      <span className="text-fg-muted">{label}</span>
+      <span className="text-[13px] text-fg-muted">{label}</span>
     </div>
   );
 }

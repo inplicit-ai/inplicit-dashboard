@@ -62,7 +62,7 @@ export function PeopleSection({
                   value={p.name ?? ""}
                   placeholder={t("personName")}
                   onChange={(e) => setRow(i, { name: e.target.value })}
-                  className="h-10 text-sm sm:flex-[2]"
+                  className="h-9 text-sm sm:flex-[2]"
                 />
                 <div className="flex items-center gap-2">
                   <Input
@@ -70,12 +70,12 @@ export function PeopleSection({
                     placeholder={t("personEmail")}
                     type="email"
                     onChange={(e) => setRow(i, { email: e.target.value })}
-                    className="h-10 flex-1 text-sm sm:min-w-[14rem]"
+                    className="h-9 flex-1 text-sm sm:min-w-[14rem]"
                   />
                   <button
                     type="button"
                     onClick={() => removeRow(i)}
-                    className="grid h-10 w-10 shrink-0 place-items-center rounded-ui text-fg-subtle transition-colors hover:bg-surface-2 hover:text-danger"
+                    className="grid size-9 shrink-0 place-items-center rounded-ui text-fg-subtle transition-colors hover:bg-surface-2 hover:text-danger"
                     aria-label={t("removePerson")}
                   >
                     <X className="h-4 w-4" />
@@ -92,7 +92,7 @@ export function PeopleSection({
             {t("addPerson")}
           </Button>
           <div className="flex items-center gap-3">
-            <span className="text-xs font-medium tabular-nums text-fg-subtle">
+            <span className="font-mono text-xs tabular-nums text-fg-subtle">
               {t("peopleCount", { count: people.length })}
             </span>
             <input

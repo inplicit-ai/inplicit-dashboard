@@ -29,11 +29,15 @@ function PromptSuggestion({
 
   const variantClasses =
     variant === "highlight" || isHighlightMode
-      ? "border-none w-full justify-start text-fg-muted hover:bg-secondary hover:text-fg"
-      : "rounded-full border-line";
+      ? "w-full justify-start border-none text-fg-muted hover:bg-surface-2 hover:text-fg"
+      : "rounded-ui border-line text-fg-muted hover:border-line-strong hover:text-fg";
 
   const sizeClasses =
-    size === "sm" ? "h-8 px-3 text-xs" : size === "lg" ? "h-11 px-6 text-base" : "h-10 px-4 text-sm";
+    size === "sm"
+      ? "h-7 px-3 text-[13px]"
+      : size === "lg"
+        ? "h-9 px-5 text-sm"
+        : "h-8 px-4 text-[13px]";
 
   return (
     <Button

@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Check, X, ArrowLeft, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/PageChrome";
+import { cn } from "@/lib/utils";
 import { type CampaignDraft } from "@/lib/api";
 import { clientApi } from "@/lib/client-api";
 import { validateForLaunch } from "@/lib/setup/draftReducer";
@@ -95,9 +96,9 @@ export function ReviewLaunch({
 
   return (
     <div className="mx-auto flex max-w-[1040px] flex-col gap-5">
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         <Eyebrow>{t("eyebrow")}</Eyebrow>
-        <h1 className="text-2xl font-medium tracking-tight text-fg">
+        <h1 className="text-[1.375rem] font-semibold leading-tight tracking-[-0.02em] text-fg">
           {t("title")}
         </h1>
         <p className="text-sm text-fg-muted">{t("subtitle")}</p>
@@ -108,15 +109,17 @@ export function ReviewLaunch({
         <div className="flex flex-col gap-5 lg:col-span-2">
           {/* Row 1 — essentials */}
           <motion.section {...reveal(0)} className="card card--compact gap-5">
-            <h2 className="text-sm font-semibold text-fg">{t("essentials")}</h2>
+            <h2 className="text-[13px] font-semibold tracking-[-0.01em] text-fg">
+              {t("essentials")}
+            </h2>
             <dl className="grid grid-cols-2 gap-5 sm:grid-cols-4">
               <Field label={tc("interviewType")}>
                 {draft.interviewType === "chat" ? tc("chatType") : tc("voice")}
               </Field>
-              <Field label={tc("duration")}>
+              <Field label={tc("duration")} mono>
                 {draft.durationMin ?? 25} {tc("minutes")}
               </Field>
-              <Field label={tc("language")}>
+              <Field label={tc("language")} mono>
                 {(draft.language?.default ?? "de").toUpperCase()}
                 {draft.language?.allowSwitch ? " · ⇄" : ""}
               </Field>
@@ -128,13 +131,13 @@ export function ReviewLaunch({
             </dl>
             {(draft.goals?.length ?? 0) > 0 ? (
               <div className="border-t border-line-subtle pt-4">
-                <p className="mb-2 text-xs font-medium text-fg-subtle">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
                   {tc("goals")}
                 </p>
                 <ul className="flex flex-col gap-1.5 text-sm text-fg">
                   {draft.goals!.map((g) => (
-                    <li key={g.id} className="flex items-start gap-2">
-                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                    <li key={g.id} className="flex items-start gap-2.5">
+                      <span className="status-disc status-disc--sm status-disc--done mt-1.5 shrink-0" />
                       <span>{g.text}</span>
                     </li>
                   ))}
@@ -145,10 +148,12 @@ export function ReviewLaunch({
 
           {/* Row 2 — audience & delivery */}
           <motion.section {...reveal(0.06)} className="card card--compact gap-5">
-            <h2 className="text-sm font-semibold text-fg">{t("delivery")}</h2>
+            <h2 className="text-[13px] font-semibold tracking-[-0.01em] text-fg">
+              {t("delivery")}
+            </h2>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
-                <p className="mb-2 text-xs font-medium text-fg-subtle">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
                   {tc("topics")}
                 </p>
                 {draft.topics?.nodes?.length ? (
@@ -163,7 +168,7 @@ export function ReviewLaunch({
                     ? draft.audience.segments.join(", ")
                     : "—"}
                 </Field>
-                <Field label={t("peopleLabel")}>
+                <Field label={t("peopleLabel")} mono>
                   {t("peopleCount", { count: peopleCount })}
                 </Field>
                 {draft.background?.notes?.trim() ? (
@@ -183,9 +188,11 @@ export function ReviewLaunch({
           {...reveal(0.12)}
           className="card card--compact gap-5 lg:sticky lg:top-6 lg:self-start"
         >
-          <h2 className="text-sm font-semibold text-fg">{t("launchpad")}</h2>
+          <h2 className="text-[13px] font-semibold tracking-[-0.01em] text-fg">
+            {t("launchpad")}
+          </h2>
           <div>
-            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-fg-subtle">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
               {t("checklist")}
             </p>
             <ul className="space-y-2 text-sm">
@@ -212,8 +219,8 @@ export function ReviewLaunch({
             </ul>
             {/* Advisory (non-blocking) — people/schedule are O-5. */}
             {peopleCount === 0 ? (
-              <p className="mt-4 flex items-start gap-2 rounded-ui bg-warning/10 px-3 py-2 text-xs text-fg-muted">
-                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" />
+              <p className="badge badge--warning mt-4 flex items-start gap-2 whitespace-normal rounded-ui px-3 py-2 text-xs font-normal normal-case leading-snug tracking-normal">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 <span>{t("advisoryNoPeople")}</span>
               </p>
             ) : null}
@@ -254,15 +261,26 @@ export function ReviewLaunch({
 
 function Field({
   label,
+  mono,
   children,
 }: {
   label: string;
+  mono?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div>
-      <dt className="text-xs font-medium text-fg-subtle">{label}</dt>
-      <dd className="mt-1 text-sm text-fg">{children}</dd>
+      <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
+        {label}
+      </dt>
+      <dd
+        className={cn(
+          "mt-1 text-sm text-fg",
+          mono && "font-mono tabular-nums",
+        )}
+      >
+        {children}
+      </dd>
     </div>
   );
 }

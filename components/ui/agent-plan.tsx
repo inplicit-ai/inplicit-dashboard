@@ -14,6 +14,7 @@ import {
   LayoutGroup,
   type Variants,
 } from "framer-motion";
+import { DashedConnector } from "@/components/ui/dashed-connector";
 
 // Type definitions
 interface Subtask {
@@ -419,9 +420,9 @@ export default function Plan() {
   };
 
   return (
-    <div className="bg-background text-foreground h-full overflow-auto p-2">
+    <div className="bg-canvas text-fg h-full overflow-auto p-2">
       <motion.div
-        className="bg-card border-border rounded-lg border shadow overflow-hidden"
+        className="bg-surface border-line rounded-card border overflow-hidden"
         initial={{ opacity: 0, y: 10 }}
         animate={{
           opacity: 1,
@@ -509,17 +510,12 @@ export default function Plan() {
                                 {task.dependencies.map((dep, idx) => (
                                   <motion.span
                                     key={idx}
-                                    className="bg-secondary/40 text-secondary-foreground rounded px-1.5 py-0.5 text-[10px] font-medium shadow-sm"
+                                    className="bg-surface-2 text-fg-muted border-line-subtle rounded-sm border px-1.5 py-0.5 font-mono text-[11px] font-medium tabular-nums"
                                     initial={{ opacity: 0, scale: 0.9 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{
                                       duration: 0.2,
                                       delay: idx * 0.05,
-                                    }}
-                                    whileHover={{
-                                      y: -1,
-                                      backgroundColor: "rgba(0,0,0,0.1)",
-                                      transition: { duration: 0.2 },
                                     }}
                                   >
                                     {dep}
@@ -530,7 +526,7 @@ export default function Plan() {
                           )}
 
                           <motion.span
-                            className={`rounded px-1.5 py-0.5 ${
+                            className={`rounded-sm px-1.5 py-0.5 font-mono text-[11px] tabular-nums uppercase tracking-[0.04em] ${
                               task.status === "completed"
                                 ? "bg-success-soft text-success"
                                 : task.status === "in-progress"
@@ -539,7 +535,7 @@ export default function Plan() {
                                     ? "bg-warning/10 text-warning"
                                     : task.status === "failed"
                                       ? "bg-danger-soft text-danger"
-                                      : "bg-muted text-muted-foreground"
+                                      : "bg-surface-2 text-fg-muted"
                             }`}
                             variants={statusBadgeVariants}
                             initial="initial"
@@ -564,7 +560,12 @@ export default function Plan() {
                           layout
                         >
                           {/* Vertical connecting line aligned with task icon */}
-                          <div className="absolute top-0 bottom-0 left-[20px] border-l-2 border-dashed border-line-strong" />
+                          <DashedConnector
+                            orientation="vertical"
+                            tone="strong"
+                            weight={1}
+                            className="left-[20px]"
+                          />
                           <ul className="border-muted mt-1 mr-2 mb-1.5 ml-3 space-y-0.5">
                             {task.subtasks.map((subtask) => {
                               const subtaskKey = `${task.id}-${subtask.id}`;
@@ -651,7 +652,7 @@ export default function Plan() {
                                   <AnimatePresence mode="wait">
                                     {isSubtaskExpanded && (
                                       <motion.div
-                                        className="text-muted-foreground border-foreground/20 mt-1 ml-1.5 border-l border-dashed pl-5 text-xs overflow-hidden"
+                                        className="text-fg-muted border-line-strong mt-1 ml-1.5 border-l border-dashed pl-5 text-xs overflow-hidden"
                                         variants={subtaskDetailsVariants}
                                         initial="hidden"
                                         animate="visible"
@@ -664,7 +665,7 @@ export default function Plan() {
                                         {subtask.tools &&
                                           subtask.tools.length > 0 && (
                                             <div className="mt-0.5 mb-1 flex flex-wrap items-center gap-1.5">
-                                              <span className="text-muted-foreground font-medium">
+                                              <span className="text-fg-muted font-medium">
                                                 MCP Servers:
                                               </span>
                                               <div className="flex flex-wrap gap-1">
@@ -672,7 +673,7 @@ export default function Plan() {
                                                   (tool, idx) => (
                                                     <motion.span
                                                       key={idx}
-                                                      className="bg-secondary/40 text-secondary-foreground rounded px-1.5 py-0.5 text-[10px] font-medium shadow-sm"
+                                                      className="bg-surface-2 text-fg-muted border-line-subtle rounded-sm border px-1.5 py-0.5 font-mono text-[11px] font-medium"
                                                       initial={{
                                                         opacity: 0,
                                                         y: -5,
@@ -683,14 +684,6 @@ export default function Plan() {
                                                         transition: {
                                                           duration: 0.2,
                                                           delay: idx * 0.05,
-                                                        },
-                                                      }}
-                                                      whileHover={{
-                                                        y: -1,
-                                                        backgroundColor:
-                                                          "rgba(0,0,0,0.1)",
-                                                        transition: {
-                                                          duration: 0.2,
                                                         },
                                                       }}
                                                     >

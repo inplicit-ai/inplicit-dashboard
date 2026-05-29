@@ -213,7 +213,10 @@ export function GuidedTour({
 
       <div className="tour-card" style={{ ...cardStyle, transition }}>
         <div className="tour-card__eyebrow">
-          <span className="tour-card__dot" aria-hidden="true" />
+          <span
+            className="status-disc status-disc--sm status-disc--live status-disc--pulse"
+            aria-hidden="true"
+          />
           {t("progress", { current: state.index + 1, total: TOUR_TOTAL })}
         </div>
         <h2 className="tour-card__title">{t(`step.${step.key}.title`)}</h2>

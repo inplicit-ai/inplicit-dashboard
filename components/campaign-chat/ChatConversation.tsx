@@ -84,14 +84,14 @@ export function ChatConversation({
             onKeyDown={onKeyDown}
             placeholder={t("placeholder")}
             rows={1}
-            className="max-h-32 flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-fg outline-none placeholder:text-fg-faint"
+            className="max-h-32 flex-1 resize-none bg-transparent px-2 py-1.5 text-[length:var(--text-body-lg)] leading-relaxed text-fg outline-none placeholder:text-fg-faint"
           />
           <button
             type="button"
             onClick={submit}
             disabled={!canSend}
             aria-label={t("send")}
-            className="grid size-8 shrink-0 place-items-center rounded-ui bg-fg text-canvas transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+            className="grid size-8 shrink-0 place-items-center rounded-full bg-fg text-canvas transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
           >
             <ArrowUp className="h-4 w-4" />
           </button>
@@ -109,10 +109,12 @@ function EmptyState() {
         <Sparkles className="h-5 w-5" />
       </span>
       <div className="space-y-2">
-        <h2 className="text-lg font-medium tracking-tight text-fg">
+        <h2 className="text-xl font-semibold tracking-tight text-fg">
           {t("emptyTitle")}
         </h2>
-        <p className="text-sm leading-relaxed text-fg-muted">{t("emptyBody")}</p>
+        <p className="text-[length:var(--text-body-lg)] leading-relaxed text-fg-muted">
+          {t("emptyBody")}
+        </p>
       </div>
       <p className="rounded-full border border-line bg-surface px-3 py-1 text-[11px] font-medium text-fg-subtle">
         {t("aiLabel")}
@@ -161,7 +163,7 @@ function MessageRow({
   if (isUser) {
     return (
       <motion.div {...enter} className="flex justify-end">
-        <div className="max-w-[min(78%,620px)] rounded-card bg-accent-soft px-4 py-3 text-sm leading-relaxed text-fg">
+        <div className="max-w-[min(80%,680px)] rounded-card bg-accent-soft px-5 py-3.5 text-[length:var(--text-body-lg)] leading-relaxed text-fg">
           {message.content}
         </div>
       </motion.div>
@@ -170,11 +172,11 @@ function MessageRow({
 
   return (
     <motion.div {...enter} className="flex flex-col gap-2">
-      <span className="label-eyebrow text-fg-subtle">{t("assistant")}</span>
-      <div className="max-w-[min(78%,620px)] rounded-card bg-surface-2 px-4 py-3">
+      <span className="label-eyebrow">{t("assistant")}</span>
+      <div className="max-w-[min(80%,680px)] rounded-card bg-surface-2 px-5 py-4">
         <p
           className={cn(
-            "text-sm leading-relaxed",
+            "text-[length:var(--text-body-lg)] leading-relaxed",
             message.declined ? "text-fg-muted" : "text-fg",
           )}
         >
@@ -182,10 +184,8 @@ function MessageRow({
         </p>
 
         {message.citations.length > 0 && (
-          <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-line-subtle pt-3">
-            <span className="text-[11px] text-fg-subtle">
-              {t("citationsLabel")}:
-            </span>
+          <div className="mt-3.5 flex flex-wrap items-center gap-1.5 border-t border-line-subtle pt-3.5">
+            <span className="label-eyebrow">{t("citationsLabel")}</span>
             {message.citations.map((c, i) => (
               <CitationChip
                 key={`${c.vse_insight_id}-${i}`}
@@ -198,9 +198,9 @@ function MessageRow({
       </div>
 
       <div className="flex items-center gap-2 pl-1">
-        <span className="text-[10px] text-fg-faint">{t("aiLabel")}</span>
+        <span className="text-[11px] text-fg-faint">{t("aiLabel")}</span>
         {message.cached && (
-          <span className="rounded-full border border-line px-1.5 py-0.5 text-[10px] text-fg-subtle">
+          <span className="rounded-sm border border-line px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-fg-subtle">
             {t("cachedNote")}
           </span>
         )}

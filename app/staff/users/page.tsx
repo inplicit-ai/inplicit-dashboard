@@ -100,28 +100,28 @@ export default async function StaffUsersPage({
       {sp.flash && <Flash type={sp.flashType ?? "ok"} message={sp.flash} />}
 
       {sp.magic_link && (
-        <Card className="card--opportunity mb-6 rounded-card border border-accent-muted bg-accent-soft p-6">
-          <p className="text-base font-semibold text-fg">
+        <Card className="card--opportunity mb-6 rounded-card border border-accent-muted bg-accent-soft p-5">
+          <p className="subtitle font-semibold text-fg">
             Magic-Link bereit
             {sp.reissued_for && (
-              <span className="ml-2 text-xs font-normal text-fg-muted">
+              <span className="ml-2 text-caption font-normal text-fg-muted">
                 für {sp.reissued_for}
               </span>
             )}
           </p>
-          <p className="mt-1 text-xs text-fg-muted">
+          <p className="mt-1 text-caption text-fg-muted">
             15 Minuten gültig, single-use.
             {sp.email_sent === "1"
               ? " Email an den Staff-User wurde verschickt."
               : ""}
           </p>
-          <div className="mt-4 break-all rounded-ui border border-line bg-canvas p-3 font-mono text-xs">
+          <div className="mt-4 break-all rounded-ui border border-line bg-canvas p-3 font-mono text-mono tabular-nums">
             <a className="text-accent-strong hover:underline" href={sp.magic_link}>
               {sp.magic_link}
             </a>
           </div>
           {sp.email_error && (
-            <p className="mt-3 text-xs text-fg-muted">
+            <p className="mt-3 text-caption text-fg-muted">
               <strong className="text-danger">Email konnte nicht versendet werden:</strong>{" "}
               <span className="font-mono">{sp.email_error}</span>
             </p>
@@ -136,10 +136,10 @@ export default async function StaffUsersPage({
               <Users className="h-5 w-5" />
             </div>
             <div className="space-y-1">
-              <p className="text-base font-semibold text-fg">
+              <p className="subtitle text-fg">
                 Noch kein zusätzliches Staff-Mitglied.
               </p>
-              <p className="max-w-[52ch] text-sm text-fg-muted">
+              <p className="max-w-[52ch] body-sm text-fg-muted">
                 Du bist aktuell der einzige Account mit Zugriff aufs Back-Office.
                 Lege weitere Staff-User an, damit Kollegen Customer-Orgs verwalten
                 können.
@@ -172,11 +172,11 @@ export default async function StaffUsersPage({
                 <tr key={u.id}>
                   <td className="font-medium text-fg">{u.name}</td>
                   <td>
-                    <span className="font-mono text-xs text-fg-muted">
+                    <span className="font-mono text-caption text-fg-muted">
                       {u.email}
                     </span>
                   </td>
-                  <td className="text-xs text-fg-muted">
+                  <td className="font-mono text-caption tabular-nums text-fg-muted">
                     {u.last_login_at
                       ? new Date(u.last_login_at).toLocaleString("de-DE")
                       : "—"}
@@ -185,7 +185,7 @@ export default async function StaffUsersPage({
                     {u.email_verified_at ? (
                       <span className="badge badge--success">Verifiziert</span>
                     ) : (
-                      <span className="badge badge--opportunity">Eingeladen</span>
+                      <span className="badge badge--warning">Eingeladen</span>
                     )}
                   </td>
                   <td>
@@ -232,7 +232,7 @@ function Flash({ type, message }: { type: "ok" | "err"; message: string }) {
     <div
       role="status"
       className={cn(
-        "mb-6 flex items-start gap-2.5 rounded-ui border px-3.5 py-2.5 text-sm",
+        "mb-6 flex items-start gap-2.5 rounded-ui border px-3.5 py-2.5 text-meta",
         type === "ok"
           ? "border-success/22 bg-success-soft text-success"
           : "border-danger/22 bg-danger-soft text-danger",

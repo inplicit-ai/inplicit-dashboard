@@ -63,10 +63,10 @@ export function CampaignTabs({ campaignId }: { campaignId: string }) {
   const t = useTranslations("breadcrumb");
 
   return (
-    <div className="-mx-4 mb-8 border-b border-line sm:-mx-8">
+    <div className="-mx-4 mb-6 border-b border-line sm:-mx-8">
       <nav
         aria-label={t("campaign")}
-        className="scrollbar-none flex gap-6 overflow-x-auto px-4 sm:px-8"
+        className="scrollbar-none flex gap-7 overflow-x-auto px-4 sm:px-8"
       >
         {TABS.map((tab) => {
           const active = tab.match(pathname, campaignId);
@@ -76,8 +76,8 @@ export function CampaignTabs({ campaignId }: { campaignId: string }) {
               href={tab.href(campaignId)}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative -mb-px whitespace-nowrap border-b-2 py-3.5 text-sm font-medium transition-colors",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:rounded-sm",
+                "relative -mb-px whitespace-nowrap border-b-2 py-4 text-[13px] font-medium transition-colors",
+                "focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 active
                   ? "border-accent text-fg"
                   : "border-transparent text-fg-muted hover:text-fg",

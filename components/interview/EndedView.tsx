@@ -16,7 +16,7 @@ export function EndedView({ lang, summary }: { lang: Lang; summary: string | nul
           <CheckCircle2 size={22} strokeWidth={2} />
         </span>
         <span className="eyebrow text-success iv-card__eyebrow">{c.endedEyebrow}</span>
-        <h1 className="headline iv-card__title">{c.endedTitle}</h1>
+        <h1 className="title iv-card__title">{c.endedTitle}</h1>
         <p className="page-header__meta iv-card__body">{summary ?? c.endedBody}</p>
       </div>
     </div>

@@ -80,7 +80,7 @@ export default async function NewStaffUserPage({
       {sp.error && (
         <div
           role="alert"
-          className="mb-6 flex items-start gap-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-sm text-danger"
+          className="mb-6 flex items-start gap-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-meta text-danger"
         >
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <p className="leading-snug">{sp.error}</p>
@@ -89,7 +89,7 @@ export default async function NewStaffUserPage({
 
       <Card className="rounded-card border border-line bg-surface p-8">
         <form action={createStaff} className="flex flex-col gap-5">
-          <p className="text-sm leading-relaxed text-fg-muted">
+          <p className="body-sm leading-relaxed text-fg-muted">
             Neuer Staff-User bekommt einen Magic-Link per Email (15 Min gültig).
             Die Person loggt sich damit ein und nutzt für jeden weiteren Login
             ebenfalls den Magic-Link-Flow. Passwort gibt&apos;s nur für dich als
@@ -103,7 +103,7 @@ export default async function NewStaffUserPage({
               required
               placeholder="Max Mustermann"
               defaultValue={sticky.name ?? ""}
-              className="h-10 text-base md:text-sm"
+              className="h-9 text-base md:text-sm"
             />
           </Field>
 
@@ -116,11 +116,11 @@ export default async function NewStaffUserPage({
               placeholder="max@inplicit.ai"
               defaultValue={sticky.email ?? ""}
               autoComplete="off"
-              className="h-10 text-base md:text-sm"
+              className="h-9 text-base md:text-sm"
             />
           </Field>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-ui border border-line bg-canvas p-4 text-sm text-fg transition-colors hover:border-line-strong">
+          <label className="flex cursor-pointer items-start gap-3 rounded-ui border border-line bg-canvas p-4 text-body-sm text-fg transition-colors hover:border-line-strong hover:bg-surface-2">
             <input
               type="checkbox"
               name="issue_magic_link"
@@ -131,7 +131,7 @@ export default async function NewStaffUserPage({
               <span className="block font-medium">
                 Magic-Link sofort ausgeben
               </span>
-              <span className="block text-xs text-fg-muted">
+              <span className="block text-caption text-fg-muted">
                 Empfehlung. Wenn ausgeschaltet, kannst du den Link später aus
                 der Liste ausstellen.
               </span>
@@ -162,7 +162,7 @@ function Field({
     <div className="space-y-1.5">
       <label
         htmlFor={id}
-        className="flex items-center gap-1.5 text-xs font-medium text-fg-muted"
+        className="label-eyebrow flex items-center gap-1.5"
       >
         {label}
         {required && <span className="text-pain">*</span>}

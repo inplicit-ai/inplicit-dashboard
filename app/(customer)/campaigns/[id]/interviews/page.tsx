@@ -89,7 +89,7 @@ export default async function InterviewsPage({
                           <span className="text-fg-subtle">—</span>
                         )}
                       </td>
-                      <td className="text-xs text-fg-muted">
+                      <td className="font-mono text-xs tabular-nums text-fg-muted">
                         {i.started_at
                           ? new Date(i.started_at).toLocaleString("de-DE")
                           : "—"}
@@ -98,7 +98,7 @@ export default async function InterviewsPage({
                         <Link
                           href={href}
                           aria-label={`Interview ${i.anon_id} öffnen`}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-full text-fg-subtle transition-colors group-hover:text-fg hover:bg-surface-2"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-ui text-fg-subtle transition-colors group-hover:text-fg hover:bg-surface-2"
                         >
                           <ArrowRight className="h-4 w-4" />
                         </Link>

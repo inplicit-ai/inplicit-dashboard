@@ -41,7 +41,7 @@ export function SectionCard({
     >
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <h3 className="text-sm font-semibold leading-tight text-fg">
+          <h3 className="text-[13px] font-semibold leading-tight tracking-[-0.01em] text-fg">
             {title}
           </h3>
           {description ? (
@@ -55,8 +55,9 @@ export function SectionCard({
               initial={reduceMotion ? false : { opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
-              className="badge badge--opportunity whitespace-nowrap text-[10px] uppercase tracking-wide"
+              className="badge badge--live whitespace-nowrap uppercase"
             >
+              <span className="status-disc status-disc--sm status-disc--live status-disc--pulse" />
               {t("updatedByAgent")}
             </motion.span>
           ) : null}

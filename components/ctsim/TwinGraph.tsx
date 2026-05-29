@@ -118,7 +118,9 @@ export function TwinGraph({
   if (nodes.length === 0) {
     return (
       <div className="card rounded-card border-dashed py-16 text-center">
-        <p className="text-sm leading-relaxed text-fg-muted">{emptyLabel}</p>
+        <p className="mx-auto max-w-[48ch] text-base leading-relaxed text-fg-muted">
+          {emptyLabel}
+        </p>
       </div>
     );
   }
@@ -211,6 +213,7 @@ export function TwinGraph({
                 x={14}
                 y={NODE_H / 2 + 4}
                 fontSize={13}
+                fontWeight={isActive ? 500 : 400}
                 fill={
                   isActive ? "var(--color-accent-strong)" : "var(--color-fg)"
                 }

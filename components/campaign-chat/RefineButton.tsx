@@ -86,7 +86,7 @@ function FieldRow({ field }: { field: RefineFieldLock }) {
       </span>
       <span
         className={cn(
-          "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+          "inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
           field.locked
             ? "border-line bg-surface-2 text-fg-subtle"
             : "border-accent-muted bg-accent-soft text-accent",

@@ -167,7 +167,7 @@ export default async function OrgDetailPage({
             meta={
               <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <StatusBadge status={org.status} />
-                <span className="text-xs text-fg-muted">
+                <span className="font-mono text-caption tabular-nums text-fg-muted">
                   {org.default_locale.toUpperCase()} ·{" "}
                   {org.default_interview_length_min} Min · Voice{" "}
                   {org.default_voice_id}
@@ -200,22 +200,22 @@ export default async function OrgDetailPage({
           )}
 
           {sp.magic_link && (
-            <Card className="card--opportunity mb-6 rounded-card border border-accent-muted bg-accent-soft p-6">
-              <p className="text-base font-semibold text-fg">
+            <Card className="card--opportunity mb-6 rounded-card border border-accent-muted bg-accent-soft p-5">
+              <p className="subtitle font-semibold text-fg">
                 Magic-Link bereit
                 {sp.reissued_for && (
-                  <span className="ml-2 text-xs font-normal text-fg-muted">
+                  <span className="ml-2 text-caption font-normal text-fg-muted">
                     für {sp.reissued_for}
                   </span>
                 )}
               </p>
-              <p className="mt-1 text-xs text-fg-muted">
+              <p className="mt-1 text-caption text-fg-muted">
                 15 Minuten gültig, single-use.
                 {sp.email_sent === "1"
                   ? " Eine Email mit dem Link wurde an den Owner verschickt."
                   : ""}
               </p>
-              <div className="mt-4 break-all rounded-ui border border-line bg-canvas p-3 font-mono text-xs">
+              <div className="mt-4 break-all rounded-ui border border-line bg-canvas p-3 font-mono text-mono tabular-nums">
                 <a
                   className="text-accent-strong hover:underline"
                   href={sp.magic_link}
@@ -223,7 +223,7 @@ export default async function OrgDetailPage({
                   {sp.magic_link}
                 </a>
               </div>
-              <p className="mt-3 text-xs text-fg-subtle">
+              <p className="mt-3 text-caption text-fg-subtle">
                 Tipp: in einem Inkognito-Tab öffnen, um nicht deine
                 Staff-Session zu überschreiben.
               </p>
@@ -231,14 +231,14 @@ export default async function OrgDetailPage({
           )}
 
           {sp.email_error && (
-            <Card className="card--pain mb-6 rounded-card border border-pain-muted bg-pain-soft p-6">
-              <p className="text-base font-semibold text-pain">
+            <Card className="card--pain mb-6 rounded-card border border-pain-muted bg-pain-soft p-5">
+              <p className="subtitle font-semibold text-pain">
                 Welcome-Email konnte nicht versendet werden
               </p>
-              <p className="mt-2 break-all font-mono text-xs text-fg-muted">
+              <p className="mt-2 break-all font-mono text-mono text-fg-muted">
                 {sp.email_error}
               </p>
-              <p className="mt-3 text-xs text-fg-subtle">
+              <p className="mt-3 text-caption text-fg-subtle">
                 Häufige Ursachen: <Mono>RESEND_API_KEY</Mono> fehlt,{" "}
                 <Mono>FROM_EMAIL</Mono> nicht domain-verifiziert, oder die
                 Resend-Sandbox erlaubt nur Versand an die Account-Email.
@@ -246,29 +246,32 @@ export default async function OrgDetailPage({
             </Card>
           )}
 
-          <Card className="mb-6 rounded-card border border-line bg-surface p-8">
+          <Card className="mb-6 rounded-card border border-line bg-surface p-6">
             <Eyebrow>Unternehmenskontext</Eyebrow>
-            <p className="mt-3 text-xs text-fg-muted">
+            <p className="mt-3 text-caption text-fg-muted">
               Wird in jeden Interview-System-Prompt der Org eingespeist. Kampagnes
               können das pro Kampagne überschreiben.
             </p>
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-fg">
+            <p className="mt-3 whitespace-pre-wrap body-sm leading-relaxed text-fg">
               {org.company_context}
             </p>
             {org.industry && (
-              <p className="mt-3 text-xs text-fg-muted">
+              <p className="mt-3 text-caption text-fg-muted">
                 Branche: <Mono>{org.industry}</Mono>
               </p>
             )}
           </Card>
 
-          <Card className="mb-6 rounded-card border border-line bg-surface p-8">
+          <Card className="mb-6 rounded-card border border-line bg-surface p-6">
             <Eyebrow>Defaults für neue Kampagnes</Eyebrow>
             <DefList className="mt-4">
-              <DefRow label="Sprache" value={org.default_locale.toUpperCase()} />
+              <DefRow
+                label="Sprache"
+                value={<Mono>{org.default_locale.toUpperCase()}</Mono>}
+              />
               <DefRow
                 label="Interviewdauer"
-                value={`${org.default_interview_length_min} Minuten`}
+                value={<Mono>{org.default_interview_length_min} Min</Mono>}
               />
               <DefRow
                 label="ElevenLabs Voice-ID"
@@ -278,7 +281,7 @@ export default async function OrgDetailPage({
             </DefList>
           </Card>
 
-          <Card className="mb-6 rounded-card border border-line bg-surface p-8">
+          <Card className="mb-6 rounded-card border border-line bg-surface p-6">
             <Eyebrow>Metadaten</Eyebrow>
             <DefList className="mt-4">
               <DefRow
@@ -289,32 +292,36 @@ export default async function OrgDetailPage({
               <DefRow
                 label="Erstellt"
                 value={
-                  org.created_at
-                    ? new Date(org.created_at).toLocaleString("de-DE")
-                    : "—"
+                  <Mono>
+                    {org.created_at
+                      ? new Date(org.created_at).toLocaleString("de-DE")
+                      : "—"}
+                  </Mono>
                 }
               />
               <DefRow
                 label="Aktualisiert"
                 value={
-                  org.updated_at
-                    ? new Date(org.updated_at).toLocaleString("de-DE")
-                    : "—"
+                  <Mono>
+                    {org.updated_at
+                      ? new Date(org.updated_at).toLocaleString("de-DE")
+                      : "—"}
+                  </Mono>
                 }
               />
             </DefList>
           </Card>
 
-          <Card className="card--pain rounded-card border border-pain-muted bg-pain-soft p-8">
+          <Card className="card--pain rounded-card border border-pain-muted bg-pain-soft p-6">
             <header className="mb-5 flex items-start gap-3">
-              <span className="grid size-8 place-items-center rounded-full bg-pain-soft text-pain">
+              <span className="grid size-8 place-items-center rounded-ui bg-pain-soft text-pain">
                 <AlertTriangle className="h-4 w-4" />
               </span>
               <div>
-                <h2 className="text-base font-semibold tracking-tight text-fg">
+                <h2 className="subtitle font-semibold text-fg">
                   Danger Zone
                 </h2>
-                <p className="text-xs text-fg-muted">
+                <p className="text-caption text-fg-muted">
                   Aktionen mit weitreichenden Folgen. Lesen, dann bewusst
                   ausführen.
                 </p>
@@ -364,7 +371,7 @@ export default async function OrgDetailPage({
                   required
                   placeholder={org.name}
                   autoComplete="off"
-                  className="h-10"
+                  className="h-9"
                 />
                 <Button type="submit" variant="destructive" size="sm">
                   Endgültig löschen
@@ -383,7 +390,7 @@ export default async function OrgDetailPage({
             muted={org.slug}
           />
 
-          <Card className="rounded-card border border-line bg-surface p-8">
+          <Card className="rounded-card border border-line bg-surface p-6">
             <form action={updateOrgAction} className="flex flex-col gap-5">
               <Field id="edit-name" label="Name" required>
                 <Input
@@ -391,7 +398,7 @@ export default async function OrgDetailPage({
                   name="name"
                   defaultValue={org.name}
                   required
-                  className="h-10 text-base md:text-sm"
+                  className="h-9 text-base md:text-sm"
                 />
               </Field>
 
@@ -409,7 +416,7 @@ export default async function OrgDetailPage({
                     inputMode="url"
                     defaultValue={org.logo_url ?? ""}
                     placeholder="https://cdn.example.com/logo.png"
-                    className="h-10 flex-1 text-base md:text-sm"
+                    className="h-9 flex-1 text-base md:text-sm"
                   />
                 </div>
               </Field>
@@ -435,7 +442,7 @@ export default async function OrgDetailPage({
                     name="industry"
                     defaultValue={org.industry ?? ""}
                     placeholder="Logistik-SaaS"
-                    className="h-10 text-base md:text-sm"
+                    className="h-9 text-base md:text-sm"
                   />
                 </Field>
                 <Field id="edit-locale" label="Standardsprache">
@@ -457,7 +464,7 @@ export default async function OrgDetailPage({
                     type="number"
                     min={1}
                     defaultValue={String(org.default_voice_id)}
-                    className="h-10 font-mono text-base md:text-sm"
+                    className="h-9 font-mono text-base md:text-sm"
                   />
                 </Field>
                 <Field id="edit-length" label="Interviewdauer">
@@ -504,7 +511,7 @@ function Flash({ type, message }: { type: "ok" | "err"; message: string }) {
     <div
       role="status"
       className={cn(
-        "mb-6 flex items-start gap-2.5 rounded-ui border px-3.5 py-2.5 text-sm",
+        "mb-6 flex items-start gap-2.5 rounded-ui border px-3.5 py-2.5 text-meta",
         type === "ok"
           ? "border-success/22 bg-success-soft text-success"
           : "border-danger/22 bg-danger-soft text-danger",
@@ -544,10 +551,10 @@ function DefRow({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">
+      <dt className="label-eyebrow text-fg-subtle">
         {label}
       </dt>
-      <dd className="m-0 text-sm font-medium text-fg">{value}</dd>
+      <dd className="m-0 body-sm font-medium text-fg">{value}</dd>
     </div>
   );
 }
@@ -564,8 +571,8 @@ function DangerRow({
   return (
     <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-[1fr_auto]">
       <div>
-        <p className="text-sm font-semibold text-fg">{title}</p>
-        <p className="mt-1 text-xs leading-relaxed text-fg-muted">
+        <p className="body-sm font-semibold text-fg">{title}</p>
+        <p className="mt-1 text-caption leading-relaxed text-fg-muted">
           {description}
         </p>
       </div>
@@ -591,12 +598,12 @@ function Field({
     <div className="space-y-1.5">
       <label
         htmlFor={id}
-        className="flex items-center gap-1.5 text-xs font-medium text-fg-muted"
+        className="label-eyebrow flex items-center gap-1.5"
       >
         {label}
         {required && <span className="text-pain">*</span>}
       </label>
-      {hint && <p className="text-xs text-fg-subtle">{hint}</p>}
+      {hint && <p className="text-caption text-fg-subtle">{hint}</p>}
       {children}
     </div>
   );
@@ -612,7 +619,7 @@ function Mono({
   return (
     <code
       className={cn(
-        "rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-fg",
+        "rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono text-mono tabular-nums text-fg",
         className,
       )}
     >

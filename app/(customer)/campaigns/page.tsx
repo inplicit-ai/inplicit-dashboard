@@ -88,13 +88,13 @@ function CampaignCard({ c }: { c: Campaign }) {
       className="group card card--compact flex flex-col justify-between gap-5 transition-[border-color,background-color] hover:border-line-strong hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 truncate text-base font-medium text-fg">
+        <p className="min-w-0 truncate text-base font-semibold tracking-tight text-fg">
           {c.org_name}
         </p>
         <StatusBadge status={c.status} className="shrink-0" />
       </div>
       <div className="flex items-end justify-between gap-3">
-        <p className="text-xs text-fg-muted">
+        <p className="font-mono text-xs tabular-nums text-fg-muted">
           {c.language.toUpperCase()} · {c.interview_length_min} Min ·{" "}
           {new Date(c.created_at).toLocaleDateString("de-DE")}
         </p>

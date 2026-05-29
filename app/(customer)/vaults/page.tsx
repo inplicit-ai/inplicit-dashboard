@@ -127,10 +127,10 @@ export default async function VaultsPage({
       {sp.flash && (
         <div
           className={cn(
-            "mb-6 rounded-card border px-4 py-3 text-sm",
+            "mb-6 rounded-ui border px-4 py-3 text-meta",
             sp.flashType === "err"
               ? "border-pain-muted bg-pain-soft text-pain"
-              : "border-success/30 bg-success-soft text-success",
+              : "border-success/22 bg-success-soft text-success",
           )}
         >
           {sp.flash}
@@ -165,7 +165,7 @@ export default async function VaultsPage({
                 <span className="grid size-10 place-items-center rounded-full bg-surface-2 text-fg-muted">
                   <VaultIcon className="h-5 w-5" />
                 </span>
-                <p className="text-sm leading-relaxed text-fg-muted">
+                <p className="body-sm leading-relaxed text-fg-muted">
                   {t("empty")}
                 </p>
               </div>
@@ -184,9 +184,9 @@ export default async function VaultsPage({
                         : "border-transparent hover:bg-surface-2",
                     )}
                   >
-                    <span className="text-sm font-medium text-fg">{v.name}</span>
+                    <span className="body-sm font-medium text-fg">{v.name}</span>
                     {v.description && (
-                      <span className="truncate text-xs text-fg-muted">
+                      <span className="truncate text-caption text-fg-muted">
                         {v.description}
                       </span>
                     )}
@@ -206,7 +206,7 @@ export default async function VaultsPage({
                   <Badge variant="secondary">
                     {vaults.find((v) => v.id === activeId)?.scope ?? "ORG"}
                   </Badge>
-                  <span className="text-sm font-medium text-fg">
+                  <span className="body-sm font-medium text-fg">
                     {t("entriesCount", { count: items.length })}
                   </span>
                 </div>
@@ -215,7 +215,7 @@ export default async function VaultsPage({
                     <input type="hidden" name="id" value={activeId} />
                     <button
                       type="submit"
-                      className="text-xs text-fg-subtle transition-colors hover:text-pain"
+                      className="text-meta text-fg-subtle transition-colors hover:text-pain"
                     >
                       {t("delete")}
                     </button>
@@ -225,7 +225,7 @@ export default async function VaultsPage({
 
               <ul className="divide-y divide-line-subtle">
                 {items.length === 0 ? (
-                  <li className="px-6 py-6 text-sm text-fg-muted">
+                  <li className="px-6 py-6 body-sm text-fg-muted">
                     {t("noEntries")}
                   </li>
                 ) : (
@@ -234,18 +234,18 @@ export default async function VaultsPage({
                       <div className="flex items-center gap-2">
                         <Badge
                           variant="outline"
-                          className="font-mono text-[10px]"
+                          className="font-mono text-eyebrow tabular-nums"
                         >
                           {it.kind}
                         </Badge>
                         {it.title && (
-                          <span className="text-sm font-medium text-fg">
+                          <span className="body-sm font-medium text-fg">
                             {it.title}
                           </span>
                         )}
                       </div>
                       {it.content && (
-                        <p className="mt-1.5 line-clamp-3 whitespace-pre-wrap text-sm leading-relaxed text-fg-muted">
+                        <p className="mt-1.5 line-clamp-3 whitespace-pre-wrap body-sm leading-relaxed text-fg-muted">
                           {it.content}
                         </p>
                       )}
@@ -292,7 +292,7 @@ export default async function VaultsPage({
             </div>
           ) : (
             <div className="card border-dashed text-center">
-              <p className="text-sm text-fg-muted">{t("selectPrompt")}</p>
+              <p className="body-sm text-fg-muted">{t("selectPrompt")}</p>
             </div>
           )}
         </div>

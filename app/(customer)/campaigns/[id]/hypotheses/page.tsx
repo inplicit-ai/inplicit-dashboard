@@ -100,14 +100,17 @@ function HypothesisCard({ h }: { h: Hypothesis }) {
               style={{ width: `${supportRate}%` }}
             />
           </div>
-          <p className="mt-2 text-xs text-fg-muted">{supportRate}% bestätigend</p>
+          <p className="mt-2 text-xs text-fg-muted">
+            <span className="font-mono tabular-nums">{supportRate}%</span>{" "}
+            bestätigend
+          </p>
         </div>
       )}
 
       {h.dept_coverage.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
           {h.dept_coverage.map((d) => (
-            <span key={d} className="badge badge--knowledge font-medium">
+            <span key={d} className="badge badge--knowledge">
               {d}
             </span>
           ))}
@@ -133,13 +136,13 @@ function HypStat({
       ? "text-danger"
       : "text-fg";
   return (
-    <div className="space-y-1">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-subtle">
+    <div className="space-y-1.5">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
         {label}
       </p>
       <p
         className={cn(
-          "font-mono text-xl font-medium tabular-nums tracking-tight",
+          "font-mono text-xl font-semibold tabular-nums tracking-tight",
           valueColor,
         )}
       >

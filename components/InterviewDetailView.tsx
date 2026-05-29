@@ -196,7 +196,7 @@ export function InterviewDetailView({
               <FilterIcon className="h-4 w-4" />
               <span className="ml-2">Filter</span>
               {activeFiltersCount > 0 && (
-                <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-soft px-1.5 text-xs font-medium text-accent-strong">
+                <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-sm bg-accent-soft px-1.5 font-mono text-xs tabular-nums text-accent-strong">
                   {activeFiltersCount}
                 </span>
               )}
@@ -290,10 +290,10 @@ function InsightCard({
       onClick={onSelect}
       aria-pressed={selected}
       className={cn(
-        "w-full rounded-card border bg-surface p-6 text-left transition-all hover:-translate-y-0.5",
+        "w-full rounded-card border bg-surface p-5 text-left transition-colors",
         selected
-          ? "border-accent-strong ring-1 ring-accent-strong"
-          : "border-line hover:border-line-strong",
+          ? "border-accent bg-accent-soft"
+          : "border-line hover:border-line-strong hover:bg-surface-2",
       )}
     >
       <div className="mb-3 flex items-center gap-2">
@@ -314,22 +314,22 @@ function InsightCard({
           </Badge>
         )}
         {quoteCount > 0 && (
-          <span className="ml-auto font-mono text-xs text-fg-subtle">
+          <span className="ml-auto font-mono tabular-nums text-xs text-fg-subtle">
             {quoteCount} {quoteCount === 1 ? "Zitat" : "Zitate"}
           </span>
         )}
       </div>
-      <p className="text-base font-medium leading-relaxed text-fg">
+      <p className="text-[1.0625rem] font-medium leading-relaxed text-fg">
         {insight.problem_statement}
       </p>
       {insight.human_solution && (
-        <p className="mt-2 text-sm text-fg-muted">
-          <strong className="text-fg">Idee:</strong> {insight.human_solution}
+        <p className="mt-2 text-sm leading-relaxed text-fg-muted">
+          <strong className="font-semibold text-fg">Idee:</strong> {insight.human_solution}
         </p>
       )}
       {insight.business_opportunity && (
-        <p className="mt-1 text-sm text-fg-muted">
-          <strong className="text-fg">Chance:</strong> {insight.business_opportunity}
+        <p className="mt-1 text-sm leading-relaxed text-fg-muted">
+          <strong className="font-semibold text-fg">Chance:</strong> {insight.business_opportunity}
         </p>
       )}
     </button>
@@ -351,9 +351,9 @@ function SectionHeader({
     <header className="mb-4 flex items-end justify-between gap-4">
       <div className="space-y-1.5">
         <Eyebrow>{eyebrow}</Eyebrow>
-        <h2 className="text-xl font-semibold tracking-tight text-fg">{title}</h2>
+        <h2 className="text-[1.375rem] font-semibold leading-tight tracking-[-0.02em] text-fg">{title}</h2>
       </div>
-      <span className="font-mono text-sm text-fg-subtle">{count}</span>
+      <span className="font-mono text-sm tabular-nums text-fg-subtle">{count}</span>
     </header>
   );
 }
@@ -388,7 +388,7 @@ function UtteranceRow({
     >
       <motion.button
         onClick={onToggle}
-        className="w-full p-4 text-left transition-colors hover:bg-surface-2"
+        className="w-full px-4 py-3 text-left transition-colors hover:bg-surface-2"
       >
         <div className="flex items-center gap-4">
           <motion.div
@@ -406,7 +406,7 @@ function UtteranceRow({
             {SPEAKER_LABEL[u.speaker]}
           </Badge>
 
-          <time className="hidden w-16 flex-shrink-0 font-mono text-xs text-fg-subtle sm:block">
+          <time className="hidden w-16 flex-shrink-0 font-mono text-xs tabular-nums text-fg-subtle sm:block">
             {time}
           </time>
 
@@ -423,7 +423,7 @@ function UtteranceRow({
           <p className="flex-1 truncate text-sm text-fg-muted">{u.text}</p>
 
           {relatedInsights.length > 0 && (
-            <span className="flex-shrink-0 inline-flex items-center gap-1 font-mono text-xs text-accent-strong">
+            <span className="flex-shrink-0 inline-flex items-center gap-1 font-mono text-xs tabular-nums text-accent-strong">
               <Sparkles className="h-3 w-3" />
               {relatedInsights.length}
             </span>
@@ -443,10 +443,10 @@ function UtteranceRow({
           >
             <div className="space-y-4 p-4">
               <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-fg-subtle">
+                <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
                   Wortlaut
                 </p>
-                <p className="rounded-ui border border-line-subtle bg-surface p-3 text-sm leading-relaxed text-fg whitespace-pre-wrap">
+                <p className="rounded-ui border border-line-subtle bg-surface p-4 text-[1.0625rem] leading-relaxed text-fg whitespace-pre-wrap">
                   {u.text}
                 </p>
               </div>
@@ -459,7 +459,7 @@ function UtteranceRow({
 
               {relatedInsights.length > 0 && (
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-fg-subtle">
+                  <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
                     Beigetragen zu
                   </p>
                   <div className="flex flex-col gap-2">
@@ -470,7 +470,7 @@ function UtteranceRow({
                       >
                         <div className="mb-1 flex items-center gap-2 text-xs">
                           <Sparkles className="h-3 w-3 text-accent-strong" />
-                          <span className="font-mono uppercase tracking-wide text-accent-strong">
+                          <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-accent-strong">
                             Insight
                           </span>
                           {ins.department && (
@@ -496,10 +496,10 @@ function UtteranceRow({
 function Meta({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div>
-      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-fg-subtle">
+      <p className="mb-1 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
         {label}
       </p>
-      <p className={cn("text-fg", mono && "font-mono text-xs")}>{value}</p>
+      <p className={cn("text-sm text-fg", mono && "font-mono text-xs tabular-nums")}>{value}</p>
     </div>
   );
 }
@@ -597,7 +597,7 @@ function FilterGroup({
 }) {
   return (
     <div className="space-y-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
+      <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
         {label}
       </p>
       <div className="space-y-1.5">{children}</div>

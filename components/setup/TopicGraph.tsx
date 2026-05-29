@@ -60,7 +60,7 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
             x2={b.x}
             y2={b.y}
             stroke="var(--color-border-strong)"
-            strokeWidth={1.5}
+            strokeWidth={1}
             strokeDasharray="4 3"
           />
         );
@@ -73,7 +73,7 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
             <rect
               width={180}
               height={36}
-              rx={10}
+              rx={8}
               fill="var(--color-surface)"
               stroke={
                 orphan

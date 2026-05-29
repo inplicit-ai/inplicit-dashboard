@@ -74,7 +74,7 @@ export function ScheduleSection({
                 aria-checked={active}
                 onClick={() => patch({ mode })}
                 className={cn(
-                  "flex-1 rounded-sm px-3 py-1.5 text-sm font-medium transition-colors sm:flex-none",
+                  "flex-1 rounded-sm px-3 py-1.5 text-[13px] font-medium transition-colors sm:flex-none",
                   active ? "bg-fg text-canvas" : "text-fg-muted hover:text-fg",
                 )}
               >
@@ -92,32 +92,32 @@ export function ScheduleSection({
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-fg-subtle">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
                   {t("windowStart")}
                 </span>
                 <Input
                   type="datetime-local"
                   value={schedule.windowStart ?? ""}
                   onChange={(e) => patch({ windowStart: e.target.value })}
-                  className="h-10 text-sm"
+                  className="h-9 font-mono text-sm tabular-nums"
                 />
               </label>
               <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-fg-subtle">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
                   {t("windowEnd")}
                 </span>
                 <Input
                   type="datetime-local"
                   value={schedule.windowEnd ?? ""}
                   onChange={(e) => patch({ windowEnd: e.target.value })}
-                  className="h-10 text-sm"
+                  className="h-9 font-mono text-sm tabular-nums"
                 />
               </label>
             </div>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <label className="flex flex-col gap-1.5 sm:w-40">
-                <span className="text-xs font-medium text-fg-subtle">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
                   {t("slotLength")}
                 </span>
                 <Select
@@ -145,14 +145,14 @@ export function ScheduleSection({
               <p className="text-sm text-fg-muted">{t("noSlots")}</p>
             ) : (
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium tabular-nums text-fg-subtle">
+                <span className="font-mono text-xs tabular-nums text-fg-subtle">
                   {t("slotsCount", { count: slots.length })}
                 </span>
-                <ul className="flex max-h-44 flex-col gap-0.5 overflow-y-auto rounded-ui border border-line bg-surface-2 p-2">
+                <ul className="scrollbar-none flex max-h-44 flex-col gap-0.5 overflow-y-auto rounded-ui border border-line bg-surface-2 p-2">
                   {slots.map((s, i) => (
                     <li
                       key={i}
-                      className="rounded-sm px-1.5 py-1 text-xs tabular-nums text-fg-muted"
+                      className="rounded-sm px-1.5 py-1 font-mono text-xs tabular-nums text-fg-muted"
                     >
                       {fmtSlot(s)}
                     </li>

@@ -17,20 +17,20 @@
   --color-surface-3: #ebebe9;
   --color-elevated: #ffffff;
 
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-border-subtle: rgba(0, 0, 0, 0.045);
-  --color-border-strong: rgba(0, 0, 0, 0.16);
+  --color-border: rgba(0, 0, 0, 0.10);
+  --color-border-subtle: rgba(0, 0, 0, 0.06);
+  --color-border-strong: rgba(0, 0, 0, 0.18);
 
-  --color-text-primary: #0a0a0a;
-  --color-text-secondary: #525252;
-  --color-text-tertiary: #8a8a8a;
-  --color-text-quaternary: #b5b5b5;
+  --color-text-primary: #09090b;
+  --color-text-secondary: #3f3f46;
+  --color-text-tertiary: #71717a;
+  --color-text-quaternary: #a1a1aa;
 
   --color-accent: #c2660c;
   --color-accent-strong: #a8560a;
-  --color-accent-soft: rgba(194, 102, 12, 0.10);
+  --color-accent-soft: rgba(194, 102, 12, 0.09);
   --color-accent-muted: rgba(194, 102, 12, 0.22);
-  --color-accent-glow: rgba(194, 102, 12, 0.18);
+  --color-accent-glow: rgba(194, 102, 12, 0.16);
 
   --color-pain: #c2410c;
   --color-pain-soft: rgba(194, 65, 12, 0.06);
@@ -41,7 +41,7 @@
   --color-gap-muted: rgba(91, 33, 182, 0.22);
 
   --color-success: #15803d;
-  --color-success-soft: rgba(21, 128, 61, 0.08);
+  --color-success-soft: rgba(21, 128, 61, 0.07);
   --color-warning: #b45309;
   --color-danger: #b91c1c;
   --color-danger-soft: rgba(185, 28, 28, 0.06);
@@ -49,21 +49,23 @@
   --color-cta-bg: #0a0a0a;
   --color-cta-text: #ffffff;
 
-  /* Typography ramp — body floor of 18px. */
+  /* Typography ramp — two density registers. Chrome floor 15px (body),
+     14px (body-sm), 13px (meta); reading surfaces opt up to 17px (body-lg).
+     JetBrains Mono carries every number / ID / status; prose is never mono. */
   --font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --text-display: clamp(2.75rem, 5.5vw, 4.5rem);
-  --text-headline: clamp(2.25rem, 4vw, 3rem);
-  --text-title: 1.625rem;
-  --text-subtitle: 1.25rem;
-  --text-body-lg: 1.1875rem;   /* 19px */
-  --text-body: 1.125rem;       /* 18px floor */
-  --text-body-sm: 1rem;        /* 16px */
-  --text-meta: 0.9375rem;      /* 15px */
-  --text-caption: 0.875rem;    /* 14px */
-  --text-eyebrow: 0.75rem;     /* 12px */
-  --text-mono: 0.9375rem;      /* 15px */
+  --text-display: clamp(2.25rem, 4.5vw, 3.25rem);
+  --text-headline: clamp(1.875rem, 3.2vw, 2.5rem);
+  --text-title: 1.375rem;       /* 22px */
+  --text-subtitle: 1.0625rem;   /* 17px */
+  --text-body-lg: 1.0625rem;    /* 17px — the reading floor */
+  --text-body: 0.9375rem;       /* 15px — chrome body floor */
+  --text-body-sm: 0.875rem;     /* 14px — UI default (tables/rows/cards) */
+  --text-meta: 0.8125rem;       /* 13px — sidebar/tabs/toolbar/buttons */
+  --text-caption: 0.75rem;      /* 12px */
+  --text-eyebrow: 0.6875rem;    /* 11px */
+  --text-mono: 0.8125rem;       /* 13px */
 
   /* Spacing — 4-pt base */
   --space-1: 0.25rem;
@@ -80,11 +82,12 @@
   --space-20: 5rem;
   --space-24: 6rem;
 
-  /* Radius — tightened to Rams-spec. Cards 16px, UI 10px, pills full. */
+  /* Radius — tight, consistent: 6 chips / 8 controls / 12 cards / 14 popovers.
+     No child rounder than its parent. Pills stay full. */
   --radius-sm: 6px;
-  --radius-ui: 10px;
-  --radius-card: 16px;
-  --radius-popover: 16px;
+  --radius-ui: 8px;
+  --radius-card: 12px;
+  --radius-popover: 14px;
   --radius-full: 9999px;
 
   /* Easing */
@@ -125,9 +128,10 @@
   --shadow-sm: none;
   --shadow-md: none;
   --shadow-card: none;
-  --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
-  --shadow-elevation: 0 16px 48px rgba(0, 0, 0, 0.10);
-  --shadow-focus: 0 0 0 3px rgba(194, 102, 12, 0.18);
+  --shadow-popover: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-elevation: 0 12px 32px rgba(0, 0, 0, 0.12);
+  /* Tight 2px focus ring — the single legitimate accent signal on inputs. */
+  --shadow-focus: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent-muted);
 
   /* shadcn-bridge tokens — solid colors so /<alpha> modifiers compile. */
   --background: #ffffff;
@@ -141,41 +145,41 @@
   --secondary: #f5f5f4;
   --secondary-foreground: #0a0a0a;
   --muted: #f5f5f4;
-  --muted-foreground: #6e6e6e;
+  --muted-foreground: #52525b;
   --shadcn-accent: #f5f5f4;
   --shadcn-accent-foreground: #0a0a0a;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --shadcn-border: #e7e5e4;
-  --input: #e7e5e4;
+  --shadcn-border: #e4e4e7;
+  --input: #e4e4e7;
   --ring: #c2660c;
-  --radius: 10px;
+  --radius: 8px;
 }
 
 /* ─── Tokens — Dark (opt-in) ──────────────────────────────────────────────── */
 [data-theme="dark"] {
   /* Cool near-blacks (#0b0c10 → #1f242f) so the warm amber accent reads as a
      focused signal. Shadows allowed here for depth on the dark canvas. */
-  --color-bg: #0b0c10;
-  --color-surface: #111319;
-  --color-surface-2: #161922;
-  --color-surface-3: #1c2029;
-  --color-elevated: #1f242f;
+  --color-bg: #0a0b0e;
+  --color-surface: #101218;
+  --color-surface-2: #15181f;
+  --color-surface-3: #1b1f27;
+  --color-elevated: #1e232d;
 
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-subtle: rgba(255, 255, 255, 0.045);
-  --color-border-strong: rgba(255, 255, 255, 0.16);
+  --color-border: rgba(255, 255, 255, 0.09);
+  --color-border-subtle: rgba(255, 255, 255, 0.055);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
 
-  --color-text-primary: #f5f6f8;
-  --color-text-secondary: rgba(245, 246, 248, 0.72);
-  --color-text-tertiary: rgba(245, 246, 248, 0.52);
-  --color-text-quaternary: rgba(245, 246, 248, 0.34);
+  --color-text-primary: #fafafa;
+  --color-text-secondary: rgba(250, 250, 250, 0.70);
+  --color-text-tertiary: rgba(250, 250, 250, 0.50);
+  --color-text-quaternary: rgba(250, 250, 250, 0.32);
 
   --color-accent: #f5a623;
   --color-accent-strong: #ffb84d;
   --color-accent-soft: rgba(245, 166, 35, 0.10);
   --color-accent-muted: rgba(245, 166, 35, 0.22);
-  --color-accent-glow: rgba(245, 166, 35, 0.32);
+  --color-accent-glow: rgba(245, 166, 35, 0.28);
 
   --color-pain: #fb7c4a;
   --color-pain-soft: rgba(251, 124, 74, 0.10);
@@ -199,13 +203,13 @@
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px rgba(0, 0, 0, 0.42);
   --shadow-popover: 0 16px 40px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-elevation: 0 24px 64px rgba(0, 0, 0, 0.65), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
-  --shadow-focus: 0 0 0 3px rgba(245, 166, 35, 0.22);
+  --shadow-focus: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent-muted);
 
-  --background: #0b0c10;
+  --background: #0a0b0e;
   --foreground: #f5f6f8;
-  --card: #131620;
+  --card: #101218;
   --card-foreground: #f5f6f8;
-  --popover: #161a24;
+  --popover: #15181f;
   --popover-foreground: #f5f6f8;
   --primary: #f5f6f8;
   --primary-foreground: #0b0c10;
@@ -247,15 +251,16 @@
 
   body {
     min-height: 100vh;
-    line-height: 1.6;
+    line-height: 1.45;
     font-size: var(--text-body);
     background: var(--color-bg);
   }
 
+  /* Monochrome dark canvas — one faint amber top-glow only (honors the
+     one-accent rule). The indigo radial wash is removed. */
   [data-theme="dark"] body {
     background:
-      radial-gradient(1200px 600px at 80% -10%, rgba(245, 166, 35, 0.06), transparent 60%),
-      radial-gradient(900px 500px at -10% 20%, rgba(99, 102, 241, 0.05), transparent 60%),
+      radial-gradient(1200px 600px at 80% -10%, rgba(245, 166, 35, 0.04), transparent 60%),
       var(--color-bg);
     background-attachment: fixed;
   }
@@ -301,17 +306,17 @@
 
 .display {
   font-size: var(--text-display);
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.04;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.025em;
   color: var(--color-text-primary);
 }
 
 .headline {
   font-size: var(--text-headline);
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.08;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.022em;
   color: var(--color-text-primary);
 }
 
@@ -336,11 +341,13 @@
   color: var(--color-text-primary);
 }
 
+/* .body-lg is the reading floor (chat / insight / transcript / RAG / empty
+   state) — keep the generous 1.6. Chrome body / body-sm / meta tighten. */
 .body-lg { font-size: var(--text-body-lg); line-height: 1.6; color: var(--color-text-primary); }
-.body { font-size: var(--text-body); line-height: 1.6; color: var(--color-text-primary); }
-.body-sm { font-size: var(--text-body-sm); line-height: 1.55; color: var(--color-text-secondary); }
-.meta { font-size: var(--text-meta); line-height: 1.5; color: var(--color-text-secondary); }
-.caption { font-size: var(--text-caption); line-height: 1.5; color: var(--color-text-tertiary); }
+.body { font-size: var(--text-body); line-height: 1.45; color: var(--color-text-primary); }
+.body-sm { font-size: var(--text-body-sm); line-height: 1.4; color: var(--color-text-secondary); }
+.meta { font-size: var(--text-meta); line-height: 1.4; color: var(--color-text-secondary); }
+.caption { font-size: var(--text-caption); line-height: 1.4; color: var(--color-text-tertiary); }
 .mono { font-family: var(--font-mono); font-size: var(--text-mono); }
 
 .eyebrow {
@@ -349,7 +356,7 @@
   gap: var(--space-2);
   font-size: var(--text-eyebrow);
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--color-accent);
   line-height: 1.2;
@@ -357,7 +364,7 @@
 
 .eyebrow::before {
   content: "";
-  width: 14px;
+  width: 12px;
   height: 1px;
   background: currentColor;
   opacity: 0.6;
@@ -596,11 +603,13 @@
   color: var(--color-text-secondary);
 }
 
+/* Shares the dashed agent-plan connector language with the synthesis
+   pipeline (see .connector--dashed below). */
 .shell-stepper__line {
   width: 24px;
-  height: 1px;
+  height: 0;
   margin-left: var(--space-1);
-  background: var(--color-border-strong);
+  border-top: 1px dashed var(--color-border-strong);
 }
 
 .shell-stepper-pill {
@@ -823,7 +832,7 @@
 /* ─── Page header ─────────────────────────────────────────────────────────── */
 
 .page-header {
-  margin-bottom: var(--space-10);
+  margin-bottom: var(--space-6);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -868,12 +877,12 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  padding: var(--space-8);
+  padding: var(--space-5);
   box-shadow: var(--shadow-card);
-  transition: border-color 0.18s var(--ease-smooth), box-shadow 0.18s var(--ease-smooth), transform 0.18s var(--ease-smooth);
+  transition: border-color 0.18s var(--ease-smooth), box-shadow 0.18s var(--ease-smooth), background 0.18s var(--ease-smooth);
 }
 
-.card--compact { padding: var(--space-6); }
+.card--compact { padding: var(--space-4); }
 .card--flush { padding: 0; overflow: hidden; }
 .card--pain { background: var(--color-pain-soft); border-color: var(--color-pain-muted); }
 .card--opportunity { background: var(--color-accent-soft); border-color: var(--color-accent-muted); }
@@ -885,22 +894,37 @@
     var(--color-surface);
 }
 
+/* Reading register — claude-calm prose surfaces (chat / insight / hypothesis
+   detail). Opts up to the 17px reading floor, 1.6 line-height, 68ch measure,
+   generous padding. In light mode drops the border to rely on a surface-2
+   fill (soft-card look). */
+.card--reading {
+  padding: var(--space-6);
+  font-size: var(--text-body-lg);
+  line-height: 1.6;
+  max-width: 68ch;
+}
+[data-theme="light"] .card--reading {
+  background: var(--color-surface-2);
+  border-color: transparent;
+}
+
 .card-link {
   display: block;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  padding: var(--space-6);
+  padding: var(--space-5);
   box-shadow: var(--shadow-card);
   transition:
     border-color 0.18s var(--ease-smooth),
     box-shadow 0.18s var(--ease-smooth),
-    transform 0.18s var(--ease-smooth);
+    background 0.18s var(--ease-smooth);
 }
+/* Linear hover — a color shift, never a lift. No translateY, no shadow. */
 .card-link:hover {
   border-color: var(--color-border-strong);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  background: var(--color-surface-2);
 }
 
 /* ─── Button ──────────────────────────────────────────────────────────────── */
@@ -910,8 +934,8 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  height: 40px;
-  padding: 0 var(--space-5);
+  height: 32px;
+  padding: 0 var(--space-4);
   font-family: var(--font-family);
   font-size: var(--text-meta);
   font-weight: 500;
@@ -925,14 +949,11 @@
     background 0.15s var(--ease-smooth),
     border-color 0.15s var(--ease-smooth),
     color 0.15s var(--ease-smooth),
-    box-shadow 0.15s var(--ease-smooth),
-    transform 0.15s var(--ease-smooth);
+    box-shadow 0.15s var(--ease-smooth);
 }
 
-.btn:active { transform: translateY(1px); }
-
-.btn--sm { height: 32px; padding: 0 var(--space-3); font-size: var(--text-caption); border-radius: var(--radius-sm); }
-.btn--lg { height: 48px; padding: 0 var(--space-6); font-size: var(--text-body); }
+.btn--sm { height: 28px; padding: 0 var(--space-3); font-size: var(--text-caption); border-radius: var(--radius-sm); }
+.btn--lg { height: 36px; padding: 0 var(--space-5); font-size: var(--text-body); }
 
 .btn--primary {
   background: var(--color-cta-bg);
@@ -1015,7 +1036,7 @@
 .label {
   font-size: var(--text-eyebrow);
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--color-text-tertiary);
 }
@@ -1025,10 +1046,11 @@
 .select {
   display: block;
   width: 100%;
+  height: 36px;
   font-family: var(--font-family);
-  font-size: var(--text-body);
+  font-size: var(--text-body-sm);
   line-height: 1.4;
-  padding: var(--space-3) var(--space-4);
+  padding: 0 var(--space-3);
   background: var(--color-surface);
   color: var(--color-text-primary);
   border: 1px solid var(--color-border);
@@ -1050,12 +1072,12 @@
 .input::placeholder, .textarea::placeholder { color: var(--color-text-quaternary); }
 
 .input--inline {
-  padding: var(--space-2) var(--space-3);
+  padding: 0 var(--space-3);
   font-size: var(--text-body-sm);
-  height: 36px;
+  height: 32px;
 }
 
-.textarea { resize: vertical; min-height: 96px; }
+.textarea { height: auto; padding: var(--space-3); resize: vertical; min-height: 96px; }
 
 .input-row {
   display: flex;
@@ -1079,7 +1101,7 @@
   text-transform: uppercase;
   letter-spacing: 0.10em;
   color: var(--color-text-tertiary);
-  padding: var(--space-4) var(--space-6);
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface-2);
   white-space: nowrap;
@@ -1089,7 +1111,7 @@
 }
 
 .table tbody td {
-  padding: var(--space-4) var(--space-6);
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--color-border-subtle);
   color: var(--color-text-primary);
   vertical-align: middle;
@@ -1119,16 +1141,18 @@
 
 /* ─── Badge ───────────────────────────────────────────────────────────────── */
 
+/* Square data-chip (not a pill — pills read as marketing). All variants are
+   tint-only; numeric content should switch to mono + tabular-nums at use-site. */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: 4px var(--space-3);
+  padding: 2px var(--space-2);
   font-size: var(--text-eyebrow);
   font-weight: 600;
   line-height: 1.4;
   letter-spacing: 0.02em;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   color: var(--color-text-secondary);
@@ -1179,6 +1203,58 @@
 }
 [data-theme="light"] .badge--danger { border-color: rgba(185, 28, 28, 0.22); }
 
+/* The canonical "interview live / synthesis running" chip. Pair with a leading
+   .status-disc.status-disc--live.status-disc--pulse. */
+.badge--live {
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent-muted);
+}
+
+/* ─── Status disc + connector (agentic / live vocabulary) ─────────────────────
+   One status language shared across stepper, live badge, sidebar live
+   indicator, and the synthesis pipeline. */
+
+.status-disc {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  background: var(--color-text-tertiary);
+}
+.status-disc--sm { width: 6px; height: 6px; }
+.status-disc--lg { width: 10px; height: 10px; }
+
+/* Live: accent fill, pulsing. Idle: hollow ring. Done: filled near-black
+   (matches the completed stepper marker). Error: danger fill. */
+.status-disc--live { background: var(--color-accent); }
+.status-disc--idle { background: transparent; border: 1px solid var(--color-border-strong); }
+.status-disc--done { background: var(--color-text-primary); }
+.status-disc--error { background: var(--color-danger); }
+
+/* The ONLY continuous animation in the system, Apple-eased, gated behind
+   prefers-reduced-motion. */
+.status-disc--pulse { animation: status-pulse 1.6s var(--ease-out) infinite; }
+
+@keyframes status-pulse {
+  0%   { box-shadow: 0 0 0 0 var(--color-accent-glow); }
+  70%  { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-disc--pulse { animation: none; }
+}
+
+/* Connector — a 1px line shared by the stepper and synthesis pipeline. */
+.connector {
+  height: 0;
+  border-top: 1px solid var(--color-border);
+}
+.connector--dashed { border-top: 1px dashed var(--color-border-strong); }
+.connector--active { border-top: 1px solid var(--color-accent); }
+
 /* ─── Pill ────────────────────────────────────────────────────────────────── */
 
 .pill {
@@ -1224,26 +1300,15 @@
 
 .stat {
   position: relative;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 100%, transparent) 0%, var(--color-surface) 100%);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  padding: var(--space-6);
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   box-shadow: var(--shadow-card);
   overflow: hidden;
-}
-
-.stat::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--color-border-strong), transparent);
-  opacity: 0.6;
-  pointer-events: none;
 }
 
 .stat__label {
@@ -1254,10 +1319,12 @@
   color: var(--color-text-tertiary);
 }
 
+/* Mono + tabular so the figure reads as instrument data. */
 .stat__value {
-  font-size: 2.25rem;
-  font-weight: 500;
-  letter-spacing: -0.03em;
+  font-family: var(--font-mono);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--color-text-primary);
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
@@ -1521,7 +1588,7 @@
   margin-bottom: var(--space-2);
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--color-text-quaternary);
 }
@@ -1532,11 +1599,11 @@
   justify-content: flex-start;
   text-align: left;
   gap: var(--space-3);
-  height: 36px;
+  height: 30px;
   padding: 0 var(--space-3);
   border-radius: var(--radius-ui);
   color: var(--color-text-secondary);
-  font-size: var(--text-caption);
+  font-size: var(--text-meta);
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
@@ -1737,13 +1804,11 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  transition: border-color 0.15s var(--ease-smooth), background 0.15s var(--ease-smooth), transform 0.15s var(--ease-smooth), box-shadow 0.15s var(--ease-smooth);
+  transition: border-color 0.15s var(--ease-smooth), background 0.15s var(--ease-smooth);
 }
 .campaign-row:hover {
   border-color: var(--color-border-strong);
   background: var(--color-surface-2);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
 }
 .campaign-row__title {
   font-size: var(--text-body-lg);
@@ -1788,20 +1853,24 @@
 .label-eyebrow {
   font-size: var(--text-eyebrow);
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--color-text-tertiary);
 }
 
-/* Tabular numeric value at 2xl — for stat-style figures. */
+/* Tabular numeric value at 2xl — for stat-style figures. Mono so it reads as
+   instrument data. */
 .text-2xl-tabular {
+  font-family: var(--font-mono);
   font-size: 1.5rem;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
 
-/* Dark-mode card elevation without re-declaring the full .card recipe. Light
-   mode stays flat (depth = border + surface step); dark mode gets the shadow. */
+/* Resting cards are flat in BOTH modes — depth is border + surface step, so
+   dark density matches light (no inset highlight on a resting .card). Elevation
+   in dark mode is opt-in via .card-elevated only. */
+[data-theme="dark"] .card { box-shadow: none; }
 [data-theme="dark"] .card-elevated { box-shadow: var(--shadow-card); }
 
 /* Chat surface envelope — flex column that fills its parent. Pair with
@@ -1857,8 +1926,8 @@
   padding: 3px 0 0 0;
   padding-right: var(--space-10);
   font-family: var(--font-family);
-  font-size: var(--text-body);
-  line-height: 1.45;
+  font-size: var(--text-body-lg);
+  line-height: 1.6;
   color: var(--color-text-primary);
   background: transparent;
   border: 0;
@@ -1963,12 +2032,10 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
-  transition: border-color 0.15s var(--ease-smooth), transform 0.15s var(--ease-smooth), box-shadow 0.15s var(--ease-smooth);
+  transition: border-color 0.15s var(--ease-smooth), background 0.15s var(--ease-smooth);
 }
 .rag__result:hover {
   border-color: var(--color-border-strong);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
 }
 .rag__result-head {
   display: flex;
@@ -1976,7 +2043,7 @@
   justify-content: space-between;
   gap: var(--space-4);
 }
-.rag__result-text { color: var(--color-text-primary); line-height: 1.5; }
+.rag__result-text { color: var(--color-text-primary); font-size: var(--text-body-lg); line-height: 1.6; }
 .rag__result-score {
   flex-shrink: 0;
   padding: 2px 8px;

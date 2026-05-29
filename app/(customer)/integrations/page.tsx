@@ -96,10 +96,10 @@ export default async function IntegrationsPage({
       {sp.flash && (
         <div
           className={cn(
-            "mb-6 rounded-card border px-4 py-3 text-sm",
+            "mb-6 rounded-ui border px-4 py-3 text-meta",
             sp.flashType === "err"
               ? "border-pain-muted bg-pain-soft text-pain"
-              : "border-success/30 bg-success-soft text-success",
+              : "border-success/22 bg-success-soft text-success",
           )}
         >
           {sp.flash}
@@ -118,7 +118,7 @@ export default async function IntegrationsPage({
                   <Plug className="h-5 w-5" />
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-fg">
+                  <p className="truncate body-sm font-semibold text-fg">
                     {c.name}
                   </p>
                   <p className="label-eyebrow text-fg-subtle">{c.category}</p>
@@ -132,7 +132,7 @@ export default async function IntegrationsPage({
               )}
             </div>
 
-            <p className="text-sm leading-relaxed text-fg-muted">
+            <p className="body-sm leading-relaxed text-fg-muted">
               {c.description}
             </p>
 
@@ -157,7 +157,7 @@ export default async function IntegrationsPage({
                 <Input
                   name="config"
                   placeholder={t("configPlaceholder")}
-                  className="font-mono text-xs"
+                  className="font-mono text-mono"
                 />
                 <Button type="submit" size="sm" className="self-start">
                   {t("connect")}
@@ -168,7 +168,7 @@ export default async function IntegrationsPage({
         ))}
       </div>
 
-      <p className="mt-6 text-xs text-fg-subtle">{t("ssoNote")}</p>
+      <p className="mt-6 text-caption text-fg-subtle">{t("ssoNote")}</p>
     </>
   );
 }

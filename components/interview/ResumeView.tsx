@@ -30,7 +30,7 @@ export function ResumeView({ lang, elapsedS, onResume, emailed }: Props) {
           <RotateCcw size={20} strokeWidth={2} />
         </span>
         <span className="eyebrow text-accent iv-card__eyebrow">{c.resumeEyebrow}</span>
-        <h1 className="headline iv-card__title">{c.resumeTitle}</h1>
+        <h1 className="title iv-card__title">{c.resumeTitle}</h1>
         <p className="page-header__meta iv-card__body">{c.resumeBody(mins)}</p>
 
         {onResume && (

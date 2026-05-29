@@ -38,12 +38,12 @@ export function LoginCard({
         </Link>
 
         <Card className="card-elevated w-full overflow-hidden rounded-card border border-line bg-surface">
-          <div className="px-8 pb-8 pt-9">
-            <div className="mb-6 space-y-1">
-              <h1 className="text-xl font-semibold tracking-tight text-fg">
+          <div className="px-7 pb-7 pt-8">
+            <div className="mb-6 space-y-1.5">
+              <h1 className="title text-fg">
                 Willkommen zurück
               </h1>
-              <p className="text-sm text-fg-muted">
+              <p className="body-sm text-fg-muted">
                 {mode === "magic"
                   ? "Wir schicken dir einen sicheren Einmal-Link."
                   : "Melde dich mit deinem Passwort an."}
@@ -56,12 +56,12 @@ export function LoginCard({
                 <p>{message}</p>
                 {devLink && (
                   <div className="mt-2.5 border-t border-success/22 pt-2.5">
-                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider opacity-70">
+                    <p className="label-eyebrow mb-1 opacity-70">
                       Dev-Link
                     </p>
                     <a
                       href={devLink}
-                      className="block break-all font-mono text-xs hover:underline"
+                      className="block break-all font-mono text-mono tabular-nums hover:underline"
                     >
                       {devLink}
                     </a>
@@ -72,7 +72,7 @@ export function LoginCard({
 
             <form action={signIn} className="mt-5 space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-xs font-medium text-fg-muted">
+                <Label htmlFor="email" className="label-eyebrow">
                   E-Mail-Adresse
                 </Label>
                 <div className="relative">
@@ -85,14 +85,14 @@ export function LoginCard({
                     defaultValue={defaultEmail ?? ""}
                     placeholder="du@firma.de"
                     autoComplete="email"
-                    className="h-10 pl-9 text-sm"
+                    className="h-9 pl-9 text-sm"
                   />
                 </div>
               </div>
 
               {mode === "password" && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="password" className="text-xs font-medium text-fg-muted">
+                  <Label htmlFor="password" className="label-eyebrow">
                     Passwort
                   </Label>
                   <div className="relative">
@@ -103,7 +103,7 @@ export function LoginCard({
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       autoComplete="current-password"
-                      className="h-10 pl-9 pr-10 text-sm"
+                      className="h-9 pl-9 pr-10 text-sm"
                     />
                     <button
                       type="button"
@@ -121,21 +121,21 @@ export function LoginCard({
                 </div>
               )}
 
-              <Button type="submit" className="mt-1 h-10 w-full text-sm font-medium">
+              <Button type="submit" size="lg" className="mt-1 w-full">
                 {mode === "magic" ? "Magic Link senden" : "Anmelden"}
               </Button>
             </form>
 
             <div className="mt-5 flex items-center gap-3">
               <Separator className="flex-1" />
-              <span className="shrink-0 text-[11px] text-fg-subtle">oder</span>
+              <span className="shrink-0 text-eyebrow uppercase tracking-[0.10em] text-fg-subtle">oder</span>
               <Separator className="flex-1" />
             </div>
 
             <button
               type="button"
               onClick={() => setMode((m) => (m === "magic" ? "password" : "magic"))}
-              className="mt-4 w-full rounded-ui border border-line bg-canvas px-4 py-2.5 text-center text-xs text-fg-muted transition-colors hover:border-line-strong hover:bg-surface hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="mt-4 h-9 w-full rounded-ui border border-line bg-canvas px-4 text-center text-meta text-fg-muted transition-colors hover:border-line-strong hover:bg-surface hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {mode === "magic"
                 ? "Mit Passwort anmelden"
@@ -144,7 +144,7 @@ export function LoginCard({
           </div>
         </Card>
 
-        <p className="text-center text-xs text-fg-subtle">
+        <p className="text-center text-caption text-fg-subtle">
           Inplicit AI · Enterprise-Interviews
         </p>
       </div>
@@ -166,7 +166,7 @@ function StatusBanner({
     <div
       role={type === "err" ? "alert" : "status"}
       className={cn(
-        "mb-4 flex items-start gap-2.5 rounded-ui border px-3.5 py-3 text-sm",
+        "mb-4 flex items-start gap-2.5 rounded-ui border px-3.5 py-3 text-meta",
         type === "ok"
           ? "border-success/22 bg-success-soft text-success"
           : "border-danger/22 bg-danger-soft text-danger",

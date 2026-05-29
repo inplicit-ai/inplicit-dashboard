@@ -210,13 +210,15 @@ export default async function TeamPage({
                         />
                       </TableCell>
                       <TableCell className="px-4 py-3 text-xs text-fg-muted">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {m.accepted_at
-                            ? new Date(m.accepted_at).toLocaleDateString(
-                                "de-DE",
-                              )
-                            : `läuft ab ${new Date(m.expires_at).toLocaleDateString("de-DE")}`}
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="h-3 w-3 shrink-0" />
+                          <span className="font-mono tabular-nums">
+                            {m.accepted_at
+                              ? new Date(m.accepted_at).toLocaleDateString(
+                                  "de-DE",
+                                )
+                              : `läuft ab ${new Date(m.expires_at).toLocaleDateString("de-DE")}`}
+                          </span>
                         </span>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-right">

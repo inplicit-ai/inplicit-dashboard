@@ -327,7 +327,7 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
                         {isEditing ? (
                           <Input
                             type="email"
-                            className="h-9"
+                            className="h-8 text-[length:var(--text-body-sm)]"
                             value={draft.email}
                             onChange={(e) =>
                               setDraft((d) => ({ ...d, email: e.target.value }))
@@ -342,7 +342,7 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
                       <td>
                         {isEditing ? (
                           <Input
-                            className="h-9"
+                            className="h-8 text-[length:var(--text-body-sm)]"
                             value={draft.name}
                             onChange={(e) =>
                               setDraft((d) => ({ ...d, name: e.target.value }))
@@ -355,7 +355,7 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
                       <td>
                         {isEditing ? (
                           <Input
-                            className="h-9"
+                            className="h-8 text-[length:var(--text-body-sm)]"
                             value={draft.department}
                             onChange={(e) =>
                               setDraft((d) => ({
@@ -371,7 +371,7 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
                       <td>
                         {isEditing ? (
                           <Input
-                            className="h-9"
+                            className="h-8 text-[length:var(--text-body-sm)]"
                             value={draft.role}
                             onChange={(e) =>
                               setDraft((d) => ({ ...d, role: e.target.value }))
@@ -451,7 +451,7 @@ function Field({
     <div className="space-y-2">
       <label
         htmlFor={id}
-        className="flex items-center gap-1.5 text-xs font-medium text-fg-muted"
+        className="label-eyebrow flex items-center gap-1.5 text-fg-subtle"
       >
         {label}
         {required && <span className="text-pain">*</span>}
@@ -462,7 +462,6 @@ function Field({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-10 text-base md:text-sm"
       />
     </div>
   );
@@ -500,10 +499,10 @@ function FlashBanner({
     <div
       role="status"
       className={cn(
-        "flex items-start gap-2.5 rounded-card border px-4 py-3 text-sm",
+        "flex items-start gap-2.5 rounded-ui border px-3.5 py-2.5 text-sm",
         type === "ok"
           ? "border-success/30 bg-success-soft text-success"
-          : "border-pain/30 bg-pain-soft text-pain",
+          : "border-pain-muted bg-pain-soft text-pain",
       )}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" />
@@ -609,7 +608,15 @@ function ParticipantStatus({ p }: { p: Participant }) {
     case "PROCESSED":
       return <span className="badge badge--success">Abgeschlossen</span>;
     case "IN_PROGRESS":
-      return <span className="badge badge--opportunity">Läuft</span>;
+      return (
+        <span className="badge badge--live">
+          <span
+            aria-hidden="true"
+            className="status-disc status-disc--sm status-disc--live status-disc--pulse"
+          />
+          Läuft
+        </span>
+      );
     case "ABANDONED":
       return <span className="badge badge--warning">Abgebrochen</span>;
     case "FAILED":

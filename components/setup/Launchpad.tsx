@@ -56,10 +56,10 @@ export function Launchpad({ suggestions }: { suggestions: string[] }) {
         className="flex w-full max-w-[680px] flex-col items-center"
       >
         <Eyebrow className="mb-4">{t("eyebrow")}</Eyebrow>
-        <h1 className="mb-3 text-3xl font-medium leading-tight tracking-[-0.025em] text-fg sm:text-4xl">
+        <h1 className="mb-3 text-3xl font-semibold leading-[1.04] tracking-[-0.025em] text-fg sm:text-4xl">
           {t("title")}
         </h1>
-        <p className="mb-8 max-w-[52ch] text-sm leading-relaxed text-fg-muted">
+        <p className="mb-8 max-w-[52ch] text-[17px] leading-relaxed text-fg-muted">
           {t("subtitle")}
         </p>
 
@@ -97,7 +97,7 @@ export function Launchpad({ suggestions }: { suggestions: string[] }) {
             <p className="text-sm text-fg-subtle">{t("firstHint")}</p>
           ) : (
             <>
-              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-fg-subtle">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
                 {t("examplesLabel")}
               </p>
               <div className="flex flex-wrap justify-center gap-2">

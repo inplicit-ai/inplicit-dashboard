@@ -63,13 +63,13 @@ export default async function AdminPage() {
             <Link
               key={tile.href}
               href={tile.href}
-              className="card card--compact group flex h-full flex-col gap-4 transition-[border-color,transform] hover:-translate-y-0.5 hover:border-line-strong"
+              className="card card--compact group flex h-full flex-col gap-4 transition-[border-color,background-color] hover:border-line-strong hover:bg-surface-2"
             >
               <div className="flex items-center justify-between">
-                <span className="grid size-10 place-items-center rounded-ui border border-line bg-surface-2 text-fg-muted transition-colors group-hover:border-accent-muted group-hover:text-accent">
+                <span className="grid size-10 place-items-center rounded-ui border border-line bg-surface-2 text-fg-muted transition-colors group-hover:border-line-strong group-hover:text-fg">
                   <Icon className="h-5 w-5" />
                 </span>
-                <ArrowRight className="h-4 w-4 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-accent" />
+                <ArrowRight className="h-4 w-4 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-fg" />
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-fg">{tile.title}</p>

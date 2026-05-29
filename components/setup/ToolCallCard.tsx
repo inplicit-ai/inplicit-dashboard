@@ -12,7 +12,13 @@ import type { SetupToolCallCard } from "@/lib/api";
  * surface, a tinted status disc on the left, human label + one-line field diff.
  * Tokens only — accent for request-input, pain-soft for a rejected patch.
  */
-export function ToolCallCard({ card }: { card: SetupToolCallCard }) {
+export function ToolCallCard({
+  card,
+  onReply,
+}: {
+  card: SetupToolCallCard;
+  onReply?: (message: string) => void;
+}) {
   const t = useTranslations("setup.toolCard");
   const prefersReducedMotion = useReducedMotion();
   const label = labelFor(card.tool, t);
@@ -20,6 +26,17 @@ export function ToolCallCard({ card }: { card: SetupToolCallCard }) {
 
   const isRequestInput = card.tool === "request_input";
   const rejected = card.applied === false && !isRequestInput;
+
+  // A follow-up question: render the prompt prominently with the agent's
+  // example answers as one-tap reply chips so the question is actionable, not
+  // just prose to read.
+  const question = isRequestInput
+    ? String(card.args?.question ?? card.args?.prompt ?? "")
+    : "";
+  const examples =
+    isRequestInput && Array.isArray(card.args?.examples)
+      ? (card.args!.examples as unknown[]).map(String).filter(Boolean)
+      : [];
 
   return (
     <motion.div
@@ -55,9 +72,33 @@ export function ToolCallCard({ card }: { card: SetupToolCallCard }) {
           <Check className="size-3" />
         )}
       </span>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="font-medium text-fg">{label}</p>
-        {summary && <p className="truncate text-xs text-fg-muted">{summary}</p>}
+        {isRequestInput ? (
+          <>
+            {question && (
+              <p className="mt-1 text-sm leading-relaxed text-fg">{question}</p>
+            )}
+            {examples.length > 0 && onReply && (
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                {examples.map((ex, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => onReply(ex)}
+                    className="rounded-full border border-accent-muted bg-surface px-3 py-1 text-[13px] font-medium text-accent transition-colors hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {ex}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          summary && (
+            <p className="truncate text-xs text-fg-muted">{summary}</p>
+          )
+        )}
       </div>
     </motion.div>
   );
@@ -107,7 +148,7 @@ function summarize(card: SetupToolCallCard): string {
     case "set_success_criteria":
       return String(a.mode ?? "");
     case "request_input":
-      return String(a.prompt ?? "");
+      return String(a.question ?? a.prompt ?? "");
     default:
       return "";
   }

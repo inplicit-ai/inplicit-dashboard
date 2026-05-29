@@ -53,7 +53,7 @@ export function ChatScroll({
   return (
     <div
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto",
+        "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto",
         className,
       )}
       {...props}

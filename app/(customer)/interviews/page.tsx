@@ -62,10 +62,10 @@ export default async function OrgInterviewsPage() {
               <MessagesSquare className="h-5 w-5" />
             </div>
             <div className="space-y-1">
-              <p className="text-base font-semibold text-fg">
+              <p className="subtitle text-fg">
                 {t("emptyTitle")}
               </p>
-              <p className="text-sm text-fg-muted">{t("emptyBody")}</p>
+              <p className="body-sm text-fg-muted">{t("emptyBody")}</p>
             </div>
           </div>
         </div>
@@ -101,7 +101,7 @@ export default async function OrgInterviewsPage() {
                         <td>
                           <Link
                             href={href}
-                            className="font-mono text-xs font-medium text-fg hover:text-accent"
+                            className="font-mono text-caption font-medium text-fg hover:text-accent"
                           >
                             {i.anon_id}
                           </Link>
@@ -109,13 +109,13 @@ export default async function OrgInterviewsPage() {
                         <td>
                           <StatusBadge status={i.status} />
                         </td>
-                        <td className="text-fg-muted tabular-nums">
+                        <td className="font-mono text-fg-muted tabular-nums">
                           {fmtDuration(i.duration_seconds)}
                         </td>
-                        <td className="uppercase text-fg-muted">
+                        <td className="font-mono uppercase tabular-nums text-fg-muted">
                           {i.language ?? "—"}
                         </td>
-                        <td className="text-xs text-fg-muted">
+                        <td className="font-mono text-caption tabular-nums text-fg-muted">
                           {i.created_at
                             ? new Date(i.created_at).toLocaleString()
                             : "—"}

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowUp, Sparkles } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import {
   PromptInput,
   PromptInputActions,
@@ -66,18 +67,29 @@ export function SetupChat({
   return (
     <ChatShell height="fill">
       {/* Honest-AI header — fixed, never scrolls */}
-      <header className="flex shrink-0 items-center gap-2.5 border-b border-line px-4 py-3">
-        <span className="flex size-7 items-center justify-center rounded-full bg-accent-soft text-accent">
-          <Sparkles className="size-3.5" />
+      <header className="flex shrink-0 items-center gap-2.5 border-b border-line px-5 py-3.5">
+        <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-ui ring-1 ring-line">
+          <Image
+            src="/logo_icon.svg"
+            alt="Inplicit"
+            width={28}
+            height={28}
+            className="size-7"
+            priority
+          />
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-fg">{t("title")}</p>
-          <p className="truncate text-xs text-fg-muted">{tAi("disclaimer")}</p>
+          <p className="text-sm font-semibold tracking-tight text-fg">
+            {t("title")}
+          </p>
+          <p className="truncate text-[13px] text-fg-muted">
+            {tAi("disclaimer")}
+          </p>
         </div>
       </header>
 
       {/* Conversation — the single scroll region */}
-      <ChatScroll className="px-4 py-4">
+      <ChatScroll className="px-5 py-5">
         <AnimatePresence initial={false}>
           {turns.map((turn) => (
             <motion.div
@@ -92,21 +104,25 @@ export function SetupChat({
             >
               {turn.role === "user" ? (
                 <div className="flex justify-end">
-                  <div className="max-w-[min(78%,620px)] rounded-card bg-accent-soft px-4 py-3 text-sm text-fg">
+                  <div className="max-w-[min(80%,680px)] rounded-card bg-accent-soft px-5 py-3.5 text-[length:var(--text-body-lg)] leading-relaxed text-fg">
                     {turn.content}
                   </div>
                 </div>
               ) : (
                 <div className="flex flex-col gap-2">
                   {turn.content && (
-                    <div className="max-w-[min(78%,620px)] rounded-card bg-surface-2 px-4 py-3 text-sm leading-relaxed text-fg">
+                    <div className="max-w-[min(80%,680px)] rounded-card bg-surface-2 px-5 py-3.5 text-[length:var(--text-body-lg)] leading-relaxed text-fg">
                       {turn.content}
                     </div>
                   )}
                   {turn.toolCalls.length > 0 && (
-                    <div className="flex max-w-[min(78%,620px)] flex-col gap-1.5">
+                    <div className="flex max-w-[min(80%,680px)] flex-col gap-1.5">
                       {turn.toolCalls.map((c, i) => (
-                        <ToolCallCard key={i} card={c} />
+                        <ToolCallCard
+                          key={i}
+                          card={c}
+                          onReply={streaming ? undefined : onSend}
+                        />
                       ))}
                     </div>
                   )}
@@ -121,7 +137,7 @@ export function SetupChat({
       </ChatScroll>
 
       {/* Composer — pinned, never scrolls away */}
-      <ChatComposerBar className="p-3">
+      <ChatComposerBar className="p-3 sm:px-5">
         <PromptInput
           value={value}
           onValueChange={setValue}
@@ -155,7 +171,7 @@ export function SetupChat({
 function ThinkingIndicator({ label }: { label: string }) {
   const prefersReducedMotion = useReducedMotion();
   return (
-    <div className="flex items-center gap-2 px-1 text-xs text-fg-muted">
+    <div className="flex items-center gap-2 px-1 text-[13px] text-fg-muted">
       <span className="flex gap-1" aria-hidden>
         {[0, 1, 2].map((i) => (
           <motion.span

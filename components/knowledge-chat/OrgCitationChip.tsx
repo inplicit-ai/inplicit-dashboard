@@ -23,7 +23,7 @@ export function OrgCitationChip({ citation }: { citation: OrgCitation }) {
     </>
   );
   const cls =
-    "inline-flex items-center gap-1 rounded-full border border-line bg-canvas px-2 py-0.5 align-baseline font-mono text-[10px] font-medium text-fg-muted transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+    "inline-flex items-center gap-1 rounded-sm border border-line bg-canvas px-2 py-0.5 align-baseline font-mono text-[11px] font-medium tabular-nums text-fg-muted transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   if (!citation.campaign_id || citation.campaign_id === NIL) {
     return (

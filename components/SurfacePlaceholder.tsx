@@ -16,12 +16,10 @@ export async function SurfacePlaceholder({
 }) {
   const t = await getTranslations("placeholder");
   return (
-    <div className="max-w-[60ch] space-y-4">
+    <div className="max-w-[68ch] space-y-4">
       <Eyebrow>{t("comingSoon")}</Eyebrow>
-      <h1 className="text-3xl font-medium leading-[1.08] tracking-[-0.025em] text-fg">
-        {t(titleKey)}
-      </h1>
-      <p className="text-base leading-relaxed text-fg-muted">{t(bodyKey)}</p>
+      <h1 className="headline text-fg">{t(titleKey)}</h1>
+      <p className="body-lg text-fg-muted">{t(bodyKey)}</p>
     </div>
   );
 }

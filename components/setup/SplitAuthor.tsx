@@ -152,9 +152,14 @@ export function SplitAuthor({
       toolCalls: [],
     };
     streamTurnId.current = assistantTurn.id;
-    setTurns((prev) => [...prev, assistantTurn]);
-    // Empty/kickoff message: the backend opens with its greeting + first probe.
-    void stream.send("");
+    // Defer the placeholder insert + kickoff out of the synchronous effect body
+    // so this reads as an external-system trigger (start the SSE stream) rather
+    // than a render-time state cascade. The ref guard keeps it strictly once.
+    queueMicrotask(() => {
+      setTurns((prev) => [...prev, assistantTurn]);
+      // Empty/kickoff message: the backend opens with its greeting + first probe.
+      void stream.send("");
+    });
   }, [turns, stream]);
 
   // User-originated catalog edit: optimistic local apply + persist.
@@ -207,7 +212,7 @@ export function SplitAuthor({
         <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto pr-0.5">
           <Catalog draft={draft} onPatch={onPatch} recentlyTouched={touched} />
         </div>
-        <div className="flex shrink-0 items-center justify-between gap-3 rounded-card border border-line bg-surface px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between gap-4 rounded-card border border-line bg-surface px-4 py-3">
           <ChecklistSummary reasons={reasons} />
           <Button
             onClick={onReview}
@@ -226,16 +231,19 @@ function ChecklistSummary({ reasons }: { reasons: string[] }) {
   const t = useTranslations("setup.review");
   if (reasons.length === 0) {
     return (
-      <span className="flex items-center gap-1.5 text-sm font-medium text-success">
-        <CheckCircle2 className="size-4" aria-hidden />
+      <span className="flex items-center gap-2 text-sm font-medium text-success">
+        <CheckCircle2 className="size-4 shrink-0" aria-hidden />
         {t("ready")}
       </span>
     );
   }
   return (
-    <ul className="space-y-0.5 text-xs text-fg-muted">
+    <ul className="flex flex-col gap-1 text-xs text-fg-muted">
       {reasons.map((r) => (
-        <li key={r}>• {t(`gates.${r}`)}</li>
+        <li key={r} className="flex items-start gap-2">
+          <span className="status-disc status-disc--sm status-disc--idle mt-1 shrink-0" />
+          <span>{t(`gates.${r}`)}</span>
+        </li>
       ))}
     </ul>
   );

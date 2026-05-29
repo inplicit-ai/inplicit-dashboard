@@ -18,7 +18,7 @@ export function CitationChip({
   return (
     <Link
       href={`/campaigns/${campaignId}/interviews?insight=${citation.vse_insight_id}`}
-      className="inline-flex items-center gap-1 rounded-full border border-line bg-canvas px-2 py-0.5 align-baseline font-mono text-[10px] font-medium text-fg-muted transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="inline-flex items-center gap-1 rounded-sm border border-line bg-canvas px-2 py-0.5 align-baseline font-mono text-[11px] font-medium tabular-nums text-fg-muted transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       title={`${citation.anon_id} · utterance #${citation.utterance_index}`}
     >
       <span>{citation.anon_id}</span>

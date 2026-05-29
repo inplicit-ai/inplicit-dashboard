@@ -26,7 +26,7 @@ export type SelectOption = {
 
 const selectVariants = cva(
   // base: layout + token surface/text/radius + focus ring + custom chevron room
-  "w-full appearance-none rounded-ui pr-9 font-medium text-fg outline-none transition-[color,background,border-color,box-shadow] duration-150 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer",
+  "w-full appearance-none rounded-ui pr-9 text-fg outline-none transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer",
   {
     variants: {
       variant: {
@@ -38,9 +38,9 @@ const selectVariants = cva(
           "border border-line-strong bg-canvas hover:border-line-strong focus-visible:border-accent focus-visible:shadow-[var(--shadow-focus)]",
       },
       size: {
-        sm: "h-9 pl-3 text-[15px]",
-        md: "h-10 pl-4 text-base",
-        lg: "h-11 pl-4 text-base",
+        sm: "h-8 pl-3 text-[length:var(--text-meta)]",
+        md: "h-9 pl-3 text-[length:var(--text-body-sm)]",
+        lg: "h-10 pl-4 text-[length:var(--text-body-sm)]",
       },
       invalid: {
         true: "border-danger focus-visible:border-danger focus-visible:shadow-none",

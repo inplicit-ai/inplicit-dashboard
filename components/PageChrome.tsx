@@ -18,8 +18,8 @@ export function Eyebrow({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] leading-none text-accent",
-        "before:block before:h-px before:w-3.5 before:bg-current before:opacity-60",
+        "inline-flex items-center gap-2 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] leading-none text-accent",
+        "before:block before:h-px before:w-3 before:bg-current before:opacity-60",
         className,
       )}
     >
@@ -47,10 +47,10 @@ export function PageHeader({
   actions,
 }: PageHeaderProps) {
   return (
-    <header className="mb-10 flex flex-col items-start justify-between gap-6 sm:flex-row">
+    <header className="mb-6 flex flex-col items-start justify-between gap-6 sm:flex-row">
       <div className="min-w-0 space-y-3">
         {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-        <h1 className="text-3xl font-medium leading-[1.08] tracking-[-0.025em] text-fg sm:text-4xl">
+        <h1 className="text-3xl font-semibold leading-[1.08] tracking-[-0.022em] text-fg sm:text-4xl">
           {title}
           {muted && (
             <>
@@ -60,7 +60,7 @@ export function PageHeader({
           )}
         </h1>
         {meta && (
-          <div className="max-w-[60ch] text-sm leading-relaxed text-fg-muted">
+          <div className="max-w-[60ch] text-[length:var(--text-body-sm)] leading-relaxed text-fg-muted">
             {meta}
           </div>
         )}

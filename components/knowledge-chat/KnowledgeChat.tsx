@@ -187,14 +187,16 @@ export function KnowledgeChat() {
 function ScopeHeader({ count }: { count: number | null }) {
   const t = useTranslations("knowledgeChat");
   return (
-    <header className="flex shrink-0 items-center gap-3 border-b border-line px-4 py-3 sm:px-8">
+    <header className="flex shrink-0 items-center gap-3 border-b border-line px-4 py-3.5 sm:px-8">
       <span className="grid size-8 shrink-0 place-items-center rounded-ui bg-accent-soft text-accent">
         <Sparkles className="h-4 w-4" />
       </span>
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-fg">{t("title")}</p>
+        <p className="truncate text-sm font-semibold tracking-tight text-fg">
+          {t("title")}
+        </p>
         {count !== null && (
-          <span className="inline-flex items-center gap-1 text-[11px] text-fg-muted">
+          <span className="inline-flex items-center gap-1 text-[11px] tabular-nums text-fg-muted">
             <Globe className="h-3 w-3 text-accent" />
             {t("scope", { count })}
           </span>
@@ -223,12 +225,12 @@ function ThreadList({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex shrink-0 items-center justify-between border-b border-line-subtle px-3 py-3">
-        <span className="label-eyebrow text-fg-subtle">{t("threadsTitle")}</span>
+        <span className="label-eyebrow">{t("threadsTitle")}</span>
         <button
           type="button"
           onClick={onNew}
           disabled={busy}
-          className="inline-flex items-center gap-1 rounded-ui border border-line bg-surface px-2 py-1 text-xs font-medium text-fg-muted transition-colors hover:border-line-strong hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+          className="inline-flex items-center gap-1 rounded-ui border border-line bg-surface px-2 py-1 text-[13px] font-medium text-fg-muted transition-colors hover:border-line-strong hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
         >
           <Plus className="h-3.5 w-3.5" />
           {t("newChat")}
@@ -236,7 +238,9 @@ function ThreadList({
       </div>
       <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto px-2 py-2">
         {threads.length === 0 ? (
-          <p className="px-2 py-3 text-xs text-fg-subtle">{t("emptyThreads")}</p>
+          <p className="px-2 py-3 text-[13px] text-fg-subtle">
+            {t("emptyThreads")}
+          </p>
         ) : (
           <ul className="space-y-0.5">
             {threads.map((thread) => {
@@ -248,9 +252,9 @@ function ThreadList({
                     onClick={() => onSelect(thread.id)}
                     aria-current={active ? "true" : undefined}
                     className={cn(
-                      "flex w-full items-center gap-2 rounded-ui border-l-2 px-2.5 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      "flex w-full items-center gap-2 rounded-ui border-l-2 px-2.5 py-2 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       active
-                        ? "border-accent bg-surface-2 text-fg"
+                        ? "border-accent bg-surface-2 font-medium text-fg"
                         : "border-transparent text-fg-muted hover:bg-surface-2 hover:text-fg",
                     )}
                   >
@@ -323,10 +327,10 @@ function Conversation({
               <Sparkles className="h-5 w-5" />
             </span>
             <div className="space-y-2">
-              <h2 className="text-lg font-medium tracking-tight text-fg">
+              <h2 className="text-xl font-semibold tracking-tight text-fg">
                 {t("emptyTitle")}
               </h2>
-              <p className="text-sm leading-relaxed text-fg-muted">
+              <p className="text-[length:var(--text-body-lg)] leading-relaxed text-fg-muted">
                 {t("emptyBody")}
               </p>
             </div>
@@ -366,14 +370,14 @@ function Conversation({
             onKeyDown={onKeyDown}
             placeholder={t("placeholder")}
             rows={1}
-            className="max-h-32 flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-fg outline-none placeholder:text-fg-faint"
+            className="max-h-32 flex-1 resize-none bg-transparent px-2 py-1.5 text-[length:var(--text-body-lg)] leading-relaxed text-fg outline-none placeholder:text-fg-faint"
           />
           <button
             type="button"
             onClick={submit}
             disabled={!canSend}
             aria-label={t("send")}
-            className="grid size-8 shrink-0 place-items-center rounded-ui bg-fg text-canvas transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+            className="grid size-8 shrink-0 place-items-center rounded-full bg-fg text-canvas transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
           >
             <ArrowUp className="h-4 w-4" />
           </button>
@@ -399,7 +403,7 @@ function MessageRow({ message }: { message: OrgChatMessage }) {
   if (message.role === "user") {
     return (
       <motion.div {...enter} className="flex justify-end">
-        <div className="max-w-[min(78%,620px)] rounded-card bg-accent-soft px-4 py-3 text-sm leading-relaxed text-fg">
+        <div className="max-w-[min(80%,680px)] rounded-card bg-accent-soft px-5 py-3.5 text-[length:var(--text-body-lg)] leading-relaxed text-fg">
           {message.content}
         </div>
       </motion.div>
@@ -407,21 +411,19 @@ function MessageRow({ message }: { message: OrgChatMessage }) {
   }
   return (
     <motion.div {...enter} className="flex flex-col gap-2">
-      <span className="label-eyebrow text-fg-subtle">{t("assistant")}</span>
-      <div className="max-w-[min(78%,620px)] rounded-card bg-surface-2 px-4 py-3">
+      <span className="label-eyebrow">{t("assistant")}</span>
+      <div className="max-w-[min(80%,680px)] rounded-card bg-surface-2 px-5 py-4">
         <p
           className={cn(
-            "text-sm leading-relaxed",
+            "text-[length:var(--text-body-lg)] leading-relaxed",
             message.declined ? "text-fg-muted" : "text-fg",
           )}
         >
           {message.content}
         </p>
         {message.citations.length > 0 && (
-          <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-line-subtle pt-3">
-            <span className="text-[11px] text-fg-subtle">
-              {t("citationsLabel")}:
-            </span>
+          <div className="mt-3.5 flex flex-wrap items-center gap-1.5 border-t border-line-subtle pt-3.5">
+            <span className="label-eyebrow">{t("citationsLabel")}</span>
             {message.citations.map((c, i) => (
               <OrgCitationChip key={`${c.vse_insight_id}-${i}`} citation={c} />
             ))}
@@ -429,9 +431,9 @@ function MessageRow({ message }: { message: OrgChatMessage }) {
         )}
       </div>
       <div className="flex items-center gap-2 pl-1">
-        <span className="text-[10px] text-fg-faint">{t("aiLabel")}</span>
+        <span className="text-[11px] text-fg-faint">{t("aiLabel")}</span>
         {message.cached && (
-          <span className="rounded-full border border-line px-1.5 py-0.5 text-[10px] text-fg-subtle">
+          <span className="rounded-sm border border-line px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-fg-subtle">
             {t("cachedNote")}
           </span>
         )}

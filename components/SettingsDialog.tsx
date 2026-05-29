@@ -129,7 +129,7 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
 
           <Section title="Appearance" icon={Sparkles}>
             <ThemePicker value={theme} onChange={pickTheme} />
-            <p className="px-1 text-[11px] leading-relaxed text-fg-subtle">
+            <p className="px-1 text-xs leading-relaxed text-fg-subtle">
               System follows your OS preference. Your choice is saved on this
               device only.
             </p>
@@ -204,7 +204,7 @@ function IdentityCard({ me }: { me: Me }) {
     <div className="flex items-center gap-3 rounded-ui border border-line bg-surface px-4 py-3">
       <span
         aria-hidden="true"
-        className="grid size-10 place-items-center rounded-full bg-accent-soft text-sm font-semibold text-accent ring-1 ring-accent-muted"
+        className="grid size-10 place-items-center rounded-ui border border-line bg-surface-2 text-sm font-bold text-fg"
       >
         {initial}
       </span>
@@ -214,7 +214,7 @@ function IdentityCard({ me }: { me: Me }) {
           <p className="truncate text-xs text-fg-muted">{me.email}</p>
         )}
       </div>
-      <span className="rounded-full border border-line bg-canvas px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-fg-muted">
+      <span className="rounded-sm border border-line bg-canvas px-2 py-0.5 font-mono text-[11px] font-semibold uppercase tracking-[0.10em] tabular-nums text-fg-muted">
         {role}
       </span>
     </div>
@@ -232,7 +232,7 @@ function Section({
 }) {
   return (
     <section className="space-y-2.5">
-      <header className="flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-fg-subtle">
+      <header className="flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
         <Icon className="h-3 w-3" />
         {title}
       </header>
@@ -269,11 +269,11 @@ function ThemePicker({
             aria-checked={active}
             onClick={() => onChange(o.id)}
             className={cn(
-              "inline-flex items-center justify-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors",
+              "inline-flex items-center justify-center gap-2 rounded-sm px-3 py-2 text-[13px] font-medium transition-colors",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               active
                 ? "border border-line bg-canvas text-fg"
-                : "border border-transparent text-fg-muted hover:text-fg",
+                : "border border-transparent text-fg-muted hover:bg-surface hover:text-fg",
             )}
           >
             <o.icon className="h-3.5 w-3.5" />
@@ -299,7 +299,7 @@ function ToggleRow({
   onChange: (next: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-ui px-3 py-2.5 transition-colors hover:bg-surface-2/60">
+    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-ui px-3 py-2.5 transition-colors hover:bg-surface-2">
       <span className="flex min-w-0 items-start gap-3">
         <Icon className="mt-0.5 h-4 w-4 shrink-0 text-fg-muted" />
         <span className="min-w-0">
@@ -331,7 +331,7 @@ function LinkRow({
     <DialogClose asChild>
       <Link
         href={href}
-        className="group flex items-center justify-between gap-4 rounded-ui px-3 py-2.5 transition-colors hover:bg-surface-2/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="group flex items-center justify-between gap-4 rounded-ui px-3 py-2.5 transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="flex min-w-0 items-start gap-3">
           <Icon className="mt-0.5 h-4 w-4 shrink-0 text-fg-muted" />

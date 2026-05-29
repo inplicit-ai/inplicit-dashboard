@@ -47,10 +47,10 @@ export default async function StaffOrgsPage() {
               <Building2 className="h-5 w-5" />
             </div>
             <div className="space-y-1">
-              <p className="text-base font-semibold text-fg">
+              <p className="subtitle text-fg">
                 Noch keine Kunden-Organisation.
               </p>
-              <p className="max-w-[48ch] text-sm text-fg-muted">
+              <p className="max-w-[48ch] body-sm text-fg-muted">
                 Lege die erste an. Pro Org genau ein Customer-User, das
                 Inplicit-Team behält Cross-Org-Zugriff.
               </p>
@@ -71,24 +71,26 @@ export default async function StaffOrgsPage() {
             <Link
               key={o.id}
               href={`/staff/orgs/${o.id}`}
-              className="group flex items-center justify-between gap-4 rounded-card border border-line bg-surface p-6 transition-colors hover:border-line-strong hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="group flex items-center justify-between gap-4 rounded-card border border-line bg-surface p-5 transition-colors hover:border-line-strong hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <div className="flex min-w-0 items-center gap-4">
                 <OrgAvatar name={o.name} logoUrl={o.logo_url} size={40} />
                 <div className="min-w-0 space-y-1.5">
-                  <p className="truncate text-base font-medium text-fg">
+                  <p className="truncate body-sm font-medium text-fg">
                     {o.name}
                   </p>
-                  <p className="text-xs text-fg-muted">
-                    <span className="font-mono">{o.slug}</span>
+                  <p className="text-caption text-fg-muted">
+                    <span className="font-mono tabular-nums">{o.slug}</span>
                     {o.industry && <> · {o.industry}</>}{" "}
-                    · {o.default_locale.toUpperCase()}{" "}
-                    · {o.default_interview_length_min} Min
+                    · <span className="font-mono tabular-nums">{o.default_locale.toUpperCase()}</span>{" "}
+                    · <span className="font-mono tabular-nums">{o.default_interview_length_min} Min</span>
                     {o.created_at && (
                       <>
                         {" "}
                         · seit{" "}
-                        {new Date(o.created_at).toLocaleDateString("de-DE")}
+                        <span className="font-mono tabular-nums">
+                          {new Date(o.created_at).toLocaleDateString("de-DE")}
+                        </span>
                       </>
                     )}
                   </p>

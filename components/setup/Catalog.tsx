@@ -35,8 +35,8 @@ export function Catalog({
   const t = useTranslations("setup.catalog");
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="space-y-1">
+    <div className="flex flex-col gap-3">
+      <div className="space-y-1.5">
         <Eyebrow>{t("title")}</Eyebrow>
         <p className="text-sm text-fg-muted">{t("subtitle")}</p>
       </div>
@@ -50,91 +50,94 @@ export function Catalog({
           recentlyTouched?.has("set_language")
         }
       >
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          {/* Interview type */}
-          <Field label={t("interviewType")}>
-            <Segmented
-              value={draft.interviewType ?? "voice"}
-              options={[
-                { value: "voice", label: t("voice") },
-                { value: "chat", label: t("chatType") },
-              ]}
-              onChange={(type) =>
-                onPatch({ tool: "set_interview_type", args: { type } })
-              }
-            />
-          </Field>
+        <div className="flex flex-col gap-4">
+          {/* Type · duration · language — three peers on one responsive row */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Field label={t("interviewType")}>
+              <Segmented
+                value={draft.interviewType ?? "voice"}
+                options={[
+                  { value: "voice", label: t("voice") },
+                  { value: "chat", label: t("chatType") },
+                ]}
+                onChange={(type) =>
+                  onPatch({ tool: "set_interview_type", args: { type } })
+                }
+              />
+            </Field>
 
-          {/* Duration — dropdown on the 5-min grid (no range slider) */}
-          <Field label={t("duration")}>
-            <Select
-              aria-label={t("duration")}
-              value={String(draft.durationMin ?? 25)}
-              onValueChange={(v) =>
-                onPatch({ tool: "set_duration", args: { minutes: Number(v) } })
-              }
-              options={DURATION_OPTIONS}
-              size="md"
-            />
-          </Field>
+            {/* Duration — dropdown on the 5-min grid (no range slider) */}
+            <Field label={t("duration")}>
+              <Select
+                aria-label={t("duration")}
+                value={String(draft.durationMin ?? 25)}
+                onValueChange={(v) =>
+                  onPatch({
+                    tool: "set_duration",
+                    args: { minutes: Number(v) },
+                  })
+                }
+                options={DURATION_OPTIONS}
+                size="md"
+              />
+            </Field>
 
-          {/* Language */}
-          <Field label={t("language")}>
-            <Select
-              aria-label={t("language")}
-              value={draft.language?.default ?? "de"}
-              onValueChange={(v) =>
-                onPatch({
-                  tool: "set_language",
-                  args: {
-                    default: v as Locale,
-                    allowSwitch: draft.language?.allowSwitch ?? true,
-                  },
-                })
-              }
-              options={[
-                { value: "de", label: "Deutsch" },
-                { value: "en", label: "English" },
-              ]}
-              size="md"
-            />
-          </Field>
-
-          {/* Allow language switch */}
-          <Field label={t("allowSwitch")}>
-            <label className="flex h-10 items-center justify-between gap-3 rounded-ui border border-line bg-surface px-4">
-              <span className="text-sm text-fg-muted">{t("allowSwitch")}</span>
-              <Switch
-                checked={draft.language?.allowSwitch ?? true}
-                onCheckedChange={(checked) =>
+            {/* Language */}
+            <Field label={t("language")}>
+              <Select
+                aria-label={t("language")}
+                value={draft.language?.default ?? "de"}
+                onValueChange={(v) =>
                   onPatch({
                     tool: "set_language",
                     args: {
-                      default: draft.language?.default ?? "de",
-                      allowSwitch: checked,
+                      default: v as Locale,
+                      allowSwitch: draft.language?.allowSwitch ?? true,
                     },
                   })
                 }
+                options={[
+                  { value: "de", label: "Deutsch" },
+                  { value: "en", label: "English" },
+                ]}
+                size="md"
               />
-            </label>
-          </Field>
+            </Field>
+          </div>
+
+          {/* Allow language switch — full-width sub-row under the pickers */}
+          <label className="flex items-center justify-between gap-3 rounded-ui border border-line-subtle bg-surface-2 px-3 py-2.5">
+            <span className="text-sm text-fg-muted">{t("allowSwitch")}</span>
+            <Switch
+              checked={draft.language?.allowSwitch ?? true}
+              onCheckedChange={(checked) =>
+                onPatch({
+                  tool: "set_language",
+                  args: {
+                    default: draft.language?.default ?? "de",
+                    allowSwitch: checked,
+                  },
+                })
+              }
+            />
+          </label>
         </div>
       </SectionCard>
 
       {/* Goals (query fan-out) */}
       <SectionCard title={t("goals")} touched={recentlyTouched?.has("set_goals")}>
         {draft.prompt ? (
-          <p className="rounded-ui border-l-2 border-accent-muted bg-accent-soft px-3 py-2 text-sm italic text-fg-muted">
+          <p className="rounded-ui border-l-2 border-line-strong bg-surface-2 px-3 py-2 text-sm italic text-fg-muted">
             {draft.prompt}
           </p>
         ) : null}
         {(draft.goals?.length ?? 0) === 0 ? (
           <p className="text-sm text-fg-muted">{t("goalsEmpty")}</p>
         ) : (
-          <ul className="flex flex-col gap-1.5">
+          <ul className="flex flex-col gap-1">
             {draft.goals!.map((g) => (
-              <li key={g.id} className="flex items-start gap-2">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+              <li key={g.id} className="flex items-start gap-2.5">
+                <span className="status-disc status-disc--sm status-disc--done mt-2.5 shrink-0" />
                 <input
                   value={g.text}
                   onChange={(e) =>
@@ -192,13 +195,16 @@ export function Catalog({
           />
           {(draft.successCriteria?.questions?.length ?? 0) > 0 ? (
             <div className="border-t border-line-subtle pt-3">
-              <p className="mb-1.5 text-xs font-medium text-fg-subtle">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
                 {t("questions")}
               </p>
               <ul className="flex flex-col gap-1.5">
                 {draft.successCriteria!.questions.map((q, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-fg">
-                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                  <li
+                    key={i}
+                    className="flex items-start gap-2.5 text-sm text-fg"
+                  >
+                    <span className="status-disc status-disc--sm status-disc--done mt-1.5 shrink-0" />
                     <span>{q}</span>
                   </li>
                 ))}
@@ -255,7 +261,9 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-xs font-medium text-fg-subtle">{label}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
+        {label}
+      </span>
       {children}
     </label>
   );
@@ -295,7 +303,7 @@ function Segmented<T extends string>({
             aria-checked={active}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "flex-1 rounded-sm px-3 py-1.5 text-sm font-medium transition-colors",
+              "flex-1 rounded-sm px-3 py-1.5 text-[13px] font-medium transition-colors",
               active
                 ? "bg-fg text-canvas"
                 : "text-fg-muted hover:text-fg",

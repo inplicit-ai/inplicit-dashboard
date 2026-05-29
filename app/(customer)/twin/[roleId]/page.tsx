@@ -50,7 +50,7 @@ export default async function TwinDetailPage({
               })
         }
         actions={
-          <Badge variant="outline" className="font-mono text-[10px]">
+          <Badge variant="outline" className="font-mono text-[11px] tabular-nums">
             {t("simulationBadge")}
           </Badge>
         }
@@ -66,7 +66,7 @@ export default async function TwinDetailPage({
             </span>
           </header>
           {predicted.length === 0 ? (
-            <p className="text-sm leading-relaxed text-fg-muted">
+            <p className="text-base leading-relaxed text-fg-muted">
               {t("noPredicted")}
             </p>
           ) : (
@@ -76,7 +76,7 @@ export default async function TwinDetailPage({
                   key={i}
                   className="flex items-start justify-between gap-3 border-t border-line-subtle pt-3 first:border-t-0 first:pt-0"
                 >
-                  <span className="text-sm leading-relaxed text-fg-muted">
+                  <span className="text-base leading-relaxed text-fg-muted">
                     {p.pain}
                   </span>
                   {typeof p.confidence === "number" && (
@@ -99,7 +99,7 @@ export default async function TwinDetailPage({
             </span>
           </header>
           {validated.length === 0 ? (
-            <p className="text-sm leading-relaxed text-fg-muted">
+            <p className="text-base leading-relaxed text-fg-muted">
               {t("noValidated")}
             </p>
           ) : (
@@ -107,7 +107,7 @@ export default async function TwinDetailPage({
               {validated.map((p, i) => (
                 <li
                   key={i}
-                  className="border-t border-line-subtle pt-3 text-sm leading-relaxed text-fg first:border-t-0 first:pt-0"
+                  className="border-t border-line-subtle pt-3 text-base leading-relaxed text-fg first:border-t-0 first:pt-0"
                 >
                   {p.pain}
                 </li>
@@ -121,13 +121,15 @@ export default async function TwinDetailPage({
       {divergence.length > 0 && (
         <section className="card card--compact mt-6 flex flex-col gap-4">
           <span className="label-eyebrow">{t("divergence")}</span>
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-3">
             {divergence.map((d, i) => (
-              <li key={i} className="flex items-center gap-3 text-sm">
-                <span className="badge badge--knowledge shrink-0 font-mono text-[10px] uppercase">
+              <li key={i} className="flex items-start gap-3">
+                <span className="badge badge--knowledge mt-0.5 shrink-0 font-mono text-[11px] uppercase tabular-nums">
                   {d.kind}
                 </span>
-                <span className="leading-relaxed text-fg-muted">{d.pain}</span>
+                <span className="text-base leading-relaxed text-fg-muted">
+                  {d.pain}
+                </span>
               </li>
             ))}
           </ul>

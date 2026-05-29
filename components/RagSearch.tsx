@@ -244,8 +244,13 @@ function ResultsArea({
   return (
     <section className="space-y-3">
       <p className="px-1 text-xs text-fg-muted">
-        {count} Beleg{count === 1 ? "" : "e"} aus {response.searched_campaigns}{" "}
-        Kampagne{response.searched_campaigns === 1 ? "" : "s"} für „{response.query}&rdquo;.
+        <span className="font-mono tabular-nums">{count}</span> Beleg
+        {count === 1 ? "" : "e"} aus{" "}
+        <span className="font-mono tabular-nums">
+          {response.searched_campaigns}
+        </span>{" "}
+        Kampagne{response.searched_campaigns === 1 ? "" : "s"} für „
+        {response.query}&rdquo;.
       </p>
 
       <div
@@ -269,23 +274,23 @@ function ResultCard({ r }: { r: SearchResult }) {
       className="group flex h-full flex-col gap-3 rounded-card border border-line bg-surface p-5 transition-colors hover:border-line-strong hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="text-sm leading-snug text-fg">{r.problem_statement}</p>
-        <span className="shrink-0 rounded-full border border-line bg-canvas px-2 py-0.5 font-mono text-[10px] font-semibold text-fg-muted">
-          {(r.score * 100).toFixed(0)}%
+        <p className="text-sm leading-relaxed text-fg">{r.problem_statement}</p>
+        <span className="badge badge--opportunity shrink-0">
+          <span className="font-mono tabular-nums">
+            {(r.score * 100).toFixed(0)}%
+          </span>
         </span>
       </div>
 
       {r.human_solution && (
-        <p className="border-l-2 border-accent-muted pl-3 text-xs italic leading-snug text-fg-muted">
+        <p className="border-l-2 border-accent-muted pl-3 text-xs italic leading-relaxed text-fg-muted">
           „{r.human_solution}&rdquo;
         </p>
       )}
 
       <div className="mt-auto flex items-center gap-2">
         {r.department && (
-          <span className="rounded-full border border-line bg-canvas px-2 py-0.5 text-[10px] font-medium text-fg-muted">
-            {r.department}
-          </span>
+          <span className="badge badge--knowledge">{r.department}</span>
         )}
         <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-medium text-fg-subtle transition-colors group-hover:text-fg">
           Interview öffnen

@@ -34,7 +34,14 @@ export function StatusHud({ lang, agentStatus, conn, latency }: Props) {
             <i />
           </span>
         ) : (
-          <span className="iv-pill__dot" aria-hidden />
+          <span
+            className={`status-disc ${
+              agentStatus === "listening"
+                ? "status-disc--live status-disc--pulse"
+                : "status-disc--idle"
+            }`}
+            aria-hidden
+          />
         )}
         {c.status[agentStatus]}
       </span>
@@ -53,13 +60,10 @@ export function StatusHud({ lang, agentStatus, conn, latency }: Props) {
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        .iv-hud { display: inline-flex; align-items: center; gap: var(--space-3); font-size: var(--text-caption); color: var(--color-text-secondary); }
-        .iv-pill { display: inline-flex; align-items: center; gap: var(--space-2); padding: 4px 10px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); }
-        .iv-pill__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-text-quaternary); }
-        .iv-pill--idle .iv-pill__dot { background: var(--color-text-quaternary); }
-        .iv-pill--listening { border-color: var(--color-accent); }
-        .iv-pill--listening .iv-pill__dot { background: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-soft); }
-        .iv-pill--speaking .iv-pill__dot { background: var(--color-success); }
+        .iv-hud { display: inline-flex; align-items: center; gap: var(--space-3); font-size: var(--text-meta); color: var(--color-text-secondary); }
+        .iv-pill { display: inline-flex; align-items: center; gap: var(--space-2); padding: 4px var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-surface-2); }
+        .iv-pill--listening { color: var(--color-accent); border-color: var(--color-accent-muted); background: var(--color-accent-soft); }
+        .iv-pill--speaking { color: var(--color-success); }
         .iv-dots { display: inline-flex; gap: 3px; }
         .iv-dots i { width: 4px; height: 4px; border-radius: 50%; background: var(--color-accent); animation: iv-bounce 1.1s var(--ease-smooth) infinite; }
         .iv-dots i:nth-child(2) { animation-delay: 0.15s; }
@@ -70,7 +74,7 @@ export function StatusHud({ lang, agentStatus, conn, latency }: Props) {
         .iv-conndot--ok { background: var(--color-success); }
         .iv-conndot--pending { background: var(--color-warning); }
         .iv-conndot--err { background: var(--color-danger); }
-        .iv-hud__lat { font-variant-numeric: tabular-nums; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+        .iv-hud__lat { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         @media (prefers-reduced-motion: reduce) { .iv-dots i { animation: none; } }
       `,
         }}

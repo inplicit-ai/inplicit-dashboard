@@ -76,14 +76,14 @@ export default async function SetPasswordPage({
           />
         </Link>
 
-        <Card className="card-elevated w-full rounded-card border border-line bg-surface p-8 sm:p-10">
+        <Card className="card-elevated w-full rounded-card border border-line bg-surface p-7 sm:p-8">
           <Eyebrow>
             {isFirstTime ? "Konto einrichten" : "Passwort ändern"}
           </Eyebrow>
-          <h1 className="mt-3 text-3xl font-medium leading-tight tracking-tight text-fg sm:text-4xl">
+          <h1 className="headline mt-3 text-fg">
             {isFirstTime ? "Lege dein Passwort fest." : "Neues Passwort."}
           </h1>
-          <p className="mt-3 text-sm text-fg-muted">
+          <p className="body-sm mt-3 text-fg-muted">
             {isFirstTime
               ? "Ab jetzt meldest du dich mit E-Mail und Passwort an. Den Magic-Link brauchst du nur noch, falls du das Passwort vergisst."
               : "Mindestens 10 Zeichen. Beide Felder müssen übereinstimmen."}
@@ -92,7 +92,7 @@ export default async function SetPasswordPage({
           {sp.error && (
             <div
               role="alert"
-              className="mt-6 flex items-start gap-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-sm text-danger"
+              className="mt-6 flex items-start gap-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-meta text-danger"
             >
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <p className="leading-snug">{sp.error}</p>
@@ -103,7 +103,7 @@ export default async function SetPasswordPage({
             <div className="space-y-1.5">
               <Label
                 htmlFor="password"
-                className="text-xs font-medium text-fg-muted"
+                className="label-eyebrow"
               >
                 Neues Passwort
               </Label>
@@ -115,13 +115,13 @@ export default async function SetPasswordPage({
                 minLength={10}
                 placeholder="••••••••••"
                 autoComplete="new-password"
-                className="h-11 text-base md:text-sm"
+                className="h-9 text-base md:text-sm"
               />
             </div>
             <div className="space-y-1.5">
               <Label
                 htmlFor="confirm"
-                className="text-xs font-medium text-fg-muted"
+                className="label-eyebrow"
               >
                 Passwort bestätigen
               </Label>
@@ -133,7 +133,7 @@ export default async function SetPasswordPage({
                 minLength={10}
                 placeholder="••••••••••"
                 autoComplete="new-password"
-                className="h-11 text-base md:text-sm"
+                className="h-9 text-base md:text-sm"
               />
             </div>
             <Button type="submit" size="lg" className="mt-2 w-full">

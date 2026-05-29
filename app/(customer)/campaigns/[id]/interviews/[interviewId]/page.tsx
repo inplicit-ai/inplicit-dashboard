@@ -94,19 +94,19 @@ function MetaLine({
   ended?: string;
   duration?: number;
 }) {
-  const parts: string[] = [];
-  if (department) parts.push(department);
-  parts.push(mode === "voice" ? "Voice" : "Chat");
-  if (started) parts.push(`Start ${formatDate(started)}`);
-  if (ended) parts.push(`Ende ${formatDate(ended)}`);
-  if (duration) parts.push(formatDuration(duration));
+  const parts: Array<{ text: string; mono?: boolean }> = [];
+  if (department) parts.push({ text: department });
+  parts.push({ text: mode === "voice" ? "Voice" : "Chat" });
+  if (started) parts.push({ text: `Start ${formatDate(started)}`, mono: true });
+  if (ended) parts.push({ text: `Ende ${formatDate(ended)}`, mono: true });
+  if (duration) parts.push({ text: formatDuration(duration), mono: true });
 
   return (
     <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-fg-muted">
       {parts.map((p, i) => (
         <span key={i} className="inline-flex items-center gap-3">
           {i > 0 && <span aria-hidden className="text-fg-subtle">·</span>}
-          {p}
+          <span className={p.mono ? "font-mono tabular-nums" : undefined}>{p.text}</span>
         </span>
       ))}
     </span>

@@ -40,7 +40,7 @@ export function PreflightCard({
           <MicIcon size={20} strokeWidth={2} />
         </span>
         <span className="eyebrow iv-card__eyebrow">{c.preflightEyebrow}</span>
-        <h1 className="headline iv-card__title">{c.preflightTitle}</h1>
+        <h1 className="title iv-card__title">{c.preflightTitle}</h1>
         <p className="page-header__meta iv-card__body">{c.preflightBody}</p>
 
         <div className="iv-card__lang">
@@ -53,7 +53,7 @@ export function PreflightCard({
         </div>
 
         <div className="iv-card__notice" role="note">
-          <span className="iv-card__notice-dot" aria-hidden />
+          <span className="status-disc status-disc--live iv-card__notice-dot" aria-hidden />
           <span>{c.aiNotice}</span>
         </div>
 
@@ -85,8 +85,8 @@ export function PreflightCard({
         dangerouslySetInnerHTML={{
           __html: `
         .iv-card__lang { margin-top: var(--space-6); }
-        .iv-card__notice { margin-top: var(--space-5); display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-accent-muted); background: var(--color-accent-soft); border-radius: var(--radius-card); font-size: var(--text-body-sm); line-height: 1.55; color: var(--color-text-primary); }
-        .iv-card__notice-dot { flex: 0 0 auto; width: 7px; height: 7px; margin-top: 7px; border-radius: 50%; background: var(--color-accent); }
+        .iv-card__notice { margin-top: var(--space-5); display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-accent-muted); background: var(--color-accent-soft); border-radius: var(--radius-ui); font-size: var(--text-body-sm); line-height: 1.55; color: var(--color-text-primary); }
+        .iv-card__notice-dot { margin-top: 6px; }
       `,
         }}
       />

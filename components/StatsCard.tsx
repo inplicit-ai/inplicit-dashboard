@@ -2,10 +2,11 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * A single KPI tile. Surface + hairline + radius, dark-only shadow (the `.card`
- * recipe). Light depth is border + surface-step only — no shadow (Braun rule).
- * The accent is reserved for active/focus states elsewhere; a stat tile is
- * quiet by default. See design-contract §2.
+ * A single KPI tile. Uses the `.stat` recipe: flat surface + hairline + radius,
+ * value rendered in JetBrains Mono + tabular-nums so the figure reads as
+ * instrument data. Light depth is border + surface-step only — no shadow (Braun
+ * rule). The accent is reserved for active/focus states elsewhere; a stat tile
+ * is quiet by default. See design-contract §2.
  */
 export function StatsCard({
   label,
@@ -19,12 +20,10 @@ export function StatsCard({
   className?: string;
 }) {
   return (
-    <div className={cn("card card--compact flex flex-col gap-2", className)}>
-      <span className="label-eyebrow text-fg-subtle">{label}</span>
-      <span className="text-2xl-tabular font-medium tracking-tight text-fg">
-        {value}
-      </span>
-      {hint && <span className="text-xs text-fg-muted">{hint}</span>}
+    <div className={cn("stat", className)}>
+      <span className="stat__label">{label}</span>
+      <span className="stat__value">{value}</span>
+      {hint && <span className="stat__sub">{hint}</span>}
     </div>
   );
 }
