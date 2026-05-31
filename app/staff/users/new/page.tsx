@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, TriangleAlert } from "lucide-react";
 import { ApiError, makeApi } from "@/lib/api";
 import { requireAdmin, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { StatusDisc } from "@/components/ui/status-disc";
-import { SpecBlock } from "@/components/ui/spec-block";
+import { Label } from "@/components/ui/label";
 
 interface SearchParams {
   error?: string;
@@ -75,22 +74,21 @@ export default async function NewStaffUserPage({
         </Button>
 
         <div>
-          <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
-            Inplicit Staff
-          </span>
-          <h1 className="mt-2 text-2xl font-semibold leading-tight tracking-[-0.02em] text-fg">
+          <h1 className="text-[length:var(--text-display)] font-semibold leading-[1.15] tracking-[-0.02em] text-fg">
             Staff hinzufügen
           </h1>
-          <p className="mt-2 body-sm text-fg-muted">Magic-Link Login</p>
+          <p className="mt-2 text-[length:var(--text-body-lg)] text-fg-muted">
+            Login per Magic-Link.
+          </p>
         </div>
 
-        <SpecBlock
-          rows={[
-            { label: "Login", value: "Magic-Link" },
-            { label: "Gültig", value: "15 min" },
-            { label: "Passwort", value: "nur Admin" },
-          ]}
-        />
+        <Card className="gap-0 p-5">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-[length:var(--text-caption)]">
+            <InfoRow label="Login" value="Magic-Link" />
+            <InfoRow label="Gültig" value="15 min" />
+            <InfoRow label="Passwort" value="nur Admin" />
+          </dl>
+        </Card>
       </aside>
 
       {/* ── Right track: the form ─────────────────────────────────────────── */}
@@ -98,18 +96,16 @@ export default async function NewStaffUserPage({
         {sp.error && (
           <div
             role="alert"
-            className="mb-6 grid grid-cols-[20px_1fr] items-start gap-x-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-meta text-danger"
+            className="mb-6 flex items-start gap-3 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-3 text-[length:var(--text-meta)] text-danger"
           >
-            <span className="flex justify-center pt-0.5">
-              <StatusDisc state="error" size="sm" />
-            </span>
+            <TriangleAlert aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
             <p className="leading-snug">{sp.error}</p>
           </div>
         )}
 
-        <Card className="rounded-card border border-line bg-surface p-8">
+        <Card className="p-8">
           <form action={createStaff} className="flex flex-col gap-5">
-            <p className="body-sm leading-relaxed text-fg-muted">
+            <p className="text-[length:var(--text-body-sm)] leading-relaxed text-fg-muted">
               Neuer Staff-User bekommt einen Magic-Link per Email (15 Min
               gültig). Die Person loggt sich damit ein und nutzt für jeden
               weiteren Login ebenfalls den Magic-Link-Flow. Passwort gibt&apos;s
@@ -123,7 +119,6 @@ export default async function NewStaffUserPage({
               required
               placeholder="Max Mustermann"
               defaultValue={sticky.name ?? ""}
-              className="h-9 text-base md:text-sm"
             />
           </Field>
 
@@ -136,11 +131,10 @@ export default async function NewStaffUserPage({
               placeholder="max@inplicit.ai"
               defaultValue={sticky.email ?? ""}
               autoComplete="off"
-              className="h-9 text-base md:text-sm"
             />
           </Field>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-ui border border-line bg-canvas p-4 text-body-sm text-fg transition-colors hover:border-line-strong hover:bg-surface-2">
+          <label className="flex cursor-pointer items-start gap-3 rounded-ui border border-line bg-surface p-4 text-[length:var(--text-body-sm)] text-fg transition-colors hover:border-line-strong hover:bg-surface-2">
             <input
               type="checkbox"
               name="issue_magic_link"
@@ -151,7 +145,7 @@ export default async function NewStaffUserPage({
               <span className="block font-medium">
                 Magic-Link sofort ausgeben
               </span>
-              <span className="block text-caption text-fg-muted">
+              <span className="block text-[length:var(--text-caption)] text-fg-muted">
                 Empfehlung. Wenn ausgeschaltet, kannst du den Link später aus
                 der Liste ausstellen.
               </span>
@@ -164,6 +158,15 @@ export default async function NewStaffUserPage({
           </form>
         </Card>
       </div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col">
+      <dt className="text-fg-subtle">{label}</dt>
+      <dd className="font-medium tabular-nums text-fg">{value}</dd>
     </div>
   );
 }
@@ -181,13 +184,10 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label
-        htmlFor={id}
-        className="label-eyebrow flex items-center gap-1.5"
-      >
+      <Label htmlFor={id}>
         {label}
-        {required && <span className="text-pain">*</span>}
-      </label>
+        {required && <span className="text-danger">*</span>}
+      </Label>
       {children}
     </div>
   );

@@ -1,7 +1,7 @@
 import { makeApi, type Cluster } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
 import { ErrorState } from "@/components/ErrorState";
-import { PageHeader } from "@/components/PageChrome";
+import { PageHeader } from "@/components/ui/page-header";
 import { KnowledgeMap } from "@/components/KnowledgeMap";
 
 export default async function MapPage({
@@ -24,7 +24,7 @@ export default async function MapPage({
     <div className="surface-bleed">
       <PageHeader
         title="Knowledge Map"
-        meta="Geclusterte Insights, gewichtet nach Signal-Stärke und Abteilungs-Abdeckung."
+        subtitle="Geclusterte Insights, gewichtet nach Signal-Stärke und Abteilungs-Abdeckung."
       />
       {!!error && (
         <div className="mb-6">

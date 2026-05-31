@@ -1,5 +1,7 @@
+import { Link2Off } from "lucide-react";
+
 import { InterviewRoom } from "@/components/InterviewRoom";
-import { StatusDisc } from "@/components/ui/status-disc";
+import { Card, CardContent } from "@/components/ui/card";
 
 const API_BASE = process.env.API_URL ?? "http://localhost:8080";
 
@@ -27,35 +29,24 @@ export default async function ResumePage({
   return <InterviewRoom wsUrl={wsUrl} apiBase={API_BASE} isResume />;
 }
 
-/** Server-safe invalid-link state — quiet instrument plate on the spine. */
+/** Centered white-modernist invalid-link card. */
 function InvalidLink() {
   return (
-    <div className="invalid-shell">
-      <div className="invalid-plate">
-        <span className="invalid-plate__spine" aria-hidden>
-          <StatusDisc state="error" size="lg" />
-        </span>
-        <div className="invalid-plate__body">
-          <span className="eyebrow">Fehler</span>
-          <h1 className="title invalid-plate__title">Ungültiger Link</h1>
-          <p className="body-lg invalid-plate__text">
+    <div className="flex min-h-[100dvh] items-center justify-center bg-canvas px-4 py-12">
+      <Card className="w-full max-w-md">
+        <CardContent className="flex flex-col items-center text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-danger-soft">
+            <Link2Off aria-hidden className="h-6 w-6 text-danger" />
+          </div>
+          <h1 className="mt-5 text-[length:var(--text-title)] font-semibold text-fg">
+            Ungültiger Link
+          </h1>
+          <p className="mt-2 max-w-[42ch] text-[length:var(--text-body)] leading-relaxed text-fg-muted">
             Dieser Fortsetzungs-Link ist nicht gültig oder abgelaufen. Bitte fordere
             einen neuen Termin an.
           </p>
-        </div>
-      </div>
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .invalid-shell { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: var(--space-8) var(--space-4); background: var(--color-surface); }
-        .invalid-plate { display: grid; grid-template-columns: 28px 1fr; align-items: start; gap: var(--space-4); max-width: 480px; width: 100%; }
-        .invalid-plate__spine { display: flex; align-items: center; justify-content: center; padding-top: 2px; }
-        .invalid-plate__body { display: flex; flex-direction: column; gap: var(--space-2); }
-        .invalid-plate__title { letter-spacing: -0.02em; }
-        .invalid-plate__text { margin-top: var(--space-2); color: var(--color-text-secondary); }
-      `,
-        }}
-      />
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -20,7 +20,7 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
   if (nodes.length === 0) {
     return (
       <div className="rounded-card border border-dashed border-line-strong bg-surface-2 px-4 py-3">
-        <p className="font-mono text-[length:var(--text-eyebrow)] uppercase tracking-[0.06em] text-fg-subtle">
+        <p className="text-[length:var(--text-body)] text-fg-subtle">
           {t("topicsEmpty")}
         </p>
       </div>
@@ -65,9 +65,8 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
             y1={a.y}
             x2={b.x}
             y2={b.y}
-            stroke="var(--color-border-strong)"
+            stroke="var(--color-border)"
             strokeWidth={1}
-            strokeDasharray="4 3"
           />
         );
       })}
@@ -79,7 +78,7 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
             <rect
               width={180}
               height={36}
-              rx={8}
+              rx={10}
               fill="var(--color-surface)"
               stroke={
                 orphan

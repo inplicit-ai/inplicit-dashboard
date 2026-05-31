@@ -1,7 +1,6 @@
 "use client";
 
 import { StatusDisc, type StatusState } from "@/components/ui/status-disc";
-import { DataChip } from "@/components/ui/data-chip";
 import type { AgentStatus, ConnState, Latency, Phase } from "./types";
 import type { Lang } from "./copy";
 import { roomCopy } from "./copy";
@@ -15,21 +14,21 @@ interface Props {
 }
 
 const PHASE_LABEL: Record<Phase, Record<Lang, string>> = {
-  open: { de: "PHASE 1 · OFFEN", en: "PHASE 1 · OPEN", fr: "PHASE 1 · OUVERT", es: "PHASE 1 · ABIERTO" },
+  open: { de: "Phase 1 · Offen", en: "Phase 1 · Open", fr: "Phase 1 · Ouvert", es: "Phase 1 · Abierto" },
   validation: {
-    de: "PHASE 2 · VALIDIERUNG",
-    en: "PHASE 2 · VALIDATION",
-    fr: "PHASE 2 · VALIDATION",
-    es: "PHASE 2 · VALIDACIÓN",
+    de: "Phase 2 · Validierung",
+    en: "Phase 2 · Validation",
+    fr: "Phase 2 · Validation",
+    es: "Phase 2 · Validación",
   },
 };
 
 /**
- * StatusHud — the live state on a tiny spine (manifesto: interview-experience).
+ * StatusHud — the live state readout (white-modernist).
  *
  * One canonical amber pulse: a StatusDisc(live) while listening + the status
- * word, a phase DataChip, then a monochrome connection/latency readout. Amber
- * never appears except on the single live disc.
+ * word, a soft phase pill, then a calm connection dot + sans tabular-nums
+ * latency readout. Amber appears only on the single live disc.
  */
 export function StatusHud({ lang, agentStatus, conn, latency, phase }: Props) {
   const c = roomCopy(lang);
@@ -44,58 +43,47 @@ export function StatusHud({ lang, agentStatus, conn, latency, phase }: Props) {
           : "var(--color-danger)";
 
   // Live (amber pulse) only while the agent is actively listening for the
-  // participant. Thinking / speaking are monochrome — amber means the floor is
-  // the participant's.
+  // participant. Thinking / speaking are monochrome.
   const discState: StatusState = agentStatus === "listening" ? "live" : "idle";
 
+  const dotColor =
+    conn === "open"
+      ? "var(--color-success)"
+      : conn === "connecting" || conn === "reconnecting" || conn === "paused"
+        ? "var(--color-warning)"
+        : "var(--color-danger)";
+
   return (
-    <div className="iv-hud">
-      <span className="iv-hud__state">
+    <div className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[length:var(--text-meta)] text-fg-subtle">
+      <span className="inline-flex items-center gap-2 font-medium text-fg-muted">
         <StatusDisc state={discState} size="sm" />
-        <span className="iv-hud__state-label">{c.status[agentStatus]}</span>
+        {c.status[agentStatus]}
       </span>
 
       {phase && (
-        <DataChip tone="neutral">{PHASE_LABEL[phase][lang]}</DataChip>
+        <span className="rounded-full border border-line-subtle bg-surface-2 px-2.5 py-0.5 text-[length:var(--text-caption)] font-medium text-fg-muted">
+          {PHASE_LABEL[phase][lang]}
+        </span>
       )}
 
-      <span className="iv-hud__rule" aria-hidden />
+      <span aria-hidden className="h-3.5 w-px bg-line" />
 
-      <span className="iv-hud__conn">
-        <span className={`iv-conndot iv-conndot--${connClass(conn)}`} aria-hidden />
+      <span className="inline-flex items-center gap-2">
+        <span
+          aria-hidden
+          className="inline-block h-1.5 w-1.5 rounded-full"
+          style={{ background: dotColor }}
+        />
         {connLabel(conn, c)}
       </span>
 
       {rt != null && (
-        <span className="iv-hud__lat" style={{ color: latColor }}>
+        <span className="tabular-nums" style={{ color: latColor }}>
           {rt} ms
         </span>
       )}
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .iv-hud { display: inline-flex; align-items: center; gap: var(--space-3); font-size: var(--text-meta); color: var(--color-text-tertiary); }
-        .iv-hud__state { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-text-secondary); }
-        .iv-hud__state-label { font-size: var(--text-eyebrow); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
-        .iv-hud__rule { width: 1px; height: 14px; background: var(--color-border); }
-        .iv-hud__conn { display: inline-flex; align-items: center; gap: var(--space-2); }
-        .iv-conndot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
-        .iv-conndot--ok { background: var(--color-success); }
-        .iv-conndot--pending { background: var(--color-warning); }
-        .iv-conndot--err { background: var(--color-danger); }
-        .iv-hud__lat { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
-      `,
-        }}
-      />
     </div>
   );
-}
-
-function connClass(conn: ConnState): "ok" | "pending" | "err" {
-  if (conn === "open") return "ok";
-  if (conn === "connecting" || conn === "reconnecting" || conn === "paused") return "pending";
-  return "err";
 }
 
 function connLabel(conn: ConnState, c: ReturnType<typeof roomCopy>): string {

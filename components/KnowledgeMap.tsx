@@ -4,11 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { Network, X } from "lucide-react";
 import * as d3 from "d3";
 import type { Cluster } from "@/lib/api";
-import { Ledger } from "@/components/ui/ledger";
-import { LedgerRow } from "@/components/ui/ledger-row";
-import { DataChip } from "@/components/ui/data-chip";
+import { Badge } from "@/components/ui/badge";
 import { SignalMeter } from "@/components/ui/signal-meter";
-import { StatusDisc } from "@/components/ui/status-disc";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface Props {
   clusters: Cluster[];
@@ -29,9 +27,9 @@ interface MapLink extends d3.SimulationLinkDatum<MapNode> {
 
 const CATEGORY_TOKEN: Record<string, { name: string; fallback: string }> = {
   operational: { name: "--color-accent", fallback: "#c2660c" },
-  innovation: { name: "--color-success", fallback: "#15803d" },
-  automation: { name: "--color-gap", fallback: "#5b21b6" },
-  risk: { name: "--color-pain", fallback: "#c2410c" },
+  innovation: { name: "--color-success", fallback: "#16955a" },
+  automation: { name: "--color-gap", fallback: "#2f6f8f" },
+  risk: { name: "--color-pain", fallback: "#d4452f" },
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -63,8 +61,7 @@ function categoryColor(category: string): string {
 
 export function KnowledgeMap({ clusters }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  // The selected node opens the SAME evidence tree used everywhere — a
-  // slide-in Ledger branch, never a separate modal.
+  // The selected node opens a calm slide-in detail panel, never a modal.
   const [selected, setSelected] = useState<Cluster | null>(null);
 
   useEffect(() => {
@@ -243,42 +240,38 @@ export function KnowledgeMap({ clusters }: Props) {
   }, [selected]);
 
   if (clusters.length === 0) {
-    // Printed-plate placeholder — hairline rule + quiet caption.
     return (
-      <div className="card flex flex-col items-center justify-center gap-4 border-dashed py-16 text-center">
-        <div className="grid size-12 place-items-center rounded-full border border-line bg-surface-2 text-fg-subtle">
-          <Network className="h-5 w-5" />
-        </div>
-        <p className="max-w-[48ch] text-base leading-relaxed text-fg-muted">
-          Noch keine Cluster. Die Wissenslandkarte erscheint, sobald Insights
-          gruppiert werden.
-        </p>
+      <div className="rounded-card border border-line bg-card shadow-card">
+        <EmptyState
+          icon={Network}
+          title="Noch keine Cluster"
+          hint="Die Wissenslandkarte erscheint, sobald Insights gruppiert werden."
+        />
       </div>
     );
   }
 
   return (
-    <div className="relative card card--flush">
-      {/* Folio-style instrument header — eyebrow count + ledger legend chips. */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-subtle px-5 py-3">
-        <span className="inline-flex items-center gap-2 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
-          <Network className="h-4 w-4" aria-hidden />
-          § Knowledge Map
-          <span className="font-mono tabular-nums normal-case tracking-normal text-fg-muted">
-            n={clusters.length}
+    <div className="relative overflow-hidden rounded-card border border-line bg-card shadow-card">
+      {/* Calm header — section title + muted count, soft legend chips. */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-subtle px-6 py-4">
+        <h2 className="flex items-baseline gap-2 text-[length:var(--text-title)] font-semibold tracking-[-0.015em] text-fg">
+          Knowledge Map
+          <span className="text-[length:var(--text-meta)] font-normal tabular-nums text-fg-subtle">
+            {clusters.length}
           </span>
-        </span>
-        <div className="flex flex-wrap items-center gap-2">
+        </h2>
+        <div className="flex flex-wrap items-center gap-2.5">
           {Object.keys(CATEGORY_LABEL).map((cat) => (
             <Legend key={cat} category={cat} label={CATEGORY_LABEL[cat]} />
           ))}
         </div>
       </div>
 
-      {/* Canvas — full bleed inside the flush card, intrinsic height. */}
+      {/* Canvas — full bleed inside the card, intrinsic height. */}
       <div
         ref={ref}
-        className="w-full bg-canvas"
+        className="w-full bg-surface"
         style={{ minHeight: CANVAS_HEIGHT }}
       />
 
@@ -302,85 +295,88 @@ function NodeDetailPanel({
   onClose: () => void;
 }) {
   const category = cluster.category ?? "operational";
+  const departments = cluster.departments ?? [];
   return (
-    <aside className="absolute inset-y-0 right-0 z-10 flex w-[min(360px,90%)] flex-col border-l border-line bg-surface">
-      <div className="flex items-center justify-between gap-3 border-b border-line-subtle px-4 py-3">
-        <span className="inline-flex items-center gap-2 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
-          <StatusDisc state="done" size="sm" />§ Cluster
-        </span>
+    <aside className="absolute inset-y-0 right-0 z-10 flex w-[min(380px,92%)] flex-col border-l border-line bg-surface shadow-md">
+      <div className="flex items-center justify-between gap-3 border-b border-line-subtle px-5 py-4">
+        <h3 className="text-[length:var(--text-title)] font-semibold tracking-[-0.015em] text-fg">
+          Cluster
+        </h3>
         <button
           type="button"
           onClick={onClose}
           aria-label="Schließen"
-          className="grid size-7 place-items-center rounded-ui text-fg-subtle transition-colors hover:bg-surface-2 hover:text-fg"
+          className="grid size-8 place-items-center rounded-ui text-fg-subtle transition-colors hover:bg-surface-2 hover:text-fg"
         >
           <X className="size-4" />
         </button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        <Ledger>
-          <LedgerRow
-            status="done"
-            index={`C-${cluster.id.slice(0, 4).toUpperCase()}`}
-            title={cluster.label}
-            metric={
-              <SignalMeter
-                value={cluster.signal_strength}
-                max={10}
-                threshold={5}
-                readout={
-                  <span className="font-mono tabular-nums">
-                    {cluster.signal_strength}
-                  </span>
-                }
-              />
+      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
+        {/* Cluster headline + signal meter. */}
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <span className="text-[length:var(--text-body-lg)] font-semibold leading-snug text-fg">
+              {cluster.label}
+            </span>
+            <span
+              className="shrink-0 font-mono text-[length:var(--text-caption)] tabular-nums text-fg-subtle"
+              title="Cluster-ID"
+            >
+              C-{cluster.id.slice(0, 4).toUpperCase()}
+            </span>
+          </div>
+          <SignalMeter
+            value={cluster.signal_strength}
+            max={10}
+            threshold={5}
+            readout={
+              <span className="tabular-nums">{cluster.signal_strength}</span>
             }
-            expandable
-            defaultOpen
-          >
-            {cluster.description && (
-              <LedgerRow
-                depth={1}
-                status="idle"
-                title={
-                  <span className="text-[length:var(--text-body)] leading-relaxed text-fg-muted">
-                    {cluster.description}
-                  </span>
-                }
-              />
-            )}
-            <LedgerRow
-              depth={1}
-              status="idle"
-              title={
-                <span className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
-                    Abteilungen
-                  </span>
-                  {(cluster.departments ?? []).map((d) => (
-                    <DataChip key={d}>{d}</DataChip>
-                  ))}
-                </span>
-              }
-              metric={
-                <DataChip mono>n={(cluster.departments ?? []).length}</DataChip>
-              }
+          />
+        </div>
+
+        {cluster.description && (
+          <p className="text-[length:var(--text-body)] leading-relaxed text-fg-muted">
+            {cluster.description}
+          </p>
+        )}
+
+        {/* Departments. */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
+              Abteilungen
+            </span>
+            <span className="text-[length:var(--text-caption)] tabular-nums text-fg-subtle">
+              {departments.length}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {departments.map((d) => (
+              <Badge key={d} variant="secondary">
+                {d}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        {/* Category. */}
+        <div className="space-y-2">
+          <span className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
+            Kategorie
+          </span>
+          <div className="flex items-center gap-2">
+            <span
+              className="size-2.5 rounded-full"
+              style={{ background: categoryColor(category) }}
+              aria-hidden
             />
-            <LedgerRow
-              depth={1}
-              status="idle"
-              title={
-                <span className="flex items-center gap-2">
-                  <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
-                    Kategorie
-                  </span>
-                  <DataChip>{CATEGORY_LABEL[category] ?? category}</DataChip>
-                </span>
-              }
-            />
-          </LedgerRow>
-        </Ledger>
+            <span className="text-[length:var(--text-body)] text-fg">
+              {CATEGORY_LABEL[category] ?? category}
+            </span>
+          </div>
+        </div>
       </div>
     </aside>
   );
@@ -388,15 +384,13 @@ function NodeDetailPanel({
 
 function Legend({ category, label }: { category: string; label: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5">
+    <span className="inline-flex items-center gap-1.5 text-[length:var(--text-caption)] font-medium text-fg-muted">
       <span
-        className="status-disc"
+        className="size-2.5 rounded-full"
         style={{ background: categoryColor(category) }}
         aria-hidden
       />
-      <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
-        {label}
-      </span>
+      {label}
     </span>
   );
 }

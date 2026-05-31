@@ -8,24 +8,20 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { DataChip, type DataChipTone } from "@/components/ui/data-chip";
 import { StatusDisc, toStatusState } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 
 /* ────────────────────────────────────────────────────────────────────────────
  * StatusBadge — single source of truth for status → tone mapping.
  *
- * Now DELEGATES to the spine vocabulary: a status string resolves to a canonical
- * tone (for the DataChip tint) and, when `withIcon`, leads with a StatusDisc icon
- * glyph so the chip speaks the exact same language as every LedgerRow disc. The
- * status→tone map lives here once; PageChrome / tables / agent-plan reuse it.
+ * White-modernist: a status string resolves to a canonical tone, which selects a
+ * soft semantic pill (green = positive/verified, red = negative/contradicted,
+ * amber = forming/live, muted = neutral). When `withIcon`, it leads with a
+ * StatusDisc glyph so the pill speaks the same status language as every row.
  *
- * Server-safe: StatusDisc(as="icon") and DataChip are both server components.
- * The lone amber pulse never appears here — chips are static labels, not the
- * single live object — so even a "live"/"in-progress" status renders its disc
- * unpulsed (the opportunity tint carries the "forming" signal instead).
- *
- * See docs/plans/overhaul/design-contract.md §3.
+ * The status→tone map lives here once; PageChrome / tables / agent-plan reuse it.
+ * Server-safe (StatusDisc icon mode + pure CSS pill). The lone amber pulse never
+ * appears here — chips are static labels, so even a "live" status renders unpulsed.
  * ────────────────────────────────────────────────────────────────────────── */
 
 export type StatusTone =
@@ -35,32 +31,35 @@ export type StatusTone =
   | "danger"
   | "neutral";
 
-type ToneSpec = { chipTone: DataChipTone; iconClass: string; Icon: LucideIcon };
+/** Soft-pill class for a tone — full radius, tint-only, calm. */
+type ToneSpec = { pillClass: string; iconClass: string; Icon: LucideIcon };
 
-/** tone → (DataChip tint, agent-plan icon, semantic ink). */
+const PILL_BASE =
+  "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[length:var(--text-caption)] font-medium leading-[1.4] tabular-nums whitespace-nowrap";
+
 const TONE: Record<StatusTone, ToneSpec> = {
   success: {
-    chipTone: "success",
+    pillClass: "border-success/25 bg-success-soft text-success",
     iconClass: "text-success",
     Icon: CheckCircle2,
   },
   opportunity: {
-    chipTone: "opportunity",
+    pillClass: "border-accent-muted bg-accent-soft text-accent",
     iconClass: "text-accent",
     Icon: CircleDotDashed,
   },
   warning: {
-    chipTone: "warning",
+    pillClass: "border-warning/25 bg-warning-soft text-warning",
     iconClass: "text-warning",
     Icon: CircleAlert,
   },
   danger: {
-    chipTone: "danger",
+    pillClass: "border-danger/30 bg-danger-soft text-danger",
     iconClass: "text-danger",
     Icon: CircleX,
   },
   neutral: {
-    chipTone: "neutral",
+    pillClass: "border-line-subtle bg-surface-2 text-fg-muted",
     iconClass: "text-fg-subtle",
     Icon: Circle,
   },
@@ -104,7 +103,7 @@ export function statusTone(status: string): StatusTone {
 export interface StatusBadgeProps
   extends React.HTMLAttributes<HTMLSpanElement> {
   status: string;
-  /** Show the leading status disc glyph. Default: false (text-only chip). */
+  /** Show the leading status disc glyph. Default: false (text-only pill). */
   withIcon?: boolean;
   /** Override the displayed text; defaults to the raw status string. */
   label?: string;
@@ -118,9 +117,9 @@ export function StatusBadge({
   ...props
 }: StatusBadgeProps) {
   const tone = statusTone(status);
-  const { chipTone } = TONE[tone];
+  const { pillClass } = TONE[tone];
   return (
-    <DataChip tone={chipTone} className={cn("gap-1.5", className)} {...props}>
+    <span className={cn(PILL_BASE, pillClass, className)} {...props}>
       {withIcon && (
         <StatusDisc
           state={toStatusState(status)}
@@ -130,7 +129,7 @@ export function StatusBadge({
         />
       )}
       {label ?? status}
-    </DataChip>
+    </span>
   );
 }
 

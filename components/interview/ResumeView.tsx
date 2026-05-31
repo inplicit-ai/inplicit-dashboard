@@ -1,7 +1,10 @@
 "use client";
 
-import { StatusDisc } from "@/components/ui/status-disc";
-import { SpecBlock, type SpecRow } from "@/components/ui/spec-block";
+import { PlayCircle } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { StatBand, type StatBandCell } from "@/components/ui/stat-band";
 import type { Lang } from "./copy";
 import { roomCopy } from "./copy";
 
@@ -15,92 +18,65 @@ interface Props {
 }
 
 /**
- * ResumeView — the paused / resumable instrument plate (doc 04 §7.5).
+ * ResumeView — the welcome-back card (white-modernist).
  *
- * A quiet plate: an idle spine disc (nothing is live while paused), a folio
- * eyebrow, the welcome-back body, and a mono SpecBlock pinning the position
- * (elapsed minutes). Either a near-black Resume CTA or a note that a resume
- * link was emailed.
+ * A centered white Card: a soft medallion, a warm welcome title, the
+ * welcome-back body, and a StatBand pinning the saved position. Either a
+ * near-black Resume CTA or a quiet note that a link was emailed.
  */
 export function ResumeView({ lang, elapsedS, onResume, emailed }: Props) {
   const c = roomCopy(lang);
   const mins = Math.round(elapsedS / 60);
 
   const positionLabel =
-    lang === "en"
-      ? "Position"
-      : lang === "fr"
-        ? "Position"
-        : lang === "es"
-          ? "Posición"
-          : "Position";
-
+    lang === "es" ? "Posición" : "Position";
   const minUnit =
-    lang === "de" ? "Min" : lang === "fr" ? "min" : lang === "es" ? "min" : "min";
+    lang === "de" ? "Min" : "min";
 
-  const rows: SpecRow[] = [
+  const cells: StatBandCell[] = [
     { label: positionLabel, value: `${mins} ${minUnit}` },
   ];
 
   return (
-    <div className="iv-resume">
-      <div className="iv-resume__plate">
-        <div className="iv-resume__head">
-          <span className="iv-resume__spine" aria-hidden>
-            <StatusDisc state="idle" size="lg" />
-          </span>
-          <div className="iv-resume__title-block">
-            <span className="eyebrow">{c.resumeEyebrow}</span>
-            <h1 className="title iv-resume__title">{c.resumeTitle}</h1>
+    <div className="flex min-h-[100dvh] items-center justify-center bg-canvas px-4 py-12">
+      <Card className="w-full max-w-md">
+        <CardContent className="flex flex-col">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-2">
+            <PlayCircle aria-hidden className="h-6 w-6 text-fg-subtle" />
           </div>
-        </div>
 
-        <p className="body-lg iv-resume__body">{c.resumeBody(mins)}</p>
+          <h1 className="mt-5 text-[length:var(--text-display)] font-semibold tracking-[-0.02em] text-fg">
+            {c.resumeTitle}
+          </h1>
+          <p className="mt-3 max-w-[52ch] text-[length:var(--text-body-lg)] leading-relaxed text-fg-muted">
+            {c.resumeBody(mins)}
+          </p>
 
-        <SpecBlock rows={rows} className="iv-resume__spec" />
+          <StatBand cells={cells} className="mt-6" />
 
-        {onResume && (
-          <div className="iv-resume__actions">
-            <button
+          {onResume && (
+            <Button
               type="button"
+              size="lg"
               onClick={onResume}
-              className="btn btn--primary btn--lg iv-resume__cta"
+              className="mt-6 w-full"
             >
               {c.resumeCta}
-            </button>
-          </div>
-        )}
-        {emailed && !onResume && (
-          <p className="caption iv-resume__legal">
-            {lang === "en"
-              ? "We've emailed you a link to rejoin when you're ready."
-              : lang === "fr"
-                ? "Nous vous avons envoyé un lien par e-mail pour reprendre."
-                : lang === "es"
-                  ? "Te hemos enviado por correo un enlace para retomar."
-                  : "Wir haben dir einen Link per E-Mail geschickt, um später fortzufahren."}
-          </p>
-        )}
-      </div>
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .iv-resume { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: var(--space-8) var(--space-4); background: var(--color-surface); }
-        .iv-resume__plate { width: 100%; max-width: 480px; padding: var(--space-8); border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--color-surface); text-align: left; }
-        .iv-resume__head { display: grid; grid-template-columns: 28px 1fr; align-items: start; gap: var(--space-4); }
-        .iv-resume__spine { display: flex; align-items: center; justify-content: center; padding-top: 2px; }
-        .iv-resume__title-block { display: flex; flex-direction: column; gap: var(--space-2); }
-        .iv-resume__title { letter-spacing: -0.02em; }
-        .iv-resume__body { margin-top: var(--space-4); color: var(--color-text-secondary); max-width: 60ch; }
-        .iv-resume__spec { margin-top: var(--space-5); max-width: 280px; }
-        .iv-resume__actions { margin-top: var(--space-6); }
-        .iv-resume__cta { width: 100%; }
-        .iv-resume__legal { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border-subtle); line-height: 1.55; color: var(--color-text-tertiary); }
-        @media (max-width: 640px) { .iv-resume__plate { padding: var(--space-6); } }
-      `,
-        }}
-      />
+            </Button>
+          )}
+          {emailed && !onResume && (
+            <p className="mt-6 border-t border-line-subtle pt-4 text-[length:var(--text-caption)] leading-relaxed text-fg-subtle">
+              {lang === "en"
+                ? "We've emailed you a link to rejoin when you're ready."
+                : lang === "fr"
+                  ? "Nous vous avons envoyé un lien par e-mail pour reprendre."
+                  : lang === "es"
+                    ? "Te hemos enviado por correo un enlace para retomar."
+                    : "Wir haben dir einen Link per E-Mail geschickt, um später fortzufahren."}
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

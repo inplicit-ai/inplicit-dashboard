@@ -16,7 +16,6 @@ import {
   ChatShell,
   ChatComposerBar,
 } from "@/components/ui/chat-shell";
-import { ConversationTurn } from "@/components/ui/conversation-turn";
 import { StatusDisc } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 import type { SetupToolCallCard } from "@/lib/api";
@@ -30,14 +29,13 @@ export type ChatTurn = {
 };
 
 /**
- * The setup agent chat pane (doc 03 §7), rebuilt onto the 21st.dev AI-conversation
- * pattern: calm ConversationTurn rows (user = near-black bubble, assistant = a
- * borderless 68ch reading column) inside the canonical ChatShell flex envelope.
- * Assistant turns interleave prose with tool-call cards rendered in the
- * agent-plan status language (StatusDisc + DataChip). The header carries the
+ * The setup agent chat pane (doc 03 §7), in the white-modernist claude.ai style:
+ * calm roomy turns — user = near-black bubble, assistant = a borderless reading
+ * column — inside the canonical ChatShell flex envelope. Assistant turns
+ * interleave prose with clean tool-call cards. A clean header carries the
  * honest-AI label (EU AI Act spirit, doc 03 §9). One scroll region with
- * stick-to-bottom + a floating "scroll to bottom" pill; pinned composer with the
- * lone amber focus ring. NO 100vh math — fills whatever height its parent gives.
+ * stick-to-bottom + a floating "scroll to bottom" pill; a pinned claude.ai
+ * composer. NO 100vh math — fills whatever height its parent gives.
  */
 export function SetupChat({
   turns,
@@ -66,24 +64,24 @@ export function SetupChat({
 
   return (
     <ChatShell height="fill">
-      {/* Honest-AI header — fixed, never scrolls. Status disc ties the agent to
-          the spine language; it pulses amber only while the agent is drafting. */}
-      <header className="flex shrink-0 items-center gap-3 border-b border-line px-5 py-3.5">
-        <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-ui ring-1 ring-line">
+      {/* Honest-AI header — fixed, never scrolls. The live disc pulses amber
+          only while the agent is drafting. */}
+      <header className="flex shrink-0 items-center gap-3 border-b border-line bg-canvas px-5 py-4">
+        <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-2 ring-1 ring-line">
           <Image
             src="/logo_icon.svg"
             alt="Inplicit"
-            width={28}
-            height={28}
-            className="size-7"
+            width={22}
+            height={22}
+            className="size-[22px]"
             priority
           />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold tracking-tight text-fg">
+          <p className="text-[length:var(--text-subtitle)] font-semibold tracking-[-0.01em] text-fg">
             {t("title")}
           </p>
-          <p className="truncate text-[13px] text-fg-muted">
+          <p className="truncate text-[length:var(--text-meta)] text-fg-muted">
             {tAi("disclaimer")}
           </p>
         </div>
@@ -97,7 +95,7 @@ export function SetupChat({
         scrollLabel={t("send")}
         className="px-5 py-6"
       >
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-7">
           <AnimatePresence initial={false}>
             {turns.map((turn) => (
               <motion.div
@@ -112,12 +110,16 @@ export function SetupChat({
                 )}
               >
                 {turn.role === "user" ? (
-                  <ConversationTurn role="user">{turn.content}</ConversationTurn>
+                  <div className="max-w-[80%] rounded-lg rounded-br-sm bg-cta px-4 py-2.5 text-[length:var(--text-body-lg)] leading-[1.6] text-cta-fg">
+                    {turn.content}
+                  </div>
                 ) : (
-                  <ConversationTurn role="assistant">
-                    {turn.content && <p>{turn.content}</p>}
+                  <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
+                    {turn.content && (
+                      <p className="whitespace-pre-wrap">{turn.content}</p>
+                    )}
                     {turn.toolCalls.length > 0 && (
-                      <div className="mt-3 flex flex-col gap-1.5">
+                      <div className="mt-3.5 flex flex-col gap-2">
                         {turn.toolCalls.map((c, i) => (
                           <ToolCallCard
                             key={i}
@@ -127,7 +129,7 @@ export function SetupChat({
                         ))}
                       </div>
                     )}
-                  </ConversationTurn>
+                  </div>
                 )}
               </motion.div>
             ))}
@@ -138,26 +140,25 @@ export function SetupChat({
       </ChatScrollAnchored>
 
       {/* Composer — pinned, never scrolls away. */}
-      <ChatComposerBar className="p-3 sm:px-5">
+      <ChatComposerBar className="px-4 py-3 sm:px-5 sm:py-4">
         <div className="mx-auto w-full max-w-3xl">
           <PromptInput
             value={value}
             onValueChange={setValue}
             onSubmit={submit}
             isLoading={streaming}
-            className="shadow-none"
           >
             <PromptInputTextarea
               placeholder={t("placeholder")}
               disabled={streaming}
             />
-            <PromptInputActions className="justify-end pt-1">
+            <PromptInputActions className="justify-end pt-1.5">
               <Button
                 type="button"
                 size="icon-sm"
                 onClick={submit}
                 disabled={streaming || !value.trim()}
-                className={cn("rounded-full")}
+                className="rounded-full"
                 aria-label={t("send")}
               >
                 <ArrowUp className="size-4" />
@@ -173,9 +174,9 @@ export function SetupChat({
 /** Animated "drafting…" indicator — the live status disc + label. */
 function ThinkingIndicator({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-2 px-1 text-[13px] text-fg-muted">
+    <div className="flex items-center gap-2 text-[length:var(--text-meta)] text-fg-muted">
       <StatusDisc state="live" size="sm" />
-      <span className="italic">{label}</span>
+      <span>{label}</span>
     </div>
   );
 }

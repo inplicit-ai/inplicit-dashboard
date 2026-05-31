@@ -4,26 +4,20 @@ import { useTranslations } from "next-intl";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { StatusDisc, type StatusState } from "@/components/ui/status-disc";
-import { DataChip } from "@/components/ui/data-chip";
 import { cn } from "@/lib/utils";
 import type { SetupToolCallCard } from "@/lib/api";
 
 /**
- * The "AI explains itself" surface (Rams #4, doc 03 §3), recomposed into the
- * agent-plan STATUS LANGUAGE (manifesto §"ONE STRUCTURE"). Every tool call is a
- * ledger row on the spine:
- *
- *   [StatusDisc] [mono tool index] [human label + one-line field diff]
- *
- * Status encodes lifecycle, not colour-as-decoration:
+ * The "AI explains itself" surface (Rams #4, doc 03 §3), in the white-modernist
+ * clean style: a soft white card with a status disc, a human label, and a
+ * one-line field diff. Status encodes lifecycle:
  *   applied        → done disc
  *   request_input  → pending disc (the agent is waiting on the human)
  *   rejected patch → error disc
  *
  * A follow-up question renders its prompt prominently with the agent's example
- * answers as one-tap reply chips — square DataChips, never pills — so the
- * question is actionable. Amber never appears here; the live pulse lives on the
- * header disc only.
+ * answers as one-tap soft reply pills so the question is actionable. Amber never
+ * appears here; the live pulse lives on the header disc only.
  */
 export function ToolCallCard({
   card,
@@ -65,14 +59,12 @@ export function ToolCallCard({
           : { type: "spring", stiffness: 500, damping: 28 }
       }
       className={cn(
-        // Hairline ledger row — depth is the border + a faint surface wash on
-        // the actionable states, never a shadow.
-        "grid grid-cols-[1.25rem_1fr] items-start gap-2.5 rounded-card border border-line bg-surface px-3 py-2.5 text-sm",
-        isRequestInput && "border-accent-muted bg-accent-soft",
-        rejected && "border-pain-muted bg-pain-soft",
+        // Clean white card — soft border + a faint tint on the actionable states.
+        "grid grid-cols-[1.25rem_1fr] items-start gap-3 rounded-md border border-line bg-surface px-4 py-3 text-[length:var(--text-body)] shadow-card",
+        isRequestInput && "border-accent-muted bg-accent-soft shadow-none",
+        rejected && "border-pain-muted bg-pain-soft shadow-none",
       )}
     >
-      {/* Spine cell — the status disc on the shared x-axis. */}
       <span className="flex h-5 items-center justify-center">
         <StatusDisc state={status} size="sm" />
       </span>
@@ -80,7 +72,7 @@ export function ToolCallCard({
       <div className="min-w-0">
         <div className="flex min-w-0 items-baseline gap-2">
           <span className="truncate font-medium text-fg">{label}</span>
-          <span className="shrink-0 font-mono text-[11px] tabular-nums text-fg-faint">
+          <span className="shrink-0 font-mono text-[length:var(--text-caption)] tabular-nums text-fg-faint">
             {card.tool}
           </span>
         </div>
@@ -88,23 +80,20 @@ export function ToolCallCard({
         {isRequestInput ? (
           <>
             {question && (
-              <p className="mt-1 text-sm leading-relaxed text-fg">{question}</p>
+              <p className="mt-1.5 text-[length:var(--text-body)] leading-[1.6] text-fg">
+                {question}
+              </p>
             )}
             {examples.length > 0 && onReply && (
-              <div className="mt-2.5 flex flex-wrap gap-1.5">
+              <div className="mt-3 flex flex-wrap gap-2">
                 {examples.map((ex, i) => (
                   <button
                     key={i}
                     type="button"
                     onClick={() => onReply(ex)}
-                    className="appearance-none border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                    className="rounded-full border border-line bg-surface px-3 py-1.5 text-[length:var(--text-caption)] text-fg-muted transition-colors hover:border-line-strong hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <DataChip
-                      tone="neutral"
-                      className="cursor-pointer transition-colors hover:border-line-strong hover:bg-surface-2 hover:text-fg"
-                    >
-                      {ex}
-                    </DataChip>
+                    {ex}
                   </button>
                 ))}
               </div>
@@ -112,7 +101,9 @@ export function ToolCallCard({
           </>
         ) : (
           summary && (
-            <p className="truncate text-xs text-fg-muted">{summary}</p>
+            <p className="mt-0.5 truncate text-[length:var(--text-meta)] text-fg-muted">
+              {summary}
+            </p>
           )
         )}
       </div>

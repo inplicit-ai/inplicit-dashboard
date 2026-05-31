@@ -1,13 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { TriangleAlert } from "lucide-react";
 import { ApiError, makeApi } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { StatusDisc } from "@/components/ui/status-disc";
 
 interface SetPasswordSearchParams {
   error?: string;
@@ -85,14 +85,11 @@ export default async function SetPasswordPage({
           />
         </Link>
 
-        <Card className="card--reading w-full rounded-card border border-line bg-surface p-8 sm:p-9">
-          <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-accent">
-            {isFirstTime ? "Konto einrichten" : "Passwort ändern"}
-          </span>
-          <h1 className="headline mt-3 text-fg">
+        <Card className="w-full p-8 sm:p-9">
+          <h1 className="text-[length:var(--text-display)] font-semibold leading-[1.15] tracking-[-0.02em] text-fg">
             {isFirstTime ? "Lege dein Passwort fest." : "Neues Passwort."}
           </h1>
-          <p className="body-sm mt-3 text-fg-muted">
+          <p className="mt-2 text-[length:var(--text-body-lg)] text-fg-muted">
             {isFirstTime
               ? "Ab jetzt meldest du dich mit E-Mail und Passwort an. Den Magic-Link brauchst du nur noch, falls du das Passwort vergisst."
               : "Mindestens 10 Zeichen. Beide Felder müssen übereinstimmen."}
@@ -101,23 +98,16 @@ export default async function SetPasswordPage({
           {sp.error && (
             <div
               role="alert"
-              className="mt-6 grid grid-cols-[20px_1fr] items-start gap-x-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-meta text-danger"
+              className="mt-6 flex items-start gap-3 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-3 text-[length:var(--text-meta)] text-danger"
             >
-              <span className="flex justify-center pt-0.5">
-                <StatusDisc state="error" size="sm" />
-              </span>
+              <TriangleAlert aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
               <p className="leading-snug">{sp.error}</p>
             </div>
           )}
 
           <form action={submit} className="mt-6 flex flex-col gap-4">
             <div className="space-y-1.5">
-              <Label
-                htmlFor="password"
-                className="label-eyebrow"
-              >
-                Neues Passwort
-              </Label>
+              <Label htmlFor="password">Neues Passwort</Label>
               <Input
                 id="password"
                 type="password"
@@ -126,16 +116,10 @@ export default async function SetPasswordPage({
                 minLength={10}
                 placeholder="••••••••••"
                 autoComplete="new-password"
-                className="h-9 text-base md:text-sm"
               />
             </div>
             <div className="space-y-1.5">
-              <Label
-                htmlFor="confirm"
-                className="label-eyebrow"
-              >
-                Passwort bestätigen
-              </Label>
+              <Label htmlFor="confirm">Passwort bestätigen</Label>
               <Input
                 id="confirm"
                 type="password"
@@ -144,7 +128,6 @@ export default async function SetPasswordPage({
                 minLength={10}
                 placeholder="••••••••••"
                 autoComplete="new-password"
-                className="h-9 text-base md:text-sm"
               />
             </div>
             <Button type="submit" size="lg" className="mt-2 w-full">

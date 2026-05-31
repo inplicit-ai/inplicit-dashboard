@@ -26,8 +26,10 @@ const LANG_OPTIONS: SelectOption[] = SUPPORTED_LANGS.map((lang) => ({
  */
 export function LanguagePicker({ value, onChange, label, disabled }: Props) {
   return (
-    <label className="field">
-      <span className="label-eyebrow">{label}</span>
+    <label className="flex flex-col gap-2">
+      <span className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-muted">
+        {label}
+      </span>
       <Select
         aria-label={label}
         value={value}

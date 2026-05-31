@@ -1,16 +1,22 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Filter as FilterIcon, Search } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Filter as FilterIcon,
+  Inbox,
+  Lightbulb,
+  Search,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Ledger } from "@/components/ui/ledger";
-import { LedgerRow } from "@/components/ui/ledger-row";
-import { Folio } from "@/components/ui/folio";
+import { Card } from "@/components/ui/card";
 import { DataChip } from "@/components/ui/data-chip";
-import { type StatusState } from "@/components/ui/status-disc";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { cn } from "@/lib/utils";
 import type { Utterance, VseInsight } from "@/lib/api";
 
@@ -34,13 +40,6 @@ const SPEAKER_LABEL: Record<Utterance["speaker"], string> = {
 const PHASE_LABEL: Record<string, string> = {
   open: "Open Discovery",
   validation: "Validierung",
-};
-
-// participant turns carry the gap tint (their voice is the evidence);
-// agent turns stay neutral. Disc keeps both on the same spine x-axis.
-const SPEAKER_DISC: Record<Utterance["speaker"], StatusState> = {
-  agent: "idle",
-  participant: "done",
 };
 
 export function InterviewDetailView({
@@ -113,22 +112,26 @@ export function InterviewDetailView({
 
   return (
     <>
-      {/* ─── § INSIGHTS — evidence tree ─────────────────────────────────────── */}
+      {/* ─── Insights ──────────────────────────────────────────────────────── */}
       <section className="mb-10">
-        <Folio index="§" label="Schlüssel-Insights" count={insights.length} />
+        <SectionHeading title="Schlüssel-Insights" count={insights.length} />
 
         {insights.length === 0 ? (
-          <EmptyPlate
-            caption={`Noch keine Insights extrahiert${
-              processingStatus ? ` — aktuell: ${processingStatus}` : ""
-            }. Sie erscheinen, sobald die Auswertung abgeschlossen ist.`}
-          />
+          <Card>
+            <EmptyState
+              icon={Inbox}
+              title="Noch keine Insights"
+              hint={`Insights erscheinen, sobald die Auswertung abgeschlossen ist${
+                processingStatus ? ` — aktuell: ${processingStatus}` : ""
+              }.`}
+            />
+          </Card>
         ) : (
-          <Ledger>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {insights.map((insight, i) => (
-              <InsightRow
+              <InsightCard
                 key={insight.id}
-                index={`I-${String(i + 1).padStart(2, "0")}`}
+                index={i + 1}
                 insight={insight}
                 selected={insight.id === selectedInsightId}
                 onSelect={() =>
@@ -136,14 +139,12 @@ export function InterviewDetailView({
                 }
               />
             ))}
-          </Ledger>
+          </div>
         )}
 
         {selected && (
-          <p className="mt-3 text-sm text-fg-muted">
-            <span className="font-mono tabular-nums">
-              {selected.utterance_ids.length}
-            </span>{" "}
+          <p className="mt-4 text-[length:var(--text-meta)] text-fg-muted">
+            <span className="tabular-nums">{selected.utterance_ids.length}</span>{" "}
             Stellen markiert.{" "}
             <button
               type="button"
@@ -156,23 +157,21 @@ export function InterviewDetailView({
         )}
       </section>
 
-      {/* ─── § TRANSCRIPT — the spine register ──────────────────────────────── */}
+      {/* ─── Transcript ────────────────────────────────────────────────────── */}
       <section className="mb-8">
-        <Folio
-          index="§"
-          label="Transkript"
+        <SectionHeading
+          title="Transkript"
           count={utterances.length}
           action={
             <Button
               variant={showFilters ? "default" : "outline"}
               size="sm"
               onClick={() => setShowFilters((c) => !c)}
-              className="relative"
             >
-              <FilterIcon className="h-4 w-4" />
-              <span className="ml-2">Filter</span>
+              <FilterIcon className="h-3.5 w-3.5" />
+              Filter
               {activeFiltersCount > 0 && (
-                <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-sm bg-accent-soft px-1.5 font-mono text-xs tabular-nums text-accent-strong">
+                <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-soft px-1.5 text-[length:var(--text-caption)] tabular-nums text-accent-strong">
                   {activeFiltersCount}
                 </span>
               )}
@@ -181,13 +180,13 @@ export function InterviewDetailView({
         />
 
         {/* Search */}
-        <div className="relative mb-3">
+        <div className="relative mb-4">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
           <Input
             placeholder="Im Transkript suchen…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 pl-9 text-sm"
+            className="pl-9"
           />
         </div>
 
@@ -198,7 +197,7 @@ export function InterviewDetailView({
               <motion.div
                 key="filters"
                 initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 220, opacity: 1 }}
+                animate={{ width: 232, opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 className="shrink-0 overflow-hidden"
@@ -212,12 +211,12 @@ export function InterviewDetailView({
             )}
           </AnimatePresence>
 
-          {/* Transcript ledger */}
+          {/* Transcript list */}
           <div className="min-w-0 flex-1">
             {filteredUtterances.length > 0 ? (
-              <Ledger framed>
+              <div className="flex flex-col gap-2">
                 {filteredUtterances.map((u) => (
-                  <UtteranceRow
+                  <UtteranceCard
                     key={u.id}
                     u={u}
                     relatedInsights={insightsByUtterance.get(u.id) ?? []}
@@ -232,15 +231,23 @@ export function InterviewDetailView({
                     }}
                   />
                 ))}
-              </Ledger>
+              </div>
             ) : (
-              <EmptyPlate
-                caption={
-                  utterances.length === 0
-                    ? "Kein Transkript vorhanden."
-                    : "Keine Zeilen passen zu deinen Filtern."
-                }
-              />
+              <Card>
+                <EmptyState
+                  icon={Inbox}
+                  title={
+                    utterances.length === 0
+                      ? "Kein Transkript vorhanden"
+                      : "Keine Treffer"
+                  }
+                  hint={
+                    utterances.length === 0
+                      ? "Sobald das Gespräch läuft, erscheinen die Wortbeiträge hier."
+                      : "Keine Zeilen passen zu deinen Filtern."
+                  }
+                />
+              </Card>
             )}
           </div>
         </div>
@@ -249,59 +256,85 @@ export function InterviewDetailView({
   );
 }
 
-// ─── Insight row (expandable evidence branch) ─────────────────────────────────
+// ─── Insight card (expandable VSE triad) ──────────────────────────────────────
 
-function InsightRow({
+function InsightCard({
   index,
   insight,
   selected,
   onSelect,
 }: {
-  index: string;
+  index: number;
   insight: VseInsight;
   selected: boolean;
   onSelect: () => void;
 }) {
   const quoteCount = insight.utterance_ids?.length ?? 0;
   return (
-    <LedgerRow
-      index={index}
-      title={
-        <span className="flex flex-wrap items-center gap-2">
-          <span className={cn(selected && "text-accent-strong")}>
-            {insight.problem_statement}
-          </span>
-          {insight.department && <DataChip tone="neutral">{insight.department}</DataChip>}
-          {insight.phase === "validation" && (
-            <DataChip tone="gap">Validierung</DataChip>
-          )}
-          {insight.origin_solution === "AI" && (
-            <DataChip tone="opportunity">Idee inferiert</DataChip>
-          )}
-        </span>
-      }
-      status={selected ? "live" : "done"}
-      pulse={false}
-      metric={
-        <span className="inline-flex items-center gap-1">
-          <span className="font-mono tabular-nums">{quoteCount}</span>
-          <span className="text-fg-subtle">{quoteCount === 1 ? "Zitat" : "Zitate"}</span>
-        </span>
-      }
-      expandable
-      onToggle={onSelect}
-      open={selected}
+    <Card
+      interactive
+      onClick={onSelect}
+      className={cn("p-5", selected && "ring-1 ring-accent-muted")}
     >
-      <div className="flex flex-col gap-1 pb-2 pt-1">
-        <TriadLine tone="pain" label="Problem" value={insight.problem_statement} />
-        {insight.human_solution && (
-          <TriadLine tone="opportunity" label="Idee" value={insight.human_solution} />
-        )}
-        {insight.business_opportunity && (
-          <TriadLine tone="success" label="Chance" value={insight.business_opportunity} />
-        )}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-2">
+          <span className="mt-0.5 text-[length:var(--text-caption)] tabular-nums text-fg-subtle">
+            I-{String(index).padStart(2, "0")}
+          </span>
+          <h3
+            className={cn(
+              "font-semibold tracking-[-0.01em] text-fg",
+              selected && "text-accent-strong",
+            )}
+          >
+            {insight.problem_statement}
+          </h3>
+        </div>
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 shrink-0 text-fg-subtle transition-transform",
+            selected && "rotate-180",
+          )}
+        />
       </div>
-    </LedgerRow>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {insight.department && <DataChip tone="neutral">{insight.department}</DataChip>}
+        {insight.phase === "validation" && <DataChip tone="gap">Validierung</DataChip>}
+        {insight.origin_solution === "AI" && (
+          <DataChip tone="opportunity">Idee inferiert</DataChip>
+        )}
+        <span className="ml-auto text-[length:var(--text-caption)] tabular-nums text-fg-subtle">
+          {quoteCount} {quoteCount === 1 ? "Zitat" : "Zitate"}
+        </span>
+      </div>
+
+      <AnimatePresence initial={false}>
+        {selected && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-4 flex flex-col gap-3 border-t border-line-subtle pt-4">
+              <TriadLine tone="pain" label="Problem" value={insight.problem_statement} />
+              {insight.human_solution && (
+                <TriadLine tone="opportunity" label="Idee" value={insight.human_solution} />
+              )}
+              {insight.business_opportunity && (
+                <TriadLine
+                  tone="success"
+                  label="Chance"
+                  value={insight.business_opportunity}
+                />
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Card>
   );
 }
 
@@ -315,18 +348,20 @@ function TriadLine({
   value: string;
 }) {
   return (
-    <div className="flex items-baseline gap-3 pl-[calc(var(--spine-w,28px)+var(--tree-indent,24px))]">
+    <div className="flex items-baseline gap-3">
       <span className="shrink-0">
         <DataChip tone={tone}>{label}</DataChip>
       </span>
-      <p className="text-sm leading-relaxed text-fg-muted">{value}</p>
+      <p className="text-[length:var(--text-body)] leading-relaxed text-fg-muted">
+        {value}
+      </p>
     </div>
   );
 }
 
-// ─── Utterance row (transcript spine register) ────────────────────────────────
+// ─── Utterance card (transcript row) ──────────────────────────────────────────
 
-function UtteranceRow({
+function UtteranceCard({
   u,
   relatedInsights,
   highlighted,
@@ -345,90 +380,77 @@ function UtteranceRow({
     typeof u.timestamp_start === "number" ? formatTime(u.timestamp_start) : "—";
 
   return (
-    <div
-      ref={registerRef}
-      className={cn("scroll-m-24 transition-colors", highlighted && "bg-accent-soft")}
-    >
-      <LedgerRow
-        index={`#${u.utterance_index}`}
-        title={
-          <span className="flex min-w-0 items-center gap-3">
-            <DataChip tone={u.speaker === "participant" ? "gap" : "neutral"}>
-              {SPEAKER_LABEL[u.speaker]}
-            </DataChip>
-            <span className="truncate text-fg-muted">{u.text}</span>
+    <div ref={registerRef} className="scroll-m-24">
+      <Card
+        interactive
+        onClick={onToggle}
+        className={cn("p-4", highlighted && "ring-1 ring-accent-muted")}
+      >
+        <div className="flex items-center gap-3">
+          <DataChip tone={u.speaker === "participant" ? "gap" : "neutral"}>
+            {SPEAKER_LABEL[u.speaker]}
+          </DataChip>
+          <span className={cn("min-w-0 flex-1 text-fg-muted", !expanded && "truncate")}>
+            {u.text}
           </span>
-        }
-        status={SPEAKER_DISC[u.speaker]}
-        metric={
-          <span className="inline-flex items-center gap-3">
-            <span className="hidden font-mono tabular-nums text-fg-subtle sm:inline">
-              {time}
-            </span>
+          <span className="hidden shrink-0 items-center gap-2 text-[length:var(--text-caption)] tabular-nums text-fg-subtle sm:inline-flex">
+            <span>{time}</span>
             {relatedInsights.length > 0 && (
-              <DataChip tone="opportunity" mono>
+              <span className="inline-flex items-center gap-1 text-accent-strong">
+                <Lightbulb className="h-3 w-3" />
                 {relatedInsights.length}
-              </DataChip>
+              </span>
             )}
           </span>
-        }
-        expandable
-        open={expanded}
-        onToggle={onToggle}
-      >
-        <div className="flex flex-col gap-4 pb-3 pl-[calc(var(--spine-w,28px)+var(--tree-indent,24px))] pt-1 pr-4">
-          <div>
-            <p className="label-eyebrow mb-2">Wortlaut</p>
-            <p className="rounded-ui border border-line-subtle bg-surface p-4 text-[length:var(--text-body-lg)] leading-relaxed text-fg whitespace-pre-wrap">
-              {u.text}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <DataChip tone="neutral" mono>
-              {time}
-            </DataChip>
-            <DataChip tone={u.phase === "validation" ? "gap" : "neutral"}>
-              {PHASE_LABEL[u.phase] ?? u.phase}
-            </DataChip>
-            <DataChip tone="neutral" mono>
-              #{u.utterance_index}
-            </DataChip>
-          </div>
-
-          {relatedInsights.length > 0 && (
-            <div>
-              <p className="label-eyebrow mb-2">Beigetragen zu</p>
-              <div className="flex flex-col gap-2">
-                {relatedInsights.map((ins) => (
-                  <div
-                    key={ins.id}
-                    className="rounded-ui border border-line bg-surface p-3"
-                  >
-                    <div className="mb-1 flex items-center gap-2">
-                      <DataChip tone="opportunity">Insight</DataChip>
-                      {ins.department && <DataChip tone="neutral">{ins.department}</DataChip>}
-                    </div>
-                    <p className="text-sm text-fg">{ins.problem_statement}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
-      </LedgerRow>
-    </div>
-  );
-}
 
-// ─── Empty plate ──────────────────────────────────────────────────────────────
+        <AnimatePresence initial={false}>
+          {expanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 flex flex-col gap-4 border-t border-line-subtle pt-4">
+                <p className="rounded-md border border-line-subtle bg-surface-2 p-4 text-[length:var(--text-body-lg)] leading-relaxed whitespace-pre-wrap text-fg">
+                  {u.text}
+                </p>
 
-function EmptyPlate({ caption }: { caption: string }) {
-  return (
-    <div className="rounded-card border border-dashed border-line-strong bg-surface px-6 py-10 text-center">
-      <p className="font-mono text-xs uppercase tracking-[0.1em] text-fg-subtle">
-        {caption}
-      </p>
+                <div className="flex flex-wrap gap-2">
+                  <DataChip tone="neutral">{time}</DataChip>
+                  <DataChip tone={u.phase === "validation" ? "gap" : "neutral"}>
+                    {PHASE_LABEL[u.phase] ?? u.phase}
+                  </DataChip>
+                  <DataChip tone="neutral">#{u.utterance_index}</DataChip>
+                </div>
+
+                {relatedInsights.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {relatedInsights.map((ins) => (
+                      <div
+                        key={ins.id}
+                        className="rounded-md border border-line bg-surface p-3"
+                      >
+                        <div className="mb-1 flex items-center gap-2">
+                          <DataChip tone="opportunity">Insight</DataChip>
+                          {ins.department && (
+                            <DataChip tone="neutral">{ins.department}</DataChip>
+                          )}
+                        </div>
+                        <p className="text-[length:var(--text-body)] text-fg">
+                          {ins.problem_statement}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
     </div>
   );
 }
@@ -465,15 +487,13 @@ function FilterPanel({
     filters.speaker.length + filters.phase.length + filters.hasInsight.length > 0;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex h-full w-[220px] flex-col gap-5 overflow-y-auto pr-1"
-    >
+    <div className="flex h-full w-[232px] flex-col gap-5 overflow-y-auto pr-1">
       <div className="flex items-center justify-between">
-        <span className="label-eyebrow">Filter</span>
+        <span className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
+          Filter
+        </span>
         {hasActive && (
-          <Button variant="ghost" size="sm" onClick={clearAll} className="h-6 text-xs">
+          <Button variant="ghost" size="xs" onClick={clearAll}>
             Zurücksetzen
           </Button>
         )}
@@ -513,7 +533,7 @@ function FilterPanel({
           label="Ohne Insight"
         />
       </FilterGroup>
-    </motion.div>
+    </div>
   );
 }
 
@@ -526,7 +546,9 @@ function FilterGroup({
 }) {
   return (
     <div className="space-y-2">
-      <p className="label-eyebrow">{label}</p>
+      <p className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
+        {label}
+      </p>
       <div className="space-y-1.5">{children}</div>
     </div>
   );
@@ -542,21 +564,20 @@ function FilterToggle({
   label: string;
 }) {
   return (
-    <motion.button
+    <button
       type="button"
-      whileHover={{ x: 2 }}
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        "flex w-full items-center justify-between gap-2 rounded-ui border px-3 py-2 text-sm transition-colors",
+        "flex w-full items-center justify-between gap-2 rounded-ui border px-3 py-2 text-[length:var(--text-body-sm)] transition-colors",
         selected
-          ? "border-accent-strong bg-accent-soft text-accent-strong"
-          : "border-line text-fg-muted hover:border-fg-subtle hover:bg-surface-2",
+          ? "border-accent-muted bg-accent-soft text-accent-strong"
+          : "border-line text-fg-muted hover:border-line-strong hover:bg-surface-2",
       )}
     >
       <span>{label}</span>
       {selected && <Check className="h-3.5 w-3.5" />}
-    </motion.button>
+    </button>
   );
 }
 

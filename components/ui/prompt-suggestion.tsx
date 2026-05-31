@@ -7,12 +7,11 @@ import * as React from "react";
 /* ────────────────────────────────────────────────────────────────────────────
  * PromptSuggestion — reply-suggestion / command affordance.
  *
- * Braun discipline: these are SQUARE data-chips, never pills. The default
- * variant is a hairline-bordered `rounded-sm` chip (matching the DataChip
- * vocabulary used everywhere else); the `highlight` variant is a full-width,
- * borderless command row for a results/command list. Numeric/ID-leaning content
- * stays in the surface neutral tone. No amber here — accent is reserved for the
- * focused composer + the live indicator.
+ * White-modernist (claude.ai): the default variant is a SOFT PILL — a
+ * hairline-bordered `rounded-full` chip on a white surface that lifts on hover.
+ * The `highlight` variant is a full-width, borderless command row for a
+ * results/command list. No amber here — accent is reserved for primary actions
+ * and the live indicator.
  * ────────────────────────────────────────────────────────────────────────── */
 
 export type PromptSuggestionProps = {
@@ -39,15 +38,15 @@ function PromptSuggestion({
       ? highlightText(children, highlight!)
       : children;
 
-  // Command-list row vs. square reply chip.
+  // Command-list row vs. soft reply pill.
   const variantClasses = isCommandRow
     ? "w-full justify-start rounded-ui border-none text-fg-muted hover:bg-surface-2 hover:text-fg"
-    : // Square data-chip: hairline edge, gentle radius, never a pill.
-      "rounded-sm border-line text-fg-muted hover:border-line-strong hover:bg-surface-2 hover:text-fg";
+    : // Soft pill: white surface, hairline edge, full radius.
+      "rounded-full border-line bg-surface text-fg-muted hover:border-line-strong hover:bg-surface-2 hover:text-fg";
 
   const sizeClasses =
     size === "sm"
-      ? "h-7 px-3 text-[13px]"
+      ? "h-7 px-3.5 text-[13px]"
       : size === "lg"
         ? "h-9 px-5 text-sm"
         : "h-8 px-4 text-[13px]";

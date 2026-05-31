@@ -1,11 +1,16 @@
+import { FlaskConical } from "lucide-react";
 import { makeApi, type Hypothesis } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
 import { ErrorState } from "@/components/ErrorState";
 import { StatusBadge } from "@/components/PageChrome";
-import { SpecStrip } from "@/components/ui/spec-strip";
-import { EvidenceTree, type EvidenceNode } from "@/components/ui/agent-list";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { StatBand } from "@/components/ui/stat-band";
+import { CardGrid } from "@/components/ui/card-grid";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Scorecard } from "@/components/ui/scorecard";
-import { toStatusState, type StatusState } from "@/components/ui/status-disc";
+import { StatusDisc, toStatusState, type StatusState } from "@/components/ui/status-disc";
 
 export default async function HypothesesPage({
   params,
@@ -30,29 +35,12 @@ export default async function HypothesesPage({
   ).length;
   const open = hypotheses.length - verified - rejected;
 
-  const nodes: EvidenceNode[] = hypotheses.map((h) => buildNode(h));
-
   return (
     <div className="surface-bleed">
-      <header className="masthead mb-8">
-        <div className="masthead__metric">
-          <span className="flex items-baseline gap-3">
-            <span className="masthead__num" aria-hidden>
-              §
-            </span>
-            <h1 className="masthead__title">Cross Validation</h1>
-          </span>
-          <span className="flex flex-col items-end">
-            <span className="masthead__metric-value">{hypotheses.length}</span>
-            <span className="masthead__metric-label">Hypothesen</span>
-          </span>
-        </div>
-        <p className="masthead__dek">
-          Hypothesen werden generiert, sobald genug Signale aus mehreren
-          Abteilungen vorliegen, und gegen widersprechende Stimmen geprüft —
-          ≥5 bestätigend, ≤1 widersprechend, ≥2 Abteilungen.
-        </p>
-      </header>
+      <PageHeader
+        title="Cross Validation"
+        subtitle="Hypothesen werden generiert, sobald genug Signale aus mehreren Abteilungen vorliegen, und gegen widersprechende Stimmen geprüft — ≥5 bestätigend, ≤1 widersprechend, ≥2 Abteilungen."
+      />
 
       {!!error && (
         <div className="mb-6">
@@ -60,7 +48,8 @@ export default async function HypothesesPage({
         </div>
       )}
 
-      <SpecStrip
+      <StatBand
+        className="mb-8"
         cells={[
           { label: "Verifiziert", value: verified },
           { label: "In Validierung", value: open },
@@ -68,33 +57,27 @@ export default async function HypothesesPage({
         ]}
       />
 
-      <div className="mt-8">
-        {hypotheses.length === 0 ? (
-          <div className="rounded-card border border-dashed border-line-strong bg-surface/40 px-6 py-14">
-            <p className="text-center font-mono text-[length:var(--text-caps)] uppercase tracking-[0.06em] text-fg-subtle">
-              KEINE HYPOTHESEN AUF DER PLATTE — entstehen, sobald genug Signale
-              aus mehreren Abteilungen vorliegen.
-            </p>
-          </div>
-        ) : (
-          <>
-            <header className="mb-4 flex items-baseline justify-between gap-4 border-b border-line pb-2">
-              <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
-                § HYPOTHESEN
-              </span>
-              <span className="font-mono text-xs tabular-nums text-fg-muted">
-                n={hypotheses.length}
-              </span>
-            </header>
-            <EvidenceTree nodes={nodes} defaultExpandedDepth={0} />
-          </>
-        )}
-      </div>
+      {hypotheses.length === 0 ? (
+        <EmptyState
+          icon={FlaskConical}
+          title="Noch keine Hypothesen"
+          hint="Hypothesen entstehen, sobald genug Signale aus mehreren Abteilungen vorliegen."
+        />
+      ) : (
+        <>
+          <SectionHeading title="Hypothesen" count={hypotheses.length} />
+          <CardGrid>
+            {hypotheses.map((h) => (
+              <HypothesisCard key={h.id} h={h} />
+            ))}
+          </CardGrid>
+        </>
+      )}
     </div>
   );
 }
 
-function buildNode(h: Hypothesis): EvidenceNode {
+function HypothesisCard({ h }: { h: Hypothesis }) {
   const status: StatusState =
     h.validation_state === "VERIFIED"
       ? "verified"
@@ -104,34 +87,24 @@ function buildNode(h: Hypothesis): EvidenceNode {
           ? "pending"
           : toStatusState(h.validation_state);
 
-  const body = (
-    <div className="space-y-4 pr-4">
+  return (
+    <Card className="gap-4 p-5">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="font-semibold leading-snug tracking-[-0.01em] text-fg">
+          {h.statement}
+        </h3>
+        <StatusDisc state={status} size="sm" />
+      </div>
+
       <div className="flex flex-wrap items-center gap-2">
         <StatusBadge status={h.validation_state} />
         {typeof h.confidence_score === "number" && (
-          <span className="font-mono text-[length:var(--text-caps)] uppercase tracking-[0.06em] text-fg-subtle">
-            conf={Math.round(h.confidence_score * 100)}%
+          <span className="text-[length:var(--text-caption)] tabular-nums text-fg-subtle">
+            {Math.round(h.confidence_score * 100)}% Konfidenz
           </span>
         )}
       </div>
-      {h.dept_coverage.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {h.dept_coverage.map((d) => (
-            <span key={d} className="badge badge--knowledge">
-              {d}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 
-  return {
-    id: h.id,
-    kind: "hypothesis",
-    status,
-    label: h.statement,
-    extra: (
       <Scorecard
         supporting={h.n_supporting}
         contradicting={h.n_contradicting}
@@ -142,7 +115,16 @@ function buildNode(h: Hypothesis): EvidenceNode {
           depts: "Abt.",
         }}
       />
-    ),
-    body,
-  };
+
+      {h.dept_coverage.length > 0 && (
+        <div className="flex flex-wrap gap-2 border-t border-line-subtle pt-3">
+          {h.dept_coverage.map((d) => (
+            <span key={d} className="badge badge--knowledge">
+              {d}
+            </span>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
 }

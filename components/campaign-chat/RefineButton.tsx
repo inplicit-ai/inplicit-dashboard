@@ -61,13 +61,13 @@ export function RefineButton({ campaignId }: { campaignId: string }) {
         </DialogHeader>
 
         {error && (
-          <p className="rounded-ui border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger">
+          <p className="rounded-ui border border-danger/30 bg-danger-soft px-3 py-2 text-[length:var(--text-body)] text-danger">
             {error}
           </p>
         )}
 
         {info && (
-          <ul className="overflow-hidden rounded-card border border-line">
+          <ul className="overflow-hidden rounded-card border border-line shadow-card">
             {info.fields.map((f) => (
               <FieldRow key={f.field} field={f} />
             ))}
@@ -86,12 +86,12 @@ const MODE_TONE: Record<string, DataChipTone> = {
   locked: "neutral",
 };
 
-/** A refine-field row in the spine language: a status disc encodes lock state,
- *  a mono-tracked DataChip carries the server-enforced edit mode. */
+/** A refine-field row: a status disc encodes lock state, a DataChip carries the
+ *  server-enforced edit mode. */
 function FieldRow({ field }: { field: RefineFieldLock }) {
   const t = useTranslations("campaignChat");
   return (
-    <li className="grid grid-cols-[1.25rem_1fr_auto] items-center gap-3 border-b border-line-subtle bg-surface px-3 py-2.5 text-sm last:border-b-0">
+    <li className="grid grid-cols-[1.25rem_1fr_auto] items-center gap-3 border-b border-line-subtle bg-surface px-4 py-3 text-[length:var(--text-body)] last:border-b-0">
       <span className="flex justify-center">
         <StatusDisc state={field.locked ? "idle" : "done"} size="sm" />
       </span>

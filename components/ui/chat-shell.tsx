@@ -7,28 +7,27 @@ import { ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ────────────────────────────────────────────────────────────────────────────
- * ChatShell / ChatScroll / ChatScrollAnchored / ChatComposerBar — structural
- * helpers implementing the canonical chat-container flex height contract WITHOUT
- * any hardcoded vh height.
+ * ChatShell / ChatScroll / ChatScrollAnchored / ChatComposerBar — the clean
+ * claude.ai chat envelope implementing the canonical height contract.
  *
- * The shell is `flex flex-col` and fills its parent (use `h-full` when the parent
- * sets height, `h-[var(--chat-height)]` at a route top level, or `flex-1 min-h-0`
- * when nested in a flex column). Exactly ONE scroll region, composer pinned at the
- * bottom (ChatComposerBar).
+ * CHAT-FILL CONTRACT (design.css): the chat page wrapper renders
+ * `className="surface-bleed chat-fill"` as the DIRECT child of `.app-work`, so
+ * `.app-work` drops its padding + overflow and the chat fills the 1fr work row
+ * exactly. The page itself NEVER scrolls — only ChatScroll's single message
+ * region does. ChatShell is `flex min-h-0 flex-col h-full` (default `fill`); the
+ * composer is pinned shrink-0 at the bottom.
  *
- * ChatScrollAnchored adds the 21st.dev AI-conversation discipline: stick-to-bottom
- * while the user is at the foot of the thread, and a floating "scroll to bottom"
- * pill the instant they read back up. The pill is the only chrome that floats —
- * everything else is the spine + hairlines.
- *
- * See docs/plans/overhaul/design-contract.md §6.
+ * ChatScrollAnchored is the lone scroll region: stick-to-bottom while the reader
+ * is parked at the foot, plus a floating "scroll to bottom" pill the instant
+ * they read back up. The pill is the only chrome that floats.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const APPLE_EASE = [0.2, 0.65, 0.3, 0.9] as const;
+const SPRING_EASE = [0.2, 0.65, 0.3, 0.9] as const;
 
 export interface ChatShellProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Height strategy. `fill` = h-full (parent owns height — default),
-   *  `chat-height` = the campaign chat token, `bare` = topbar-only token. */
+  /** Height strategy. `fill` = h-full (parent owns height — the default, paired
+   *  with the chat-fill wrapper). The token variants exist only for legacy
+   *  callers that don't use the chat-fill wrapper. */
   height?: "fill" | "chat-height" | "bare";
 }
 
@@ -54,7 +53,7 @@ export function ChatShell({
   );
 }
 
-/** The single scrolling message list. `min-h-0 flex-1 overflow-y-auto`. */
+/** A simple single scrolling message list. `min-h-0 flex-1 overflow-y-auto`. */
 export function ChatScroll({
   className,
   children,
@@ -87,7 +86,7 @@ export interface ChatScrollAnchoredProps
  * The single scroll region WITH stick-to-bottom + a floating scroll-to-bottom
  * pill. Anchors to the foot while the reader is at the bottom; the moment they
  * scroll up the pill fades in and the auto-anchor stands down so reading back is
- * never yanked. This is the one piece of floating chrome the chat allows.
+ * never yanked.
  */
 export function ChatScrollAnchored({
   dep = [],
@@ -102,12 +101,9 @@ export function ChatScrollAnchored({
   const endRef = React.useRef<HTMLDivElement>(null);
   const [atBottom, setAtBottom] = React.useState(true);
 
-  const scrollToEnd = React.useCallback(
-    (behavior: ScrollBehavior) => {
-      endRef.current?.scrollIntoView({ behavior, block: "end" });
-    },
-    [],
-  );
+  const scrollToEnd = React.useCallback((behavior: ScrollBehavior) => {
+    endRef.current?.scrollIntoView({ behavior, block: "end" });
+  }, []);
 
   // Track whether the reader is parked at the foot of the thread.
   const onScroll = React.useCallback(() => {
@@ -152,8 +148,8 @@ export function ChatScrollAnchored({
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
-            transition={{ duration: 0.18, ease: APPLE_EASE }}
-            className="absolute bottom-4 left-1/2 z-10 grid size-9 -translate-x-1/2 place-items-center rounded-full border border-line bg-canvas text-fg-muted shadow-sm transition-colors hover:border-line-strong hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            transition={{ duration: 0.18, ease: SPRING_EASE }}
+            className="absolute bottom-5 left-1/2 z-10 grid size-9 -translate-x-1/2 place-items-center rounded-full border border-line bg-surface text-fg-muted shadow-card transition-colors hover:border-line-strong hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <ArrowDown className="size-4" />
           </motion.button>
@@ -163,7 +159,9 @@ export function ChatScrollAnchored({
   );
 }
 
-/** Pinned composer bar — never scrolls away. */
+/** Pinned composer bar — never scrolls away. A calm hairline divides it from the
+ *  conversation; the surface stays flush with the page so the composer floats on
+ *  the same off-white canvas as claude.ai. */
 export function ChatComposerBar({
   className,
   children,

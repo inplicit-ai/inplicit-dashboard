@@ -15,14 +15,12 @@ import { ScheduleSection } from "./ScheduleSection";
 import { EmailTemplateSection } from "./EmailTemplateSection";
 
 /**
- * The catalog (right pane) — re-cut as a Braun SPEC SHEET on the status spine.
+ * The catalog (right pane) — a stack of clean white section cards (claude.ai).
  *
- * The stack of rounded cards is gone. Every group is a FOLIO section break
- * (full-bleed hairline + tracked-caps folio), and its data lands directly on
- * the page's negative space. The interview FORMAT becomes one ruled spec band
- * (the .spec-strip instrument); GOALS and SUCCESS QUESTIONS become an
- * EvidenceTree whose status discs sit on the one shared spine x-axis.
- * Provenance becomes spatial, never boxed.
+ * Every group is a {@link SectionCard}: white surface, hairline border, soft
+ * shadow, calm sentence-case title + muted count. The interview FORMAT is a
+ * roomy labeled control grid; GOALS and SUCCESS QUESTIONS render as a soft
+ * EvidenceTree. Empty data shows a quiet hint, never an all-caps slogan dump.
  *
  * Every field is both user-editable and agent-populatable: an edit dispatches a
  * *local* SetupToolCall of the same shape the agent emits — single reducer, two
@@ -43,7 +41,7 @@ export function Catalog({
   const goals = draft.goals ?? [];
   const questions = draft.successCriteria?.questions ?? [];
 
-  // Goals as a status-spine ledger — each goal is an inline-editable row.
+  // Goals as soft evidence rows — each goal is an inline-editable label.
   const goalNodes: EvidenceNode[] = goals.map((g, i) => ({
     id: g.id,
     kind: "insight",
@@ -59,8 +57,8 @@ export function Catalog({
       />
     ),
     meta: (
-      <span className="font-mono tabular-nums text-fg-faint">
-        G-{String(i + 1).padStart(2, "0")}
+      <span className="tabular-nums text-fg-subtle">
+        {String(i + 1).padStart(2, "0")}
       </span>
     ),
   }));
@@ -71,17 +69,16 @@ export function Catalog({
     status: "done",
     label: <span className="text-fg">{q}</span>,
     meta: (
-      <span className="font-mono tabular-nums text-fg-faint">
-        Q-{String(i + 1).padStart(2, "0")}
+      <span className="tabular-nums text-fg-subtle">
+        {String(i + 1).padStart(2, "0")}
       </span>
     ),
   }));
 
   return (
-    <div className="flex flex-col gap-9">
-      {/* ── Format — one ruled instrument band of three peers ───────────── */}
+    <div className="flex flex-col gap-5">
+      {/* ── Format — a roomy labeled control grid ───────────────────────── */}
       <SectionCard
-        index="§ 01"
         title={t("interviewType")}
         touched={
           recentlyTouched?.has("set_interview_type") ||
@@ -89,7 +86,7 @@ export function Catalog({
           recentlyTouched?.has("set_language")
         }
       >
-        <div className="spec-strip rounded-card border border-line">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <SpecField label={t("interviewType")}>
             <Segmented
               value={draft.interviewType ?? "voice"}
@@ -137,8 +134,10 @@ export function Catalog({
           </SpecField>
         </div>
 
-        <label className="flex items-center justify-between gap-3 py-1">
-          <span className="text-fg-muted">{t("allowSwitch")}</span>
+        <label className="flex items-center justify-between gap-3 border-t border-line-subtle pt-3">
+          <span className="text-[length:var(--text-body)] text-fg-muted">
+            {t("allowSwitch")}
+          </span>
           <Switch
             checked={draft.language?.allowSwitch ?? true}
             onCheckedChange={(checked) =>
@@ -154,15 +153,14 @@ export function Catalog({
         </label>
       </SectionCard>
 
-      {/* ── Goals (query fan-out) ──────────────────────────────────────── */}
+      {/* ── Goals ──────────────────────────────────────────────────────── */}
       <SectionCard
-        index="§ 02"
         title={t("goals")}
         count={goals.length}
         touched={recentlyTouched?.has("set_goals")}
       >
         {draft.prompt ? (
-          <p className="border-l-2 border-line-strong pl-3 italic leading-relaxed text-fg-muted">
+          <p className="rounded-md border-l-2 border-accent-muted bg-surface-2 px-3 py-2 text-[length:var(--text-body)] leading-relaxed text-fg-muted">
             {draft.prompt}
           </p>
         ) : null}
@@ -175,7 +173,6 @@ export function Catalog({
 
       {/* ── Background ─────────────────────────────────────────────────── */}
       <SectionCard
-        index="§ 03"
         title={t("background")}
         touched={recentlyTouched?.has("set_background")}
       >
@@ -192,7 +189,6 @@ export function Catalog({
 
       {/* ── Success criteria ───────────────────────────────────────────── */}
       <SectionCard
-        index="§ 04"
         title={t("successCriteria")}
         count={questions.length > 0 ? questions.length : undefined}
         touched={recentlyTouched?.has("set_success_criteria")}
@@ -221,7 +217,6 @@ export function Catalog({
 
       {/* ── Topics ─────────────────────────────────────────────────────── */}
       <SectionCard
-        index="§ 05"
         title={t("topics")}
         count={draft.topics?.nodes?.length || undefined}
         touched={
@@ -256,20 +251,18 @@ export function Catalog({
   );
 }
 
-/* ─── Shared spec-sheet helpers ──────────────────────────────────────────── */
+/* ─── Shared catalog helpers ─────────────────────────────────────────────── */
 
-/** A printed-plate placeholder for empty data — hairline rule + mono caption. */
+/** A quiet hint for empty data — soft dashed plate, calm sentence-case copy. */
 export function PlatePlaceholder({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-card border border-dashed border-line-strong bg-surface-2 px-4 py-3">
-      <p className="font-mono text-[length:var(--text-eyebrow)] uppercase tracking-[0.06em] text-fg-subtle">
-        {children}
-      </p>
+    <div className="rounded-md border border-dashed border-line-strong bg-surface-2 px-4 py-3">
+      <p className="text-[length:var(--text-body)] text-fg-subtle">{children}</p>
     </div>
   );
 }
 
-/** A labelled cell inside the ruled spec band — eyebrow over the control. */
+/** A labelled control cell — calm sentence-case label over the control. */
 function SpecField({
   label,
   children,
@@ -278,8 +271,10 @@ function SpecField({
   children: React.ReactNode;
 }) {
   return (
-    <label className="spec-cell !gap-2">
-      <span className="spec-cell__label">{label}</span>
+    <label className="flex flex-col gap-2">
+      <span className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
+        {label}
+      </span>
       {children}
     </label>
   );

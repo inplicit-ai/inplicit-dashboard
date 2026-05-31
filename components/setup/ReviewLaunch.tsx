@@ -7,23 +7,30 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusDisc } from "@/components/ui/status-disc";
-import { SpecStrip } from "@/components/ui/spec-strip";
+import { StatBand, type StatBandCell } from "@/components/ui/stat-band";
 import { EvidenceTree, type EvidenceNode } from "@/components/ui/agent-list";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionHeading } from "@/components/ui/section-heading";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { DataChip } from "@/components/ui/data-chip";
-import { Eyebrow } from "@/components/PageChrome";
 import { type CampaignDraft } from "@/lib/api";
 import { clientApi } from "@/lib/client-api";
 import { validateForLaunch } from "@/lib/setup/draftReducer";
 import { TopicGraph } from "./TopicGraph";
 
 /**
- * Review + launch pad (doc 03 §8) — re-cut as a Braun launch instrument.
+ * Review + launch (doc 03 §8) — a crisp white-modernist confirmation screen.
  *
- *   1. Masthead         — the review title (sanctioned display register)
- *   2. SpecStrip        — type · duration · language · mode as one ruled band
- *   3. Folio sections   — goals as a status-spine EvidenceTree, delivery facts
- *   4. Launch pad       — the blocking validation as a status-disc register +
- *                         a near-black launch CTA (amber is never a button fill)
+ *   1. PageHeader     — the calm review title + muted subtitle (no §, no eyebrow)
+ *   2. StatBand       — type · duration · language · mode as one clean readout
+ *   3. Section cards  — goals as a soft EvidenceTree, audience & delivery facts
+ *   4. Launch card    — the blocking validation as a calm gate list + the
+ *                       near-black launch CTA (amber is never a button fill)
  *
  * Launch is a two-step bridge to the existing terminal write path:
  *   a) `launchDraft` materializes the draft → a DRAFT campaign row.
@@ -92,8 +99,8 @@ export function ReviewLaunch({
           },
         };
 
-  // Essentials as one ruled instrument band.
-  const specCells = [
+  // Essentials as one clean readout band.
+  const specCells: StatBandCell[] = [
     {
       label: tc("interviewType"),
       value: draft.interviewType === "chat" ? tc("chatType") : tc("voice"),
@@ -123,27 +130,27 @@ export function ReviewLaunch({
     status: "done",
     label: <span className="text-fg">{g.text}</span>,
     meta: (
-      <span className="font-mono tabular-nums text-fg-faint">
-        G-{String(i + 1).padStart(2, "0")}
+      <span className="tabular-nums text-fg-subtle">
+        {String(i + 1).padStart(2, "0")}
       </span>
     ),
   }));
 
   return (
     <div className="mx-auto flex max-w-[1040px] flex-col gap-8">
-      {/* ── Masthead ─────────────────────────────────────────────────────── */}
-      <motion.header {...reveal(0)} className="flex flex-col gap-2">
-        <Eyebrow>{t("eyebrow")}</Eyebrow>
-        <h1 className="text-[length:var(--text-display)] font-semibold leading-tight tracking-[-0.022em] text-fg">
-          {t("title")}
-        </h1>
-        <p className="body-lg max-w-[60ch] text-fg-muted">{t("subtitle")}</p>
-      </motion.header>
+      {/* ── Header ───────────────────────────────────────────────────────── */}
+      <motion.div {...reveal(0)}>
+        <PageHeader
+          title={t("title")}
+          subtitle={t("subtitle")}
+          className="mb-0"
+        />
+      </motion.div>
 
-      {/* ── Essentials instrument band ───────────────────────────────────── */}
+      {/* ── Essentials readout band ──────────────────────────────────────── */}
       <motion.section {...reveal(0.04)} className="flex flex-col gap-4">
-        <Folio index="§ 01" label={t("essentials")} />
-        <SpecStrip cells={specCells} className="rounded-card border border-line" />
+        <SectionHeading title={t("essentials")} className="mb-0" />
+        <StatBand cells={specCells} />
       </motion.section>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -152,151 +159,137 @@ export function ReviewLaunch({
           {/* Goals */}
           {goals.length > 0 ? (
             <motion.section {...reveal(0.08)} className="flex flex-col gap-4">
-              <Folio index="§ 02" label={tc("goals")} count={goals.length} />
-              <EvidenceTree nodes={goalNodes} defaultExpandedDepth={0} />
+              <SectionHeading
+                title={tc("goals")}
+                count={goals.length}
+                className="mb-0"
+              />
+              <Card>
+                <CardContent>
+                  <EvidenceTree nodes={goalNodes} defaultExpandedDepth={0} />
+                </CardContent>
+              </Card>
             </motion.section>
           ) : null}
 
           {/* Delivery */}
           <motion.section {...reveal(0.12)} className="flex flex-col gap-4">
-            <Folio index="§ 03" label={t("delivery")} />
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-              <div className="flex flex-col gap-2">
-                <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
-                  {tc("topics")}
-                </p>
-                {draft.topics?.nodes?.length ? (
-                  <TopicGraph data={draft.topics} />
-                ) : (
-                  <p className="font-mono text-[length:var(--text-eyebrow)] uppercase tracking-[0.06em] text-fg-subtle">
-                    {tc("topicsEmpty")}
+            <SectionHeading title={t("delivery")} className="mb-0" />
+            <Card>
+              <CardContent className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <p className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
+                    {tc("topics")}
                   </p>
-                )}
-              </div>
-              <dl className="flex flex-col divide-y divide-line-subtle">
-                <SpecRow label={tc("audience")}>
-                  {draft.audience?.segments?.length
-                    ? draft.audience.segments.join(", ")
-                    : "—"}
-                </SpecRow>
-                <SpecRow label={t("peopleLabel")} mono>
-                  {t("peopleCount", { count: peopleCount })}
-                </SpecRow>
-                {draft.background?.notes?.trim() ? (
-                  <SpecRow label={tc("background")}>
-                    <span className="line-clamp-3 text-fg-muted">
-                      {draft.background.notes}
+                  {draft.topics?.nodes?.length ? (
+                    <TopicGraph data={draft.topics} />
+                  ) : (
+                    <p className="text-[length:var(--text-body)] text-fg-subtle">
+                      {tc("topicsEmpty")}
+                    </p>
+                  )}
+                </div>
+                <dl className="flex flex-col divide-y divide-line-subtle">
+                  <SpecRow label={tc("audience")}>
+                    {draft.audience?.segments?.length
+                      ? draft.audience.segments.join(", ")
+                      : "—"}
+                  </SpecRow>
+                  <SpecRow label={t("peopleLabel")}>
+                    <span className="tabular-nums">
+                      {t("peopleCount", { count: peopleCount })}
                     </span>
                   </SpecRow>
-                ) : null}
-              </dl>
-            </div>
+                  {draft.background?.notes?.trim() ? (
+                    <SpecRow label={tc("background")}>
+                      <span className="line-clamp-3 text-fg-muted">
+                        {draft.background.notes}
+                      </span>
+                    </SpecRow>
+                  ) : null}
+                </dl>
+              </CardContent>
+            </Card>
           </motion.section>
         </div>
 
-        {/* Right — launch pad (sticky) */}
+        {/* Right — launch card (sticky) */}
         <motion.aside
           {...reveal(0.16)}
-          className="card card--compact gap-5 lg:sticky lg:top-6 lg:self-start"
+          className="lg:sticky lg:top-6 lg:self-start"
         >
-          <Folio index="§ 04" label={t("launchpad")} tone="subtle" />
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
+                {t("launchpad")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-5">
+              <div className="flex flex-col gap-3">
+                <p className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
+                  {t("checklist")}
+                </p>
+                <ul className="flex flex-col gap-2.5">
+                  <Gate
+                    ok={!reasons.includes("no_goals")}
+                    label={t("gates.no_goals")}
+                    okLabel={t("gatesOk.no_goals")}
+                  />
+                  <Gate
+                    ok={!reasons.includes("no_success_criteria")}
+                    label={t("gates.no_success_criteria")}
+                    okLabel={t("gatesOk.no_success_criteria")}
+                  />
+                  <Gate
+                    ok={!reasons.includes("bad_duration")}
+                    label={t("gates.bad_duration")}
+                    okLabel={t("gatesOk.bad_duration")}
+                  />
+                  <Gate
+                    ok={!reasons.includes("no_interview_type")}
+                    label={t("gates.no_interview_type")}
+                    okLabel={t("gatesOk.no_interview_type")}
+                  />
+                </ul>
+                {peopleCount === 0 ? (
+                  <p className="mt-1 flex items-start gap-2 rounded-md border border-line bg-warning-soft px-3 py-2 text-[13px] leading-snug text-fg-muted">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" />
+                    <span>{t("advisoryNoPeople")}</span>
+                  </p>
+                ) : null}
+              </div>
 
-          <div className="flex flex-col gap-3">
-            <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
-              {t("checklist")}
-            </p>
-            <ul className="flex flex-col gap-2.5">
-              <Gate
-                ok={!reasons.includes("no_goals")}
-                label={t("gates.no_goals")}
-                okLabel={t("gatesOk.no_goals")}
-              />
-              <Gate
-                ok={!reasons.includes("no_success_criteria")}
-                label={t("gates.no_success_criteria")}
-                okLabel={t("gatesOk.no_success_criteria")}
-              />
-              <Gate
-                ok={!reasons.includes("bad_duration")}
-                label={t("gates.bad_duration")}
-                okLabel={t("gatesOk.bad_duration")}
-              />
-              <Gate
-                ok={!reasons.includes("no_interview_type")}
-                label={t("gates.no_interview_type")}
-                okLabel={t("gatesOk.no_interview_type")}
-              />
-            </ul>
-            {peopleCount === 0 ? (
-              <p className="mt-1 flex items-start gap-2 rounded-ui border border-line bg-warning-soft px-3 py-2 text-[13px] leading-snug text-fg-muted">
-                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" />
-                <span>{t("advisoryNoPeople")}</span>
-              </p>
-            ) : null}
-          </div>
+              {error ? (
+                <p className="text-[length:var(--text-body)] text-danger" role="alert">
+                  {error}
+                </p>
+              ) : null}
 
-          {error ? (
-            <p className="text-danger" role="alert">
-              {error}
-            </p>
-          ) : null}
-
-          <div className="flex flex-col gap-3 border-t border-line-subtle pt-4">
-            <Button
-              onClick={launch}
-              disabled={blocked || launching}
-              size="lg"
-              className="w-full"
-            >
-              {launching ? t("launching") : t("launch")}
-            </Button>
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="w-full text-fg-muted"
-            >
-              <a href={`/campaigns/new/${draftId}`}>
-                <ArrowLeft className="h-3.5 w-3.5" />
-                {t("back")}
-              </a>
-            </Button>
-          </div>
+              <div className="flex flex-col gap-3 border-t border-line-subtle pt-4">
+                <Button
+                  onClick={launch}
+                  disabled={blocked || launching}
+                  size="lg"
+                  className="w-full"
+                >
+                  {launching ? t("launching") : t("launch")}
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-fg-muted"
+                >
+                  <a href={`/campaigns/new/${draftId}`}>
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    {t("back")}
+                  </a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </motion.aside>
       </div>
-    </div>
-  );
-}
-
-/* ─── Section folio — full-bleed hairline + tracked-caps masthead ─────────── */
-function Folio({
-  index,
-  label,
-  count,
-  tone = "primary",
-}: {
-  index: string;
-  label: string;
-  count?: number;
-  tone?: "primary" | "subtle";
-}) {
-  return (
-    <div
-      className={
-        tone === "subtle"
-          ? "flex items-baseline justify-between gap-4 border-b border-line-subtle pb-2.5"
-          : "flex items-baseline justify-between gap-4 border-b border-line pb-2.5"
-      }
-    >
-      <span className="flex items-baseline gap-2 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em]">
-        <span className="font-mono tabular-nums text-fg-faint">{index}</span>
-        <span className="text-fg-muted">{label}</span>
-      </span>
-      {typeof count === "number" ? (
-        <span className="font-mono text-[length:var(--text-eyebrow)] tabular-nums text-fg-subtle">
-          n={count}
-        </span>
-      ) : null}
     </div>
   );
 }
@@ -304,26 +297,22 @@ function Folio({
 /* ─── A hairline-separated spec label:value pair ─────────────────────────── */
 function SpecRow({
   label,
-  mono,
   children,
 }: {
   label: string;
-  mono?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-1 py-2.5 first:pt-0">
-      <dt className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
+      <dt className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
         {label}
       </dt>
-      <dd className={mono ? "font-mono tabular-nums text-fg" : "text-fg"}>
-        {children}
-      </dd>
+      <dd className="text-[length:var(--text-body)] text-fg">{children}</dd>
     </div>
   );
 }
 
-/* ─── A launch gate as a status-spine row ────────────────────────────────── */
+/* ─── A launch gate as a calm status row ─────────────────────────────────── */
 function Gate({
   ok,
   label,

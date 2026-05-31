@@ -1,16 +1,19 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { CheckCircle2, FolderOpen, TriangleAlert } from "lucide-react";
 import { makeApi, type Vault, type VaultItem, ApiError } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { ErrorState } from "@/components/ErrorState";
-import { Folio } from "@/components/ui/folio";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Card } from "@/components/ui/card";
 import { DataChip } from "@/components/ui/data-chip";
-import { StatusDisc } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 
 interface SearchParams {
@@ -110,119 +113,91 @@ export default async function VaultsPage({
     }
   }
 
+  const activeVault = vaults.find((v) => v.id === activeId) ?? null;
+
   return (
     <>
-      <Folio index="§" label={t("title")} count={vaults.length} />
+      <PageHeader title={t("title")} subtitle={t("count", { count: vaults.length })} />
 
       {error && (
-        <div className="mt-6">
+        <div className="mb-6">
           <ErrorState error={error} />
         </div>
       )}
 
-      {sp.flash && (
-        <div
-          role="status"
-          className="mt-6 grid grid-cols-[20px_1fr] items-start gap-x-2.5 rounded-ui border border-line-subtle bg-surface-2 px-3.5 py-2.5 text-meta text-fg"
-        >
-          <span className="flex justify-center pt-0.5">
-            <StatusDisc state={sp.flashType === "err" ? "error" : "done"} size="sm" />
-          </span>
-          <p className="leading-snug">{sp.flash}</p>
-        </div>
-      )}
+      {sp.flash && <Flash type={sp.flashType ?? "ok"} message={sp.flash} />}
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[20rem_1fr]">
-        {/* Vault list + create */}
+      <div className="grid gap-6 lg:grid-cols-[20rem_1fr]">
+        {/* ── Vault list + create ─────────────────────────────────────────── */}
         <div className="space-y-4">
           {canWrite && (
-            <div className="card card--compact">
+            <Card className="gap-3 p-5">
               <form action={createVault} className="space-y-3">
-                <label className="field">
-                  <span className="field__label">{t("newVault")}</span>
+                <div className="space-y-1.5">
+                  <Label htmlFor="vault-name">{t("newVault")}</Label>
                   <Input
+                    id="vault-name"
                     name="name"
                     placeholder={t("namePlaceholder")}
                     required
                   />
-                </label>
+                </div>
                 <Input name="description" placeholder={t("descPlaceholder")} />
                 <Button type="submit" className="w-full">
                   {t("createVault")}
                 </Button>
               </form>
-            </div>
+            </Card>
           )}
 
           {vaults.length === 0 ? (
-            <div className="overflow-hidden rounded-card border border-dashed border-line-strong bg-surface">
-              <div className="flex flex-col gap-3 px-5 py-8">
-                <span className="flex items-center gap-2.5">
-                  <StatusDisc state="idle" />
-                  <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
-                    {t("eyebrow")}
-                  </span>
-                </span>
-                <p className="body-sm leading-relaxed text-fg-muted">
-                  {t("empty")}
-                </p>
-              </div>
-            </div>
+            <Card className="p-2">
+              <EmptyState icon={FolderOpen} title={t("title")} hint={t("empty")} />
+            </Card>
           ) : (
-            <ul className="ledger" style={{ ["--spine-w" as string]: "20px" }}>
-              {vaults.map((v) => (
-                <li
-                  key={v.id}
-                  className="border-b border-line-subtle last:border-b-0"
-                >
+            <nav className="flex flex-col gap-2">
+              {vaults.map((v) => {
+                const isActive = v.id === activeId;
+                return (
                   <a
+                    key={v.id}
                     href={`/vaults?vault=${v.id}`}
-                    aria-current={v.id === activeId ? "true" : undefined}
+                    aria-current={isActive ? "true" : undefined}
                     className={cn(
-                      "grid grid-cols-[20px_1fr] items-start gap-x-2.5 px-2 py-2.5 transition-colors",
-                      v.id === activeId
-                        ? "bg-surface-2"
-                        : "hover:bg-surface-2",
+                      "block rounded-card border px-4 py-3 transition-all",
+                      isActive
+                        ? "border-line-strong bg-surface shadow-card"
+                        : "border-line bg-surface hover:-translate-y-0.5 hover:shadow-card-hover",
                     )}
                   >
-                    <span className="flex justify-center pt-1">
-                      <StatusDisc
-                        state={v.id === activeId ? "live" : "idle"}
-                        size="sm"
-                      />
-                    </span>
-                    <span className="min-w-0">
-                      <span
-                        className={cn(
-                          "block truncate text-body-sm text-fg",
-                          v.id === activeId ? "font-semibold" : "font-medium",
-                        )}
-                      >
-                        {v.name}
-                      </span>
-                      {v.description && (
-                        <span className="mt-0.5 block truncate text-caption text-fg-muted">
-                          {v.description}
-                        </span>
+                    <span
+                      className={cn(
+                        "block truncate text-[length:var(--text-body-sm)] text-fg",
+                        isActive ? "font-semibold" : "font-medium",
                       )}
+                    >
+                      {v.name}
                     </span>
+                    {v.description && (
+                      <span className="mt-0.5 block truncate text-[length:var(--text-caption)] text-fg-muted">
+                        {v.description}
+                      </span>
+                    )}
                   </a>
-                </li>
-              ))}
-            </ul>
+                );
+              })}
+            </nav>
           )}
         </div>
 
-        {/* Vault detail */}
+        {/* ── Vault detail ────────────────────────────────────────────────── */}
         <div>
-          {activeId ? (
-            <div className="card card--flush flex flex-col">
+          {activeId && activeVault ? (
+            <Card variant="ledger" className="overflow-hidden">
               <div className="flex items-center justify-between gap-3 border-b border-line-subtle px-6 py-4">
                 <div className="flex items-center gap-2">
-                  <DataChip tone="neutral">
-                    {vaults.find((v) => v.id === activeId)?.scope ?? "ORG"}
-                  </DataChip>
-                  <span className="body-sm font-medium text-fg">
+                  <DataChip tone="neutral">{activeVault.scope ?? "ORG"}</DataChip>
+                  <span className="text-[length:var(--text-body-sm)] font-medium text-fg">
                     {t("entriesCount", { count: items.length })}
                   </span>
                 </div>
@@ -231,7 +206,7 @@ export default async function VaultsPage({
                     <input type="hidden" name="id" value={activeId} />
                     <button
                       type="submit"
-                      className="text-meta text-fg-subtle transition-colors hover:text-pain"
+                      className="text-[length:var(--text-meta)] text-fg-subtle transition-colors hover:text-danger"
                     >
                       {t("delete")}
                     </button>
@@ -241,7 +216,7 @@ export default async function VaultsPage({
 
               <ul className="divide-y divide-line-subtle">
                 {items.length === 0 ? (
-                  <li className="px-6 py-6 body-sm text-fg-muted">
+                  <li className="px-6 py-6 text-[length:var(--text-body-sm)] text-fg-muted">
                     {t("noEntries")}
                   </li>
                 ) : (
@@ -252,13 +227,13 @@ export default async function VaultsPage({
                           {it.kind}
                         </DataChip>
                         {it.title && (
-                          <span className="body-sm font-medium text-fg">
+                          <span className="text-[length:var(--text-body-sm)] font-medium text-fg">
                             {it.title}
                           </span>
                         )}
                       </div>
                       {it.content && (
-                        <p className="mt-1.5 line-clamp-3 whitespace-pre-wrap body-sm leading-relaxed text-fg-muted">
+                        <p className="mt-1.5 line-clamp-3 whitespace-pre-wrap text-[length:var(--text-body-sm)] leading-relaxed text-fg-muted">
                           {it.content}
                         </p>
                       )}
@@ -302,22 +277,42 @@ export default async function VaultsPage({
                   </Button>
                 </form>
               )}
-            </div>
+            </Card>
           ) : (
-            <div className="overflow-hidden rounded-card border border-dashed border-line-strong bg-surface">
-              <div className="flex flex-col gap-3 px-8 py-12">
-                <span className="flex items-center gap-2.5">
-                  <StatusDisc state="idle" />
-                  <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
-                    {t("eyebrow")}
-                  </span>
-                </span>
-                <p className="body-lg text-fg-muted">{t("selectPrompt")}</p>
-              </div>
-            </div>
+            <Card className="p-2">
+              <EmptyState
+                icon={FolderOpen}
+                title={t("title")}
+                hint={t("selectPrompt")}
+              />
+            </Card>
           )}
         </div>
       </div>
     </>
+  );
+}
+
+function Flash({ type, message }: { type: "ok" | "err"; message: string }) {
+  const Icon = type === "ok" ? CheckCircle2 : TriangleAlert;
+  return (
+    <div
+      role="status"
+      className={cn(
+        "mb-6 flex items-start gap-3 rounded-ui border px-3.5 py-3 text-[length:var(--text-meta)]",
+        type === "ok"
+          ? "border-success/20 bg-success-soft text-fg"
+          : "border-danger/22 bg-danger-soft text-danger",
+      )}
+    >
+      <Icon
+        aria-hidden
+        className={cn(
+          "mt-0.5 h-4 w-4 shrink-0",
+          type === "ok" ? "text-success" : "text-danger",
+        )}
+      />
+      <p className="leading-snug">{message}</p>
+    </div>
   );
 }

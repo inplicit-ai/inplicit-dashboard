@@ -1,6 +1,7 @@
 "use client";
 
 import { type RefObject } from "react";
+
 import { ConversationTurn } from "@/components/ui/conversation-turn";
 import type { Lang } from "./copy";
 import { roomCopy } from "./copy";
@@ -20,16 +21,22 @@ function cleanAgentText(s: string): string {
 
 /**
  * Transcript — the running interview echo as calm ConversationTurn rows
- * (manifesto: interview-experience). assistant = the AI agent, user = the
- * participant; 68ch, content-first, no bubble border on the agent side. The
- * orchestrator sticks-to-bottom by scrolling `scrollRef` on new content.
+ * (white-modernist). assistant = the AI agent, user = the participant. This is
+ * the SOLE overflow region in the chat layout: it's `flex-1 min-h-0
+ * overflow-y-auto`; the orchestrator pins the composer below it and never lets
+ * the page itself scroll. Sticks-to-bottom by scrolling `scrollRef`.
  */
 export function Transcript({ lang, messages, interimUser, scrollRef }: Props) {
   const c = roomCopy(lang);
   return (
-    <div ref={scrollRef} className="iv-transcript">
+    <div
+      ref={scrollRef}
+      className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto py-2"
+    >
       {messages.length === 0 && !interimUser && (
-        <p className="caption iv-transcript__empty">{c.transcriptEmpty}</p>
+        <p className="m-auto text-center text-[length:var(--text-caption)] text-fg-subtle">
+          {c.transcriptEmpty}
+        </p>
       )}
 
       {messages.map((m) => (
@@ -46,7 +53,7 @@ export function Transcript({ lang, messages, interimUser, scrollRef }: Props) {
       ))}
 
       {interimUser && (
-        <ConversationTurn role="user" className="iv-turn--interim">
+        <ConversationTurn role="user" className="opacity-60">
           {interimUser}
           <Cursor />
         </ConversationTurn>
@@ -55,9 +62,6 @@ export function Transcript({ lang, messages, interimUser, scrollRef }: Props) {
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        .iv-transcript { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-2) 0 var(--space-4); }
-        .iv-transcript__empty { margin: auto 0; color: var(--color-text-tertiary); text-align: center; }
-        .iv-turn--interim { opacity: 0.6; }
         .iv-cursor { display: inline-block; width: 2px; height: 0.95em; margin-left: 2px; vertical-align: -2px; background: currentColor; opacity: 0.65; animation: iv-blink 1s steps(2) infinite; }
         @keyframes iv-blink { to { opacity: 0; } }
         @media (prefers-reduced-motion: reduce) { .iv-cursor { animation: none; } }

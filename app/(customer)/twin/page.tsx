@@ -3,11 +3,11 @@ import { Network } from "lucide-react";
 import { makeApi, type TwinGraph as TwinGraphData } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/PageChrome";
+import { PageHeader } from "@/components/ui/page-header";
 import { ErrorState } from "@/components/ErrorState";
-import { Folio } from "@/components/ui/folio";
-import { InstrumentBand } from "@/components/ui/instrument-band";
-import { DataChip } from "@/components/ui/data-chip";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { StatBand } from "@/components/ui/stat-band";
+import { EmptyState } from "@/components/ui/empty-state";
 import { StatusDisc } from "@/components/ui/status-disc";
 import { TwinGraph } from "@/components/ctsim/TwinGraph";
 
@@ -37,68 +37,53 @@ export default async function DigitalTwinPage() {
   return (
     <>
       <PageHeader
-        eyebrow={t("eyebrow")}
         title={t("title")}
-        meta={t("meta")}
-        actions={
-          <Badge variant="outline" className="font-mono text-[11px] tabular-nums">
-            {t("simulationBadge")}
-          </Badge>
-        }
+        subtitle={t("meta")}
+        actions={<Badge variant="outline">{t("simulationBadge")}</Badge>}
       />
 
       {error ? (
         <ErrorState error={error} />
       ) : (
-        <div className="surface-bleed flex flex-col gap-6">
-          {/* One ruled instrument band — the twin coverage readout. */}
-          <InstrumentBand
+        <div className="flex flex-col gap-8">
+          {/* Twin coverage readout — the clean white stat band. */}
+          <StatBand
             cells={[
               { label: "Rollen", value: total },
               {
                 label: "Validated",
                 value: validatedCount,
                 delta:
-                  total > 0
-                    ? { value: `${coverage}%`, dir: "up" }
-                    : undefined,
+                  total > 0 ? { dir: "up", value: `${coverage}%` } : undefined,
               },
               { label: "Predicted", value: predictedCount },
             ]}
           />
 
-          {/* Section folio + ledger-language legend (square chips, not pills). */}
+          {/* Section header + soft legend pills (no glyph, no all-caps). */}
           <div className="flex flex-col gap-4">
-            <Folio
-              index="§"
-              label="Hierarchie"
+            <SectionHeading
+              title="Hierarchie"
               count={total}
               action={
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1.5">
                     <StatusDisc state="verified" size="sm" />
-                    <DataChip tone="success" mono>
+                    <Badge variant="success">
                       {t("legendValidated", { count: validatedCount })}
-                    </DataChip>
+                    </Badge>
                   </span>
                   <span className="inline-flex items-center gap-1.5">
                     <StatusDisc state="needs-evidence" size="sm" />
-                    <DataChip>{t("legendPredicted")}</DataChip>
+                    <Badge variant="secondary">{t("legendPredicted")}</Badge>
                   </span>
                 </div>
               }
             />
 
             {graph.nodes.length === 0 ? (
-              <div className="card rounded-card border-dashed py-16 text-center">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="grid size-12 place-items-center rounded-full border border-line bg-surface-2 text-fg-subtle">
-                    <Network className="h-5 w-5" />
-                  </div>
-                  <p className="max-w-[48ch] text-base leading-relaxed text-fg-muted">
-                    {t("empty")}
-                  </p>
-                </div>
+              <div className="rounded-card border border-line bg-card shadow-card">
+                <EmptyState icon={Network} title={t("empty")} />
               </div>
             ) : (
               <TwinGraph data={graph} emptyLabel={t("empty")} />

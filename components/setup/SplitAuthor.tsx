@@ -196,14 +196,14 @@ export function SplitAuthor({
   const reasons = validateForLaunch(draft);
 
   return (
-    // surface-bleed opts this single route child out of the .app-work reading
-    // cap → full available width for the dense split author (design-contract §7).
-    // Height is anchored to the topbar-only chat token — no hardcoded 100vh math
-    // (design-contract §3/§6.1). Stacks on mobile; the chat pane caps at 50vh
-    // below md and fills height from md up.
-    <div className="surface-bleed flex min-h-0 flex-col gap-4 md:h-[var(--chat-height-bare)] md:flex-row">
+    // chat-fill makes this the flush, non-scrolling DIRECT child of .app-work:
+    // it fills the viewport row exactly (height:100%; min-h:0; flex column) so
+    // the PAGE never scrolls — only the chat message list and the catalog do.
+    // surface-bleed keeps the full available width for the split author.
+    // Stacks on mobile (chat pane caps at 50vh); fills height from md up.
+    <div className="surface-bleed chat-fill gap-4 p-4 md:flex-row md:p-6">
       {/* Left — chat */}
-      <div className="flex max-h-[50vh] min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-surface md:max-h-none md:max-w-[44%]">
+      <div className="flex max-h-[50vh] min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card md:max-h-none md:max-w-[44%]">
         <SetupChat turns={turns} streaming={stream.streaming} onSend={onSend} />
       </div>
 
@@ -212,8 +212,8 @@ export function SplitAuthor({
         <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto pr-0.5">
           <Catalog draft={draft} onPatch={onPatch} recentlyTouched={touched} />
         </div>
-        {/* Launch bar — the spine checklist + the near-black primary CTA. */}
-        <div className="flex shrink-0 flex-col gap-3 rounded-card border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        {/* Launch bar — the readiness checklist + the near-black primary CTA. */}
+        <div className="flex shrink-0 flex-col gap-3 rounded-card border border-line bg-surface px-4 py-3 shadow-card sm:flex-row sm:items-center sm:justify-between">
           <ChecklistSummary reasons={reasons} />
           <Button
             onClick={onReview}

@@ -161,12 +161,12 @@ export function CampaignChat({ campaignId }: { campaignId: string }) {
     }
   }
 
-  // Full-height chat-container (design-contract §6): the page supplies the
+  // Full-height chat-container (chat-fill contract): the page supplies the
   // height envelope; this fills it as a `flex min-h-0` row. Each pane (thread
   // rail + conversation) owns its own scroll region.
   return (
     <div className="flex h-full min-h-0 overflow-hidden border-t border-line bg-canvas">
-      <aside className="hidden w-64 shrink-0 border-r border-line bg-surface sm:flex sm:min-h-0 sm:flex-col">
+      <aside className="hidden w-72 shrink-0 border-r border-line bg-surface sm:flex sm:min-h-0 sm:flex-col">
         <ChatThreadList
           threads={threads}
           activeId={activeId}

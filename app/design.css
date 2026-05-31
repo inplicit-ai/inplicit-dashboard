@@ -8,77 +8,73 @@
 /* ─── Tokens — Light (DEFAULT, white-first) ──────────────────────────────── */
 :root,
 [data-theme="light"] {
-  /* Color system — Instrument / Research Ledger: warm paper over layered
-     neutral steps, ink primary, ONE amber chroma as the live/active signal.
-     Depth comes from hairline borders + a single surface step, never shadows.
-     STRUCTURE is the redesign; color stays disciplined. */
-  --color-bg: #faf9f6;
-  --color-surface: #f4f2ed;
-  --color-surface-2: #ece9e2;
-  --color-surface-3: #e3dfd6;
-  --color-elevated: #faf9f6;
+  /* Color system — WHITE MODERNIST CLEAN: off-white canvas so pure-white cards
+     lift, layered warm-neutral steps, near-black ink, ONE amber accent for
+     primary actions / active nav / focus / the single live indicator. Depth is
+     a soft shadow + a hairline border (light-mode shadows are now part of the
+     look). claude.ai / Linear / Vercel calm. */
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+  --color-surface-2: #f5f4f2;
+  --color-surface-3: #ededeb;
+  --color-elevated: #ffffff;
 
-  --color-border: #e3ded4;
-  --color-border-subtle: rgba(26, 24, 21, 0.06);
-  --color-border-strong: #cfc8ba;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-subtle: rgba(0, 0, 0, 0.05);
+  --color-border-strong: rgba(0, 0, 0, 0.14);
 
-  --color-text-primary: #1a1815;
-  --color-text-secondary: #5b554c;
-  --color-text-tertiary: #9a948a;
-  --color-text-quaternary: #b7b1a6;
+  --color-text-primary: #0a0a0a;
+  --color-text-secondary: #52525b;
+  --color-text-tertiary: #8a8a93;
+  --color-text-quaternary: #b4b4bb;
 
   --color-accent: #c2660c;
   --color-accent-strong: #a8550a;
-  --color-accent-soft: #f4e8d6;
-  --color-accent-muted: rgba(194, 102, 12, 0.24);
-  --color-accent-glow: rgba(194, 102, 12, 0.16);
+  --color-accent-soft: #fbf0e0;
+  --color-accent-muted: rgba(194, 102, 12, 0.28);
+  --color-accent-glow: rgba(194, 102, 12, 0.14);
 
-  --color-pain: #a8493a;
-  --color-pain-soft: rgba(168, 73, 58, 0.07);
-  --color-pain-muted: rgba(168, 73, 58, 0.22);
+  --color-pain: #d4452f;
+  --color-pain-soft: rgba(212, 69, 47, 0.06);
+  --color-pain-muted: rgba(212, 69, 47, 0.20);
 
-  --color-gap: #3f6478;
-  --color-gap-soft: rgba(63, 100, 120, 0.07);
-  --color-gap-muted: rgba(63, 100, 120, 0.22);
+  --color-gap: #2f6f8f;
+  --color-gap-soft: rgba(47, 111, 143, 0.06);
+  --color-gap-muted: rgba(47, 111, 143, 0.20);
 
-  --color-success: #4a6f55;
-  --color-success-soft: #e7ede7;
-  --color-warning: #9c7416;
-  --color-warning-soft: #f3ead4;
-  --color-danger: #a8493a;
-  --color-danger-soft: #f1e6e1;
-  --color-info: #3f6478;
-  --color-info-soft: #e4ebed;
+  --color-success: #16955a;
+  --color-success-soft: #e8f6ee;
+  --color-warning: #b07310;
+  --color-warning-soft: #fbf0d9;
+  --color-danger: #d4452f;
+  --color-danger-soft: #fbe9e6;
+  --color-info: #2f6f8f;
+  --color-info-soft: #e6f0f5;
 
-  --color-cta-bg: #1a1815;
-  --color-cta-text: #faf9f6;
+  --color-cta-bg: #0a0a0a;
+  --color-cta-text: #ffffff;
 
-  /* Typography — Instrument FOUR-size working scale. Hierarchy comes from
-     WEIGHT (400/500/600), SPACE (8px baseline), and the dashed-spine indent —
-     never from inventing sizes or colors. The legacy ramp tokens are retuned
-     (never removed) so they collapse onto the four canonical sizes:
-       Display 1.875rem · Title 1.25rem · Body 0.875rem · Caps 0.6875rem
-       (Meta 0.75rem stays for dense gutter timestamps).
-     --font-mono = machine identity (anon_id, tokens, counts, section numbers);
-     --font-sans = everything human. All numbers use tabular-nums. */
+  /* Typography — Inter for ALL UI text. --font-mono is RESERVED for literal
+     opaque IDs only (anon_id, UUID, interview_token). Numerals / metrics /
+     counts / percentages / timestamps render in SANS Inter with tabular-nums —
+     NEVER monospace. Hierarchy comes from size + weight + space. */
   --font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Canonical four-size scale */
-  --text-display: 1.875rem;     /* 30px — masthead metric + the one section title */
-  --text-title: 1.25rem;        /* 20px — sub-section labels, drawer headers */
-  --text-body: 0.875rem;        /* 14px — every ledger row, all prose */
-  --text-caps: 0.6875rem;       /* 11px — eyebrows, TOC, chips, column heads */
-
-  /* Legacy ramp tokens collapsed onto the four sizes (kept for compatibility) */
-  --text-headline: 1.875rem;    /* → Display */
-  --text-subtitle: 1.25rem;     /* → Title */
-  --text-body-lg: 0.875rem;     /* → Body */
-  --text-body-sm: 0.875rem;     /* → Body */
-  --text-meta: 0.75rem;         /* 12px — dense gutter timestamps only */
-  --text-caption: 0.75rem;      /* 12px */
-  --text-eyebrow: 0.6875rem;    /* → Caps */
-  --text-mono: 0.875rem;        /* → Body, mono */
+  /* Size ramp — white-modernist clean. */
+  --text-display: 1.875rem;     /* 30px — page titles */
+  --text-headline: 1.875rem;    /* 30px — alias of display */
+  --text-title: 1.1875rem;      /* 19px — section titles */
+  --text-subtitle: 1.1875rem;   /* 19px — alias of title */
+  --text-body-lg: 0.9375rem;    /* 15px — reading register */
+  --text-body: 0.875rem;        /* 14px — running UI / prose */
+  --text-body-sm: 0.875rem;     /* 14px — alias of body */
+  --text-meta: 0.8125rem;       /* 13px — meta / button labels */
+  --text-caption: 0.75rem;      /* 12px — captions / chip text */
+  --text-caps: 0.75rem;         /* 12px — labels / column heads */
+  --text-eyebrow: 0.75rem;      /* 12px — eyebrow / field labels */
+  --text-mono: 0.8125rem;       /* 13px — opaque IDs only */
+  --text-metric: 2rem;          /* 32px — big metric values (sans, tabular) */
 
   /* Spacing — 4-pt base */
   --space-1: 0.25rem;
@@ -95,14 +91,15 @@
   --space-20: 5rem;
   --space-24: 6rem;
 
-  /* Radius — Instrument: hairline-rounded, near-square. 3 chips / 5 controls /
-     6 mid / 8 cards. No child rounder than its parent. Pills stay full. */
-  --radius-sm: 3px;
-  --radius-ui: 5px;
-  --radius-md: 6px;
-  --radius-card: 8px;
-  --radius-lg: 8px;
-  --radius-popover: 8px;
+  /* Radius — white-modernist: soft rounded-xl cards, roomy controls.
+     Pills stay full. */
+  --radius-sm: 8px;
+  --radius-ui: 10px;
+  --radius-md: 12px;
+  --radius-card: 14px;
+  --radius-lg: 16px;
+  --radius-popover: 14px;
+  --radius: 10px;
   --radius-full: 9999px;
 
   /* Easing */
@@ -151,109 +148,111 @@
   --duration-control: 220ms;
   --duration-overlay: 200ms;
 
-  /* Shadows — white-first: NO card shadows in light mode (depth = border +
-     surface step). Shadows reserved for transient popovers/menus only. */
-  --shadow-sm: none;
-  --shadow-md: none;
-  --shadow-card: none;
-  --shadow-popover: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+  /* Shadows — white-modernist: subtle, soft elevation in light mode (this is
+     intentional and part of the look). Cards rest on --shadow-card and lift to
+     --shadow-card-hover. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 6px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-popover: 0 8px 28px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-elevation: 0 12px 32px rgba(0, 0, 0, 0.12);
   /* Tight 2px focus ring — the single legitimate accent signal on inputs. */
   --shadow-focus: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent-muted);
 
-  /* shadcn-bridge tokens — solid warm-paper colors so /<alpha> compiles. */
-  --background: #faf9f6;
-  --foreground: #1a1815;
-  --card: #faf9f6;
-  --card-foreground: #1a1815;
-  --popover: #faf9f6;
-  --popover-foreground: #1a1815;
-  --primary: #1a1815;
-  --primary-foreground: #faf9f6;
-  --secondary: #ece9e2;
-  --secondary-foreground: #1a1815;
-  --muted: #ece9e2;
-  --muted-foreground: #5b554c;
-  --shadcn-accent: #ece9e2;
-  --shadcn-accent-foreground: #1a1815;
-  --destructive: #a8493a;
-  --destructive-foreground: #faf9f6;
-  --shadcn-border: #e3ded4;
-  --input: #e3ded4;
+  /* shadcn-bridge tokens. */
+  --background: #fafafa;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f4f2;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f5f4f2;
+  --muted-foreground: #52525b;
+  --shadcn-accent: #f5f4f2;
+  --shadcn-accent-foreground: #0a0a0a;
+  --destructive: #d4452f;
+  --destructive-foreground: #ffffff;
+  --shadcn-border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.12);
   --ring: #c2660c;
-  --radius: 5px;
 }
 
 /* ─── Tokens — Dark (opt-in) ──────────────────────────────────────────────── */
 [data-theme="dark"] {
-  /* Warm near-blacks (#0e0c0a → #2e271d) so the amber accent reads as the one
-     focused signal. Shadows allowed here for depth on the dark canvas. */
-  --color-bg: #0e0c0a;
-  --color-surface: #17140f;
-  --color-surface-2: #221d16;
-  --color-surface-3: #2e271d;
-  --color-elevated: #2e271d;
+  /* Neutral near-blacks so the amber accent reads as the one focused signal.
+     Soft inset/drop shadows for depth on the dark canvas. */
+  --color-bg: #0a0a0b;
+  --color-surface: #161618;
+  --color-surface-2: #1f1f22;
+  --color-surface-3: #2a2a2e;
+  --color-elevated: #1f1f22;
 
-  --color-border: #241f18;
-  --color-border-subtle: rgba(245, 242, 234, 0.06);
-  --color-border-strong: #3a3328;
+  --color-border: rgba(255, 255, 255, 0.10);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
 
-  --color-text-primary: #f5f2ea;
-  --color-text-secondary: #c8c0b2;
-  --color-text-tertiary: #857d6f;
-  --color-text-quaternary: rgba(245, 242, 234, 0.34);
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #a1a1aa;
+  --color-text-tertiary: #71717a;
+  --color-text-quaternary: rgba(250, 250, 250, 0.32);
 
   --color-accent: #f5a623;
   --color-accent-strong: #ffb84d;
-  --color-accent-soft: #2c2114;
-  --color-accent-muted: rgba(245, 166, 35, 0.24);
-  --color-accent-glow: rgba(245, 166, 35, 0.28);
+  --color-accent-soft: rgba(245, 166, 35, 0.12);
+  --color-accent-muted: rgba(245, 166, 35, 0.28);
+  --color-accent-glow: rgba(245, 166, 35, 0.22);
 
-  --color-pain: #dd7a64;
-  --color-pain-soft: rgba(221, 122, 100, 0.12);
-  --color-pain-muted: rgba(221, 122, 100, 0.26);
+  --color-pain: #f87171;
+  --color-pain-soft: rgba(248, 113, 113, 0.12);
+  --color-pain-muted: rgba(248, 113, 113, 0.26);
 
-  --color-gap: #74a6c2;
-  --color-gap-soft: rgba(116, 166, 194, 0.12);
-  --color-gap-muted: rgba(116, 166, 194, 0.26);
+  --color-gap: #60a5fa;
+  --color-gap-soft: rgba(96, 165, 250, 0.12);
+  --color-gap-muted: rgba(96, 165, 250, 0.26);
 
-  --color-success: #7ab98a;
-  --color-success-soft: #16231a;
-  --color-warning: #ddab3a;
-  --color-warning-soft: #2a2010;
-  --color-danger: #dd7a64;
-  --color-danger-soft: #2a1612;
-  --color-info: #74a6c2;
-  --color-info-soft: #13212a;
+  --color-success: #34d399;
+  --color-success-soft: rgba(52, 211, 153, 0.12);
+  --color-warning: #fbbf24;
+  --color-warning-soft: rgba(251, 191, 36, 0.12);
+  --color-danger: #f87171;
+  --color-danger-soft: rgba(248, 113, 113, 0.12);
+  --color-info: #60a5fa;
+  --color-info-soft: rgba(96, 165, 250, 0.12);
 
-  --color-cta-bg: #f5f2ea;
-  --color-cta-text: #0e0c0a;
+  --color-cta-bg: #fafafa;
+  --color-cta-text: #0a0a0b;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.5);
-  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px rgba(0, 0, 0, 0.42);
-  --shadow-popover: 0 16px 40px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-card-hover: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 10px 28px rgba(0, 0, 0, 0.55);
+  --shadow-popover: 0 16px 40px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45);
   --shadow-elevation: 0 24px 64px rgba(0, 0, 0, 0.65), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
   --shadow-focus: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent-muted);
 
-  --background: #0e0c0a;
-  --foreground: #f5f2ea;
-  --card: #17140f;
-  --card-foreground: #f5f2ea;
-  --popover: #221d16;
-  --popover-foreground: #f5f2ea;
-  --primary: #f5f2ea;
-  --primary-foreground: #0e0c0a;
-  --secondary: #221d16;
-  --secondary-foreground: #f5f2ea;
-  --muted: #17140f;
-  --muted-foreground: #857d6f;
-  --shadcn-accent: #221d16;
-  --shadcn-accent-foreground: #f5f2ea;
-  --destructive: #dd7a64;
-  --destructive-foreground: #f5f2ea;
-  --shadcn-border: #241f18;
-  --input: #241f18;
+  --background: #0a0a0b;
+  --foreground: #fafafa;
+  --card: #161618;
+  --card-foreground: #fafafa;
+  --popover: #1f1f22;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #0a0a0b;
+  --secondary: #1f1f22;
+  --secondary-foreground: #fafafa;
+  --muted: #161618;
+  --muted-foreground: #71717a;
+  --shadcn-accent: #1f1f22;
+  --shadcn-accent-foreground: #fafafa;
+  --destructive: #f87171;
+  --destructive-foreground: #fafafa;
+  --shadcn-border: rgba(255, 255, 255, 0.10);
+  --input: rgba(255, 255, 255, 0.14);
   --ring: #f5a623;
 }
 
@@ -338,8 +337,8 @@
 .display {
   font-size: var(--text-display);
   font-weight: 600;
-  line-height: 1.2;        /* 30/36 */
-  letter-spacing: -0.01em;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   color: var(--color-text-primary);
 }
 
@@ -347,7 +346,7 @@
   font-size: var(--text-headline);
   font-weight: 600;
   line-height: 1.2;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   color: var(--color-text-primary);
 }
 
@@ -359,57 +358,61 @@
 .title {
   font-size: var(--text-title);
   font-weight: 600;
-  line-height: 1.4;        /* 20/28 */
-  letter-spacing: -0.01em;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
   color: var(--color-text-primary);
 }
 
 .subtitle {
   font-size: var(--text-subtitle);
   font-weight: 600;
-  line-height: 1.4;
-  letter-spacing: -0.01em;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
   color: var(--color-text-primary);
 }
 
-/* Body is the single running size (14/22). All reading registers collapse onto
-   it; the legacy body-lg / body-sm tokens now alias Body. */
-.body-lg { font-size: var(--text-body-lg); line-height: 1.571; color: var(--color-text-primary); }
-.body { font-size: var(--text-body); line-height: 1.571; color: var(--color-text-primary); }
-.body-sm { font-size: var(--text-body-sm); line-height: 1.571; color: var(--color-text-secondary); }
-.meta { font-size: var(--text-meta); line-height: 1.4; color: var(--color-text-secondary); }
+/* Body (14/1.55) is the running UI size; body-lg (15/1.6) is the reading
+   register for prose surfaces. */
+.body-lg { font-size: var(--text-body-lg); line-height: 1.6; color: var(--color-text-primary); }
+.body { font-size: var(--text-body); line-height: 1.55; color: var(--color-text-primary); }
+.body-sm { font-size: var(--text-body-sm); line-height: 1.55; color: var(--color-text-secondary); }
+.meta { font-size: var(--text-meta); line-height: 1.4; font-weight: 400; color: var(--color-text-secondary); }
 .caption { font-size: var(--text-caption); line-height: 1.4; color: var(--color-text-tertiary); }
+/* Mono is reserved for literal opaque IDs only (anon_id, UUID, token). */
 .mono { font-family: var(--font-mono); font-size: var(--text-mono); font-variant-numeric: tabular-nums; }
 
-/* Caps — the universal label register: eyebrows, the index TOC, chip text,
-   column headers, spec-gutter labels. Weight 600, uppercase, wide tracking. */
+/* Metric value — big SANS tabular figure for MetricCard / StatBand. */
+.metric {
+  font-size: var(--text-metric);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+/* Caps — the label register. Calmer 0.04em tracking. UPPERCASE only for table
+   column heads; field labels are sentence-case (use .label / .field__label). */
 .caps {
   font-size: var(--text-caps);
   font-weight: 600;
   line-height: 1.4;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
 }
 
+/* Eyebrow — calm 12px tracked label, no leading dash. */
 .eyebrow {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   font-size: var(--text-eyebrow);
   font-weight: 600;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--color-accent);
+  color: var(--color-text-tertiary);
   line-height: 1.2;
-}
-
-.eyebrow::before {
-  content: "";
-  width: 12px;
-  height: 1px;
-  background: currentColor;
-  opacity: 0.6;
 }
 
 .text-secondary { color: var(--color-text-secondary); }
@@ -472,6 +475,22 @@
   min-width: 0;
   overflow-y: auto;
   padding: var(--space-10) var(--space-8) var(--space-20);
+}
+
+/* Chat-fill: a flush, non-scrolling child fills the 1fr work row exactly so the
+   page never scrolls — only the chat's own message region does. The chat page
+   wrapper renders className="surface-bleed chat-fill" as the DIRECT child of
+   .app-work; the chat component is flex min-h-0 flex-col with ONE overflow-y
+   message region + a shrink-0 pinned composer. */
+.app-work:has(> .chat-fill) {
+  padding: 0;
+  overflow: hidden;
+}
+.chat-fill {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Center the work-area content at a comfortable reading width, matching the
@@ -558,8 +577,8 @@
   align-items: center;
   gap: var(--space-4);
   height: var(--shell-topbar-h);
-  padding: 0 var(--space-6);
-  background: var(--color-bg);
+  padding: 0 var(--space-8);
+  background: var(--color-surface);
   border-bottom: 1px solid var(--color-border-subtle);
 }
 
@@ -634,7 +653,7 @@
   width: 24px;
   height: 0;
   margin-left: var(--space-1);
-  border-top: 1px dashed var(--color-border-strong);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .shell-stepper-pill {
@@ -693,8 +712,9 @@
   align-items: stretch;
   height: 60px;
   padding-bottom: env(safe-area-inset-bottom, 0);
-  background: var(--color-bg);
-  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border-subtle);
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.03);
 }
 .shell-tabbar__item {
   position: relative;
@@ -712,22 +732,11 @@
   border: 0;
   cursor: pointer;
 }
-/* Active = near-black label + a 2px amber top tick (the same underline signal
-   as the desktop tabs), NOT a fully amber item. Amber stays a functional mark. */
+/* Active = accent label + icon (clean white-modernist; the accent is the
+   single live/active mark). No top tick, no fully-filled item. */
 .shell-tabbar__item.is-active {
-  color: var(--color-text-primary);
+  color: var(--color-accent-strong);
   font-weight: 600;
-}
-.shell-tabbar__item.is-active::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 28px;
-  height: 2px;
-  border-radius: var(--radius-full);
-  background: var(--color-accent);
 }
 .shell-tabbar__item.is-disabled { opacity: 0.4; pointer-events: none; }
 .shell-tabbar__label { line-height: 1; }
@@ -745,9 +754,9 @@
   left: 0;
   z-index: 51;
   width: min(82vw, 320px);
-  background: var(--color-bg);
-  border-right: 1px solid var(--color-border);
-  box-shadow: var(--shadow-elevation);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-popover);
   overflow: hidden;
 }
 .shell-drawer__panel .sidebar { position: relative; width: 100%; height: 100dvh; }
@@ -874,7 +883,7 @@
 /* ─── Page header ─────────────────────────────────────────────────────────── */
 
 .page-header {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-8);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -883,11 +892,14 @@
 
 .page-header__main { min-width: 0; }
 .page-header__main > .eyebrow { margin-bottom: var(--space-3); }
-.page-header__main > .headline { margin-bottom: var(--space-4); }
+.page-header__main > .display,
+.page-header__main > .headline { margin-bottom: var(--space-2); }
+.page-header__main > .display:last-child,
 .page-header__main > .headline:last-child { margin-bottom: 0; }
 
 .page-header__meta {
-  font-size: var(--text-body-sm);
+  font-size: var(--text-body-lg);
+  line-height: 1.6;
   color: var(--color-text-secondary);
   max-width: 60ch;
 }
@@ -918,10 +930,13 @@
   position: relative;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: none;        /* Instrument: depth = hairline + one surface step. */
-  transition: border-color 0.18s var(--ease-smooth), background 0.18s var(--ease-smooth);
+  border-radius: var(--radius-card);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-card);   /* white-modernist: soft elevation in both themes. */
+  transition:
+    border-color 0.18s var(--ease-spring),
+    box-shadow 0.18s var(--ease-spring),
+    transform 0.18s var(--ease-spring);
 }
 
 .card--compact { padding: var(--space-4); }
@@ -932,7 +947,7 @@
 .card--ledger {
   border: 0;
   border-radius: 0;
-  padding-inline: 0;
+  padding: 0;
   background: transparent;
   box-shadow: none;
 }
@@ -966,17 +981,20 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  padding: var(--space-5);
+  padding: var(--space-6);
   box-shadow: var(--shadow-card);
   transition:
-    border-color 0.18s var(--ease-smooth),
-    box-shadow 0.18s var(--ease-smooth),
-    background 0.18s var(--ease-smooth);
+    border-color 0.18s var(--ease-spring),
+    box-shadow 0.18s var(--ease-spring),
+    transform 0.18s var(--ease-spring);
 }
-/* Linear hover — a color shift, never a lift. No translateY, no shadow. */
+/* White-modernist hover — a gentle spring lift + stronger soft shadow. */
 .card-link:hover {
-  border-color: var(--color-border-strong);
-  background: var(--color-surface-2);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-link:hover { transform: none; }
 }
 
 /* ─── Button ──────────────────────────────────────────────────────────────── */
@@ -986,7 +1004,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  height: 32px;
+  height: 36px;
   padding: 0 var(--space-4);
   font-family: var(--font-family);
   font-size: var(--text-meta);
@@ -1004,32 +1022,30 @@
     box-shadow 0.15s var(--ease-smooth);
 }
 
-.btn--sm { height: 28px; padding: 0 var(--space-3); font-size: var(--text-caption); border-radius: var(--radius-sm); }
-.btn--lg { height: 36px; padding: 0 var(--space-5); font-size: var(--text-body); }
+.btn--sm { height: 30px; padding: 0 var(--space-3); font-size: var(--text-caption); border-radius: var(--radius-ui); }
+.btn--lg { height: 40px; padding: 0 var(--space-5); font-size: var(--text-body); }
 
 .btn--primary {
   background: var(--color-cta-bg);
   color: var(--color-cta-text);
   border-color: var(--color-cta-bg);
-  box-shadow: none;
+  box-shadow: var(--shadow-sm);
 }
 .btn--primary:hover {
-  background: #1a1a1a;
-  border-color: #1a1a1a;
-}
-[data-theme="dark"] .btn--primary {
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset, 0 4px 14px rgba(0, 0, 0, 0.45);
+  background: #1f1f1f;
+  border-color: #1f1f1f;
+  box-shadow: var(--shadow-md);
 }
 [data-theme="dark"] .btn--primary:hover {
   background: #ffffff;
   border-color: #ffffff;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.24) inset, 0 8px 22px rgba(0, 0, 0, 0.55);
 }
 
 .btn--ghost {
   background: var(--color-surface);
   border-color: var(--color-border);
   color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
 }
 .btn--ghost:hover {
   background: var(--color-surface-2);
@@ -1046,15 +1062,19 @@
 }
 .btn--link:hover { color: var(--color-text-primary); text-decoration: underline; text-underline-offset: 3px; }
 
+/* Accent is DEMOTED — reserved for primary actions / active nav / focus. When a
+   true accent CTA is intended, render solid accent (no gradient); otherwise use
+   .btn--primary. */
 .btn--accent {
-  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-strong) 100%);
-  color: #1a1100;
-  border-color: transparent;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.24) inset, 0 6px 18px var(--color-accent-glow);
+  background: var(--color-accent);
+  color: #ffffff;
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-sm);
 }
 .btn--accent:hover {
-  filter: brightness(1.05);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.28) inset, 0 10px 28px var(--color-accent-glow);
+  background: var(--color-accent-strong);
+  border-color: var(--color-accent-strong);
+  box-shadow: var(--shadow-md);
 }
 
 .btn--danger {
@@ -1084,13 +1104,13 @@
 /* ─── Form ────────────────────────────────────────────────────────────────── */
 
 .field { display: flex; flex-direction: column; gap: var(--space-2); }
+/* Field labels are sentence-case (no uppercase), calm 0.04em tracking. */
 .field__label,
 .label {
   font-size: var(--text-eyebrow);
   font-weight: 600;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
-  color: var(--color-text-tertiary);
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
 }
 
 .input,
@@ -1098,27 +1118,25 @@
 .select {
   display: block;
   width: 100%;
-  height: 36px;
+  height: 40px;
   font-family: var(--font-family);
   font-size: var(--text-body-sm);
   line-height: 1.4;
   padding: 0 var(--space-3);
   background: var(--color-surface);
   color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--input);
   border-radius: var(--radius-ui);
   transition: border-color 0.15s var(--ease-smooth), box-shadow 0.15s var(--ease-smooth), background 0.15s var(--ease-smooth);
 }
 
 .input:hover, .textarea:hover, .select:hover {
   border-color: var(--color-border-strong);
-  background: var(--color-surface-2);
 }
 .input:focus, .textarea:focus, .select:focus {
   outline: none;
   border-color: var(--color-accent);
   box-shadow: var(--shadow-focus);
-  background: var(--color-surface-2);
 }
 
 .input::placeholder, .textarea::placeholder { color: var(--color-text-quaternary); }
@@ -1126,7 +1144,7 @@
 .input--inline {
   padding: 0 var(--space-3);
   font-size: var(--text-body-sm);
-  height: 32px;
+  height: 36px;
 }
 
 .textarea { height: auto; padding: var(--space-3); resize: vertical; min-height: 96px; }
@@ -1148,14 +1166,14 @@
 
 .table thead th {
   text-align: left;
-  font-size: var(--text-eyebrow);
+  font-size: var(--text-caps);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.06em;
   color: var(--color-text-tertiary);
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface-2);
+  background: transparent;
   white-space: nowrap;
   position: sticky;
   top: 0;
@@ -1163,7 +1181,7 @@
 }
 
 .table tbody td {
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-4);
   border-bottom: 1px solid var(--color-border-subtle);
   color: var(--color-text-primary);
   vertical-align: middle;
@@ -1193,41 +1211,39 @@
 
 /* ─── Badge ───────────────────────────────────────────────────────────────── */
 
-/* Square data-chip (not a pill — pills read as marketing). All variants are
-   tint-only; numeric content should switch to mono + tabular-nums at use-site. */
+/* Soft pill — SANS (mono only when content is a literal ID), tabular numerals,
+   full radius, tinted variants. */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: 0.125rem 0.375rem;
-  font-family: var(--font-mono);
-  font-size: var(--text-caps);
-  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  font-family: var(--font-family);
+  font-size: var(--text-caption);
+  font-weight: 500;
   line-height: 1.4;
-  letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-2);
   color: var(--color-text-secondary);
   white-space: nowrap;
 }
 
-/* Canonical square tag / count primitive (DataChip). Mono, tabular, 3px. */
+/* Canonical tag / count pill (DataChip). SANS, tabular, full radius. */
 .chip {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: 0.125rem 0.375rem;
-  font-family: var(--font-mono);
-  font-size: var(--text-caps);
-  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  font-family: var(--font-family);
+  font-size: var(--text-caption);
+  font-weight: 500;
   line-height: 1.4;
-  letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-2);
   color: var(--color-text-secondary);
   white-space: nowrap;
 }
@@ -1243,12 +1259,17 @@
 .chip--success {
   color: var(--color-success);
   background: var(--color-success-soft);
-  border-color: rgba(74, 111, 85, 0.24);
+  border-color: transparent;
 }
 .chip--danger {
   color: var(--color-danger);
   background: var(--color-danger-soft);
-  border-color: var(--color-pain-muted);
+  border-color: transparent;
+}
+.chip--warning {
+  color: var(--color-warning);
+  background: var(--color-warning-soft);
+  border-color: transparent;
 }
 /* Interactive chip (citation / suggestion) — amber on hover, the one signal. */
 button.chip,
@@ -1286,25 +1307,18 @@ button.chip:hover,
 .badge--success {
   color: var(--color-success);
   background: var(--color-success-soft);
-  border-color: rgba(52, 211, 153, 0.22);
+  border-color: transparent;
 }
 .badge--warning {
   color: var(--color-warning);
-  background: rgba(251, 191, 36, 0.10);
-  border-color: rgba(251, 191, 36, 0.24);
+  background: var(--color-warning-soft);
+  border-color: transparent;
 }
 .badge--danger {
   color: var(--color-danger);
   background: var(--color-danger-soft);
-  border-color: rgba(248, 113, 113, 0.22);
+  border-color: transparent;
 }
-
-[data-theme="light"] .badge--success { border-color: rgba(21, 128, 61, 0.22); }
-[data-theme="light"] .badge--warning {
-  background: rgba(180, 83, 9, 0.06);
-  border-color: rgba(180, 83, 9, 0.22);
-}
-[data-theme="light"] .badge--danger { border-color: rgba(185, 28, 28, 0.22); }
 
 /* The canonical "interview live / synthesis running" chip. Pair with a leading
    .status-disc.status-disc--live.status-disc--pulse. */
@@ -1374,13 +1388,13 @@ button.chip:hover,
    active segment goes solid amber. */
 .connector {
   height: 0;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border-subtle);
 }
-.connector--dashed { border-top: 1px dashed var(--color-border-strong); }
+/* De-emphasized: no dashes on page chrome — a calm subtle rule. */
+.connector--dashed { border-top: 1px solid var(--color-border-subtle); }
 .connector--active { border-top: 1px solid var(--color-accent); }
 
-/* Vertical variant — the page spine threading the ledger. Absolutely placed at
-   --connector-left so it aligns to every disc center. */
+/* Vertical variant — a calm subtle rule (no dashes). */
 .connector--vertical {
   position: absolute;
   top: 0;
@@ -1388,7 +1402,7 @@ button.chip:hover,
   left: var(--connector-left);
   height: auto;
   border-top: 0;
-  border-left: 1px dashed var(--color-border-strong);
+  border-left: 1px solid var(--color-border-subtle);
 }
 .connector--vertical.connector--active {
   border-left-color: var(--color-accent);
@@ -1480,16 +1494,16 @@ button.chip:hover,
   padding: var(--space-2) var(--space-3);
   font-size: var(--text-caps);
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--color-text-secondary);
   text-decoration: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-ui);
   transition: color 0.15s var(--ease-smooth), box-shadow 0.15s var(--ease-smooth);
 }
 .index-item:hover { color: var(--color-text-primary); }
 .index-item__num {
-  font-family: var(--font-mono);
+  font-family: var(--font-family);
   font-variant-numeric: tabular-nums;
   color: var(--color-text-tertiary);
 }
@@ -1507,32 +1521,27 @@ button.chip:hover,
 
 /* ─── SectionMasthead — printed-journal page header ────────────────────────── */
 
+/* Superseded by the PageHeader component — restyled here to the clean
+   white-modernist header for any remaining .masthead usages. No '§' glyph,
+   no mono, no bottom rule. */
 .masthead {
   display: grid;
   gap: var(--space-2);
-  padding-block: var(--space-6);
-  border-bottom: 1px solid var(--color-border);
+  padding-block: var(--space-2) 0;
 }
-.masthead__num {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  font-size: var(--text-display);
-  font-weight: 600;
-  line-height: 1.2;
-  color: var(--color-text-tertiary);
-  letter-spacing: -0.01em;
-}
+/* The '§' numeral is killed entirely. */
+.masthead__num { display: none; }
 .masthead__title {
   font-size: var(--text-display);
   font-weight: 600;
   line-height: 1.2;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   color: var(--color-text-primary);
 }
 .masthead__dek {
-  max-width: var(--measure-width);
-  font-size: var(--text-body);
-  line-height: 1.571;
+  max-width: 60ch;
+  font-size: var(--text-body-lg);
+  line-height: 1.6;
   color: var(--color-text-secondary);
 }
 .masthead__metric {
@@ -1542,63 +1551,69 @@ button.chip:hover,
   gap: var(--space-4);
 }
 .masthead__metric-value {
-  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: var(--text-display);
+  font-size: var(--text-metric);
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   color: var(--color-text-primary);
 }
 .masthead__metric-label {
   font-size: var(--text-caps);
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--color-text-tertiary);
 }
 
 /* ─── SpecStrip — kills the stat-card grid (one ruled enclosure) ───────────── */
 
+/* StatBand — white-modernist readout. A single rounded container split by 1px
+   dividers (the gap-px-on-border trick) into equal white metric cells. */
 .spec-strip {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
-  border-block: 1px solid var(--color-border);
+  gap: 1px;
+  background: var(--color-border);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 .spec-cell {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-4);
-  border-left: 1px solid var(--color-border);
+  padding: var(--space-5);
+  background: var(--color-surface);
 }
-.spec-cell:first-child { border-left: 0; }
 .spec-cell__label {
-  font-family: var(--font-mono);
+  font-family: var(--font-family);
   font-size: var(--text-caps);
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--color-text-tertiary);
 }
 .spec-cell__value {
-  font-family: var(--font-mono);
+  font-family: var(--font-family);
   font-variant-numeric: tabular-nums;
-  font-size: var(--text-display);
+  font-size: var(--text-metric);
   font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   color: var(--color-text-primary);
 }
 .spec-cell__delta {
   position: absolute;
-  top: var(--space-4);
-  right: var(--space-4);
-  font-family: var(--font-mono);
+  top: var(--space-5);
+  right: var(--space-5);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-family);
   font-variant-numeric: tabular-nums;
-  font-size: var(--text-caps);
-  font-weight: 600;
+  font-size: var(--text-caption);
+  font-weight: 500;
   color: var(--color-text-tertiary);
 }
 .spec-cell__delta--up { color: var(--color-success); }
@@ -1608,8 +1623,6 @@ a.spec-cell:hover { background: var(--color-surface-2); }
 
 @media (max-width: 640px) {
   .spec-strip { grid-auto-flow: row; grid-template-columns: repeat(2, 1fr); }
-  .spec-cell:nth-child(odd) { border-left: 0; }
-  .spec-cell:nth-child(n + 3) { border-top: 1px solid var(--color-border); }
 }
 
 /* ─── SpecGutter — the live synthesis machine as label/value pairs ─────────── */
@@ -1626,8 +1639,7 @@ a.spec-cell:hover { background: var(--color-surface-2); }
 .spec-gutter__title {
   font-size: var(--text-caps);
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--color-text-tertiary);
   margin-bottom: var(--space-3);
 }
@@ -1637,21 +1649,20 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   justify-content: space-between;
   gap: var(--space-3);
   padding-block: var(--space-2);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 .spec-row__label {
-  font-family: var(--font-mono);
+  font-family: var(--font-family);
   font-size: var(--text-caps);
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--color-text-tertiary);
 }
 .spec-row__value {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  font-family: var(--font-mono);
+  font-family: var(--font-family);
   font-variant-numeric: tabular-nums;
   font-size: var(--text-body);
   color: var(--color-text-primary);
@@ -1672,18 +1683,17 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   position: relative;
   margin-left: var(--tree-indent);
 }
-/* The dashed spine for a node's children, aligned to the disc center column. */
+/* The dashed connector is retired — children align under a calm subtle rule. */
 .tree-node__children::before {
   content: "";
   position: absolute;
   top: 0;
   bottom: 0;
   left: var(--connector-left);
-  border-left: 1px dashed var(--color-border-strong);
+  border-left: 1px solid var(--color-border-subtle);
 }
 .tree-node__children--active::before {
   border-left-color: var(--color-accent);
-  border-left-style: solid;
 }
 .tree-row {
   display: grid;
@@ -1691,8 +1701,10 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   align-items: center;
   gap: var(--space-3);
   padding-block: var(--space-2);
-  min-height: calc(var(--baseline) * 5);
-  border-bottom: 1px solid var(--color-border);
+  padding-inline: var(--space-2);
+  min-height: calc(var(--baseline) * 6);
+  border-bottom: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-ui);
   cursor: default;
 }
 .tree-row--button { cursor: pointer; }
@@ -1725,8 +1737,9 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   gap: var(--space-2);
   flex-shrink: 0;
 }
-/* Amber left-tick on hover — never a fill. */
-.tree-row--button:hover { box-shadow: inset 2px 0 0 var(--color-accent); }
+/* Calm surface tint on hover (rounded), not an amber tick. */
+.tree-row--button { transition: background 0.12s var(--ease-smooth); }
+.tree-row--button:hover { background: var(--color-surface-2); }
 /* Citation-targeted row lights its spine amber + scrolls into view. */
 .tree-row.is-cited { box-shadow: inset 2px 0 0 var(--color-accent); }
 
@@ -1744,7 +1757,7 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   display: inline-grid;
   grid-auto-flow: column;
   gap: var(--space-4);
-  font-family: var(--font-mono);
+  font-family: var(--font-family);
   font-variant-numeric: tabular-nums;
 }
 .scorecard__cell { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
@@ -1757,8 +1770,8 @@ a.spec-cell:hover { background: var(--color-surface-2); }
 .scorecard__num--bad { color: var(--color-danger); }
 .scorecard__label {
   font-size: var(--text-caps);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   color: var(--color-text-tertiary);
 }
 /* Faint reference mark printing the threshold (>=5, <=1, >=2). */
@@ -1780,23 +1793,24 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   font-size: var(--text-caps);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   color: var(--color-text-tertiary);
   padding: var(--space-3) var(--space-4);
-  background: var(--color-surface);
+  background: transparent;
   border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
 }
+/* Generous ~52px rows, hairline separators, calm surface hover (no amber tick). */
 .register tbody td {
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
   color: var(--color-text-primary);
   vertical-align: middle;
 }
 .register tbody tr:last-child td { border-bottom: 0; }
-/* Amber left-tick on hover — never a fill, never zebra. */
-.register tbody tr { transition: box-shadow 0.12s var(--ease-smooth); }
-.register tbody tr:hover { box-shadow: inset 2px 0 0 var(--color-accent); }
+.register tbody tr { transition: background 0.12s var(--ease-smooth); }
+.register tbody tr:hover { background: var(--color-surface-2); }
+/* Mono ONLY for the literal opaque ID (anon_id). */
 .register__id { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 /* Active sort column header carries the one amber underline. */
 .register__sort {
@@ -1812,8 +1826,8 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   align-items: center;
   gap: var(--space-3);
   padding-block: var(--space-3);
-  border-bottom: 1px solid var(--color-border);
-  font-family: var(--font-mono);
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-family: var(--font-family);
   font-variant-numeric: tabular-nums;
   font-size: var(--text-body);
 }
@@ -1894,7 +1908,7 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  padding: var(--space-5);
+  padding: var(--space-6);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -1905,15 +1919,14 @@ a.spec-cell:hover { background: var(--color-surface-2); }
 .stat__label {
   font-size: var(--text-eyebrow);
   font-weight: 600;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--color-text-tertiary);
 }
 
-/* Mono + tabular so the figure reads as instrument data. */
+/* SANS + tabular metric value. */
 .stat__value {
-  font-family: var(--font-mono);
-  font-size: 1.75rem;
+  font-family: var(--font-family);
+  font-size: var(--text-metric);
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--color-text-primary);
@@ -1968,7 +1981,7 @@ a.spec-cell:hover { background: var(--color-surface-2); }
 }
 .progress__bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-accent) 0%, var(--color-accent-strong) 100%);
+  background: var(--color-accent);
   transition: width 0.3s var(--ease-smooth);
 }
 
@@ -1996,19 +2009,45 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   border: 0;
 }
 
+/* Superseded by the EmptyState component — restyled to a centered column with a
+   soft icon circle. No all-caps slogan dumps. */
 .empty-state {
-  padding: var(--space-12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
+  padding: var(--space-16) var(--space-6);
   color: var(--color-text-tertiary);
-  font-size: var(--text-body-sm);
+  font-size: var(--text-body);
+}
+
+.empty-state__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-4);
 }
 
 .empty-state__title {
-  font-size: var(--text-subtitle);
+  font-size: var(--text-title);
+  line-height: 1.35;
   color: var(--color-text-primary);
-  margin-bottom: var(--space-2);
-  font-weight: 500;
+  margin-bottom: var(--space-1);
+  font-weight: 600;
 }
+
+.empty-state__hint {
+  max-width: 42ch;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-body);
+}
+
+.empty-state__action { margin-top: var(--space-5); }
 
 /* ─── Quote ───────────────────────────────────────────────────────────────── */
 
@@ -2111,10 +2150,10 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   left: 0;
   z-index: 30;
   width: var(--sidebar-w);
-  /* The journal's bound spine: a flat surface with a single hairline right
-     rule. No frosted gradient, no blur — depth is the rule, not a wash. */
+  /* White-modernist left-nav (claude.ai feel): a calm white-first rail that
+     sits a hair off the off-white canvas, separated by a single hairline. */
   background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border-subtle);
 }
 
 .sidebar__inner {
@@ -2148,9 +2187,10 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   align-items: center;
   gap: var(--space-3);
   margin: 0 var(--space-3);
-  padding: var(--space-3);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-ui);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
   flex-shrink: 0;
   min-width: 0;
 }
@@ -2171,15 +2211,14 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   text-overflow: ellipsis;
 }
 .sidebar__org-role {
-  font-size: var(--text-eyebrow);
-  font-weight: 600;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
+  font-size: var(--text-caption);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--color-text-tertiary);
 }
 
-/* Demoted from the amber gradient chip to a flat surface step carrying mono
-   initials — the rail holds exactly one accent (the LIVE folio), nothing else. */
+/* Soft square avatar — a clean surface step carrying the org initial. */
 .sidebar__avatar {
   width: 32px;
   height: 32px;
@@ -2187,7 +2226,7 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   border: 1px solid var(--color-border-subtle);
   background: var(--color-surface-2);
   color: var(--color-text-secondary);
-  font-family: var(--font-mono);
+  font-family: var(--font-family);
   font-variant-numeric: tabular-nums;
   font-size: 12px;
   font-weight: 600;
@@ -2219,25 +2258,19 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   flex-direction: column;
   gap: 2px;
 }
-/* Section folio: a tiny tracked-caps label sitting on a leading hairline so
-   each nav group reads as a ruled subsection of the bound spine. */
+/* Calm sentence-case group label (claude.ai left-nav). No tracked caps, no
+   trailing hairline — whitespace + the group gap does the separating. */
 .sidebar__section-label {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   padding: 0 var(--space-3);
-  margin-bottom: var(--space-2);
-  font-size: var(--text-eyebrow);
+  margin-bottom: var(--space-1);
+  font-size: var(--text-caption);
   font-weight: 600;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--color-text-tertiary);
-}
-.sidebar__section-label::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--color-border-subtle);
 }
 
 .sidebar__item {
@@ -2246,15 +2279,15 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   justify-content: flex-start;
   text-align: left;
   gap: var(--space-3);
-  height: 30px;
+  height: 36px;
   padding: 0 var(--space-3);
-  border-radius: var(--radius-ui);
+  border-radius: var(--radius-md);
   color: var(--color-text-secondary);
   font-size: var(--text-meta);
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.12s var(--ease-smooth), color 0.12s var(--ease-smooth), box-shadow 0.12s var(--ease-smooth);
+  transition: background-color 0.12s var(--ease-smooth), color 0.12s var(--ease-smooth);
   white-space: nowrap;
   min-width: 0;
   border: 1px solid transparent;
@@ -2263,20 +2296,23 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   background: var(--color-surface-2);
   color: var(--color-text-primary);
 }
-/* Active item — identical treatment in BOTH themes: a flat surface-3 fill plus
-   a single 2px inset-left accent tick. The tick is the ONLY amber in the rail;
-   no gradient, no border, no shadow. Depth is the surface step alone. */
+/* Active item — clean claude.ai-style soft accent fill: a calm accent-soft
+   wash + accent label, no inset tick, no gradient. */
 .sidebar__item.is-active {
-  background: var(--color-surface-3);
-  color: var(--color-text-primary);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
   border-color: transparent;
-  box-shadow: inset 2px 0 0 var(--color-accent);
   font-weight: 600;
 }
-.sidebar__item.is-active .sidebar__item-icon { color: var(--color-text-primary); }
+.sidebar__item.is-active .sidebar__item-icon { color: var(--color-accent-strong); }
+.sidebar__item.is-active:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
+.sidebar__item.is-active:hover .sidebar__item-icon { color: var(--color-accent-strong); }
 .sidebar__item.is-active .sidebar__item-badge {
   background: var(--color-surface);
-  color: var(--color-text-secondary);
+  color: var(--color-accent-strong);
 }
 
 .sidebar__item-icon {
@@ -2297,21 +2333,21 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   min-width: 0;
 }
 
-/* Square mono data-chip — no decorative amber. Tint-only on a surface step. */
+/* Soft count pill — sans tabular-nums, full-radius. */
 .sidebar__item-badge {
   display: inline-flex;
   align-items: center;
-  height: 16px;
-  padding: 0 5px;
-  border-radius: var(--radius-sm);
+  height: 18px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
   border: 1px solid var(--color-border-subtle);
   background: var(--color-surface-2);
   color: var(--color-text-tertiary);
-  font-family: var(--font-mono);
+  font-family: var(--font-family);
   font-variant-numeric: tabular-nums;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   flex-shrink: 0;
 }
 
@@ -2335,7 +2371,9 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   gap: var(--space-3);
   margin: var(--space-2) var(--space-3) 0;
   padding: var(--space-2) var(--space-3);
-  border-top: 1px solid var(--color-border-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
 }
 .sidebar[data-state="icon"] .sidebar__live {
   justify-content: center;
@@ -2343,19 +2381,19 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   padding-inline: 0;
 }
 .sidebar__live-label {
-  font-size: var(--text-eyebrow);
-  font-weight: 600;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
-  color: var(--color-text-tertiary);
+  font-size: var(--text-caption);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-text-secondary);
   line-height: 1.2;
   flex: 1;
   min-width: 0;
 }
 .sidebar__live-count {
-  font-family: var(--font-mono);
+  font-family: var(--font-family);
   font-variant-numeric: tabular-nums;
-  font-size: var(--text-mono);
+  font-size: var(--text-meta);
   font-weight: 500;
   color: var(--color-text-primary);
 }
@@ -2478,11 +2516,11 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   word-break: break-all;
 }
 .sidebar__menu-role {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
-  color: var(--color-text-quaternary);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-text-tertiary);
   margin-top: var(--space-2);
 }
 
@@ -2531,15 +2569,22 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  transition: border-color 0.15s var(--ease-smooth), background 0.15s var(--ease-smooth);
+  box-shadow: var(--shadow-card);
+  transition:
+    border-color 0.18s var(--ease-spring),
+    box-shadow 0.18s var(--ease-spring),
+    transform 0.18s var(--ease-spring);
 }
 .campaign-row:hover {
-  border-color: var(--color-border-strong);
-  background: var(--color-surface-2);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .campaign-row:hover { transform: none; }
 }
 .campaign-row__title {
   font-size: var(--text-body-lg);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-primary);
   letter-spacing: -0.01em;
 }
@@ -2580,24 +2625,21 @@ a.spec-cell:hover { background: var(--color-surface-2); }
 .label-eyebrow {
   font-size: var(--text-eyebrow);
   font-weight: 600;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--color-text-tertiary);
 }
 
-/* Tabular numeric value at 2xl — for stat-style figures. Mono so it reads as
-   instrument data. */
+/* Tabular numeric value at 2xl — SANS for stat-style figures. */
 .text-2xl-tabular {
-  font-family: var(--font-mono);
+  font-family: var(--font-family);
   font-size: 1.5rem;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
 
-/* Resting cards are flat in BOTH modes — depth is border + surface step, so
-   dark density matches light (no inset highlight on a resting .card). Elevation
-   in dark mode is opt-in via .card-elevated only. */
-[data-theme="dark"] .card { box-shadow: none; }
+/* White-modernist: cards carry soft elevation in BOTH themes (the old
+   'no light-mode shadows / flat dark' rule is revoked). .card already applies
+   --shadow-card; this is the explicit elevated opt-in. */
 [data-theme="dark"] .card-elevated { box-shadow: var(--shadow-card); }
 
 /* Chat surface envelope — flex column that fills its parent. Pair with
@@ -2635,9 +2677,9 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   display: flex;
   align-items: stretch;
   padding: var(--space-4) var(--space-5);
-  background: var(--color-elevated);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   transition: border-color 0.18s var(--ease-smooth), box-shadow 0.18s var(--ease-smooth);
 }
@@ -2774,7 +2816,8 @@ a.spec-cell:hover { background: var(--color-surface-2); }
 .rag__result-score {
   flex-shrink: 0;
   padding: 2px 8px;
-  font-family: var(--font-mono);
+  font-family: var(--font-family);
+  font-variant-numeric: tabular-nums;
   font-size: 11px;
   color: var(--color-text-tertiary);
   background: var(--color-surface-2);
@@ -2847,22 +2890,22 @@ a.spec-cell:hover { background: var(--color-surface-2); }
    (it floats above a dimmed scrim, not on the white canvas). */
 .tour-card {
   z-index: 1001;
-  background: var(--color-bg);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-popover);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-popover);
-  padding: var(--space-5);
+  padding: var(--space-6);
 }
 
 .tour-card__eyebrow {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: 0.6875rem;
+  font-size: var(--text-caption);
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--color-accent);
+  color: var(--color-accent-strong);
 }
 
 .tour-card__dot {
@@ -2874,9 +2917,10 @@ a.spec-cell:hover { background: var(--color-surface-2); }
 
 .tour-card__title {
   margin: var(--space-3) 0 var(--space-2);
-  font-size: 1.0625rem;
+  font-size: var(--text-title);
   font-weight: 600;
   line-height: 1.3;
+  letter-spacing: -0.015em;
   color: var(--color-text-primary);
 }
 
@@ -2916,16 +2960,17 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   color: var(--color-text-primary);
 }
 
-/* Primary action is near-black (never accent background — Braun rule). */
+/* Primary action — solid near-black CTA (white-modernist primary button). */
 .tour-card__next {
-  background: var(--color-text-primary);
-  color: var(--color-bg);
+  background: var(--color-cta-bg);
+  color: var(--color-cta-text);
   border: none;
-  font-size: 0.8125rem;
+  font-size: var(--text-meta);
   font-weight: 500;
   cursor: pointer;
-  padding: 7px 14px;
+  padding: 8px 16px;
   border-radius: var(--radius-ui);
+  box-shadow: var(--shadow-sm);
 }
 .tour-card__next:hover {
   opacity: 0.9;

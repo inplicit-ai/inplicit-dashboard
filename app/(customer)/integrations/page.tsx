@@ -1,17 +1,19 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { CheckCircle2, Plug, TriangleAlert } from "lucide-react";
 import { makeApi, type IntegrationView, ApiError } from "@/lib/api";
 import { requireOrgOwner, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ErrorState } from "@/components/ErrorState";
-import { Folio } from "@/components/ui/folio";
-import { InstrumentBand } from "@/components/ui/instrument-band";
-import { Ledger } from "@/components/ui/ledger";
-import { LedgerRow } from "@/components/ui/ledger-row";
-import { DataChip } from "@/components/ui/data-chip";
-import { StatusDisc } from "@/components/ui/status-disc";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatBand } from "@/components/ui/stat-band";
+import { CardGrid } from "@/components/ui/card-grid";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { cn } from "@/lib/utils";
 
 interface SearchParams {
   flash?: string;
@@ -92,30 +94,19 @@ export default async function IntegrationsPage({
 
   return (
     <>
-      <Folio index="§" label={t("title")} count={connectors.length} />
-      <p className="mt-2 max-w-[60ch] body-sm text-fg-muted">{t("subtitle")}</p>
+      <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
       {error && (
-        <div className="mt-6">
+        <div className="mb-6">
           <ErrorState error={error} />
         </div>
       )}
 
-      {sp.flash && (
-        <div
-          role="status"
-          className="mt-6 grid grid-cols-[20px_1fr] items-start gap-x-2.5 rounded-ui border border-line-subtle bg-surface-2 px-3.5 py-2.5 text-meta text-fg"
-        >
-          <span className="flex justify-center pt-0.5">
-            <StatusDisc state={sp.flashType === "err" ? "error" : "done"} size="sm" />
-          </span>
-          <p className="leading-snug">{sp.flash}</p>
-        </div>
-      )}
+      {sp.flash && <Flash type={sp.flashType ?? "ok"} message={sp.flash} />}
 
       {connectors.length > 0 && (
-        <div className="mt-6">
-          <InstrumentBand
+        <div className="mb-8">
+          <StatBand
             cells={[
               { label: t("title"), value: connectors.length },
               { label: t("connected"), value: connectedCount },
@@ -125,35 +116,43 @@ export default async function IntegrationsPage({
         </div>
       )}
 
-      <Ledger framed className="mt-8">
-        {connectors.map((c) => (
-          <LedgerRow
-            key={c.key}
-            status={c.installed && c.status === "CONNECTED" ? "done" : "idle"}
-            index={c.category}
-            title={c.name}
-            expandable
-            metric={
-              c.installed ? (
-                <DataChip tone={c.status === "CONNECTED" ? "success" : "neutral"}>
-                  {c.status === "CONNECTED" ? t("connected") : t("disabled")}
-                </DataChip>
-              ) : undefined
-            }
-          >
-            <div className="flex flex-col gap-3 py-1">
-              <p className="card--reading leading-relaxed text-fg-muted">
+      {!error && connectors.length === 0 ? (
+        <EmptyState icon={Plug} title={t("title")} hint={t("subtitle")} />
+      ) : (
+        <CardGrid>
+          {connectors.map((c) => (
+            <Card key={c.key} className="gap-4 p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="font-semibold tracking-[-0.01em] text-fg">
+                    {c.name}
+                  </h3>
+                  <p className="mt-0.5 text-[length:var(--text-caption)] text-fg-subtle">
+                    {c.category}
+                  </p>
+                </div>
+                {c.installed && (
+                  <StatusBadge
+                    status={c.status === "CONNECTED" ? "ACTIVE" : "PAUSED"}
+                    label={c.status === "CONNECTED" ? t("connected") : t("disabled")}
+                    withIcon
+                  />
+                )}
+              </div>
+
+              <p className="text-[length:var(--text-body-sm)] leading-relaxed text-fg-muted">
                 {c.description}
               </p>
+
               {c.installed ? (
-                <form action={disconnect}>
+                <form action={disconnect} className="mt-auto pt-1">
                   <input type="hidden" name="id" value={c.install_id} />
                   <Button type="submit" variant="outline" size="sm">
                     {t("disconnect")}
                   </Button>
                 </form>
               ) : (
-                <form action={install} className="flex flex-col gap-2">
+                <form action={install} className="mt-auto flex flex-col gap-2 pt-1">
                   <input type="hidden" name="provider" value={c.key} />
                   {c.requires_secret && (
                     <Input
@@ -165,20 +164,46 @@ export default async function IntegrationsPage({
                   )}
                   <Input
                     name="config"
+                    mono
                     placeholder={t("configPlaceholder")}
-                    className="font-mono font-mono tabular-nums"
                   />
                   <Button type="submit" size="sm" className="self-start">
                     {t("connect")}
                   </Button>
                 </form>
               )}
-            </div>
-          </LedgerRow>
-        ))}
-      </Ledger>
+            </Card>
+          ))}
+        </CardGrid>
+      )}
 
-      <p className="mt-6 text-caption text-fg-subtle">{t("ssoNote")}</p>
+      <p className="mt-6 text-[length:var(--text-caption)] text-fg-subtle">
+        {t("ssoNote")}
+      </p>
     </>
+  );
+}
+
+function Flash({ type, message }: { type: "ok" | "err"; message: string }) {
+  const Icon = type === "ok" ? CheckCircle2 : TriangleAlert;
+  return (
+    <div
+      role="status"
+      className={cn(
+        "mb-6 flex items-start gap-3 rounded-ui border px-3.5 py-3 text-[length:var(--text-meta)]",
+        type === "ok"
+          ? "border-success/20 bg-success-soft text-fg"
+          : "border-danger/22 bg-danger-soft text-danger",
+      )}
+    >
+      <Icon
+        aria-hidden
+        className={cn(
+          "mt-0.5 h-4 w-4 shrink-0",
+          type === "ok" ? "text-success" : "text-danger",
+        )}
+      />
+      <p className="leading-snug">{message}</p>
+    </div>
   );
 }

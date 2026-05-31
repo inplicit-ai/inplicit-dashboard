@@ -2,13 +2,12 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * A single instrument cell. Reframed onto the `.spec-cell` recipe so a row of
- * KPIs reads as ONE ruled control-panel band (hairline-divided cells), never a
- * grid of floating boxes — the Research Ledger discipline. Value is JetBrains
- * Mono + tabular-nums (`.spec-cell__value`); label is a tracked-caps eyebrow.
+ * A single metric cell in the white-modernist StatBand. Renders a muted sans
+ * label over a BIG sans tabular-nums value (NEVER mono) inside a white cell
+ * that the enclosing {@link StatsRow} divides with 1px gap-px dividers.
  *
- * Designed to sit inside `<StatsRow>` (the `.spec-strip` enclosure). The accent
- * never appears here — a stat tile is monochrome by default.
+ * The accent never appears here — a stat tile is monochrome by default.
+ * Designed to sit inside `<StatsRow>` (the bordered rounded container).
  */
 export function StatsCard({
   label,
@@ -22,11 +21,15 @@ export function StatsCard({
   className?: string;
 }) {
   return (
-    <div className={cn("spec-cell", className)}>
-      <span className="spec-cell__label">{label}</span>
-      <span className="spec-cell__value">{value}</span>
+    <div className={cn("flex flex-col gap-2 bg-surface p-6", className)}>
+      <span className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
+        {label}
+      </span>
+      <span className="text-[length:var(--text-metric)] font-semibold leading-[1.1] tracking-[-0.02em] tabular-nums text-fg">
+        {value}
+      </span>
       {hint && (
-        <span className="font-mono text-[length:var(--text-caps)] uppercase tracking-[0.06em] text-fg-subtle">
+        <span className="text-[length:var(--text-caption)] text-fg-subtle">
           {hint}
         </span>
       )}
@@ -35,10 +38,15 @@ export function StatsCard({
 }
 
 /**
- * The instrument band — one hairline enclosure divided into equal cells. Wraps
- * the `.spec-strip` recipe; collapses to a 2-col grid under 640px via the
- * recipe. Replaces the old floating stat-card grid.
+ * The StatBand container — ONE rounded-xl hairline enclosure split into equal
+ * cells by the gap-px-on-a-border-colored-bg divider trick. Collapses to a
+ * 2-col grid on small screens. Replaces the retired floating stat-card grid
+ * and the austere ".spec-strip".
  */
 export function StatsRow({ children }: { children: ReactNode }) {
-  return <div className="spec-strip mb-8">{children}</div>;
+  return (
+    <div className="mb-8 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line lg:grid-flow-col lg:auto-cols-fr">
+      {children}
+    </div>
+  );
 }

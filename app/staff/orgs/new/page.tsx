@@ -1,16 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, TriangleAlert } from "lucide-react";
 import { ApiError, makeApi, type ProvisionOrgInput } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, makeDurationOptions } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Folio } from "@/components/ui/folio";
-import { StatusDisc } from "@/components/ui/status-disc";
-import { SpecBlock } from "@/components/ui/spec-block";
+import { SectionHeading } from "@/components/ui/section-heading";
 
 export default async function NewOrgPage({
   searchParams,
@@ -83,7 +82,7 @@ export default async function NewOrgPage({
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(220px,260px)_1fr]">
-      {/* ── Left rail: the setup-flow checklist + intent ───────────────────── */}
+      {/* ── Left rail: intent + a calm info card ───────────────────────────── */}
       <aside className="flex flex-col gap-6 lg:sticky lg:top-6 lg:self-start">
         <Button asChild variant="link" size="sm" className="px-0 text-fg-muted">
           <Link href="/staff/orgs">
@@ -93,34 +92,31 @@ export default async function NewOrgPage({
         </Button>
 
         <div>
-          <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
-            Inplicit Staff
-          </span>
-          <h1 className="mt-2 text-2xl font-semibold leading-tight tracking-[-0.02em] text-fg">
+          <h1 className="text-[length:var(--text-display)] font-semibold leading-[1.15] tracking-[-0.02em] text-fg">
             Organisation anlegen
           </h1>
-          <p className="mt-2 body-sm text-fg-muted">ein Kunde, ein Account</p>
+          <p className="mt-2 text-[length:var(--text-body-lg)] text-fg-muted">
+            Ein Kunde, ein Account.
+          </p>
         </div>
 
-        {/* Spine checklist — the two stages of provisioning. */}
-        <ol className="relative ml-1 flex flex-col gap-4 border-l border-dashed border-line-strong pl-4">
-          <li className="-ml-[21px] flex items-center gap-2.5">
-            <StatusDisc state="live" />
-            <span className="text-meta text-fg">Unternehmen</span>
-          </li>
-          <li className="-ml-[21px] flex items-center gap-2.5">
-            <StatusDisc state="idle" />
-            <span className="text-meta text-fg-muted">Customer-Account</span>
-          </li>
-        </ol>
-
-        <SpecBlock
-          rows={[
-            { label: "Users / Org", value: 1 },
-            { label: "Login", value: "Magic-Link" },
-            { label: "Voice", value: 438 },
-          ]}
-        />
+        <Card className="gap-4 p-5">
+          <ol className="flex flex-col gap-3">
+            <li className="flex items-center gap-2.5 text-[length:var(--text-meta)] text-fg">
+              <CheckCircle2 className="h-4 w-4 text-accent" />
+              Unternehmen
+            </li>
+            <li className="flex items-center gap-2.5 text-[length:var(--text-meta)] text-fg-muted">
+              <Circle className="h-4 w-4 text-fg-subtle" />
+              Customer-Account
+            </li>
+          </ol>
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-line-subtle pt-4 text-[length:var(--text-caption)]">
+            <InfoRow label="Users / Org" value="1" />
+            <InfoRow label="Login" value="Magic-Link" />
+            <InfoRow label="Voice" value="438" />
+          </dl>
+        </Card>
       </aside>
 
       {/* ── Right track: the working form ──────────────────────────────────── */}
@@ -128,21 +124,21 @@ export default async function NewOrgPage({
         {sp.error && (
           <div
             role="alert"
-            className="mb-6 grid grid-cols-[20px_1fr] items-start gap-x-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-meta text-danger"
+            className="mb-6 flex items-start gap-3 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-3 text-[length:var(--text-meta)] text-danger"
           >
-            <span className="flex justify-center pt-0.5">
-              <StatusDisc state="error" size="sm" />
-            </span>
+            <TriangleAlert aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
             <p className="leading-snug">{sp.error}</p>
           </div>
         )}
 
-        <Card className="rounded-card border border-line bg-surface p-8">
+        <Card className="p-8">
           <form action={createOrg} className="flex flex-col gap-5">
-            <Folio index="§ 01" label="Unternehmen" tone="subtle" />
-            <p className="-mt-2 text-caption text-fg-muted">
-              Daten zum Kunden. Sind später bearbeitbar.
-            </p>
+            <div>
+              <SectionHeading title="Unternehmen" className="mb-1" />
+              <p className="text-[length:var(--text-caption)] text-fg-muted">
+                Daten zum Kunden. Sind später bearbeitbar.
+              </p>
+            </div>
 
           <Field id="name" label="Name" required>
             <Input
@@ -151,7 +147,6 @@ export default async function NewOrgPage({
               required
               placeholder="Acme GmbH"
               defaultValue={sticky.name}
-              className="h-9 text-base md:text-sm"
             />
           </Field>
 
@@ -170,10 +165,10 @@ export default async function NewOrgPage({
               id="slug"
               name="slug"
               required
+              mono
               pattern="[a-z0-9\-]+"
               placeholder="acme-gmbh"
               defaultValue={sticky.slug}
-              className="h-9 font-mono text-base md:text-sm"
             />
           </Field>
 
@@ -190,7 +185,7 @@ export default async function NewOrgPage({
               rows={6}
               placeholder="Acme GmbH ist ein B2B-SaaS für Logistikfirmen mit Sitz in Berlin..."
               defaultValue={sticky.company_context}
-              className="min-h-[150px] text-base md:text-sm"
+              className="min-h-[150px]"
             />
           </Field>
 
@@ -201,7 +196,6 @@ export default async function NewOrgPage({
                 name="industry"
                 placeholder="Logistik-SaaS"
                 defaultValue={sticky.industry}
-                className="h-9 text-base md:text-sm"
               />
             </Field>
             <Field id="default_locale" label="Standardsprache">
@@ -223,7 +217,6 @@ export default async function NewOrgPage({
                 type="number"
                 min={1}
                 defaultValue={String(sticky.default_voice_id ?? 438)}
-                className="h-9 font-mono text-base md:text-sm"
               />
             </Field>
             <Field
@@ -241,8 +234,8 @@ export default async function NewOrgPage({
           </div>
 
           <div className="mt-2 border-t border-line-subtle pt-5">
-            <Folio index="§ 02" label="Customer-Account" tone="subtle" />
-            <p className="-mt-2 text-caption text-fg-muted">
+            <SectionHeading title="Customer-Account" className="mb-1" />
+            <p className="text-[length:var(--text-caption)] text-fg-muted">
               Genau ein User pro Org. Die Person, die das Dashboard sieht.
             </p>
           </div>
@@ -256,7 +249,6 @@ export default async function NewOrgPage({
                 required
                 placeholder="max@acme.de"
                 defaultValue={sticky.owner_email}
-                className="h-9 text-base md:text-sm"
               />
             </Field>
             <Field id="owner_name" label="Owner-Name" required>
@@ -266,12 +258,11 @@ export default async function NewOrgPage({
                 required
                 placeholder="Max Mustermann"
                 defaultValue={sticky.owner_name}
-                className="h-9 text-base md:text-sm"
               />
             </Field>
           </div>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-ui border border-line bg-canvas p-4 text-body-sm text-fg transition-colors hover:border-line-strong hover:bg-surface-2">
+          <label className="flex cursor-pointer items-start gap-3 rounded-ui border border-line bg-surface p-4 text-[length:var(--text-body-sm)] text-fg transition-colors hover:border-line-strong hover:bg-surface-2">
             <input
               type="checkbox"
               name="issue_magic_link"
@@ -280,7 +271,7 @@ export default async function NewOrgPage({
             />
             <span className="space-y-0.5">
               <span className="block font-medium">Magic-Link sofort ausgeben</span>
-              <span className="block text-caption text-fg-muted">
+              <span className="block text-[length:var(--text-caption)] text-fg-muted">
                 Der Owner bekommt eine Welcome-Email mit dem Login-Link (15 Min
                 gültig, single-use).
               </span>
@@ -299,6 +290,15 @@ export default async function NewOrgPage({
 
 // ─── Pieces ───────────────────────────────────────────────────────────────────
 
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col">
+      <dt className="text-fg-subtle">{label}</dt>
+      <dd className="font-medium tabular-nums text-fg">{value}</dd>
+    </div>
+  );
+}
+
 function Field({
   id,
   label,
@@ -314,11 +314,15 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="label-eyebrow flex items-center gap-1.5">
+      <Label htmlFor={id}>
         {label}
-        {required && <span className="text-pain">*</span>}
-      </label>
-      {hint && <p className="text-caption leading-relaxed text-fg-subtle">{hint}</p>}
+        {required && <span className="text-danger">*</span>}
+      </Label>
+      {hint && (
+        <p className="text-[length:var(--text-caption)] leading-relaxed text-fg-subtle">
+          {hint}
+        </p>
+      )}
       {children}
     </div>
   );
@@ -326,7 +330,7 @@ function Field({
 
 function Mono({ children }: { children: React.ReactNode }) {
   return (
-    <code className="rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono font-mono tabular-nums tabular-nums text-fg">
+    <code className="rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono text-[length:var(--text-mono)] text-fg">
       {children}
     </code>
   );

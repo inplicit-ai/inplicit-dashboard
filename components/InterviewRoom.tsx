@@ -34,6 +34,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Composer } from "@/components/ui/composer";
 
 interface Props {
   /** Live interview WebSocket URL. */
@@ -423,7 +424,6 @@ export function InterviewRoom({
           elapsedS={elapsedS}
           utteranceCount={messages.length}
         />
-        <RoomStyles />
       </>
     );
   }
@@ -437,7 +437,6 @@ export function InterviewRoom({
           elapsedS={elapsedS}
           onResume={conn === "open" ? () => setStage("live") : undefined}
         />
-        <RoomStyles />
       </>
     );
   }
@@ -461,13 +460,12 @@ export function InterviewRoom({
           onStartVoice={enterVoice}
           onPreferText={preferText}
         />
-        <RoomStyles />
       </>
     );
   }
 
   return (
-    <div className="iv-shell">
+    <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-surface">
       <TopBar
         lang={language}
         elapsedS={elapsedS}
@@ -478,13 +476,19 @@ export function InterviewRoom({
         onEnd={() => setEndDialog(true)}
       />
 
-      <main className={`iv-main iv-main--${liveView}`}>
+      <main
+        className={
+          liveView === "voice"
+            ? "flex min-h-0 flex-1 flex-col items-center justify-center gap-8 px-6 py-8"
+            : "mx-auto flex min-h-0 w-full max-w-[68ch] flex-1 flex-col px-6 pt-4"
+        }
+      >
         {liveView === "voice" ? (
-          <div className="iv-voice">
-            <div className="iv-orb-wrap iv-orb-wrap--desktop">
+          <div className="flex flex-col items-center gap-8">
+            <div className="hidden items-center justify-center overflow-hidden md:flex">
               <VoiceOrb size={ORB_DESKTOP} getLevel={getOrbLevel} />
             </div>
-            <div className="iv-orb-wrap iv-orb-wrap--mobile">
+            <div className="flex items-center justify-center overflow-hidden md:hidden">
               <VoiceOrb size={ORB_MOBILE} getLevel={getOrbLevel} />
             </div>
             <StatusHud
@@ -494,57 +498,40 @@ export function InterviewRoom({
               latency={latency}
               phase={phase}
             />
+            {errorMsg && (
+              <div className="flash flash--err w-full max-w-md">{errorMsg}</div>
+            )}
           </div>
         ) : (
-          <div className="iv-chat">
+          <div className="flex min-h-0 w-full flex-1 flex-col">
             <Transcript
               lang={language}
               messages={messages}
               interimUser={interimUser}
               scrollRef={transcriptRef}
             />
-            <div className="iv-composer">
-              <textarea
+            {errorMsg && (
+              <div className="flash flash--err mb-3 shrink-0">{errorMsg}</div>
+            )}
+            <div className="shrink-0 pb-4 pt-2" style={{ paddingBottom: "calc(var(--space-4) + var(--safe-bottom))" }}>
+              <Composer
                 value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    sendText();
-                  }
-                }}
+                onValueChange={setDraft}
+                onSubmit={() => sendText()}
+                onMic={conn === "open" ? switchToVoice : undefined}
                 placeholder={c.composerPlaceholder}
-                rows={2}
                 disabled={conn !== "open"}
-                className="iv-composer__textarea"
               />
-              <div className="iv-composer__actions">
-                <button
-                  type="button"
-                  onClick={switchToVoice}
-                  disabled={conn !== "open"}
-                  className="btn btn--ghost btn--sm"
-                >
-                  {c.toVoice}
-                </button>
-                <button
-                  type="button"
-                  onClick={sendText}
-                  disabled={conn !== "open" || !draft.trim()}
-                  className="btn btn--primary btn--sm"
-                >
-                  {c.send}
-                </button>
-              </div>
             </div>
           </div>
         )}
-
-        {errorMsg && <div className="flash flash--err iv-error">{errorMsg}</div>}
       </main>
 
       {liveView === "voice" && (
-        <footer className="iv-footer">
+        <footer
+          className="flex shrink-0 items-center justify-center border-t border-line bg-surface px-5 py-4"
+          style={{ paddingBottom: "calc(var(--space-4) + var(--safe-bottom))" }}
+        >
           <VoiceControls
             lang={language}
             muted={muted}
@@ -577,56 +564,12 @@ export function InterviewRoom({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <RoomStyles />
     </div>
   );
 }
 
 function isAgentStatus(s: string | undefined): s is AgentStatus {
   return s === "idle" || s === "listening" || s === "thinking" || s === "speaking";
-}
-
-// ─── Shared room styles ──────────────────────────────────────────────────────
-
-function RoomStyles() {
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: `
-        .iv-shell { height: 100dvh; overflow: hidden; display: flex; flex-direction: column; min-height: 0; background: var(--color-surface); }
-        .iv-main { flex: 1; width: 100%; max-width: 68ch; margin: 0 auto; padding: var(--space-6); display: flex; flex-direction: column; min-height: 0; }
-        .iv-main--voice { justify-content: center; align-items: center; }
-
-        .iv-voice { display: flex; flex-direction: column; align-items: center; gap: var(--space-6); }
-        .iv-orb-wrap { display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .iv-orb-wrap--mobile { display: none; }
-        @media (max-width: 767px) {
-          .iv-orb-wrap--desktop { display: none; }
-          .iv-orb-wrap--mobile { display: flex; }
-        }
-
-        /* Chat = one flex min-h-0 column; Transcript owns the sole overflow. */
-        .iv-chat { display: flex; flex-direction: column; gap: var(--space-4); width: 100%; flex: 1; min-height: 0; }
-
-        .iv-composer { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); display: flex; align-items: flex-end; gap: var(--space-3); transition: border-color 0.15s var(--ease-smooth), box-shadow 0.15s var(--ease-smooth); }
-        .iv-composer:focus-within { border-color: var(--color-accent); box-shadow: var(--shadow-focus); }
-        .iv-composer__textarea { flex: 1; font-family: var(--font-family); font-size: var(--text-body-lg); line-height: 1.6; color: var(--color-text-primary); background: transparent; border: 0; resize: none; padding: var(--space-2) 0; min-height: 40px; max-height: 160px; }
-        .iv-composer__textarea:focus { outline: none; }
-        .iv-composer__textarea::placeholder { color: var(--color-text-quaternary); }
-        .iv-composer__actions { display: inline-flex; align-items: center; gap: var(--space-2); }
-
-        .iv-footer { display: flex; align-items: center; justify-content: center; padding: var(--space-4) var(--space-5); padding-bottom: calc(var(--space-4) + var(--safe-bottom)); border-top: 1px solid var(--color-border); background: var(--color-surface); }
-
-        .iv-error { margin-top: var(--space-3); align-self: stretch; }
-
-        @media (max-width: 640px) {
-          .iv-main { padding: var(--space-4); }
-        }
-      `,
-      }}
-    />
-  );
 }
 
 // ─── AudioBufferQueue (PCM16 playback, level metering) ───────────────────────

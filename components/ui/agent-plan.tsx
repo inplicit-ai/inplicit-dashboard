@@ -11,18 +11,21 @@ import {
 } from "framer-motion";
 import { DashedConnector } from "@/components/ui/dashed-connector";
 import { StatusDisc, toStatusState } from "@/components/ui/status-disc";
-import { DataChip } from "@/components/ui/data-chip";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { cn } from "@/lib/utils";
 
 /* ────────────────────────────────────────────────────────────────────────────
- * agent-plan — the LIVING REFERENCE for the whole Research Ledger language.
+ * agent-plan — the white-modernist plan view (claude.ai task-list feel).
  *
- * Re-cut to the manifesto: every plan node is a row on the ONE status spine.
- * The status disc (StatusDisc — single source of truth) sits in a fixed 28px
- * spine column so parent and child discs share an x-axis; children reveal under
- * the agent-plan dashed connector threaded down the disc center. Hierarchy is
- * WEIGHT + spine-depth, never size. Dependencies / MCP tools are square
- * DataChips. Hover is a surface shift (surface-2), never a lift or new shadow.
- * The lone continuous animation is the StatusDisc pulse on the single live row.
+ * Rebuilt off the retired austere "status-spine ledger": the plan now lives on
+ * a clean white Card with a calm SectionHeading (sentence-case title + muted
+ * count — no "§" glyph, no all-caps eyebrow). Each task is a roomy row with a
+ * StatusDisc, a SANS tabular-nums index, the title, and soft pill Badges for
+ * dependencies / MCP tools. Children reveal under a quiet hairline connector.
+ * Hover is a gentle surface tint; the lone continuous animation is the
+ * StatusDisc pulse on the single live row.
  * ────────────────────────────────────────────────────────────────────────── */
 
 const APPLE_EASE = [0.2, 0.65, 0.3, 0.9] as const;
@@ -388,9 +391,8 @@ export default function Plan() {
   const completed = tasks.filter((t) => t.status === "completed").length;
 
   return (
-    <div className="bg-canvas text-fg h-full overflow-auto">
+    <div className="text-fg h-full overflow-auto">
       <motion.div
-        className="ledger card card--ledger"
         initial={{ opacity: 0, y: 10 }}
         animate={{
           opacity: 1,
@@ -398,18 +400,19 @@ export default function Plan() {
           transition: { duration: 0.3, ease: APPLE_EASE },
         }}
       >
-        {/* Folio masthead — eyebrow + tabular count, never a bigger heading. */}
-        <div className="folio">
-          <span className="folio__label">§ PLAN</span>
-          <span className="folio__action">
-            <span className="folio__count font-mono tabular-nums">
+        {/* Calm section header — sentence-case title + muted completed count. */}
+        <SectionHeading
+          title="Plan"
+          action={
+            <span className="text-[length:var(--text-meta)] tabular-nums text-fg-subtle">
               {completed}/{tasks.length}
             </span>
-          </span>
-        </div>
+          }
+        />
 
+        <Card variant="ledger" className="overflow-hidden">
         <LayoutGroup>
-          <ul className="overflow-hidden">
+          <ul className="divide-y divide-line-subtle overflow-hidden">
             {tasks.map((task) => {
               const isExpanded = expandedTasks.includes(task.id);
               const isCompleted = task.status === "completed";
@@ -422,9 +425,9 @@ export default function Plan() {
                   animate="visible"
                   variants={taskVariants}
                 >
-                  {/* Parent row — spine disc | mono index + title | deps | chevron */}
+                  {/* Parent row — disc | index + title | deps | chevron */}
                   <div
-                    className="ledger-row ledger-row--parent group cursor-pointer"
+                    className="group flex cursor-pointer items-center gap-3 px-5 py-4 transition-colors hover:bg-surface-2 data-[open=true]:bg-surface-2/60"
                     data-open={isExpanded}
                     role="button"
                     tabIndex={0}
@@ -438,7 +441,7 @@ export default function Plan() {
                     }}
                   >
                     <span
-                      className="ledger-row__spine cursor-pointer"
+                      className="inline-flex w-[28px] shrink-0 cursor-pointer justify-center"
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleTaskStatus(task.id);
@@ -458,16 +461,15 @@ export default function Plan() {
                       </AnimatePresence>
                     </span>
 
-                    <div className="ledger-row__body">
-                      <span className="ledger-row__index">
+                    <div className="flex min-w-0 flex-1 items-baseline gap-3">
+                      <span className="shrink-0 text-[length:var(--text-meta)] tabular-nums text-fg-subtle">
                         {task.id.padStart(2, "0")}
                       </span>
                       <span
-                        className={
-                          isCompleted
-                            ? "ledger-row__title text-fg-muted line-through"
-                            : "ledger-row__title"
-                        }
+                        className={cn(
+                          "truncate text-[length:var(--text-body)] font-medium text-fg",
+                          isCompleted && "text-fg-muted line-through",
+                        )}
                       >
                         {task.title}
                       </span>
@@ -476,11 +478,14 @@ export default function Plan() {
                     <div className="flex items-center gap-2">
                       {task.dependencies.length > 0 &&
                         task.dependencies.map((dep) => (
-                          <DataChip key={dep} mono>
+                          <Badge key={dep} variant="secondary">
                             {dep.padStart(2, "0")}
-                          </DataChip>
+                          </Badge>
                         ))}
-                      <span className="ledger-row__chevron" aria-hidden>
+                      <span
+                        className="text-fg-subtle transition-transform duration-200 group-data-[open=true]:rotate-90"
+                        aria-hidden
+                      >
                         <ChevronRight className="size-4" />
                       </span>
                     </div>
@@ -499,11 +504,11 @@ export default function Plan() {
                       >
                         <DashedConnector
                           orientation="vertical"
-                          tone={taskState === "live" ? "active" : "strong"}
+                          tone={taskState === "live" ? "active" : "default"}
                           weight={1}
-                          className="left-[calc(var(--spine-w,28px)/2)]"
+                          className="left-[calc(20px+14px)] top-1 bottom-3"
                         />
-                        <ul className="ledger-branch">
+                        <ul className="pb-2">
                           {task.subtasks.map((subtask) => {
                             const subtaskKey = `${task.id}-${subtask.id}`;
                             const isSubtaskExpanded =
@@ -520,7 +525,7 @@ export default function Plan() {
                                 layout
                               >
                                 <div
-                                  className="ledger-row ledger-row--child group cursor-pointer"
+                                  className="group flex cursor-pointer items-center gap-3 py-2.5 pr-5 pl-12 transition-colors hover:bg-surface-2"
                                   role="button"
                                   tabIndex={0}
                                   onClick={() =>
@@ -537,7 +542,7 @@ export default function Plan() {
                                   }}
                                 >
                                   <span
-                                    className="ledger-row__spine cursor-pointer"
+                                    className="inline-flex shrink-0 cursor-pointer justify-center"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       toggleSubtaskStatus(task.id, subtask.id);
@@ -563,16 +568,16 @@ export default function Plan() {
                                     </AnimatePresence>
                                   </span>
 
-                                  <div className="ledger-row__body">
-                                    <span className="ledger-row__index">
+                                  <div className="flex min-w-0 flex-1 items-baseline gap-3">
+                                    <span className="shrink-0 text-[length:var(--text-meta)] tabular-nums text-fg-subtle">
                                       {subtask.id}
                                     </span>
                                     <span
-                                      className={
-                                        subtask.status === "completed"
-                                          ? "ledger-row__title text-fg-muted line-through"
-                                          : "ledger-row__title"
-                                      }
+                                      className={cn(
+                                        "truncate text-[length:var(--text-body)] text-fg-muted",
+                                        subtask.status === "completed" &&
+                                          "line-through",
+                                      )}
                                     >
                                       {subtask.title}
                                     </span>
@@ -582,26 +587,26 @@ export default function Plan() {
                                 <AnimatePresence mode="wait">
                                   {isSubtaskExpanded && (
                                     <motion.div
-                                      className="text-fg-muted relative ml-[calc(var(--spine-w,28px)/2)] overflow-hidden border-l border-dashed border-line-strong pl-5"
+                                      className="text-fg-muted relative overflow-hidden pr-5 pb-3 pl-[60px]"
                                       variants={subtaskDetailsVariants}
                                       initial="hidden"
                                       animate="visible"
                                       exit="hidden"
                                       layout
                                     >
-                                      <p className="py-2 text-[length:var(--text-body)] leading-relaxed">
+                                      <p className="py-2 text-[length:var(--text-body)] leading-relaxed text-fg-muted">
                                         {subtask.description}
                                       </p>
                                       {subtask.tools &&
                                         subtask.tools.length > 0 && (
-                                          <div className="mb-2 flex flex-wrap items-center gap-1.5">
-                                            <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
+                                          <div className="mb-1 flex flex-wrap items-center gap-1.5">
+                                            <span className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
                                               MCP
                                             </span>
                                             {subtask.tools.map((tool) => (
-                                              <DataChip key={tool} mono>
+                                              <Badge key={tool} variant="secondary" mono>
                                                 {tool}
-                                              </DataChip>
+                                              </Badge>
                                             ))}
                                           </div>
                                         )}
@@ -620,6 +625,7 @@ export default function Plan() {
             })}
           </ul>
         </LayoutGroup>
+        </Card>
       </motion.div>
     </div>
   );

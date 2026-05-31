@@ -39,8 +39,8 @@ const selectVariants = cva(
       },
       size: {
         sm: "h-8 pl-3 text-[length:var(--text-meta)]",
-        md: "h-9 pl-3 text-[length:var(--text-body-sm)]",
-        lg: "h-10 pl-4 text-[length:var(--text-body-sm)]",
+        md: "h-10 pl-3.5 text-[length:var(--text-body-sm)]",
+        lg: "h-11 pl-4 text-[length:var(--text-body-sm)]",
       },
       invalid: {
         true: "border-danger focus-visible:border-danger focus-visible:shadow-none",

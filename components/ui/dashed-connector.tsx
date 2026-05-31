@@ -3,43 +3,48 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /* ────────────────────────────────────────────────────────────────────────────
- * DashedConnector — reusable dashed hierarchy line (token-driven).
+ * Connector — reusable hierarchy line (token-driven), white-modernist.
  *
- * Replaces the inline `border-l-2 border-dashed border-muted-foreground/30`
- * spine used in agent-plan with a token border (border-line / border-line-strong)
- * so it themes correctly in dark mode. Server-safe.
+ * The austere "dashed spine" idiom is RETIRED: connectors are now calm SOLID
+ * hairlines (border-line-subtle by default) so the tree reads as a quiet,
+ * modern indent rule rather than a 2000s dotted skeleton. The public name and
+ * prop contract are preserved (callers still import `DashedConnector` and may
+ * pass `orientation` / `tone` / `weight`) — only the rendered look is rebuilt.
+ *
+ * Pass `dashed` to opt back into a dashed stroke for the rare case where a
+ * dotted line genuinely communicates "predicted / provisional".
  *
  * Vertical:   <DashedConnector orientation="vertical" className="left-[20px]" />
  *             (parent must be `relative`; component is absolutely positioned)
  * Horizontal: <DashedConnector orientation="horizontal" className="w-6" />
  *
- * `tone="active"` lights the connector AMBER (.border-accent) so the lone
- * running synthesis / live branch of a Ledger can thread an accent spine —
- * the one place a connector may carry the accent (manifesto: amber means live).
- *
- * See docs/plans/overhaul/design-contract.md §4.
+ * `tone="active"` lights the connector AMBER — reserved for the single live /
+ * focused branch (the one place a connector carries the accent).
  * ────────────────────────────────────────────────────────────────────────── */
 
 export interface DashedConnectorProps
   extends React.HTMLAttributes<HTMLDivElement> {
   orientation?: "vertical" | "horizontal";
   tone?: "default" | "muted" | "strong" | "active";
-  /** Stroke weight. Default 2 for vertical spines, 1 reads better horizontally. */
+  /** Stroke weight (px). Hairline (1) is the calm modern default. */
   weight?: 1 | 2;
+  /** Opt back into a dashed stroke (predicted / provisional connectors). */
+  dashed?: boolean;
 }
 
 const TONE_BORDER: Record<NonNullable<DashedConnectorProps["tone"]>, string> = {
-  default: "border-line",
+  default: "border-line-subtle",
   muted: "border-line-subtle",
-  strong: "border-line-strong",
+  strong: "border-line",
   // The single accent connector — reserved for the live/running branch.
   active: "border-accent",
 };
 
 export function DashedConnector({
   orientation = "vertical",
-  tone = "strong",
-  weight = 2,
+  tone = "default",
+  weight = 1,
+  dashed = false,
   className,
   ...props
 }: DashedConnectorProps) {
@@ -49,10 +54,13 @@ export function DashedConnector({
     <div
       aria-hidden
       className={cn(
-        "border-dashed",
+        dashed ? "border-dashed" : "border-solid",
         border,
         isVertical
-          ? cn("absolute top-0 bottom-0", weight === 2 ? "border-l-2" : "border-l")
+          ? cn(
+              "absolute top-0 bottom-0",
+              weight === 2 ? "border-l-2" : "border-l",
+            )
           : cn("h-px w-full", weight === 2 ? "border-t-2" : "border-t"),
         className,
       )}

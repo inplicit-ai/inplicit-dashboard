@@ -11,12 +11,11 @@ import { SectionCard } from "./SectionCard";
 import { PlatePlaceholder } from "./Catalog";
 
 /**
- * People section (doc 03 §4 #10) — re-cut as a participant register on the spine.
+ * People section (doc 03 §4 #10) — a clean participant list inside a SectionCard.
  *
- * Each row sits on the shared status spine: a StatusDisc encodes validity
- * (done = a real email, error = missing "@"), the email is rendered in mono so
- * the column reads as the anon-id register it becomes after launch. CSV upload
- * de-dups by email and lands its rows inline immediately — no jump, no box.
+ * Each row carries a small StatusDisc encoding validity (done = a real email,
+ * error = missing "@"), then calm sans name + email inputs. CSV upload de-dups
+ * by email and lands its rows inline immediately — no jump.
  *
  * Every edit dispatches a `set_people` tool call so the catalog stays the single
  * source of truth (same reducer, two writers). PII stays client-side until
@@ -53,7 +52,6 @@ export function PeopleSection({
 
   return (
     <SectionCard
-      index="§ 06"
       title={t("people")}
       count={people.length || undefined}
       touched={touched}
@@ -84,7 +82,7 @@ export function PeopleSection({
                       placeholder={t("personEmail")}
                       type="email"
                       onChange={(e) => setRow(i, { email: e.target.value })}
-                      className="h-8 font-mono sm:flex-[3] sm:min-w-[14rem]"
+                      className="h-8 sm:flex-[3] sm:min-w-[14rem]"
                     />
                   </div>
                   <button
@@ -107,7 +105,7 @@ export function PeopleSection({
             {t("addPerson")}
           </Button>
           <div className="flex items-center gap-3">
-            <span className="font-mono text-[length:var(--text-eyebrow)] tabular-nums text-fg-subtle">
+            <span className="text-[length:var(--text-meta)] tabular-nums text-fg-subtle">
               {t("peopleCount", { count: people.length })}
             </span>
             <input
@@ -131,7 +129,7 @@ export function PeopleSection({
             </Button>
           </div>
         </div>
-        <p className="font-mono text-[length:var(--text-eyebrow)] uppercase tracking-[0.06em] text-fg-subtle">
+        <p className="text-[length:var(--text-caption)] text-fg-subtle">
           {t("csvHint")}
         </p>
       </div>

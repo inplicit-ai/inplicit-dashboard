@@ -15,7 +15,18 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SpecStrip } from "@/components/ui/spec-strip";
+import { StatBand } from "@/components/ui/stat-band";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { Card } from "@/components/ui/card";
+import { EmptyState as EmptyStateCard } from "@/components/ui/empty-state";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { StatusDisc, toStatusState } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 import type { Participant } from "@/lib/api";
@@ -202,8 +213,8 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Instrument band — one ruled readout, not floating stats. */}
-      <SpecStrip
+      {/* Metric band — the white-modernist readout. */}
+      <StatBand
         cells={[
           { label: "Teilnehmer", value: counts.total },
           { label: "Eingeladen", value: counts.invited },
@@ -211,30 +222,26 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
         ]}
       />
 
-      {/* Folio + add action */}
-      <header className="flex items-baseline justify-between gap-4 border-b border-line pb-2">
-        <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
-          § TEILNEHMER
-        </span>
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-xs tabular-nums text-fg-muted">
-            n={counts.total}
-          </span>
-          {!adding && (
+      {/* Section heading + add action */}
+      <SectionHeading
+        title="Teilnehmer"
+        count={counts.total}
+        action={
+          !adding ? (
             <Button size="sm" onClick={() => setAdding(true)}>
               <UserPlus className="h-4 w-4" />
               Teilnehmer hinzufügen
             </Button>
-          )}
-        </div>
-      </header>
+          ) : undefined
+        }
+      />
 
       {/* Flash banner */}
       {flash && <FlashBanner type={flash.type} message={flash.message} />}
 
       {/* Inline create form — its own card so the inputs have room to breathe */}
       {adding && (
-        <div className="card card--compact">
+        <Card className="gap-0 p-5">
           <div className="mb-4 flex items-start justify-between gap-4">
             <div className="space-y-1">
               <p className="text-sm font-semibold text-fg">Neuer Teilnehmer</p>
@@ -307,140 +314,152 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
               Speichern
             </Button>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Table */}
       {rows.length === 0 && !adding ? (
-        <div className="card card--flush">
-          <EmptyState onAdd={() => setAdding(true)} />
-        </div>
+        <EmptyStateCard
+          icon={UserPlus}
+          title="Noch keine Teilnehmer in dieser Kampagne"
+          hint="Lege jemanden manuell an oder lade per CSV-Upload beim Erstellen mehrere Personen auf einmal hoch."
+          action={
+            <Button size="sm" onClick={() => setAdding(true)}>
+              <UserPlus className="h-4 w-4" />
+              Teilnehmer hinzufügen
+            </Button>
+          }
+        />
       ) : (
-        <div className="w-full overflow-x-auto">
-            <table className="register min-w-[860px]">
-              <thead>
-                <tr>
-                  <th className="w-[28px]" aria-label="Status" />
-                  <th className="min-w-[220px]">E-Mail</th>
-                  <th className="min-w-[160px]">Name</th>
-                  <th className="min-w-[160px]">Abteilung</th>
-                  <th className="min-w-[160px]">Rolle</th>
-                  <th className="w-[150px]">Status</th>
-                  <th className="w-[280px] text-right">Aktionen</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((p) => {
-                  const isEditing = editing === p.id;
-                  const discState = participantDiscState(p);
-                  return (
-                    <tr key={p.id} className={isEditing ? "bg-surface-2" : ""}>
-                      <td>
-                        <StatusDisc
-                          state={discState}
-                          pulse={discState === "live"}
-                          size="sm"
+        <Card variant="ledger" className="overflow-hidden">
+          <Table className="min-w-[860px]">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-[28px]" aria-label="Status" />
+                <TableHead className="min-w-[220px]">E-Mail</TableHead>
+                <TableHead className="min-w-[160px]">Name</TableHead>
+                <TableHead className="min-w-[160px]">Abteilung</TableHead>
+                <TableHead className="min-w-[160px]">Rolle</TableHead>
+                <TableHead className="w-[150px]">Status</TableHead>
+                <TableHead className="w-[280px] text-right">Aktionen</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((p) => {
+                const isEditing = editing === p.id;
+                const discState = participantDiscState(p);
+                return (
+                  <TableRow
+                    key={p.id}
+                    className={cn(
+                      "border-line-subtle",
+                      isEditing && "bg-surface-2",
+                    )}
+                  >
+                    <TableCell className="py-4">
+                      <StatusDisc
+                        state={discState}
+                        pulse={discState === "live"}
+                        size="sm"
+                      />
+                    </TableCell>
+                    <TableCell mono={!isEditing} className="py-4">
+                      {isEditing ? (
+                        <Input
+                          type="email"
+                          className="h-8 text-[length:var(--text-body-sm)]"
+                          value={draft.email}
+                          onChange={(e) =>
+                            setDraft((d) => ({ ...d, email: e.target.value }))
+                          }
                         />
-                      </td>
-                      <td>
+                      ) : (
+                        <span className="text-fg-muted">{p.email}</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-4">
+                      {isEditing ? (
+                        <Input
+                          className="h-8 text-[length:var(--text-body-sm)]"
+                          value={draft.name}
+                          onChange={(e) =>
+                            setDraft((d) => ({ ...d, name: e.target.value }))
+                          }
+                        />
+                      ) : (
+                        <CellText value={p.name} />
+                      )}
+                    </TableCell>
+                    <TableCell className="py-4">
+                      {isEditing ? (
+                        <Input
+                          className="h-8 text-[length:var(--text-body-sm)]"
+                          value={draft.department}
+                          onChange={(e) =>
+                            setDraft((d) => ({
+                              ...d,
+                              department: e.target.value,
+                            }))
+                          }
+                        />
+                      ) : (
+                        <CellText value={p.department} />
+                      )}
+                    </TableCell>
+                    <TableCell className="py-4">
+                      {isEditing ? (
+                        <Input
+                          className="h-8 text-[length:var(--text-body-sm)]"
+                          value={draft.role}
+                          onChange={(e) =>
+                            setDraft((d) => ({ ...d, role: e.target.value }))
+                          }
+                        />
+                      ) : (
+                        <CellText value={p.role} />
+                      )}
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <ParticipantStatus p={p} />
+                    </TableCell>
+                    <TableCell className="py-4 text-right">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
                         {isEditing ? (
-                          <Input
-                            type="email"
-                            className="h-8 text-[length:var(--text-body-sm)]"
-                            value={draft.email}
-                            onChange={(e) =>
-                              setDraft((d) => ({ ...d, email: e.target.value }))
-                            }
-                          />
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={cancelEdit}
+                              disabled={busy === p.id}
+                            >
+                              Abbrechen
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => saveEdit(p.id)}
+                              disabled={busy === p.id}
+                            >
+                              Speichern
+                            </Button>
+                          </>
                         ) : (
-                          <span className="register__id text-xs text-fg-muted">
-                            {p.email}
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        {isEditing ? (
-                          <Input
-                            className="h-8 text-[length:var(--text-body-sm)]"
-                            value={draft.name}
-                            onChange={(e) =>
-                              setDraft((d) => ({ ...d, name: e.target.value }))
-                            }
+                          <RowActions
+                            p={p}
+                            busy={busy === p.id}
+                            onEdit={() => startEdit(p)}
+                            onInvite={() => inviteRow(p, false)}
+                            onResend={() => inviteRow(p, true)}
+                            onDelete={() => deleteRow(p)}
                           />
-                        ) : (
-                          <CellText value={p.name} />
                         )}
-                      </td>
-                      <td>
-                        {isEditing ? (
-                          <Input
-                            className="h-8 text-[length:var(--text-body-sm)]"
-                            value={draft.department}
-                            onChange={(e) =>
-                              setDraft((d) => ({
-                                ...d,
-                                department: e.target.value,
-                              }))
-                            }
-                          />
-                        ) : (
-                          <CellText value={p.department} />
-                        )}
-                      </td>
-                      <td>
-                        {isEditing ? (
-                          <Input
-                            className="h-8 text-[length:var(--text-body-sm)]"
-                            value={draft.role}
-                            onChange={(e) =>
-                              setDraft((d) => ({ ...d, role: e.target.value }))
-                            }
-                          />
-                        ) : (
-                          <CellText value={p.role} />
-                        )}
-                      </td>
-                      <td>
-                        <ParticipantStatus p={p} />
-                      </td>
-                      <td className="text-right">
-                        <div className="flex flex-wrap items-center justify-end gap-2">
-                          {isEditing ? (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={cancelEdit}
-                                disabled={busy === p.id}
-                              >
-                                Abbrechen
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => saveEdit(p.id)}
-                                disabled={busy === p.id}
-                              >
-                                Speichern
-                              </Button>
-                            </>
-                          ) : (
-                            <RowActions
-                              p={p}
-                              busy={busy === p.id}
-                              onEdit={() => startEdit(p)}
-                              onInvite={() => inviteRow(p, false)}
-                              onResend={() => inviteRow(p, true)}
-                              onDelete={() => deleteRow(p)}
-                            />
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </div>
   );
@@ -469,7 +488,7 @@ function Field({
     <div className="space-y-2">
       <label
         htmlFor={id}
-        className="label-eyebrow flex items-center gap-1.5 text-fg-subtle"
+        className="flex items-center gap-1.5 text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-muted"
       >
         {label}
         {required && <span className="text-pain">*</span>}
@@ -518,29 +537,6 @@ function FlashBanner({
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" />
       <p className="leading-snug">{message}</p>
-    </div>
-  );
-}
-
-function EmptyState({ onAdd }: { onAdd: () => void }) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-      <div className="grid size-11 place-items-center rounded-full bg-surface-2 text-fg-muted">
-        <UserPlus className="h-5 w-5" />
-      </div>
-      <div className="space-y-1">
-        <p className="text-base font-semibold text-fg">
-          Noch keine Teilnehmer in dieser Kampagne.
-        </p>
-        <p className="max-w-sm text-sm text-fg-muted">
-          Lege jemanden manuell an oder lade per CSV-Upload beim Erstellen
-          mehrere Personen auf einmal hoch.
-        </p>
-      </div>
-      <Button size="sm" onClick={onAdd} className="mt-1">
-        <UserPlus className="h-4 w-4" />
-        Teilnehmer hinzufügen
-      </Button>
     </div>
   );
 }

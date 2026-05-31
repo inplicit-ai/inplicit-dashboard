@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface Tab {
@@ -58,15 +59,22 @@ const TABS: Tab[] = [
   },
 ];
 
+/**
+ * Campaign section tabs — the BadgeTabs sliding-pill aesthetic, but each tab is
+ * a real <Link> (server-routed). The active pill is a single framer-motion
+ * <motion.span layoutId> that slides between tabs; under prefers-reduced-motion
+ * it simply snaps. i18n keys are reused verbatim from the `breadcrumb` catalog.
+ */
 export function CampaignTabs({ campaignId }: { campaignId: string }) {
   const pathname = usePathname() ?? "";
   const t = useTranslations("breadcrumb");
+  const reduceMotion = useReducedMotion();
 
   return (
-    <div className="-mx-4 mb-6 border-b border-line sm:-mx-8">
+    <div className="mb-8 overflow-x-auto scrollbar-none">
       <nav
         aria-label={t("campaign")}
-        className="scrollbar-none flex gap-7 overflow-x-auto px-4 sm:px-8"
+        className="inline-flex items-center gap-1 rounded-full border border-line-subtle bg-surface-2 p-1"
       >
         {TABS.map((tab) => {
           const active = tab.match(pathname, campaignId);
@@ -76,14 +84,20 @@ export function CampaignTabs({ campaignId }: { campaignId: string }) {
               href={tab.href(campaignId)}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative -mb-px whitespace-nowrap border-b-2 py-4 text-[13px] font-medium transition-colors",
-                "focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                active
-                  ? "border-accent text-fg"
-                  : "border-transparent text-fg-muted hover:text-fg",
+                "relative flex h-8 items-center whitespace-nowrap rounded-full px-3.5 text-[length:var(--text-meta)] font-medium transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                active ? "text-fg" : "text-fg-muted hover:text-fg",
               )}
             >
-              {t(tab.labelKey)}
+              {active && (
+                <motion.span
+                  layoutId={reduceMotion ? undefined : "campaign-tab-pill"}
+                  aria-hidden
+                  className="absolute inset-0 rounded-full bg-surface shadow-sm"
+                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                />
+              )}
+              <span className="relative z-10">{t(tab.labelKey)}</span>
             </Link>
           );
         })}

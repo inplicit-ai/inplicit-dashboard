@@ -1,9 +1,10 @@
 import { CampaignChat } from "@/components/campaign-chat/CampaignChat";
 
-// Per-campaign RAG chat (O-7). Wide work surface (design-contract §7) that owns
-// its own full height via the chat-container flex contract (§6) — no PageHeader,
-// the chat surface renders its own fixed header so the conversation fills the
-// viewport under the topbar + campaign tabs.
+// Per-campaign RAG chat (O-7). CHAT-FILL CONTRACT: the wrapper is the DIRECT
+// child of `.app-work` with `surface-bleed chat-fill` — `.app-work` drops its
+// padding + overflow so the chat fills the 1fr work row exactly under the topbar
+// + campaign tabs. The page never scrolls; only the chat's message region does.
+// NO 100dvh / --chat-height math here.
 export default async function CampaignChatPage({
   params,
 }: {
@@ -12,7 +13,7 @@ export default async function CampaignChatPage({
   const { id } = await params;
 
   return (
-    <div className="surface-bleed h-[var(--chat-height)]">
+    <div className="surface-bleed chat-fill">
       <CampaignChat campaignId={id} />
     </div>
   );

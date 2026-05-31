@@ -1,18 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
-import Link from "next/link";
-import {
-  ArrowRight,
-  ArrowUp,
-  GitBranch,
-  Network,
-  Search,
-  Sparkles,
-  Wrench,
-  type LucideIcon,
-} from "lucide-react";
-import { StatusDisc } from "@/components/ui/status-disc";
+import { useState } from "react";
+import { Search } from "lucide-react";
+import { Composer, type ComposerSuggestion } from "@/components/ui/composer";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { CardGrid, EntityCard } from "@/components/ui/card-grid";
+import { Card } from "@/components/ui/card";
 
 // Stage-1 vector search: embed → Qdrant → cited insight rows. Stage-2
 // (LLM-summarized cite-or-decline answer) hangs off the same endpoint later;
@@ -36,31 +29,22 @@ interface SearchResponse {
   searched_campaigns: number;
 }
 
-const SUGGESTIONS: Array<{
-  label: string;
-  prompt: string;
-  icon: LucideIcon;
-}> = [
+const SUGGESTIONS: ComposerSuggestion[] = [
   {
     label: "Onboarding-Pain",
-    prompt: "Welche Onboarding-Probleme erwähnen neue Mitarbeitende?",
-    icon: Sparkles,
+    value: "Welche Onboarding-Probleme erwähnen neue Mitarbeitende?",
   },
   {
     label: "Tool-Workarounds",
-    prompt: "Welche Tools werden umgangen, doppelt genutzt oder selbst gebaut?",
-    icon: Wrench,
+    value: "Welche Tools werden umgangen, doppelt genutzt oder selbst gebaut?",
   },
   {
     label: "Team-Reibung",
-    prompt: "Wo entsteht Reibung zwischen Abteilungen oder Teams?",
-    icon: Network,
+    value: "Wo entsteht Reibung zwischen Abteilungen oder Teams?",
   },
   {
     label: "Top-Schmerzen",
-    prompt:
-      "Was sind die meistgenannten Pain-Points über alle Kampagnes hinweg?",
-    icon: GitBranch,
+    value: "Was sind die meistgenannten Pain-Points über alle Kampagnes hinweg?",
   },
 ];
 
@@ -69,7 +53,6 @@ export function RagSearch() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [response, setResponse] = useState<SearchResponse | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   async function runSearch(q: string) {
     const trimmed = q.trim();
@@ -96,30 +79,18 @@ export function RagSearch() {
     }
   }
 
-  function onSubmit() {
-    void runSearch(query);
-  }
-
-  function onSuggestion(prompt: string) {
+  function onSuggestion(s: ComposerSuggestion) {
+    const prompt = s.value ?? s.label;
     setQuery(prompt);
-    textareaRef.current?.focus();
     void runSearch(prompt);
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      onSubmit();
-    }
-  }
-
-  const canSend = query.trim().length > 0 && !loading;
   const hasResults = response && response.results.length > 0;
   const isEmpty = response && response.results.length === 0;
 
   return (
     <div className="space-y-4">
-      {/* Cited evidence — rendered ABOVE the composer as a ledger of rows. */}
+      {/* Cited evidence — rendered ABOVE the composer. */}
       {(error || response) && (
         <ResultsArea
           error={error}
@@ -129,51 +100,16 @@ export function RagSearch() {
         />
       )}
 
-      {/* Composer — the one elevated input; amber lives only on its focus ring
-          and the live streaming indicator. */}
-      <div className="rag__card">
-        <textarea
-          ref={textareaRef}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Finde Insights aus deinen Kampagnes…"
-          rows={2}
-          className="rag__input"
-        />
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={!canSend}
-          aria-label="Suche starten"
-          className="rag__send"
-        >
-          {loading ? (
-            <span className="rag__send-loading" aria-hidden="true" />
-          ) : (
-            <ArrowUp width={14} height={14} />
-          )}
-        </button>
-      </div>
-
-      {/* Reply-suggestion chips — square data-chips, not pills. */}
-      <div className="flex flex-wrap gap-2">
-        {SUGGESTIONS.map((s) => {
-          const Icon = s.icon;
-          return (
-            <button
-              key={s.label}
-              type="button"
-              onClick={() => onSuggestion(s.prompt)}
-              title={s.prompt}
-              className="badge badge--knowledge inline-flex items-center gap-1.5 transition-colors hover:border-line-strong hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Icon className="h-3.5 w-3.5 shrink-0 text-fg-subtle" aria-hidden />
-              <span>{s.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {/* Composer — the one elevated input; amber lives only on its focus ring. */}
+      <Composer
+        value={query}
+        onValueChange={setQuery}
+        onSubmit={(v) => void runSearch(v)}
+        placeholder="Finde Insights aus deinen Kampagnes…"
+        isLoading={loading}
+        suggestions={SUGGESTIONS}
+        onSuggestionSelect={onSuggestion}
+      />
     </div>
   );
 }
@@ -193,9 +129,9 @@ function ResultsArea({
 }) {
   if (error) {
     return (
-      <div className="rounded-card border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
+      <Card className="gap-0 border-danger/30 bg-danger-soft p-4 text-sm text-danger">
         {error}
-      </div>
+      </Card>
     );
   }
 
@@ -203,7 +139,7 @@ function ResultsArea({
 
   if (isEmpty) {
     return (
-      <div className="rounded-card border border-line bg-surface px-5 py-4">
+      <Card className="gap-0 p-5">
         <div className="flex items-start gap-3">
           <span
             aria-hidden="true"
@@ -219,7 +155,7 @@ function ResultsArea({
             </p>
           </div>
         </div>
-      </div>
+      </Card>
     );
   }
 
@@ -229,48 +165,42 @@ function ResultsArea({
 
   return (
     <section>
-      <header className="mb-3 flex items-baseline justify-between gap-4 border-b border-line-subtle pb-2">
-        <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
-          § BELEGE
-        </span>
-        <span className="font-mono text-xs tabular-nums text-fg-muted">
-          n={count} · {response.searched_campaigns} kmp
-        </span>
-      </header>
-
-      <div className="evidence-tree">
+      <SectionHeading
+        title="Belege"
+        count={count}
+        action={
+          <span className="text-[length:var(--text-meta)] tabular-nums text-fg-subtle">
+            {response.searched_campaigns} Kampagnes
+          </span>
+        }
+      />
+      <CardGrid>
         {response.results.map((r) => (
-          <ResultRow key={r.vse_insight_id} r={r} />
+          <ResultCard key={r.vse_insight_id} r={r} />
         ))}
-      </div>
+      </CardGrid>
     </section>
   );
 }
 
-function ResultRow({ r }: { r: SearchResult }) {
+function ResultCard({ r }: { r: SearchResult }) {
   return (
-    <div className="tree-node">
-      <Link
-        href={`/campaigns/${r.campaign_id}/interviews/${r.interview_id}`}
-        className="tree-row tree-row--button tree-row--parent group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <div className="tree-row__lead">
-          <StatusDisc state="done" />
-          <span className="tree-row__label">{r.problem_statement}</span>
-        </div>
-        <div className="tree-row__meta">
+    <EntityCard
+      href={`/campaigns/${r.campaign_id}/interviews/${r.interview_id}`}
+      title={r.problem_statement}
+      meta={
+        <span className="inline-flex flex-wrap items-center gap-2">
           {r.department && (
             <span className="badge badge--knowledge">{r.department}</span>
           )}
-          <span className="badge badge--knowledge font-mono tabular-nums">
-            {r.anon_id}
-          </span>
-          <span className="font-mono tabular-nums text-fg-muted">
-            {(r.score * 100).toFixed(0)}%
-          </span>
-          <ArrowRight className="h-4 w-4 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-fg" />
-        </div>
-      </Link>
-    </div>
+          <span className="font-mono tabular-nums">{r.anon_id}</span>
+        </span>
+      }
+      footer={
+        <span className="tabular-nums text-fg-muted">
+          {(r.score * 100).toFixed(0)}% Relevanz
+        </span>
+      }
+    />
   );
 }

@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+
 import { makeApi, type InterviewDetail } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ErrorState";
 import { StatusBadge } from "@/components/PageChrome";
 import { StatusDisc, toStatusState } from "@/components/ui/status-disc";
-import { SpecBlock, type SpecRow } from "@/components/ui/spec-block";
-import { InstrumentBand, type InstrumentCell } from "@/components/ui/instrument-band";
+import { StatBand, type StatBandCell } from "@/components/ui/stat-band";
 import { InterviewDetailView } from "@/components/InterviewDetailView";
 
 export default async function InterviewDetailPage({
@@ -48,22 +48,28 @@ export default async function InterviewDetailPage({
             </Link>
           </Button>
 
-          {/* ─── Ledger masthead: two tracks ──────────────────────────────── */}
-          <header className="mb-8 grid gap-8 lg:grid-cols-[minmax(220px,260px)_1fr]">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-start gap-3">
-                <span className="flex w-7 shrink-0 items-center justify-center pt-1.5">
-                  <StatusDisc state={toStatusState(detail.interview.status)} size="lg" />
-                </span>
-                <div className="flex flex-col gap-1">
-                  <span className="eyebrow">Interview</span>
-                  <h1 className="title font-mono tabular-nums tracking-[-0.01em]">
-                    {detail.interview.anon_id}
-                  </h1>
+          {/* ─── Clean page header: ID + status + meta ─────────────────────── */}
+          <header className="mb-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2.5">
+                  <StatusDisc
+                    state={toStatusState(detail.interview.status)}
+                    size="md"
+                  />
+                  <span className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
+                    Interview
+                  </span>
                 </div>
+                <h1 className="mt-2 font-mono text-[length:var(--text-display)] font-semibold tracking-[-0.01em] tabular-nums text-fg">
+                  {detail.interview.anon_id}
+                </h1>
+                <p className="mt-2 text-[length:var(--text-meta)] text-fg-muted">
+                  {metaLine(detail.interview)}
+                </p>
               </div>
-              <SpecBlock rows={mastheadRows(detail.interview)} />
-              <div className="inline-flex flex-wrap gap-2">
+
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
                 <StatusBadge status={detail.interview.status} />
                 {detail.interview.processing_status &&
                   detail.interview.status === "COMPLETED" && (
@@ -72,9 +78,7 @@ export default async function InterviewDetailPage({
               </div>
             </div>
 
-            <div className="min-w-0">
-              <InstrumentBand cells={instrumentCells(detail)} />
-            </div>
+            <StatBand cells={statCells(detail)} className="mt-6" />
           </header>
 
           <InterviewDetailView
@@ -88,16 +92,16 @@ export default async function InterviewDetailPage({
   );
 }
 
-function mastheadRows(iv: InterviewDetail["interview"]): SpecRow[] {
-  const rows: SpecRow[] = [];
-  if (iv.department) rows.push({ label: "Abteilung", value: iv.department });
-  rows.push({ label: "Modus", value: iv.mode === "voice" ? "Voice" : "Chat" });
-  if (iv.started_at) rows.push({ label: "Start", value: formatDate(iv.started_at) });
-  if (iv.ended_at) rows.push({ label: "Ende", value: formatDate(iv.ended_at) });
-  return rows;
+function metaLine(iv: InterviewDetail["interview"]): string {
+  const parts: string[] = [];
+  if (iv.department) parts.push(iv.department);
+  parts.push(iv.mode === "voice" ? "Voice" : "Chat");
+  if (iv.started_at) parts.push(`Start ${formatDate(iv.started_at)}`);
+  if (iv.ended_at) parts.push(`Ende ${formatDate(iv.ended_at)}`);
+  return parts.join(" · ");
 }
 
-function instrumentCells(detail: InterviewDetail): InstrumentCell[] {
+function statCells(detail: InterviewDetail): StatBandCell[] {
   const iv = detail.interview;
   return [
     {
@@ -106,7 +110,7 @@ function instrumentCells(detail: InterviewDetail): InstrumentCell[] {
     },
     { label: "Wortbeiträge", value: detail.utterances.length },
     { label: "Insights", value: detail.insights.length },
-    { label: "Modus", value: iv.mode === "voice" ? "VOICE" : "CHAT" },
+    { label: "Modus", value: iv.mode === "voice" ? "Voice" : "Chat" },
   ];
 }
 

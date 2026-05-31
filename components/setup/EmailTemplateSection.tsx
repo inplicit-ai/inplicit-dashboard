@@ -42,10 +42,10 @@ export function EmailTemplateSection({
   const previewBody = renderTokens(tpl.body, sample);
 
   return (
-    <SectionCard index="§ 08" title={t("emailTemplate")} touched={touched}>
+    <SectionCard title={t("emailTemplate")} touched={touched}>
       <div className="flex flex-col gap-4">
         <label className="flex flex-col gap-1.5">
-          <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
+          <span className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
             {t("emailSubject")}
           </span>
           <Input
@@ -55,7 +55,7 @@ export function EmailTemplateSection({
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
+          <span className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
             {t("emailBody")}
           </span>
           <Textarea
@@ -65,16 +65,15 @@ export function EmailTemplateSection({
             className="min-h-[96px]"
           />
         </label>
-        <p className="font-mono text-[length:var(--text-eyebrow)] uppercase tracking-[0.06em] text-fg-subtle">
+        <p className="text-[length:var(--text-caption)] text-fg-subtle">
           {t("emailVarsHint")}
         </p>
 
-        {/* Rendered preview — quiet instrument plate, monochrome (not a live
-            process, so no accent: a done disc reads it as a settled render). */}
-        <div className="overflow-hidden rounded-card border border-line bg-surface-2">
-          <div className="flex items-center gap-2 border-b border-line-subtle px-4 py-2">
+        {/* Rendered preview — a quiet settled plate (done disc, no accent). */}
+        <div className="overflow-hidden rounded-md border border-line bg-surface-2">
+          <div className="flex items-center gap-2 border-b border-line-subtle px-4 py-2.5">
             <StatusDisc state="done" size="sm" />
-            <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
+            <span className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
               {t("preview")}
             </span>
           </div>

@@ -201,10 +201,10 @@ function IdentityCard({ me }: { me: Me }) {
   const initial = (display || "·").slice(0, 1).toUpperCase();
   const role = me.role.replace(/_/g, " ").toLowerCase();
   return (
-    <div className="flex items-center gap-3 rounded-ui border border-line bg-surface px-4 py-3">
+    <div className="flex items-center gap-3 rounded-card border border-line bg-surface px-4 py-3 shadow-card">
       <span
         aria-hidden="true"
-        className="grid size-10 place-items-center rounded-ui border border-line bg-surface-2 font-mono text-[13px] font-semibold tabular-nums text-fg-muted"
+        className="grid size-10 place-items-center rounded-ui border border-line bg-surface-2 text-[14px] font-semibold text-fg-muted"
       >
         {initial}
       </span>
@@ -214,7 +214,7 @@ function IdentityCard({ me }: { me: Me }) {
           <p className="truncate text-xs text-fg-muted">{me.email}</p>
         )}
       </div>
-      <span className="rounded-sm border border-line bg-canvas px-2 py-0.5 font-mono text-[11px] font-semibold uppercase tracking-[0.10em] tabular-nums text-fg-muted">
+      <span className="rounded-full border border-line-subtle bg-surface-2 px-2.5 py-0.5 text-[12px] font-medium capitalize text-fg-muted">
         {role}
       </span>
     </div>
@@ -232,8 +232,8 @@ function Section({
 }) {
   return (
     <section className="space-y-2.5">
-      <header className="flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
-        <Icon className="h-3 w-3" />
+      <header className="flex items-center gap-2 px-1 text-[13px] font-semibold text-fg-muted">
+        <Icon className="h-3.5 w-3.5 text-fg-subtle" />
         {title}
       </header>
       <div className="space-y-1">{children}</div>

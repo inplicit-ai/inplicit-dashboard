@@ -1,16 +1,14 @@
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { ArrowRight } from "lucide-react";
+import { Inbox } from "lucide-react";
 import { makeApi, type OrgInterviewRow, type OrgStats } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
 import { ErrorState } from "@/components/ErrorState";
-import { Folio } from "@/components/ui/folio";
-import { InstrumentBand } from "@/components/ui/instrument-band";
-import { Ledger } from "@/components/ui/ledger";
-import { LedgerRow } from "@/components/ui/ledger-row";
-import { DataChip } from "@/components/ui/data-chip";
-import { SpecBlock } from "@/components/ui/spec-block";
-import { StatusDisc, toStatusState } from "@/components/ui/status-disc";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatBand } from "@/components/ui/stat-band";
+import { EmptyState } from "@/components/ui/empty-state";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { Card } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 function fmtDuration(seconds?: number): string {
   if (!seconds || seconds <= 0) return "—";
@@ -33,19 +31,56 @@ export default async function OrgInterviewsPage() {
     error = e;
   }
 
+  const columns: DataTableColumn<OrgInterviewRow>[] = [
+    {
+      key: "anon",
+      header: t("colAnon"),
+      mono: true,
+      cell: (i) => i.anon_id,
+    },
+    {
+      key: "campaign",
+      header: t("colCampaign"),
+      cell: (i) => <span className="font-medium text-fg">{i.campaign_label}</span>,
+    },
+    {
+      key: "status",
+      header: t("colStatus"),
+      cell: (i) => <StatusBadge status={i.status} withIcon />,
+    },
+    {
+      key: "language",
+      header: t("colLanguage"),
+      cell: (i) => (i.language ?? "—").toUpperCase(),
+    },
+    {
+      key: "duration",
+      header: t("colDuration"),
+      numeric: true,
+      cell: (i) => fmtDuration(i.duration_seconds),
+    },
+    {
+      key: "date",
+      header: t("colDate"),
+      numeric: true,
+      cell: (i) =>
+        i.created_at ? new Date(i.created_at).toLocaleDateString() : "—",
+    },
+  ];
+
   return (
     <>
-      <Folio index="§" label={t("title")} count={rows.length} />
+      <PageHeader title={t("title")} subtitle={t("count", { count: rows.length })} />
 
       {error && (
-        <div className="mt-6">
+        <div className="mb-6">
           <ErrorState error={error} />
         </div>
       )}
 
       {stats && (
-        <div className="mt-6">
-          <InstrumentBand
+        <div className="mb-8">
+          <StatBand
             cells={[
               { label: t("statCampaigns"), value: stats.campaigns },
               { label: t("statTotal"), value: stats.interviews_total },
@@ -58,83 +93,19 @@ export default async function OrgInterviewsPage() {
       )}
 
       {rows.length === 0 && !error ? (
-        <div className="mt-8 max-w-[68ch] overflow-hidden rounded-card border border-dashed border-line-strong bg-surface">
-          <div className="flex flex-col gap-4 px-8 py-12">
-            <span className="flex items-center gap-2.5">
-              <StatusDisc state="idle" />
-              <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
-                {t("emptyTitle")}
-              </span>
-            </span>
-            <p className="body-lg max-w-[52ch] text-fg-muted">{t("emptyBody")}</p>
-          </div>
-        </div>
+        <EmptyState icon={Inbox} title={t("emptyTitle")} hint={t("emptyBody")} />
       ) : (
         rows.length > 0 && (
-          <Ledger framed className="mt-8">
-            {rows.map((i) => {
-              const href = `/campaigns/${i.campaign_id}/interviews/${i.id}`;
-              return (
-                <LedgerRow
-                  key={i.id}
-                  status={toStatusState(i.status)}
-                  index={i.anon_id}
-                  title={i.campaign_label}
-                  expandable
-                  metric={
-                    <span className="font-mono tabular-nums text-fg-muted">
-                      {fmtDuration(i.duration_seconds)}
-                    </span>
-                  }
-                >
-                  <div className="flex flex-col gap-3 py-1">
-                    <div className="cluster">
-                      <DataChip tone="neutral">{i.status}</DataChip>
-                      <DataChip mono>{(i.language ?? "—").toUpperCase()}</DataChip>
-                      <DataChip mono>{fmtDuration(i.duration_seconds)}</DataChip>
-                    </div>
-                    <SpecBlock
-                      rows={[
-                        { label: t("colAnon"), value: i.anon_id },
-                        { label: t("colStatus"), value: i.status },
-                        {
-                          label: t("colDuration"),
-                          value: fmtDuration(i.duration_seconds),
-                        },
-                        {
-                          label: t("colLanguage"),
-                          value: (i.language ?? "—").toUpperCase(),
-                        },
-                        {
-                          label: t("colDate"),
-                          value: i.created_at
-                            ? new Date(i.created_at).toLocaleString()
-                            : "—",
-                        },
-                      ]}
-                    />
-                    <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-                      <Link
-                        href={href}
-                        aria-label={t("open", { anon: i.anon_id })}
-                        className="inline-flex items-center gap-1.5 text-meta text-accent-strong hover:underline"
-                      >
-                        {t("colAnon")} {i.anon_id}
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
-                      <Link
-                        href={`/campaigns/${i.campaign_id}`}
-                        className="inline-flex items-center gap-1.5 text-meta text-fg-muted hover:text-fg"
-                      >
-                        {i.campaign_label}
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </div>
-                  </div>
-                </LedgerRow>
-              );
-            })}
-          </Ledger>
+          <Card variant="ledger" className="overflow-hidden">
+            <DataTable
+              columns={columns}
+              rows={rows}
+              rowKey={(i) => i.id}
+              rowHref={(i) =>
+                `/campaigns/${i.campaign_id}/interviews/${i.id}`
+              }
+            />
+          </Card>
         )
       )}
     </>

@@ -67,6 +67,7 @@
   --text-caps: var(--text-caps);
   --text-eyebrow: var(--text-eyebrow);
   --text-mono: var(--text-mono);
+  --text-metric: var(--text-metric);
 
   /* Radii */
   --radius-sm: var(--radius-sm);
@@ -80,6 +81,7 @@
   --shadow-sm: var(--shadow-sm);
   --shadow-md: var(--shadow-md);
   --shadow-card: var(--shadow-card);
+  --shadow-card-hover: var(--shadow-card-hover);
   --shadow-popover: var(--shadow-popover);
   --shadow-elevation: var(--shadow-elevation);
 

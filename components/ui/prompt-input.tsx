@@ -81,9 +81,10 @@ function PromptInput({
       >
         <div
           className={cn(
-            // The single composer: one elevated input. The lone amber on a form
-            // is the focus ring — a 2px accent edge that arms only on focus.
-            "rounded-card border border-line bg-surface p-2 transition-colors focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25",
+            // The claude.ai composer: a single rounded-2xl white box with soft
+            // elevation. Focus-within deepens the border + shadow (calm, no
+            // amber halo) — inviting and roomy, never cramped.
+            "rounded-lg border border-line bg-surface px-3 py-2.5 shadow-card transition-[border-color,box-shadow] duration-200 focus-within:border-line-strong focus-within:shadow-md",
             className,
           )}
         >
@@ -133,9 +134,9 @@ function PromptInputTextarea({
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={handleKeyDown}
       className={cn(
-        // Reading register inside the composer: 17px/1.6, no inner ring (the
-        // wrapper owns the lone amber focus edge).
-        "min-h-[44px] w-full resize-none border-none bg-transparent px-2 py-1.5 text-[length:var(--text-body-lg)] leading-relaxed text-fg shadow-none outline-none placeholder:text-fg-faint focus-visible:ring-0 focus-visible:ring-offset-0",
+        // Roomy reading register inside the composer: 15px/1.6, no inner ring
+        // (the wrapper owns the focus edge), calm muted placeholder.
+        "min-h-[44px] w-full resize-none border-none bg-transparent px-1 py-1 text-[length:var(--text-body-lg)] leading-[1.6] text-fg shadow-none outline-none placeholder:text-fg-subtle focus-visible:ring-0 focus-visible:ring-offset-0",
         className,
       )}
       rows={1}

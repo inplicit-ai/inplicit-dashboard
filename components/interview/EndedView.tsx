@@ -1,16 +1,18 @@
 "use client";
 
-import { StatusDisc } from "@/components/ui/status-disc";
-import { SpecBlock, type SpecRow } from "@/components/ui/spec-block";
+import { CheckCircle2 } from "lucide-react";
+
+import { Card, CardContent } from "@/components/ui/card";
+import { StatBand, type StatBandCell } from "@/components/ui/stat-band";
 import type { Lang } from "./copy";
 import { roomCopy } from "./copy";
 
 interface Props {
   lang: Lang;
   summary: string | null;
-  /** Wall-clock elapsed seconds (optional — drives the duration spec row). */
+  /** Wall-clock elapsed seconds (optional — drives the duration cell). */
   elapsedS?: number;
-  /** Number of exchanged turns (optional — drives the utterances spec row). */
+  /** Number of exchanged turns (optional — drives the utterances cell). */
   utteranceCount?: number;
 }
 
@@ -21,66 +23,78 @@ function fmtDuration(s: number): string {
 }
 
 /**
- * EndedView — the quiet instrument-plate (manifesto: interview-experience).
+ * EndedView — the quiet completion card (white-modernist).
  *
- * A single done StatusDisc on the spine, a folio-style eyebrow, and a mono
- * SpecBlock summarising the run (duration / utterances / status → synthesis
- * queued). No gradient avatar, no glow — monochrome, since nothing is live.
+ * A centered white Card: a soft success medallion, a confident thank-you title,
+ * a calm body, and a StatBand summarising the run (duration / turns / status).
+ * Numbers render in clean sans tabular-nums.
  */
 export function EndedView({ lang, summary, elapsedS, utteranceCount }: Props) {
   const c = roomCopy(lang);
 
   const synthLabel =
     lang === "en"
-      ? "→ synthesis queued"
+      ? "Queued"
       : lang === "fr"
-        ? "→ synthèse en file"
+        ? "En file"
         : lang === "es"
-          ? "→ síntesis en cola"
-          : "→ Auswertung in Warteschlange";
+          ? "En cola"
+          : "In Warteschlange";
 
-  const rows: SpecRow[] = [];
+  const durationLabel =
+    lang === "en"
+      ? "Duration"
+      : lang === "fr"
+        ? "Durée"
+        : lang === "es"
+          ? "Duración"
+          : "Dauer";
+
+  const turnsLabel =
+    lang === "en"
+      ? "Turns"
+      : lang === "fr"
+        ? "Échanges"
+        : lang === "es"
+          ? "Turnos"
+          : "Beiträge";
+
+  const statusLabel =
+    lang === "en"
+      ? "Synthesis"
+      : lang === "fr"
+        ? "Synthèse"
+        : lang === "es"
+          ? "Síntesis"
+          : "Auswertung";
+
+  const cells: StatBandCell[] = [];
   if (typeof elapsedS === "number") {
-    rows.push({ label: c.remaining, value: fmtDuration(elapsedS) });
+    cells.push({ label: durationLabel, value: fmtDuration(elapsedS) });
   }
   if (typeof utteranceCount === "number") {
-    rows.push({ label: "n=", value: utteranceCount });
+    cells.push({ label: turnsLabel, value: utteranceCount });
   }
-  rows.push({ label: "Status", value: synthLabel });
+  cells.push({ label: statusLabel, value: synthLabel });
 
   return (
-    <div className="iv-plate">
-      <div className="iv-plate__head">
-        <span className="iv-plate__spine" aria-hidden>
-          <StatusDisc state="done" size="lg" />
-        </span>
-        <div className="iv-plate__title-block">
-          <span className="eyebrow">{c.endedEyebrow}</span>
-          <h1 className="title iv-plate__title">{c.endedTitle}</h1>
-        </div>
-      </div>
+    <div className="flex min-h-[100dvh] items-center justify-center bg-canvas px-4 py-12">
+      <Card className="w-full max-w-md">
+        <CardContent className="flex flex-col">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-success-soft">
+            <CheckCircle2 aria-hidden className="h-6 w-6 text-success" />
+          </div>
 
-      <p className="body-lg iv-plate__body">{summary ?? c.endedBody}</p>
+          <h1 className="mt-5 text-[length:var(--text-display)] font-semibold tracking-[-0.02em] text-fg">
+            {c.endedTitle}
+          </h1>
+          <p className="mt-3 max-w-[52ch] text-[length:var(--text-body-lg)] leading-relaxed text-fg-muted">
+            {summary ?? c.endedBody}
+          </p>
 
-      <SpecBlock rows={rows} className="iv-plate__spec" />
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .iv-plate { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; gap: var(--space-6); max-width: 68ch; margin: 0 auto; padding: var(--space-8) var(--space-6); background: var(--color-surface); }
-        .iv-plate__head { display: grid; grid-template-columns: 28px 1fr; align-items: start; gap: var(--space-4); }
-        .iv-plate__spine { display: flex; align-items: center; justify-content: center; padding-top: 2px; }
-        .iv-plate__title-block { display: flex; flex-direction: column; gap: var(--space-2); }
-        .iv-plate__title { letter-spacing: -0.02em; }
-        .iv-plate__body { padding-left: calc(28px + var(--space-4)); max-width: 60ch; color: var(--color-text-secondary); }
-        .iv-plate__spec { margin-left: calc(28px + var(--space-4)); max-width: 360px; }
-        @media (max-width: 640px) {
-          .iv-plate { padding: var(--space-6) var(--space-4); }
-          .iv-plate__body, .iv-plate__spec { padding-left: 0; margin-left: 0; }
-        }
-      `,
-        }}
-      />
+          <StatBand cells={cells} className="mt-6" />
+        </CardContent>
+      </Card>
     </div>
   );
 }

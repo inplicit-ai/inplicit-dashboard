@@ -3,23 +3,24 @@
 /**
  * TwinGraph — vertical org-hierarchy graph for the digital twin (O-9, doc 07 §7).
  *
- * Ported from ct-sim's hand-rolled `RoleGraph.tsx` SVG and RE-THEMED to our
- * white-first tokens, then ROTATED into a CLEAR VERTICAL hierarchy: top-level
- * roles at the top, `manages` edges flowing downward. (ct-sim fanned a top row
- * into a central hub with subordinates dangling — here it is a proper top-down
- * org chart, the user's "clearer vertical hierarchy" requirement.)
+ * Ported from ct-sim's hand-rolled `RoleGraph.tsx` SVG and rebuilt onto the
+ * white-modernist look, ROTATED into a CLEAR VERTICAL hierarchy: top-level
+ * roles at the top, `manages` edges flowing downward — a proper top-down org
+ * chart.
  *
- * Design (01): dashed hairline connectors (the design-system tree idiom), NO
- * shadows. The single warm accent (var(--color-accent)) tints the active/
- * selected node (accent-soft fill + accent border) and is echoed on hover.
- * Solid node borders = roles with VALIDATED twin data; dashed borders =
- * predicted-only (ct-sim's dashed-subordinate convention, repurposed). A check
- * marks roles whose twin has validated data from real interviews.
+ * Design: calm SOLID hairline connectors on white (the retired dotted-spine
+ * idiom is gone); soft rounded node cards (white fill, hairline border, subtle
+ * shadow) that gently raise on hover. The single warm accent tints the active /
+ * selected node (accent-soft fill + accent border) and the lone edge feeding it.
+ * A solid border + green status disc = a role with VALIDATED twin data; a
+ * subtly dashed border + hollow disc = predicted-only (provisional).
  */
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { Network } from "lucide-react";
 import type { TwinGraph as TwinGraphData } from "@/lib/api";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface Positioned {
   id: string;
@@ -116,18 +117,15 @@ export function TwinGraph({
   );
 
   if (nodes.length === 0) {
-    // Printed-plate placeholder — hairline rule + quiet caption.
     return (
-      <div className="card rounded-card border-dashed py-16 text-center">
-        <p className="mx-auto max-w-[48ch] text-base leading-relaxed text-fg-muted">
-          {emptyLabel}
-        </p>
+      <div className="rounded-card border border-line bg-card shadow-card">
+        <EmptyState icon={Network} title={emptyLabel} />
       </div>
     );
   }
 
   return (
-    <div className="card card--flush w-full overflow-auto p-3">
+    <div className="w-full overflow-auto rounded-card border border-line bg-card p-4 shadow-card">
       <svg
         width={width}
         height={height}
@@ -135,9 +133,8 @@ export function TwinGraph({
         role="img"
         className="mx-auto block"
       >
-        {/* Edges: dashed hairline, downward — the design connector idiom. The
-            lone edge feeding the active node lights AMBER (manifesto: the live/
-            focused branch is the only accent connector). */}
+        {/* Edges: calm solid hairline, downward. The lone edge feeding the
+            active node lights AMBER (amber means focused / live). */}
         {data.edges.map((e, i) => {
           // Draw parent → child top-down regardless of edge direction.
           const childId = e.relation === "manages" ? e.to : e.from;
@@ -161,10 +158,10 @@ export function TwinGraph({
               stroke={
                 onActiveBranch
                   ? "var(--color-accent)"
-                  : "var(--color-line-strong)"
+                  : "var(--color-border)"
               }
-              strokeWidth={onActiveBranch ? 1.5 : 1.5}
-              strokeDasharray={onActiveBranch ? undefined : "4 3"}
+              strokeWidth={onActiveBranch ? 1.75 : 1.25}
+              strokeLinecap="round"
             />
           );
         })}
@@ -192,17 +189,15 @@ export function TwinGraph({
               <rect
                 width={NODE_W}
                 height={NODE_H}
-                rx={10}
+                rx={12}
                 fill={
                   isActive ? "var(--color-accent-soft)" : "var(--color-surface)"
                 }
                 stroke={
-                  isActive
-                    ? "var(--color-accent)"
-                    : "var(--color-line-strong)"
+                  isActive ? "var(--color-accent)" : "var(--color-border)"
                 }
                 strokeWidth={isActive ? 1.5 : 1}
-                strokeDasharray={validated ? undefined : "4 3"}
+                strokeDasharray={validated || isActive ? undefined : "5 4"}
                 className="transition-[stroke,fill] duration-150 group-hover:[stroke:var(--color-accent)]"
               />
               {/* Status disc on the node's own spine — the SAME vocabulary as
@@ -224,7 +219,7 @@ export function TwinGraph({
                     ? "var(--color-accent)"
                     : validated
                       ? "var(--color-success)"
-                      : "var(--color-line-strong)"
+                      : "var(--color-border-strong)"
                 }
                 strokeWidth={1}
                 strokeDasharray={validated || isActive ? undefined : "2 2"}

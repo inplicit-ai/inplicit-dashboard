@@ -1,30 +1,29 @@
 import type { ReactNode } from "react";
-import { DataChip } from "@/components/ui/data-chip";
-import { statusTone } from "@/components/ui/status-badge";
+import { StatusBadge as TonePill } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils";
 
 /* ────────────────────────────────────────────────────────────────────────────
- * PageChrome — the shared masthead vocabulary for every instrument screen.
+ * PageChrome — the shared header vocabulary for every screen.
  *
- * Reframed onto the Research Ledger discipline:
- *  • Eyebrow    → the universal tracked-uppercase TERTIARY folio voice (amber is
- *                 reserved for the single live object, never a static label).
- *  • PageHeader → a folio masthead: one display title, a tracked eyebrow index,
- *                 a mono spec meta line, and an action slot — set off by a single
- *                 full-bleed hairline rule, not a boxed card.
- *  • StatusBadge→ the localized domain-status chip, delegating tone to the shared
- *                 statusTone() map and rendering through the canonical DataChip.
+ * White-modernist rebuild (claude.ai / Linear feel):
+ *  • Eyebrow    → a calm 12px label, no leading dash, sentence-friendly tracking.
+ *                 Amber stays the live signal only — eyebrows are tertiary ink.
+ *  • PageHeader → a big, airy masthead: one confident SANS display title, an
+ *                 optional muted subtitle, and a right-aligned action slot. No
+ *                 §-glyph, no boxed card, no full-bleed rule. Whitespace carries it.
+ *  • StatusBadge→ the localized domain-status pill, delegating tone to the shared
+ *                 statusTone() map and rendering as a soft semantic pill.
  *
  * Public exports (Eyebrow / PageHeader / StatusBadge) and their prop contracts
- * are unchanged — only the composition is rebuilt.
+ * are unchanged — only the composition is rebuilt onto the clean library.
  * ────────────────────────────────────────────────────────────────────────── */
 
 // ─── Eyebrow ──────────────────────────────────────────────────────────────────
 
 /**
- * Small uppercase tracked label — the folio voice that opens a section or sits
- * above a masthead title. Monochrome tertiary ink (Braun discipline): amber is
- * the live signal only, never decoration on a static label.
+ * Small calm label that opens a section or sits above a masthead title.
+ * Tertiary ink, light tracking, no decorative dash — amber is the live signal
+ * only, never a static label flourish.
  */
 export function Eyebrow({
   children,
@@ -36,8 +35,7 @@ export function Eyebrow({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] leading-none text-fg-subtle",
-        "before:block before:h-px before:w-3 before:bg-current before:opacity-50",
+        "inline-flex items-center gap-2 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.04em] leading-none text-fg-subtle",
         className,
       )}
     >
@@ -58,10 +56,9 @@ interface PageHeaderProps {
 }
 
 /**
- * The masthead folio. Title carries the lone display weight on the screen; the
- * eyebrow is the tracked-caps index; the meta line is the supporting spec. The
- * whole header is closed by a single hairline rule so the page reads as one
- * ruled instrument — never a floating titled card.
+ * The page masthead. A big confident SANS title carries the screen; an optional
+ * muted subtitle/meta line sits below it; primary actions align right. Generous
+ * air, no ruled box — the modern dashboard header.
  */
 export function PageHeader({
   eyebrow,
@@ -71,11 +68,11 @@ export function PageHeader({
   actions,
 }: PageHeaderProps) {
   return (
-    <header className="mb-8 border-b border-line pb-5">
-      <div className="flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-end">
-        <div className="min-w-0 space-y-3">
+    <header className="mb-8">
+      <div className="flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-start">
+        <div className="min-w-0 space-y-2">
           {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-          <h1 className="text-3xl font-semibold leading-[1.08] tracking-[-0.022em] text-fg sm:text-4xl">
+          <h1 className="text-[length:var(--text-display)] font-semibold leading-[1.15] tracking-[-0.02em] text-fg sm:text-[2rem]">
             {title}
             {muted && (
               <>
@@ -84,16 +81,16 @@ export function PageHeader({
               </>
             )}
           </h1>
+          {meta && (
+            <div className="max-w-[60ch] text-[length:var(--text-body-lg)] leading-relaxed text-fg-muted">
+              {meta}
+            </div>
+          )}
         </div>
         {actions && (
           <div className="flex shrink-0 items-center gap-2">{actions}</div>
         )}
       </div>
-      {meta && (
-        <div className="mt-4 max-w-[68ch] text-[length:var(--text-body-sm)] leading-relaxed text-fg-muted">
-          {meta}
-        </div>
-      )}
     </header>
   );
 }
@@ -102,8 +99,8 @@ export function PageHeader({
 
 /**
  * Domain status → German display label. Tone resolution is delegated to the
- * shared `statusTone()` primitive (design-contract §3) so the status→tone
- * mapping lives in exactly one place; this map only owns the localized copy.
+ * shared `statusTone()` primitive so the status→tone mapping lives in exactly
+ * one place; this map only owns the localized copy. Renders as a soft pill.
  */
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: "Entwurf",
@@ -124,18 +121,6 @@ const STATUS_LABEL: Record<string, string> = {
   FALSIFYING: "Validierung",
 };
 
-/** tone → DataChip tint (the canonical square data-chip, tint-only). */
-const TONE_CHIP: Record<
-  ReturnType<typeof statusTone>,
-  React.ComponentProps<typeof DataChip>["tone"]
-> = {
-  success: "success",
-  opportunity: "opportunity",
-  warning: "warning",
-  danger: "danger",
-  neutral: "neutral",
-};
-
 export function StatusBadge({
   status,
   className,
@@ -144,9 +129,7 @@ export function StatusBadge({
   className?: string;
 }) {
   const label = STATUS_LABEL[status] ?? status;
-  return (
-    <DataChip tone={TONE_CHIP[statusTone(status)]} className={className}>
-      {label}
-    </DataChip>
-  );
+  // Tone is resolved internally by the shared pill from the raw status string,
+  // keeping the status→tone mapping authoritative in exactly one place.
+  return <TonePill status={status} label={label} className={className} />;
 }

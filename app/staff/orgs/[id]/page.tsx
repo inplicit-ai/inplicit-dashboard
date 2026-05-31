@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AlertTriangle, ArrowLeft, KeyRound, Pencil } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle2,
+  KeyRound,
+  Pencil,
+  TriangleAlert,
+} from "lucide-react";
 import {
   ApiError,
   makeApi,
@@ -11,15 +18,15 @@ import { requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, makeDurationOptions } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { ErrorState } from "@/components/ErrorState";
 import { OrgAvatar } from "@/components/OrgAvatar";
-import { Folio } from "@/components/ui/folio";
-import { SpecBlock } from "@/components/ui/spec-block";
-import { DataChip } from "@/components/ui/data-chip";
-import { StatusDisc, toStatusState } from "@/components/ui/status-disc";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils";
 
 interface OrgDetailSearchParams {
@@ -155,42 +162,41 @@ export default async function OrgDetailPage({
       )}
 
       {!editing && (
-        <div className="grid gap-8 lg:grid-cols-[minmax(220px,260px)_1fr]">
-          {/* ── Left rail: sticky masthead + spec readout ─────────────────── */}
+        <div className="grid gap-8 lg:grid-cols-[minmax(240px,300px)_1fr]">
+          {/* ── Left rail: sticky identity card + actions ─────────────────── */}
           <aside className="flex flex-col gap-6 lg:sticky lg:top-6 lg:self-start">
-            <div className="flex items-start gap-3">
-              <OrgAvatar name={org.name} logoUrl={org.logo_url} size={44} />
-              <div className="min-w-0">
-                <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] text-fg">
-                  {org.name}
-                </h1>
-                <p className="mt-1 font-mono font-mono tabular-nums tabular-nums text-fg-muted">
-                  {org.slug}
-                </p>
+            <Card className="gap-5 p-6">
+              <div className="flex items-start gap-3">
+                <OrgAvatar name={org.name} logoUrl={org.logo_url} size={44} />
+                <div className="min-w-0">
+                  <h1 className="text-[length:var(--text-title)] font-semibold leading-tight tracking-[-0.015em] text-fg">
+                    {org.name}
+                  </h1>
+                  <p className="mt-1 font-mono text-[length:var(--text-mono)] text-fg-muted">
+                    {org.slug}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-2.5">
-              <StatusDisc state={toStatusState(org.status)} />
-              <DataChip tone="neutral">{org.status}</DataChip>
-            </div>
+              <StatusBadge status={org.status} withIcon className="self-start" />
 
-            <SpecBlock
-              rows={[
-                { label: "Sprache", value: org.default_locale.toUpperCase() },
-                {
-                  label: "Interviewdauer",
-                  value: `${org.default_interview_length_min} min`,
-                },
-                { label: "Voice-ID", value: org.default_voice_id },
-                {
-                  label: "Erstellt",
-                  value: org.created_at
-                    ? new Date(org.created_at).toLocaleDateString("de-DE")
-                    : "—",
-                },
-              ]}
-            />
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line-subtle pt-5 text-[length:var(--text-caption)]">
+                <InfoRow label="Sprache" value={org.default_locale.toUpperCase()} />
+                <InfoRow
+                  label="Interviewdauer"
+                  value={`${org.default_interview_length_min} min`}
+                />
+                <InfoRow label="Voice-ID" value={String(org.default_voice_id)} />
+                <InfoRow
+                  label="Erstellt"
+                  value={
+                    org.created_at
+                      ? new Date(org.created_at).toLocaleDateString("de-DE")
+                      : "—"
+                  }
+                />
+              </dl>
+            </Card>
 
             <div className="flex flex-col gap-2">
               <Button asChild variant="outline" size="sm">
@@ -208,7 +214,7 @@ export default async function OrgDetailPage({
             </div>
           </aside>
 
-          {/* ── Right track: the instrument register ──────────────────────── */}
+          {/* ── Right track: detail sections ──────────────────────────────── */}
           <div className="min-w-0 space-y-8">
             {sp.updated === "1" && (
               <Flash type="ok" message="Organisation aktualisiert." />
@@ -218,189 +224,176 @@ export default async function OrgDetailPage({
             )}
 
             {sp.magic_link && (
-              <div className="rounded-card border border-line bg-surface-2 p-5">
-                <div className="flex items-center gap-2.5">
-                  <StatusDisc state="live" />
-                  <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg">
+              <Card className="gap-0 bg-surface-2 p-5">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="h-4 w-4 text-accent" />
+                  <p className="text-[length:var(--text-body-sm)] font-semibold text-fg">
                     Magic-Link bereit
                     {sp.reissued_for && (
-                      <span className="ml-2 lowercase tracking-normal text-fg-muted">
+                      <span className="ml-2 font-normal text-fg-muted">
                         für {sp.reissued_for}
                       </span>
                     )}
                   </p>
                 </div>
-                <p className="mt-2 text-caption text-fg-muted">
+                <p className="mt-2 text-[length:var(--text-caption)] text-fg-muted">
                   15 Minuten gültig, single-use.
                   {sp.email_sent === "1"
                     ? " Eine Email mit dem Link wurde an den Owner verschickt."
                     : ""}
                 </p>
-                <div className="mt-4 break-all rounded-ui border border-line bg-canvas p-3 font-mono font-mono tabular-nums tabular-nums">
+                <div className="mt-4 break-all rounded-ui border border-line bg-surface p-3">
                   <a
-                    className="text-accent-strong hover:underline"
+                    className="font-mono text-[length:var(--text-mono)] text-accent-strong hover:underline"
                     href={sp.magic_link}
                   >
                     {sp.magic_link}
                   </a>
                 </div>
-                <p className="mt-3 text-caption text-fg-subtle">
+                <p className="mt-3 text-[length:var(--text-caption)] text-fg-subtle">
                   Tipp: in einem Inkognito-Tab öffnen, um nicht deine
                   Staff-Session zu überschreiben.
                 </p>
-              </div>
+              </Card>
             )}
 
             {sp.email_error && (
-              <div className="rounded-card border border-pain-muted bg-pain-soft p-5">
-                <div className="flex items-center gap-2.5">
-                  <StatusDisc state="error" />
-                  <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-pain">
+              <Card className="gap-0 border-danger/22 bg-danger-soft p-5">
+                <div className="flex items-center gap-2">
+                  <TriangleAlert className="h-4 w-4 text-danger" />
+                  <p className="text-[length:var(--text-body-sm)] font-semibold text-danger">
                     Welcome-Email konnte nicht versendet werden
                   </p>
                 </div>
-                <p className="mt-2 break-all font-mono font-mono tabular-nums text-fg-muted">
+                <p className="mt-2 break-all font-mono text-[length:var(--text-mono)] text-fg-muted">
                   {sp.email_error}
                 </p>
-                <p className="mt-3 text-caption text-fg-subtle">
+                <p className="mt-3 text-[length:var(--text-caption)] text-fg-subtle">
                   Häufige Ursachen: <Mono>RESEND_API_KEY</Mono> fehlt,{" "}
                   <Mono>FROM_EMAIL</Mono> nicht domain-verifiziert, oder die
                   Resend-Sandbox erlaubt nur Versand an die Account-Email.
                 </p>
-              </div>
+              </Card>
             )}
 
-            <section>
-              <Folio index="§ 01" label="Unternehmenskontext" tone="subtle" />
-              <p className="mt-3 text-caption text-fg-muted">
+            <Card className="p-6">
+              <SectionHeading title="Unternehmenskontext" />
+              <p className="text-[length:var(--text-caption)] text-fg-muted">
                 Wird in jeden Interview-System-Prompt der Org eingespeist.
                 Kampagnes können das pro Kampagne überschreiben.
               </p>
-              <p className="card--reading mt-4 whitespace-pre-wrap leading-relaxed text-fg">
+              <p className="mt-4 whitespace-pre-wrap text-[length:var(--text-body-lg)] leading-relaxed text-fg">
                 {org.company_context}
               </p>
               {org.industry && (
-                <p className="mt-3 text-caption text-fg-muted">
+                <p className="mt-3 text-[length:var(--text-caption)] text-fg-muted">
                   Branche: <Mono>{org.industry}</Mono>
                 </p>
               )}
-            </section>
+            </Card>
 
-            <section>
-              <Folio
-                index="§ 02"
-                label="Defaults für neue Kampagnes"
-                tone="subtle"
-              />
-              <SpecBlock
-                className="mt-4"
-                rows={[
-                  {
-                    label: "Sprache",
-                    value: org.default_locale.toUpperCase(),
-                  },
-                  {
-                    label: "Interviewdauer",
-                    value: `${org.default_interview_length_min} min`,
-                  },
-                  {
-                    label: "ElevenLabs Voice-ID",
-                    value: org.default_voice_id,
-                  },
-                  { label: "Status", value: org.status },
-                ]}
-              />
-            </section>
-
-            <section>
-              <Folio index="§ 03" label="Metadaten" tone="subtle" />
-              <SpecBlock
-                className="mt-4"
-                rows={[
-                  { label: "Org-ID", value: org.id },
-                  { label: "Slug", value: org.slug },
-                  {
-                    label: "Erstellt",
-                    value: org.created_at
-                      ? new Date(org.created_at).toLocaleString("de-DE")
-                      : "—",
-                  },
-                  {
-                    label: "Aktualisiert",
-                    value: org.updated_at
-                      ? new Date(org.updated_at).toLocaleString("de-DE")
-                      : "—",
-                  },
-                ]}
-              />
-            </section>
-
-            <Card className="card--pain rounded-card border border-pain-muted bg-pain-soft p-6">
-            <header className="mb-5 flex items-start gap-3">
-              <span className="grid size-8 place-items-center rounded-ui bg-pain-soft text-pain">
-                <AlertTriangle className="h-4 w-4" />
-              </span>
-              <div>
-                <h2 className="subtitle font-semibold text-fg">
-                  Danger Zone
-                </h2>
-                <p className="text-caption text-fg-muted">
-                  Aktionen mit weitreichenden Folgen. Lesen, dann bewusst
-                  ausführen.
-                </p>
-              </div>
-            </header>
-
-            <DangerRow
-              title="Suspendieren"
-              description={
-                <>
-                  Org-Status auf <Mono>SUSPENDED</Mono>. Bestehende Kampagnes
-                  bleiben, aber der Customer kann sich nicht einloggen, bis du
-                  sie reaktivierst.
-                </>
-              }
-            >
-              <form action={suspendOrgAction}>
-                <Button type="submit" variant="outline" size="sm">
-                  Suspendieren
-                </Button>
-              </form>
-            </DangerRow>
-
-            <Separator className="my-5 bg-pain-muted" />
-
-            <DangerRow
-              title="Löschen"
-              description={
-                <>
-                  Soft-Delete. Org wird auf <Mono>DELETED</Mono> markiert und
-                  aus den Listen verborgen.
-                  <br />
-                  <span className="mt-2 block">
-                    Zur Bestätigung den Org-Namen exakt eintippen:{" "}
-                    <Mono>{org.name}</Mono>
-                  </span>
-                </>
-              }
-            >
-              <form
-                action={deleteOrgAction}
-                className="flex min-w-[240px] flex-col gap-2"
-              >
-                <Input
-                  type="text"
-                  name="confirm_name"
-                  required
-                  placeholder={org.name}
-                  autoComplete="off"
-                  className="h-9"
+            <Card className="p-6">
+              <SectionHeading title="Defaults für neue Kampagnes" />
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+                <InfoRow label="Sprache" value={org.default_locale.toUpperCase()} />
+                <InfoRow
+                  label="Interviewdauer"
+                  value={`${org.default_interview_length_min} min`}
                 />
-                <Button type="submit" variant="destructive" size="sm">
-                  Endgültig löschen
-                </Button>
-              </form>
-            </DangerRow>
+                <InfoRow label="Voice-ID" value={String(org.default_voice_id)} />
+                <InfoRow label="Status" value={org.status} />
+              </dl>
+            </Card>
+
+            <Card className="p-6">
+              <SectionHeading title="Metadaten" />
+              <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+                <InfoRow label="Org-ID" value={org.id} mono />
+                <InfoRow label="Slug" value={org.slug} mono />
+                <InfoRow
+                  label="Erstellt"
+                  value={
+                    org.created_at
+                      ? new Date(org.created_at).toLocaleString("de-DE")
+                      : "—"
+                  }
+                />
+                <InfoRow
+                  label="Aktualisiert"
+                  value={
+                    org.updated_at
+                      ? new Date(org.updated_at).toLocaleString("de-DE")
+                      : "—"
+                  }
+                />
+              </dl>
+            </Card>
+
+            <Card className="gap-5 border-danger/22 bg-danger-soft p-6">
+              <header className="flex items-start gap-3">
+                <span className="grid size-8 place-items-center rounded-ui bg-danger/10 text-danger">
+                  <AlertTriangle className="h-4 w-4" />
+                </span>
+                <div>
+                  <h2 className="text-[length:var(--text-subtitle)] font-semibold text-fg">
+                    Danger Zone
+                  </h2>
+                  <p className="text-[length:var(--text-caption)] text-fg-muted">
+                    Aktionen mit weitreichenden Folgen. Lesen, dann bewusst
+                    ausführen.
+                  </p>
+                </div>
+              </header>
+
+              <DangerRow
+                title="Suspendieren"
+                description={
+                  <>
+                    Org-Status auf <Mono>SUSPENDED</Mono>. Bestehende Kampagnes
+                    bleiben, aber der Customer kann sich nicht einloggen, bis du
+                    sie reaktivierst.
+                  </>
+                }
+              >
+                <form action={suspendOrgAction}>
+                  <Button type="submit" variant="outline" size="sm">
+                    Suspendieren
+                  </Button>
+                </form>
+              </DangerRow>
+
+              <Separator className="bg-danger/20" />
+
+              <DangerRow
+                title="Löschen"
+                description={
+                  <>
+                    Soft-Delete. Org wird auf <Mono>DELETED</Mono> markiert und
+                    aus den Listen verborgen.
+                    <br />
+                    <span className="mt-2 block">
+                      Zur Bestätigung den Org-Namen exakt eintippen:{" "}
+                      <Mono>{org.name}</Mono>
+                    </span>
+                  </>
+                }
+              >
+                <form
+                  action={deleteOrgAction}
+                  className="flex min-w-[240px] flex-col gap-2"
+                >
+                  <Input
+                    type="text"
+                    name="confirm_name"
+                    required
+                    placeholder={org.name}
+                    autoComplete="off"
+                  />
+                  <Button type="submit" variant="destructive" size="sm">
+                    Endgültig löschen
+                  </Button>
+                </form>
+              </DangerRow>
             </Card>
           </div>
         </div>
@@ -408,9 +401,9 @@ export default async function OrgDetailPage({
 
       {editing && (
         <div className="mx-auto max-w-[680px]">
-          <Folio index="§" label={`${org.name} · Bearbeiten`} />
+          <PageHeader title={`${org.name} bearbeiten`} />
 
-          <Card className="mt-6 rounded-card border border-line bg-surface p-6">
+          <Card className="p-6">
             <form action={updateOrgAction} className="flex flex-col gap-5">
               <Field id="edit-name" label="Name" required>
                 <Input
@@ -418,7 +411,6 @@ export default async function OrgDetailPage({
                   name="name"
                   defaultValue={org.name}
                   required
-                  className="h-9 text-base md:text-sm"
                 />
               </Field>
 
@@ -436,7 +428,7 @@ export default async function OrgDetailPage({
                     inputMode="url"
                     defaultValue={org.logo_url ?? ""}
                     placeholder="https://cdn.example.com/logo.png"
-                    className="h-9 flex-1 text-base md:text-sm"
+                    className="flex-1"
                   />
                 </div>
               </Field>
@@ -451,7 +443,7 @@ export default async function OrgDetailPage({
                   name="company_context"
                   rows={6}
                   defaultValue={org.company_context}
-                  className="min-h-[150px] text-base md:text-sm"
+                  className="min-h-[150px]"
                 />
               </Field>
 
@@ -462,7 +454,6 @@ export default async function OrgDetailPage({
                     name="industry"
                     defaultValue={org.industry ?? ""}
                     placeholder="Logistik-SaaS"
-                    className="h-9 text-base md:text-sm"
                   />
                 </Field>
                 <Field id="edit-locale" label="Standardsprache">
@@ -484,7 +475,6 @@ export default async function OrgDetailPage({
                     type="number"
                     min={1}
                     defaultValue={String(org.default_voice_id)}
-                    className="h-9 font-mono text-base md:text-sm"
                   />
                 </Field>
                 <Field id="edit-length" label="Interviewdauer">
@@ -525,20 +515,49 @@ function BackLink() {
   );
 }
 
+function InfoRow({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <dt className="text-[length:var(--text-caption)] text-fg-subtle">{label}</dt>
+      <dd
+        className={cn(
+          "break-all text-[length:var(--text-body-sm)] font-medium text-fg",
+          mono ? "font-mono text-[length:var(--text-mono)]" : "tabular-nums",
+        )}
+      >
+        {value}
+      </dd>
+    </div>
+  );
+}
+
 function Flash({ type, message }: { type: "ok" | "err"; message: string }) {
+  const Icon = type === "ok" ? CheckCircle2 : TriangleAlert;
   return (
     <div
       role="status"
       className={cn(
-        "grid grid-cols-[20px_1fr] items-start gap-x-2.5 rounded-ui border px-3.5 py-2.5 text-meta",
+        "flex items-start gap-3 rounded-ui border px-3.5 py-3 text-[length:var(--text-meta)]",
         type === "ok"
-          ? "border-line-subtle bg-surface-2 text-fg"
+          ? "border-success/20 bg-success-soft text-fg"
           : "border-danger/22 bg-danger-soft text-danger",
       )}
     >
-      <span className="flex justify-center pt-0.5">
-        <StatusDisc state={type === "ok" ? "done" : "error"} size="sm" />
-      </span>
+      <Icon
+        aria-hidden
+        className={cn(
+          "mt-0.5 h-4 w-4 shrink-0",
+          type === "ok" ? "text-success" : "text-danger",
+        )}
+      />
       <p className="leading-snug">{message}</p>
     </div>
   );
@@ -556,8 +575,10 @@ function DangerRow({
   return (
     <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-[1fr_auto]">
       <div>
-        <p className="body-sm font-semibold text-fg">{title}</p>
-        <p className="mt-1 text-caption leading-relaxed text-fg-muted">
+        <p className="text-[length:var(--text-body-sm)] font-semibold text-fg">
+          {title}
+        </p>
+        <p className="mt-1 text-[length:var(--text-caption)] leading-relaxed text-fg-muted">
           {description}
         </p>
       </div>
@@ -581,14 +602,13 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label
-        htmlFor={id}
-        className="label-eyebrow flex items-center gap-1.5"
-      >
+      <Label htmlFor={id}>
         {label}
-        {required && <span className="text-pain">*</span>}
-      </label>
-      {hint && <p className="text-caption text-fg-subtle">{hint}</p>}
+        {required && <span className="text-danger">*</span>}
+      </Label>
+      {hint && (
+        <p className="text-[length:var(--text-caption)] text-fg-subtle">{hint}</p>
+      )}
       {children}
     </div>
   );
@@ -604,7 +624,7 @@ function Mono({
   return (
     <code
       className={cn(
-        "rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono font-mono tabular-nums tabular-nums text-fg",
+        "rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono text-[length:var(--text-mono)] text-fg",
         className,
       )}
     >

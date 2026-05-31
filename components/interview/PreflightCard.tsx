@@ -1,5 +1,9 @@
 "use client";
 
+import { Mic } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { StatusDisc } from "@/components/ui/status-disc";
 import type { Lang } from "./copy";
 import { roomCopy } from "./copy";
@@ -16,12 +20,12 @@ interface Props {
 }
 
 /**
- * PreflightCard — the pre-call instrument plate (doc 04 §5).
+ * PreflightCard — the pre-call card (white-modernist).
  *
- * A calm 68ch reading card: folio eyebrow + title, language confirm, the
- * EU-AI-Act self-identification as a hairline note carrying the one live disc
- * (this is the AI signal), then a near-black primary CTA. No tinted icon
- * avatar, no glow — depth is the hairline + surface step.
+ * A calm centered white Card on the off-white page: a soft icon medallion, a
+ * confident title + muted body, the language picker, the EU-AI-Act
+ * self-identification as a soft note carrying the single live disc, then a
+ * near-black primary CTA and a quiet text-alt link. Generous whitespace.
  */
 export function PreflightCard({
   lang,
@@ -34,71 +38,69 @@ export function PreflightCard({
 }: Props) {
   const c = roomCopy(lang);
   return (
-    <div className="iv-pf">
-      <div className="iv-pf__plate">
-        <span className="eyebrow">{c.preflightEyebrow}</span>
-        <h1 className="title iv-pf__title">{c.preflightTitle}</h1>
-        <p className="body-lg iv-pf__body">{c.preflightBody}</p>
+    <div className="flex min-h-[100dvh] items-center justify-center bg-canvas px-4 py-12">
+      <Card className="w-full max-w-md">
+        <CardContent className="flex flex-col">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-2">
+            <Mic aria-hidden className="h-6 w-6 text-fg-subtle" />
+          </div>
 
-        <div className="iv-pf__lang">
-          <LanguagePicker
-            value={lang}
-            onChange={onLangChange}
-            label={c.languageLabel}
-            disabled={langLocked}
-          />
-        </div>
+          <h1 className="mt-5 text-[length:var(--text-display)] font-semibold tracking-[-0.02em] text-fg">
+            {c.preflightTitle}
+          </h1>
+          <p className="mt-3 max-w-[52ch] text-[length:var(--text-body-lg)] leading-relaxed text-fg-muted">
+            {c.preflightBody}
+          </p>
 
-        <div className="iv-pf__notice" role="note">
-          <span className="iv-pf__notice-disc" aria-hidden>
-            <StatusDisc state="live" size="sm" />
-          </span>
-          <span>{c.aiNotice}</span>
-        </div>
+          <div className="mt-6">
+            <LanguagePicker
+              value={lang}
+              onChange={onLangChange}
+              label={c.languageLabel}
+              disabled={langLocked}
+            />
+          </div>
 
-        {errorMsg && <div className="flash flash--err iv-pf__flash">{errorMsg}</div>}
-
-        <div className="iv-pf__actions">
-          <button
-            type="button"
-            onClick={onStartVoice}
-            disabled={!ready}
-            className="btn btn--primary btn--lg iv-pf__cta"
+          <div
+            role="note"
+            className="mt-5 flex items-start gap-3 rounded-md border border-line bg-surface-2 px-4 py-3 text-[length:var(--text-body-sm)] leading-relaxed text-fg-muted"
           >
-            {ready ? c.start : c.connecting}
-          </button>
-          <button
-            type="button"
-            onClick={onPreferText}
-            disabled={!ready}
-            className="btn btn--link iv-pf__alt"
-          >
-            {c.preferText}
-          </button>
-        </div>
+            <span className="flex shrink-0 items-center pt-1" aria-hidden>
+              <StatusDisc state="live" size="sm" />
+            </span>
+            <span>{c.aiNotice}</span>
+          </div>
 
-        <p className="caption iv-pf__legal">{c.micNotice}</p>
-      </div>
+          {errorMsg && (
+            <div className="mt-5 flash flash--err">{errorMsg}</div>
+          )}
 
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .iv-pf { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: var(--space-8) var(--space-4); background: var(--color-surface); }
-        .iv-pf__plate { width: 100%; max-width: 480px; padding: var(--space-8); border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--color-surface); text-align: left; }
-        .iv-pf__title { margin-top: var(--space-3); letter-spacing: -0.02em; }
-        .iv-pf__body { margin-top: var(--space-3); color: var(--color-text-secondary); max-width: 60ch; }
-        .iv-pf__lang { margin-top: var(--space-6); }
-        .iv-pf__notice { margin-top: var(--space-5); display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-ui); font-size: var(--text-body-sm); line-height: 1.55; color: var(--color-text-secondary); }
-        .iv-pf__notice-disc { display: inline-flex; align-items: center; padding-top: 5px; }
-        .iv-pf__flash { margin-top: var(--space-5); }
-        .iv-pf__actions { margin-top: var(--space-6); display: flex; flex-direction: column; gap: var(--space-3); }
-        .iv-pf__cta { width: 100%; }
-        .iv-pf__alt { align-self: center; font-size: var(--text-meta); }
-        .iv-pf__legal { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border-subtle); line-height: 1.55; color: var(--color-text-tertiary); }
-        @media (max-width: 640px) { .iv-pf__plate { padding: var(--space-6); } }
-      `,
-        }}
-      />
+          <div className="mt-6 flex flex-col items-stretch gap-3">
+            <Button
+              type="button"
+              size="lg"
+              onClick={onStartVoice}
+              disabled={!ready}
+              className="w-full"
+            >
+              {ready ? c.start : c.connecting}
+            </Button>
+            <Button
+              type="button"
+              variant="link"
+              onClick={onPreferText}
+              disabled={!ready}
+              className="self-center"
+            >
+              {c.preferText}
+            </Button>
+          </div>
+
+          <p className="mt-6 border-t border-line-subtle pt-4 text-[length:var(--text-caption)] leading-relaxed text-fg-subtle">
+            {c.micNotice}
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
