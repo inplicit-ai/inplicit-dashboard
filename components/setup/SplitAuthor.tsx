@@ -201,28 +201,35 @@ export function SplitAuthor({
     // the PAGE never scrolls — only the chat message list and the catalog do.
     // surface-bleed keeps the full available width for the split author.
     // Stacks on mobile (chat pane caps at 50vh); fills height from md up.
-    <div className="surface-bleed chat-fill gap-4 p-4 md:flex-row md:p-6">
-      {/* Left — chat */}
-      <div className="flex max-h-[50vh] min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card md:max-h-none md:max-w-[44%]">
-        <SetupChat turns={turns} streaming={stream.streaming} onSend={onSend} />
-      </div>
-
-      {/* Right — catalog + launch bar */}
-      <div className="flex min-h-0 flex-1 flex-col gap-3">
-        <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto pr-0.5">
-          <Catalog draft={draft} onPatch={onPatch} recentlyTouched={touched} />
+    <div className="surface-bleed chat-fill p-4 md:p-6">
+      {/* The 50/50 split is its OWN flex row inside the chat-fill column wrapper.
+          .chat-fill forces flex-direction:column (the viewport height contract),
+          which would otherwise defeat md:flex-row and stack EDDA above the
+          catalog — so the split lives one level in, fills the remaining height,
+          and owns the side-by-side layout. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-4 md:flex-row">
+        {/* Left — EDDA setup agent (50% on md+) */}
+        <div className="flex max-h-[50vh] min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card md:max-h-none md:basis-1/2">
+          <SetupChat turns={turns} streaming={stream.streaming} onSend={onSend} />
         </div>
-        {/* Launch bar — the readiness checklist + the near-black primary CTA. */}
-        <div className="flex shrink-0 flex-col gap-3 rounded-card border border-line bg-surface px-4 py-3 shadow-card sm:flex-row sm:items-center sm:justify-between">
-          <ChecklistSummary reasons={reasons} />
-          <Button
-            onClick={onReview}
-            disabled={reasons.length > 0 || launching}
-            size="lg"
-            className="shrink-0"
-          >
-            {tReview("reviewCta")}
-          </Button>
+
+        {/* Right — campaign catalog + launch bar (50% on md+) */}
+        <div className="flex min-h-0 flex-1 flex-col gap-3 md:basis-1/2">
+          <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto pr-0.5">
+            <Catalog draft={draft} onPatch={onPatch} recentlyTouched={touched} />
+          </div>
+          {/* Launch bar — the readiness checklist + the near-black primary CTA. */}
+          <div className="flex shrink-0 flex-col gap-3 rounded-card border border-line bg-surface px-4 py-3 shadow-card sm:flex-row sm:items-center sm:justify-between">
+            <ChecklistSummary reasons={reasons} />
+            <Button
+              onClick={onReview}
+              disabled={reasons.length > 0 || launching}
+              size="lg"
+              className="shrink-0"
+            >
+              {tReview("reviewCta")}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
