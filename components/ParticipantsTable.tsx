@@ -15,6 +15,8 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SpecStrip } from "@/components/ui/spec-strip";
+import { StatusDisc, toStatusState } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 import type { Participant } from "@/lib/api";
 
@@ -200,23 +202,32 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Header / KPI strip */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-          <Stat label="Teilnehmer" value={counts.total} />
-          <Divider />
-          <Stat label="Eingeladen" value={counts.invited} />
-          <Divider />
-          <Stat label="Abgeschlossen" value={counts.completed} />
-        </div>
+      {/* Instrument band — one ruled readout, not floating stats. */}
+      <SpecStrip
+        cells={[
+          { label: "Teilnehmer", value: counts.total },
+          { label: "Eingeladen", value: counts.invited },
+          { label: "Abgeschlossen", value: counts.completed },
+        ]}
+      />
 
-        {!adding && (
-          <Button size="sm" onClick={() => setAdding(true)}>
-            <UserPlus className="h-4 w-4" />
-            Teilnehmer hinzufügen
-          </Button>
-        )}
-      </div>
+      {/* Folio + add action */}
+      <header className="flex items-baseline justify-between gap-4 border-b border-line pb-2">
+        <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
+          § TEILNEHMER
+        </span>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-xs tabular-nums text-fg-muted">
+            n={counts.total}
+          </span>
+          {!adding && (
+            <Button size="sm" onClick={() => setAdding(true)}>
+              <UserPlus className="h-4 w-4" />
+              Teilnehmer hinzufügen
+            </Button>
+          )}
+        </div>
+      </header>
 
       {/* Flash banner */}
       {flash && <FlashBanner type={flash.type} message={flash.message} />}
@@ -305,11 +316,11 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
           <EmptyState onAdd={() => setAdding(true)} />
         </div>
       ) : (
-        <div className="card card--flush">
-          <div className="w-full overflow-x-auto">
-            <table className="table min-w-[820px]">
+        <div className="w-full overflow-x-auto">
+            <table className="register min-w-[860px]">
               <thead>
                 <tr>
+                  <th className="w-[28px]" aria-label="Status" />
                   <th className="min-w-[220px]">E-Mail</th>
                   <th className="min-w-[160px]">Name</th>
                   <th className="min-w-[160px]">Abteilung</th>
@@ -321,8 +332,16 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
               <tbody>
                 {rows.map((p) => {
                   const isEditing = editing === p.id;
+                  const discState = participantDiscState(p);
                   return (
                     <tr key={p.id} className={isEditing ? "bg-surface-2" : ""}>
+                      <td>
+                        <StatusDisc
+                          state={discState}
+                          pulse={discState === "live"}
+                          size="sm"
+                        />
+                      </td>
                       <td>
                         {isEditing ? (
                           <Input
@@ -334,7 +353,7 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
                             }
                           />
                         ) : (
-                          <span className="font-mono text-xs text-fg-muted">
+                          <span className="register__id text-xs text-fg-muted">
                             {p.email}
                           </span>
                         )}
@@ -421,7 +440,6 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
                 })}
               </tbody>
             </table>
-          </div>
         </div>
       )}
     </div>
@@ -472,19 +490,12 @@ function CellText({ value }: { value?: string | null }) {
   return <span className="text-fg">{value}</span>;
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex items-baseline gap-1.5">
-      <span className="font-mono text-base font-semibold tabular-nums text-fg">
-        {value}
-      </span>
-      <span className="text-xs text-fg-muted">{label}</span>
-    </div>
-  );
-}
-
-function Divider() {
-  return <span aria-hidden="true" className="h-3 w-px bg-line" />;
+/** Map a participant's lifecycle to the canonical status-disc spine state. */
+function participantDiscState(p: Participant): ReturnType<typeof toStatusState> {
+  if (p.latest_interview_status) {
+    return toStatusState(p.latest_interview_status);
+  }
+  return p.email_sent ? "pending" : "idle";
 }
 
 function FlashBanner({
@@ -526,7 +537,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
           mehrere Personen auf einmal hoch.
         </p>
       </div>
-      <Button size="sm" variant="accent" onClick={onAdd} className="mt-1">
+      <Button size="sm" onClick={onAdd} className="mt-1">
         <UserPlus className="h-4 w-4" />
         Teilnehmer hinzufügen
       </Button>

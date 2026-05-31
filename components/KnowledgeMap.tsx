@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { Network } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Network, X } from "lucide-react";
 import * as d3 from "d3";
 import type { Cluster } from "@/lib/api";
+import { Ledger } from "@/components/ui/ledger";
+import { LedgerRow } from "@/components/ui/ledger-row";
+import { DataChip } from "@/components/ui/data-chip";
+import { SignalMeter } from "@/components/ui/signal-meter";
+import { StatusDisc } from "@/components/ui/status-disc";
 
 interface Props {
   clusters: Cluster[];
@@ -29,6 +34,13 @@ const CATEGORY_TOKEN: Record<string, { name: string; fallback: string }> = {
   risk: { name: "--color-pain", fallback: "#c2410c" },
 };
 
+const CATEGORY_LABEL: Record<string, string> = {
+  operational: "Operativ",
+  innovation: "Innovation",
+  automation: "Automatisierung",
+  risk: "Risiko",
+};
+
 /** Intrinsic canvas height — a content dimension, not a viewport layout crutch. */
 const CANVAS_HEIGHT = 600;
 
@@ -51,6 +63,9 @@ function categoryColor(category: string): string {
 
 export function KnowledgeMap({ clusters }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  // The selected node opens the SAME evidence tree used everywhere — a
+  // slide-in Ledger branch, never a separate modal.
+  const [selected, setSelected] = useState<Cluster | null>(null);
 
   useEffect(() => {
     const container = ref.current;
@@ -131,6 +146,10 @@ export function KnowledgeMap({ clusters }: Props) {
         .data(nodes)
         .join("g")
         .style("cursor", "pointer")
+        .on("click", (_event, d) => {
+          const match = clusters.find((c) => c.id === d.id) ?? null;
+          setSelected(match);
+        })
         .call(
           d3
             .drag<SVGGElement, MapNode>()
@@ -150,8 +169,12 @@ export function KnowledgeMap({ clusters }: Props) {
             }),
         );
 
+      // The active-node ring is applied imperatively in a sibling effect so a
+      // selection never re-runs the force simulation (no graph jump on click).
       node
         .append("circle")
+        .attr("class", "kmap-node-circle")
+        .attr("data-node-id", (d) => d.id)
         .attr("r", radiusFor)
         .attr("fill", (d) => categoryColor(d.category))
         .attr("fill-opacity", 0.9)
@@ -203,7 +226,24 @@ export function KnowledgeMap({ clusters }: Props) {
     };
   }, [clusters]);
 
+  // Paint the active-node ring imperatively — selection must not rebuild the
+  // graph (the sole accent on the canvas marks the focused cluster).
+  useEffect(() => {
+    const container = ref.current;
+    if (!container) return;
+    const accent = tokenColor("--color-accent", "#c2660c");
+    const halo = tokenColor("--color-surface", "#ffffff");
+    container
+      .querySelectorAll<SVGCircleElement>(".kmap-node-circle")
+      .forEach((c) => {
+        const active = c.getAttribute("data-node-id") === selected?.id;
+        c.setAttribute("stroke", active ? accent : halo);
+        c.setAttribute("stroke-width", active ? "3" : "2");
+      });
+  }, [selected]);
+
   if (clusters.length === 0) {
+    // Printed-plate placeholder — hairline rule + quiet caption.
     return (
       <div className="card flex flex-col items-center justify-center gap-4 border-dashed py-16 text-center">
         <div className="grid size-12 place-items-center rounded-full border border-line bg-surface-2 text-fg-subtle">
@@ -218,23 +258,20 @@ export function KnowledgeMap({ clusters }: Props) {
   }
 
   return (
-    <div className="card card--flush">
-      {/* Header bar — fixed height, hairline divider, never scrolls. */}
+    <div className="relative card card--flush">
+      {/* Folio-style instrument header — eyebrow count + ledger legend chips. */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-subtle px-5 py-3">
-        <div className="flex items-center gap-2 text-[13px] text-fg-muted">
-          <Network className="h-4 w-4 text-fg-subtle" aria-hidden />
-          <span>
-            <span className="font-mono tabular-nums text-fg">
-              {clusters.length}
-            </span>{" "}
-            Cluster
+        <span className="inline-flex items-center gap-2 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
+          <Network className="h-4 w-4" aria-hidden />
+          § Knowledge Map
+          <span className="font-mono tabular-nums normal-case tracking-normal text-fg-muted">
+            n={clusters.length}
           </span>
-        </div>
-        <div className="flex flex-wrap items-center gap-4">
-          <Legend color={categoryColor("operational")} label="Operativ" />
-          <Legend color={categoryColor("innovation")} label="Innovation" />
-          <Legend color={categoryColor("automation")} label="Automatisierung" />
-          <Legend color={categoryColor("risk")} label="Risiko" />
+        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          {Object.keys(CATEGORY_LABEL).map((cat) => (
+            <Legend key={cat} category={cat} label={CATEGORY_LABEL[cat]} />
+          ))}
         </div>
       </div>
 
@@ -244,19 +281,122 @@ export function KnowledgeMap({ clusters }: Props) {
         className="w-full bg-canvas"
         style={{ minHeight: CANVAS_HEIGHT }}
       />
+
+      {/* Slide-in detail panel — the selected cluster as the SAME evidence
+          tree (cluster → departments / signal) used across the product. */}
+      {selected && (
+        <NodeDetailPanel
+          cluster={selected}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </div>
   );
 }
 
-function Legend({ color, label }: { color: string; label: string }) {
+function NodeDetailPanel({
+  cluster,
+  onClose,
+}: {
+  cluster: Cluster;
+  onClose: () => void;
+}) {
+  const category = cluster.category ?? "operational";
   return (
-    <div className="flex items-center gap-1.5">
+    <aside className="absolute inset-y-0 right-0 z-10 flex w-[min(360px,90%)] flex-col border-l border-line bg-surface">
+      <div className="flex items-center justify-between gap-3 border-b border-line-subtle px-4 py-3">
+        <span className="inline-flex items-center gap-2 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
+          <StatusDisc state="done" size="sm" />§ Cluster
+        </span>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Schließen"
+          className="grid size-7 place-items-center rounded-ui text-fg-subtle transition-colors hover:bg-surface-2 hover:text-fg"
+        >
+          <X className="size-4" />
+        </button>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto p-2">
+        <Ledger>
+          <LedgerRow
+            status="done"
+            index={`C-${cluster.id.slice(0, 4).toUpperCase()}`}
+            title={cluster.label}
+            metric={
+              <SignalMeter
+                value={cluster.signal_strength}
+                max={10}
+                threshold={5}
+                readout={
+                  <span className="font-mono tabular-nums">
+                    {cluster.signal_strength}
+                  </span>
+                }
+              />
+            }
+            expandable
+            defaultOpen
+          >
+            {cluster.description && (
+              <LedgerRow
+                depth={1}
+                status="idle"
+                title={
+                  <span className="text-[length:var(--text-body)] leading-relaxed text-fg-muted">
+                    {cluster.description}
+                  </span>
+                }
+              />
+            )}
+            <LedgerRow
+              depth={1}
+              status="idle"
+              title={
+                <span className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
+                    Abteilungen
+                  </span>
+                  {(cluster.departments ?? []).map((d) => (
+                    <DataChip key={d}>{d}</DataChip>
+                  ))}
+                </span>
+              }
+              metric={
+                <DataChip mono>n={(cluster.departments ?? []).length}</DataChip>
+              }
+            />
+            <LedgerRow
+              depth={1}
+              status="idle"
+              title={
+                <span className="flex items-center gap-2">
+                  <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
+                    Kategorie
+                  </span>
+                  <DataChip>{CATEGORY_LABEL[category] ?? category}</DataChip>
+                </span>
+              }
+            />
+          </LedgerRow>
+        </Ledger>
+      </div>
+    </aside>
+  );
+}
+
+function Legend({ category, label }: { category: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
       <span
         className="status-disc"
-        style={{ background: color }}
+        style={{ background: categoryColor(category) }}
         aria-hidden
       />
-      <span className="text-[13px] text-fg-muted">{label}</span>
-    </div>
+      <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
+        {label}
+      </span>
+    </span>
   );
 }

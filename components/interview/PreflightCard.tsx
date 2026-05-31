@@ -1,6 +1,6 @@
 "use client";
 
-import { MicIcon } from "lucide-react";
+import { StatusDisc } from "@/components/ui/status-disc";
 import type { Lang } from "./copy";
 import { roomCopy } from "./copy";
 import { LanguagePicker } from "./LanguagePicker";
@@ -16,9 +16,12 @@ interface Props {
 }
 
 /**
- * Pre-call card (doc 04 §5 PreflightCard): language confirm, AI
- * self-identification notice (EU AI Act), mic notice, Start. The participant
- * sets the language here; it's locked at start (doc 04 §10 default).
+ * PreflightCard — the pre-call instrument plate (doc 04 §5).
+ *
+ * A calm 68ch reading card: folio eyebrow + title, language confirm, the
+ * EU-AI-Act self-identification as a hairline note carrying the one live disc
+ * (this is the AI signal), then a near-black primary CTA. No tinted icon
+ * avatar, no glow — depth is the hairline + surface step.
  */
 export function PreflightCard({
   lang,
@@ -31,19 +34,13 @@ export function PreflightCard({
 }: Props) {
   const c = roomCopy(lang);
   return (
-    <div className="iv-center">
-      <div className="card iv-card">
-        <span
-          className="grid size-11 place-items-center rounded-full bg-accent-soft text-accent"
-          aria-hidden
-        >
-          <MicIcon size={20} strokeWidth={2} />
-        </span>
-        <span className="eyebrow iv-card__eyebrow">{c.preflightEyebrow}</span>
-        <h1 className="title iv-card__title">{c.preflightTitle}</h1>
-        <p className="page-header__meta iv-card__body">{c.preflightBody}</p>
+    <div className="iv-pf">
+      <div className="iv-pf__plate">
+        <span className="eyebrow">{c.preflightEyebrow}</span>
+        <h1 className="title iv-pf__title">{c.preflightTitle}</h1>
+        <p className="body-lg iv-pf__body">{c.preflightBody}</p>
 
-        <div className="iv-card__lang">
+        <div className="iv-pf__lang">
           <LanguagePicker
             value={lang}
             onChange={onLangChange}
@@ -52,19 +49,21 @@ export function PreflightCard({
           />
         </div>
 
-        <div className="iv-card__notice" role="note">
-          <span className="status-disc status-disc--live iv-card__notice-dot" aria-hidden />
+        <div className="iv-pf__notice" role="note">
+          <span className="iv-pf__notice-disc" aria-hidden>
+            <StatusDisc state="live" size="sm" />
+          </span>
           <span>{c.aiNotice}</span>
         </div>
 
-        {errorMsg && <div className="flash flash--err iv-card__flash">{errorMsg}</div>}
+        {errorMsg && <div className="flash flash--err iv-pf__flash">{errorMsg}</div>}
 
-        <div className="iv-card__actions">
+        <div className="iv-pf__actions">
           <button
             type="button"
             onClick={onStartVoice}
             disabled={!ready}
-            className="btn btn--primary btn--lg iv-card__cta"
+            className="btn btn--primary btn--lg iv-pf__cta"
           >
             {ready ? c.start : c.connecting}
           </button>
@@ -72,21 +71,31 @@ export function PreflightCard({
             type="button"
             onClick={onPreferText}
             disabled={!ready}
-            className="btn btn--link iv-card__alt"
+            className="btn btn--link iv-pf__alt"
           >
             {c.preferText}
           </button>
         </div>
 
-        <p className="caption iv-card__legal">{c.micNotice}</p>
+        <p className="caption iv-pf__legal">{c.micNotice}</p>
       </div>
 
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        .iv-card__lang { margin-top: var(--space-6); }
-        .iv-card__notice { margin-top: var(--space-5); display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-accent-muted); background: var(--color-accent-soft); border-radius: var(--radius-ui); font-size: var(--text-body-sm); line-height: 1.55; color: var(--color-text-primary); }
-        .iv-card__notice-dot { margin-top: 6px; }
+        .iv-pf { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: var(--space-8) var(--space-4); background: var(--color-surface); }
+        .iv-pf__plate { width: 100%; max-width: 480px; padding: var(--space-8); border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--color-surface); text-align: left; }
+        .iv-pf__title { margin-top: var(--space-3); letter-spacing: -0.02em; }
+        .iv-pf__body { margin-top: var(--space-3); color: var(--color-text-secondary); max-width: 60ch; }
+        .iv-pf__lang { margin-top: var(--space-6); }
+        .iv-pf__notice { margin-top: var(--space-5); display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-ui); font-size: var(--text-body-sm); line-height: 1.55; color: var(--color-text-secondary); }
+        .iv-pf__notice-disc { display: inline-flex; align-items: center; padding-top: 5px; }
+        .iv-pf__flash { margin-top: var(--space-5); }
+        .iv-pf__actions { margin-top: var(--space-6); display: flex; flex-direction: column; gap: var(--space-3); }
+        .iv-pf__cta { width: 100%; }
+        .iv-pf__alt { align-self: center; font-size: var(--text-meta); }
+        .iv-pf__legal { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border-subtle); line-height: 1.55; color: var(--color-text-tertiary); }
+        @media (max-width: 640px) { .iv-pf__plate { padding: var(--space-6); } }
       `,
         }}
       />

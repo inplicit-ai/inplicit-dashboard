@@ -1,20 +1,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { AlertCircle, CheckCircle2, Clock, UserPlus, Users } from "lucide-react";
+import { AlertCircle, CheckCircle2, UserPlus } from "lucide-react";
 import { makeApi, type OrgMember, ApiError } from "@/lib/api";
 import { requireOrgOwner, requestCookie } from "@/lib/auth";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { PageHeader } from "@/components/PageChrome";
+import { SpecStrip } from "@/components/ui/spec-strip";
+import { StatusDisc } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 
 interface SearchParams {
@@ -94,13 +87,31 @@ export default async function TeamPage({
     }
   }
 
+  const activeCount = members.filter((m) => m.accepted_at).length;
+  const pendingCount = members.length - activeCount;
+
   return (
     <>
-      <PageHeader
-        eyebrow="Workspace"
-        title="Team"
-        muted={`${members.length} Mitglied${members.length === 1 ? "" : "er"}`}
-      />
+      <header className="masthead mb-8">
+        <div className="masthead__metric">
+          <span className="flex items-baseline gap-3">
+            <span className="masthead__num" aria-hidden>
+              §
+            </span>
+            <h1 className="masthead__title">Team</h1>
+          </span>
+          <span className="flex flex-col items-end">
+            <span className="masthead__metric-value">{members.length}</span>
+            <span className="masthead__metric-label">
+              Mitglied{members.length === 1 ? "" : "er"}
+            </span>
+          </span>
+        </div>
+        <p className="masthead__dek">
+          Workspace-Mitglieder. Eingeladene Kolleginnen können nur den
+          Insights-Search nutzen, ohne Kampagnes zu verwalten.
+        </p>
+      </header>
 
       {sp.flash && <Flash type={sp.flashType ?? "ok"} message={sp.flash} />}
 
@@ -116,22 +127,114 @@ export default async function TeamPage({
           </p>
           <p className="mt-1 text-xs text-fg-muted">7 Tage gültig, single-use.</p>
           <div className="mt-3 break-all rounded-ui border border-line bg-canvas p-3 font-mono text-xs">
-            <a
-              className="text-accent-strong hover:underline"
-              href={sp.magic_link}
-            >
+            <a className="text-accent-strong hover:underline" href={sp.magic_link}>
               {sp.magic_link}
             </a>
           </div>
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="card card--compact lg:col-span-1">
-          <p className="text-sm font-semibold text-fg">Mitglied einladen</p>
-          <p className="mt-1 text-xs leading-relaxed text-fg-muted">
-            Das Mitglied erhält einen Einladungs-Link per E-Mail und kann
-            danach nur den Insights-Search nutzen.
+      <SpecStrip
+        cells={[
+          { label: "Mitglieder", value: members.length },
+          { label: "Aktiv", value: activeCount },
+          { label: "Eingeladen", value: pendingCount },
+        ]}
+      />
+
+      <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(240px,300px)]">
+        {/* Register track */}
+        <div className="min-w-0">
+          {listError && (
+            <div className="mb-4 flex items-start gap-2.5 rounded-ui border border-pain-muted bg-pain-soft px-3.5 py-2.5 text-sm text-pain">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <p>{listError}</p>
+            </div>
+          )}
+
+          {!listError && members.length === 0 ? (
+            <div className="rounded-card border border-dashed border-line-strong bg-surface/40 px-6 py-14">
+              <p className="text-center font-mono text-[length:var(--text-caps)] uppercase tracking-[0.06em] text-fg-subtle">
+                NOCH KEINE MITGLIEDER — lade Kolleginnen ein, sie nutzen den
+                Insights-Search.
+              </p>
+            </div>
+          ) : (
+            members.length > 0 && (
+              <>
+                <header className="mb-4 flex items-baseline justify-between gap-4 border-b border-line pb-2">
+                  <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
+                    § MITGLIEDER
+                  </span>
+                  <span className="font-mono text-xs tabular-nums text-fg-muted">
+                    n={members.length}
+                  </span>
+                </header>
+                <div className="w-full overflow-x-auto">
+                  <table className="register min-w-[560px]">
+                    <thead>
+                      <tr>
+                        <th className="w-[28px]" aria-label="Status" />
+                        <th>E-Mail</th>
+                        <th>Status</th>
+                        <th>Datum</th>
+                        <th className="w-[120px] text-right">Aktion</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {members.map((m) => (
+                        <tr key={m.id}>
+                          <td>
+                            <StatusDisc
+                              state={m.accepted_at ? "done" : "pending"}
+                              size="sm"
+                            />
+                          </td>
+                          <td className="register__id text-xs text-fg-muted">
+                            {m.email}
+                          </td>
+                          <td>
+                            <StatusBadge
+                              status={m.accepted_at ? "ACTIVE" : "PENDING"}
+                              label={m.accepted_at ? "Aktiv" : "Eingeladen"}
+                            />
+                          </td>
+                          <td className="register__id text-xs text-fg-muted">
+                            {m.accepted_at
+                              ? new Date(m.accepted_at).toLocaleDateString(
+                                  "de-DE",
+                                )
+                              : `läuft ab ${new Date(m.expires_at).toLocaleDateString("de-DE")}`}
+                          </td>
+                          <td className="text-right">
+                            <form action={removeMember}>
+                              <input type="hidden" name="id" value={m.id} />
+                              <Button
+                                type="submit"
+                                variant="ghost"
+                                size="sm"
+                                className="text-xs text-fg-muted hover:bg-pain-soft hover:text-pain"
+                              >
+                                Entfernen
+                              </Button>
+                            </form>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )
+          )}
+        </div>
+
+        {/* Invite rail */}
+        <aside className="lg:sticky lg:top-6 lg:self-start">
+          <span className="eyebrow">Mitglied einladen</span>
+          <p className="mt-3 text-xs leading-relaxed text-fg-muted">
+            Das Mitglied erhält einen Einladungs-Link per E-Mail und kann danach
+            nur den Insights-Search nutzen.
           </p>
           <form action={inviteMember} className="mt-4 flex flex-col gap-3">
             <Input
@@ -146,101 +249,7 @@ export default async function TeamPage({
               Einladen
             </Button>
           </form>
-        </div>
-
-        <div className="lg:col-span-2">
-          {listError && (
-            <div className="mb-4 flex items-start gap-2.5 rounded-ui border border-pain-muted bg-pain-soft px-3.5 py-2.5 text-sm text-pain">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <p>{listError}</p>
-            </div>
-          )}
-
-          {!listError && members.length === 0 && (
-            <div className="card border-dashed">
-              <div className="flex flex-col items-center justify-center gap-3 py-4 text-center">
-                <span className="grid size-11 place-items-center rounded-full bg-accent-soft text-accent">
-                  <Users className="h-5 w-5" />
-                </span>
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-fg">
-                    Noch keine Mitglieder eingeladen.
-                  </p>
-                  <p className="max-w-[44ch] text-xs leading-relaxed text-fg-muted">
-                    Lade Kolleginnen ein — sie können den Insights-Search
-                    nutzen, ohne Kampagnes verwalten zu müssen.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {members.length > 0 && (
-            <div className="card card--flush">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-line-subtle bg-surface-2 hover:bg-surface-2">
-                    <TableHead className="px-4 py-3 text-fg-muted">
-                      E-Mail
-                    </TableHead>
-                    <TableHead className="px-4 py-3 text-fg-muted">
-                      Status
-                    </TableHead>
-                    <TableHead className="px-4 py-3 text-fg-muted">
-                      Datum
-                    </TableHead>
-                    <TableHead className="w-[88px] px-4 py-3 text-right text-fg-muted">
-                      Aktion
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {members.map((m) => (
-                    <TableRow
-                      key={m.id}
-                      className="border-line-subtle hover:bg-surface-2"
-                    >
-                      <TableCell className="px-4 py-3 font-mono text-xs text-fg-muted">
-                        {m.email}
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <StatusBadge
-                          status={m.accepted_at ? "ACTIVE" : "PENDING"}
-                          label={m.accepted_at ? "Aktiv" : "Eingeladen"}
-                        />
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-xs text-fg-muted">
-                        <span className="flex items-center gap-1.5">
-                          <Clock className="h-3 w-3 shrink-0" />
-                          <span className="font-mono tabular-nums">
-                            {m.accepted_at
-                              ? new Date(m.accepted_at).toLocaleDateString(
-                                  "de-DE",
-                                )
-                              : `läuft ab ${new Date(m.expires_at).toLocaleDateString("de-DE")}`}
-                          </span>
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-right">
-                        <form action={removeMember}>
-                          <input type="hidden" name="id" value={m.id} />
-                          <Button
-                            type="submit"
-                            variant="ghost"
-                            size="sm"
-                            className="text-xs text-fg-muted hover:bg-pain-soft hover:text-pain"
-                          >
-                            Entfernen
-                          </Button>
-                        </form>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
+        </aside>
       </div>
     </>
   );

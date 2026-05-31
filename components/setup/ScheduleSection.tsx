@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, makeDurationOptions } from "@/components/ui/select";
+import { StatusDisc } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 import type {
   CampaignDraft,
@@ -12,6 +13,7 @@ import type {
   SetupToolCall,
 } from "@/lib/api";
 import { SectionCard } from "./SectionCard";
+import { PlatePlaceholder } from "./Catalog";
 
 /** Slot-length options on the 5-minute grid (5..60). */
 const SLOT_LENGTH_OPTIONS = makeDurationOptions(5, 60, 5);
@@ -57,7 +59,12 @@ export function ScheduleSection({
   const slots = schedule.slots ?? [];
 
   return (
-    <SectionCard title={t("schedule")} touched={touched}>
+    <SectionCard
+      index="§ 07"
+      title={t("schedule")}
+      count={slots.length || undefined}
+      touched={touched}
+    >
       <div className="flex flex-col gap-4">
         {/* Booking mode */}
         <div
@@ -142,19 +149,23 @@ export function ScheduleSection({
             </div>
 
             {slots.length === 0 ? (
-              <p className="text-sm text-fg-muted">{t("noSlots")}</p>
+              <PlatePlaceholder>{t("noSlots")}</PlatePlaceholder>
             ) : (
               <div className="flex flex-col gap-1.5">
-                <span className="font-mono text-xs tabular-nums text-fg-subtle">
+                <span className="font-mono text-[length:var(--text-eyebrow)] uppercase tracking-[0.06em] tabular-nums text-fg-subtle">
                   {t("slotsCount", { count: slots.length })}
                 </span>
-                <ul className="scrollbar-none flex max-h-44 flex-col gap-0.5 overflow-y-auto rounded-ui border border-line bg-surface-2 p-2">
+                {/* Generated slots as a status-spine register — each a ready disc. */}
+                <ul className="scrollbar-none flex max-h-48 flex-col overflow-y-auto rounded-card border border-line">
                   {slots.map((s, i) => (
                     <li
                       key={i}
-                      className="rounded-sm px-1.5 py-1 font-mono text-xs tabular-nums text-fg-muted"
+                      className="flex items-center gap-2.5 border-b border-line-subtle px-3 py-1.5 last:border-b-0"
                     >
-                      {fmtSlot(s)}
+                      <StatusDisc state="done" size="sm" />
+                      <span className="font-mono text-[13px] tabular-nums text-fg-muted">
+                        {fmtSlot(s)}
+                      </span>
                     </li>
                   ))}
                 </ul>

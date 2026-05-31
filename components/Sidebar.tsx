@@ -11,7 +11,13 @@ import {
   type NavMode,
   type NavSection,
 } from "@/lib/shell/nav";
-import { IconHelp, IconLogOut, IconSettings } from "@/components/icons";
+import {
+  IconHelp,
+  IconLogOut,
+  IconSearch,
+  IconSettings,
+} from "@/components/icons";
+import { StatusDisc } from "@/components/ui/status-disc";
 import { replayTour } from "@/lib/shell/use-guided-tour";
 import {
   Tooltip,
@@ -34,6 +40,8 @@ interface SidebarProps {
   state?: SidebarState;
   /** Compact presentation for the mobile drawer (always shows labels). */
   inDrawer?: boolean;
+  /** Number of interviews currently running — drives the pinned LIVE folio. */
+  liveCount?: number;
   /** Called when a nav link is clicked (used to close the mobile drawer). */
   onNavigate?: () => void;
 }
@@ -46,6 +54,7 @@ export function Sidebar({
   hasAudits = false,
   state = "expanded",
   inDrawer = false,
+  liveCount = 0,
   onNavigate,
 }: SidebarProps) {
   const pathname = usePathname() ?? "";
@@ -129,7 +138,47 @@ export function Sidebar({
             ))}
           </nav>
 
+          {mode === "customer" && (
+            <div className="sidebar__live" data-idle={liveCount === 0}>
+              <StatusDisc
+                state={liveCount > 0 ? "live" : "idle"}
+                size="sm"
+                pulse={liveCount > 0}
+              />
+              {!iconOnly && (
+                <>
+                  <span className="sidebar__live-label">
+                    {tNav("interviews")}
+                  </span>
+                  <span className="sidebar__live-count">{liveCount}</span>
+                </>
+              )}
+            </div>
+          )}
+
           <div className="sidebar__bottom">
+            {hasAudits && (
+              <Link
+                href="/chat"
+                className="sidebar__command"
+                onClick={onNavigate}
+                aria-label={tNav("knowledgeChat")}
+              >
+                <span className="sidebar__item-icon" aria-hidden="true">
+                  <IconSearch size={15} />
+                </span>
+                {!iconOnly && (
+                  <>
+                    <span className="sidebar__command-label">
+                      {tNav("knowledgeChat")}
+                    </span>
+                    <kbd className="sidebar__command-kbd" aria-hidden="true">
+                      ⌘K
+                    </kbd>
+                  </>
+                )}
+              </Link>
+            )}
             {mode === "customer" && (
               <button
                 type="button"

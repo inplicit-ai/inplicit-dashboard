@@ -8,64 +8,77 @@
 /* ─── Tokens — Light (DEFAULT, white-first) ──────────────────────────────── */
 :root,
 [data-theme="light"] {
-  /* Color system — white-first, layered neutral surfaces.
-     Depth comes from hairline borders + surface steps, never shadows.
-     The warm amber accent reads as a focused signal, never decoration. */
-  --color-bg: #ffffff;
-  --color-surface: #fafafa;
-  --color-surface-2: #f4f4f3;
-  --color-surface-3: #ebebe9;
-  --color-elevated: #ffffff;
+  /* Color system — Instrument / Research Ledger: warm paper over layered
+     neutral steps, ink primary, ONE amber chroma as the live/active signal.
+     Depth comes from hairline borders + a single surface step, never shadows.
+     STRUCTURE is the redesign; color stays disciplined. */
+  --color-bg: #faf9f6;
+  --color-surface: #f4f2ed;
+  --color-surface-2: #ece9e2;
+  --color-surface-3: #e3dfd6;
+  --color-elevated: #faf9f6;
 
-  --color-border: rgba(0, 0, 0, 0.10);
-  --color-border-subtle: rgba(0, 0, 0, 0.06);
-  --color-border-strong: rgba(0, 0, 0, 0.18);
+  --color-border: #e3ded4;
+  --color-border-subtle: rgba(26, 24, 21, 0.06);
+  --color-border-strong: #cfc8ba;
 
-  --color-text-primary: #09090b;
-  --color-text-secondary: #3f3f46;
-  --color-text-tertiary: #71717a;
-  --color-text-quaternary: #a1a1aa;
+  --color-text-primary: #1a1815;
+  --color-text-secondary: #5b554c;
+  --color-text-tertiary: #9a948a;
+  --color-text-quaternary: #b7b1a6;
 
   --color-accent: #c2660c;
-  --color-accent-strong: #a8560a;
-  --color-accent-soft: rgba(194, 102, 12, 0.09);
-  --color-accent-muted: rgba(194, 102, 12, 0.22);
+  --color-accent-strong: #a8550a;
+  --color-accent-soft: #f4e8d6;
+  --color-accent-muted: rgba(194, 102, 12, 0.24);
   --color-accent-glow: rgba(194, 102, 12, 0.16);
 
-  --color-pain: #c2410c;
-  --color-pain-soft: rgba(194, 65, 12, 0.06);
-  --color-pain-muted: rgba(194, 65, 12, 0.22);
+  --color-pain: #a8493a;
+  --color-pain-soft: rgba(168, 73, 58, 0.07);
+  --color-pain-muted: rgba(168, 73, 58, 0.22);
 
-  --color-gap: #5b21b6;
-  --color-gap-soft: rgba(91, 33, 182, 0.06);
-  --color-gap-muted: rgba(91, 33, 182, 0.22);
+  --color-gap: #3f6478;
+  --color-gap-soft: rgba(63, 100, 120, 0.07);
+  --color-gap-muted: rgba(63, 100, 120, 0.22);
 
-  --color-success: #15803d;
-  --color-success-soft: rgba(21, 128, 61, 0.07);
-  --color-warning: #b45309;
-  --color-danger: #b91c1c;
-  --color-danger-soft: rgba(185, 28, 28, 0.06);
+  --color-success: #4a6f55;
+  --color-success-soft: #e7ede7;
+  --color-warning: #9c7416;
+  --color-warning-soft: #f3ead4;
+  --color-danger: #a8493a;
+  --color-danger-soft: #f1e6e1;
+  --color-info: #3f6478;
+  --color-info-soft: #e4ebed;
 
-  --color-cta-bg: #0a0a0a;
-  --color-cta-text: #ffffff;
+  --color-cta-bg: #1a1815;
+  --color-cta-text: #faf9f6;
 
-  /* Typography ramp — two density registers. Chrome floor 15px (body),
-     14px (body-sm), 13px (meta); reading surfaces opt up to 17px (body-lg).
-     JetBrains Mono carries every number / ID / status; prose is never mono. */
+  /* Typography — Instrument FOUR-size working scale. Hierarchy comes from
+     WEIGHT (400/500/600), SPACE (8px baseline), and the dashed-spine indent —
+     never from inventing sizes or colors. The legacy ramp tokens are retuned
+     (never removed) so they collapse onto the four canonical sizes:
+       Display 1.875rem · Title 1.25rem · Body 0.875rem · Caps 0.6875rem
+       (Meta 0.75rem stays for dense gutter timestamps).
+     --font-mono = machine identity (anon_id, tokens, counts, section numbers);
+     --font-sans = everything human. All numbers use tabular-nums. */
   --font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --text-display: clamp(2.25rem, 4.5vw, 3.25rem);
-  --text-headline: clamp(1.875rem, 3.2vw, 2.5rem);
-  --text-title: 1.375rem;       /* 22px */
-  --text-subtitle: 1.0625rem;   /* 17px */
-  --text-body-lg: 1.0625rem;    /* 17px — the reading floor */
-  --text-body: 0.9375rem;       /* 15px — chrome body floor */
-  --text-body-sm: 0.875rem;     /* 14px — UI default (tables/rows/cards) */
-  --text-meta: 0.8125rem;       /* 13px — sidebar/tabs/toolbar/buttons */
+  /* Canonical four-size scale */
+  --text-display: 1.875rem;     /* 30px — masthead metric + the one section title */
+  --text-title: 1.25rem;        /* 20px — sub-section labels, drawer headers */
+  --text-body: 0.875rem;        /* 14px — every ledger row, all prose */
+  --text-caps: 0.6875rem;       /* 11px — eyebrows, TOC, chips, column heads */
+
+  /* Legacy ramp tokens collapsed onto the four sizes (kept for compatibility) */
+  --text-headline: 1.875rem;    /* → Display */
+  --text-subtitle: 1.25rem;     /* → Title */
+  --text-body-lg: 0.875rem;     /* → Body */
+  --text-body-sm: 0.875rem;     /* → Body */
+  --text-meta: 0.75rem;         /* 12px — dense gutter timestamps only */
   --text-caption: 0.75rem;      /* 12px */
-  --text-eyebrow: 0.6875rem;    /* 11px */
-  --text-mono: 0.8125rem;       /* 13px */
+  --text-eyebrow: 0.6875rem;    /* → Caps */
+  --text-mono: 0.875rem;        /* → Body, mono */
 
   /* Spacing — 4-pt base */
   --space-1: 0.25rem;
@@ -82,12 +95,14 @@
   --space-20: 5rem;
   --space-24: 6rem;
 
-  /* Radius — tight, consistent: 6 chips / 8 controls / 12 cards / 14 popovers.
-     No child rounder than its parent. Pills stay full. */
-  --radius-sm: 6px;
-  --radius-ui: 8px;
-  --radius-card: 12px;
-  --radius-popover: 14px;
+  /* Radius — Instrument: hairline-rounded, near-square. 3 chips / 5 controls /
+     6 mid / 8 cards. No child rounder than its parent. Pills stay full. */
+  --radius-sm: 3px;
+  --radius-ui: 5px;
+  --radius-md: 6px;
+  --radius-card: 8px;
+  --radius-lg: 8px;
+  --radius-popover: 8px;
   --radius-full: 9999px;
 
   /* Easing */
@@ -101,6 +116,19 @@
   --shell-topbar-h: 56px;   /* the app shell's sticky topbar (.shell-topbar) */
   --tabs-h: 48px;
   --sidebar-w: 248px;
+
+  /* Instrument three-zone shell + ledger geometry. The INDEX RAIL and SPEC
+     GUTTER stay fixed; only the MEASURE COLUMN scrolls. One --tree-indent
+     governs every hierarchy level product-wide; the dashed connector lives at
+     one fixed gutter column aligned to the disc center. Everything snaps to an
+     8px baseline. */
+  --baseline: 8px;
+  --rail-width: 240px;
+  --rail-width-collapsed: 56px;
+  --gutter-width: 300px;
+  --measure-width: 720px;
+  --tree-indent: 24px;
+  --connector-left: 20px;
 
   /* Chat surfaces — canonical available-height envelope. Pages must NOT compute
      100vh - <rem> internally; use h-[var(--chat-height)] (under topbar + tabs)
@@ -133,70 +161,73 @@
   /* Tight 2px focus ring — the single legitimate accent signal on inputs. */
   --shadow-focus: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent-muted);
 
-  /* shadcn-bridge tokens — solid colors so /<alpha> modifiers compile. */
-  --background: #ffffff;
-  --foreground: #0a0a0a;
-  --card: #ffffff;
-  --card-foreground: #0a0a0a;
-  --popover: #ffffff;
-  --popover-foreground: #0a0a0a;
-  --primary: #0a0a0a;
-  --primary-foreground: #ffffff;
-  --secondary: #f5f5f4;
-  --secondary-foreground: #0a0a0a;
-  --muted: #f5f5f4;
-  --muted-foreground: #52525b;
-  --shadcn-accent: #f5f5f4;
-  --shadcn-accent-foreground: #0a0a0a;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --shadcn-border: #e4e4e7;
-  --input: #e4e4e7;
+  /* shadcn-bridge tokens — solid warm-paper colors so /<alpha> compiles. */
+  --background: #faf9f6;
+  --foreground: #1a1815;
+  --card: #faf9f6;
+  --card-foreground: #1a1815;
+  --popover: #faf9f6;
+  --popover-foreground: #1a1815;
+  --primary: #1a1815;
+  --primary-foreground: #faf9f6;
+  --secondary: #ece9e2;
+  --secondary-foreground: #1a1815;
+  --muted: #ece9e2;
+  --muted-foreground: #5b554c;
+  --shadcn-accent: #ece9e2;
+  --shadcn-accent-foreground: #1a1815;
+  --destructive: #a8493a;
+  --destructive-foreground: #faf9f6;
+  --shadcn-border: #e3ded4;
+  --input: #e3ded4;
   --ring: #c2660c;
-  --radius: 8px;
+  --radius: 5px;
 }
 
 /* ─── Tokens — Dark (opt-in) ──────────────────────────────────────────────── */
 [data-theme="dark"] {
-  /* Cool near-blacks (#0b0c10 → #1f242f) so the warm amber accent reads as a
+  /* Warm near-blacks (#0e0c0a → #2e271d) so the amber accent reads as the one
      focused signal. Shadows allowed here for depth on the dark canvas. */
-  --color-bg: #0a0b0e;
-  --color-surface: #101218;
-  --color-surface-2: #15181f;
-  --color-surface-3: #1b1f27;
-  --color-elevated: #1e232d;
+  --color-bg: #0e0c0a;
+  --color-surface: #17140f;
+  --color-surface-2: #221d16;
+  --color-surface-3: #2e271d;
+  --color-elevated: #2e271d;
 
-  --color-border: rgba(255, 255, 255, 0.09);
-  --color-border-subtle: rgba(255, 255, 255, 0.055);
-  --color-border-strong: rgba(255, 255, 255, 0.18);
+  --color-border: #241f18;
+  --color-border-subtle: rgba(245, 242, 234, 0.06);
+  --color-border-strong: #3a3328;
 
-  --color-text-primary: #fafafa;
-  --color-text-secondary: rgba(250, 250, 250, 0.70);
-  --color-text-tertiary: rgba(250, 250, 250, 0.50);
-  --color-text-quaternary: rgba(250, 250, 250, 0.32);
+  --color-text-primary: #f5f2ea;
+  --color-text-secondary: #c8c0b2;
+  --color-text-tertiary: #857d6f;
+  --color-text-quaternary: rgba(245, 242, 234, 0.34);
 
   --color-accent: #f5a623;
   --color-accent-strong: #ffb84d;
-  --color-accent-soft: rgba(245, 166, 35, 0.10);
-  --color-accent-muted: rgba(245, 166, 35, 0.22);
+  --color-accent-soft: #2c2114;
+  --color-accent-muted: rgba(245, 166, 35, 0.24);
   --color-accent-glow: rgba(245, 166, 35, 0.28);
 
-  --color-pain: #fb7c4a;
-  --color-pain-soft: rgba(251, 124, 74, 0.10);
-  --color-pain-muted: rgba(251, 124, 74, 0.24);
+  --color-pain: #dd7a64;
+  --color-pain-soft: rgba(221, 122, 100, 0.12);
+  --color-pain-muted: rgba(221, 122, 100, 0.26);
 
-  --color-gap: #b39bff;
-  --color-gap-soft: rgba(179, 155, 255, 0.10);
-  --color-gap-muted: rgba(179, 155, 255, 0.24);
+  --color-gap: #74a6c2;
+  --color-gap-soft: rgba(116, 166, 194, 0.12);
+  --color-gap-muted: rgba(116, 166, 194, 0.26);
 
-  --color-success: #34d399;
-  --color-success-soft: rgba(52, 211, 153, 0.10);
-  --color-warning: #fbbf24;
-  --color-danger: #f87171;
-  --color-danger-soft: rgba(248, 113, 113, 0.10);
+  --color-success: #7ab98a;
+  --color-success-soft: #16231a;
+  --color-warning: #ddab3a;
+  --color-warning-soft: #2a2010;
+  --color-danger: #dd7a64;
+  --color-danger-soft: #2a1612;
+  --color-info: #74a6c2;
+  --color-info-soft: #13212a;
 
-  --color-cta-bg: #f5f6f8;
-  --color-cta-text: #0b0c10;
+  --color-cta-bg: #f5f2ea;
+  --color-cta-text: #0e0c0a;
 
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.5);
@@ -205,24 +236,24 @@
   --shadow-elevation: 0 24px 64px rgba(0, 0, 0, 0.65), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
   --shadow-focus: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent-muted);
 
-  --background: #0a0b0e;
-  --foreground: #f5f6f8;
-  --card: #101218;
-  --card-foreground: #f5f6f8;
-  --popover: #15181f;
-  --popover-foreground: #f5f6f8;
-  --primary: #f5f6f8;
-  --primary-foreground: #0b0c10;
-  --secondary: #1c2029;
-  --secondary-foreground: #f5f6f8;
-  --muted: #161922;
-  --muted-foreground: #9aa1ad;
-  --shadcn-accent: #1c2029;
-  --shadcn-accent-foreground: #f5f6f8;
-  --destructive: #ef4444;
-  --destructive-foreground: #f5f6f8;
-  --shadcn-border: #232734;
-  --input: #232734;
+  --background: #0e0c0a;
+  --foreground: #f5f2ea;
+  --card: #17140f;
+  --card-foreground: #f5f2ea;
+  --popover: #221d16;
+  --popover-foreground: #f5f2ea;
+  --primary: #f5f2ea;
+  --primary-foreground: #0e0c0a;
+  --secondary: #221d16;
+  --secondary-foreground: #f5f2ea;
+  --muted: #17140f;
+  --muted-foreground: #857d6f;
+  --shadcn-accent: #221d16;
+  --shadcn-accent-foreground: #f5f2ea;
+  --destructive: #dd7a64;
+  --destructive-foreground: #f5f2ea;
+  --shadcn-border: #241f18;
+  --input: #241f18;
   --ring: #f5a623;
 }
 
@@ -307,16 +338,16 @@
 .display {
   font-size: var(--text-display);
   font-weight: 600;
-  line-height: 1.04;
-  letter-spacing: -0.025em;
+  line-height: 1.2;        /* 30/36 */
+  letter-spacing: -0.01em;
   color: var(--color-text-primary);
 }
 
 .headline {
   font-size: var(--text-headline);
   font-weight: 600;
-  line-height: 1.08;
-  letter-spacing: -0.022em;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   color: var(--color-text-primary);
 }
 
@@ -328,27 +359,38 @@
 .title {
   font-size: var(--text-title);
   font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
+  line-height: 1.4;        /* 20/28 */
+  letter-spacing: -0.01em;
   color: var(--color-text-primary);
 }
 
 .subtitle {
   font-size: var(--text-subtitle);
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.4;
   letter-spacing: -0.01em;
   color: var(--color-text-primary);
 }
 
-/* .body-lg is the reading floor (chat / insight / transcript / RAG / empty
-   state) — keep the generous 1.6. Chrome body / body-sm / meta tighten. */
-.body-lg { font-size: var(--text-body-lg); line-height: 1.6; color: var(--color-text-primary); }
-.body { font-size: var(--text-body); line-height: 1.45; color: var(--color-text-primary); }
-.body-sm { font-size: var(--text-body-sm); line-height: 1.4; color: var(--color-text-secondary); }
+/* Body is the single running size (14/22). All reading registers collapse onto
+   it; the legacy body-lg / body-sm tokens now alias Body. */
+.body-lg { font-size: var(--text-body-lg); line-height: 1.571; color: var(--color-text-primary); }
+.body { font-size: var(--text-body); line-height: 1.571; color: var(--color-text-primary); }
+.body-sm { font-size: var(--text-body-sm); line-height: 1.571; color: var(--color-text-secondary); }
 .meta { font-size: var(--text-meta); line-height: 1.4; color: var(--color-text-secondary); }
 .caption { font-size: var(--text-caption); line-height: 1.4; color: var(--color-text-tertiary); }
-.mono { font-family: var(--font-mono); font-size: var(--text-mono); }
+.mono { font-family: var(--font-mono); font-size: var(--text-mono); font-variant-numeric: tabular-nums; }
+
+/* Caps — the universal label register: eyebrows, the index TOC, chip text,
+   column headers, spec-gutter labels. Weight 600, uppercase, wide tracking. */
+.caps {
+  font-size: var(--text-caps);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
 
 .eyebrow {
   display: inline-flex;
@@ -506,6 +548,8 @@
 
 /* ─── Topbar (sticky, step-aware) ─────────────────────────────────────────── */
 
+/* Flat, honest topbar: a solid bg with a single hairline bottom rule. No blur,
+   no gradient — depth is the rule, consistent with the bound-spine rail. */
 .shell-topbar {
   position: sticky;
   top: 0;
@@ -515,9 +559,7 @@
   gap: var(--space-4);
   height: var(--shell-topbar-h);
   padding: 0 var(--space-6);
-  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
-  backdrop-filter: saturate(160%) blur(14px);
-  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  background: var(--color-bg);
   border-bottom: 1px solid var(--color-border-subtle);
 }
 
@@ -563,33 +605,16 @@
   gap: var(--space-2);
 }
 
+/* Marker is now just a centering slot for the StatusDisc — the disc carries the
+   complete/current/upcoming state in the shared agent-plan vocabulary, so the
+   old bordered-circle + numeric fills are gone. */
 .shell-stepper__marker {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: var(--radius-full);
-  font-size: 11px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text-tertiary);
-  background: var(--color-surface);
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
-}
-
-/* Completed: filled near-black. */
-.shell-stepper__step[data-state="complete"] .shell-stepper__marker {
-  background: var(--color-text-primary);
-  border-color: var(--color-text-primary);
-  color: var(--color-bg);
-}
-/* Current: accent on the active marker only. */
-.shell-stepper__step[data-state="current"] .shell-stepper__marker {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  background: var(--color-accent-soft);
 }
 
 .shell-stepper__label {
@@ -668,10 +693,11 @@
   align-items: stretch;
   height: 60px;
   padding-bottom: env(safe-area-inset-bottom, 0);
-  background: var(--color-elevated);
+  background: var(--color-bg);
   border-top: 1px solid var(--color-border);
 }
 .shell-tabbar__item {
+  position: relative;
   flex: 1;
   display: inline-flex;
   flex-direction: column;
@@ -686,7 +712,23 @@
   border: 0;
   cursor: pointer;
 }
-.shell-tabbar__item.is-active { color: var(--color-accent); }
+/* Active = near-black label + a 2px amber top tick (the same underline signal
+   as the desktop tabs), NOT a fully amber item. Amber stays a functional mark. */
+.shell-tabbar__item.is-active {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+.shell-tabbar__item.is-active::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 2px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+}
 .shell-tabbar__item.is-disabled { opacity: 0.4; pointer-events: none; }
 .shell-tabbar__label { line-height: 1; }
 
@@ -876,14 +918,24 @@
   position: relative;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-lg);
   padding: var(--space-5);
-  box-shadow: var(--shadow-card);
-  transition: border-color 0.18s var(--ease-smooth), box-shadow 0.18s var(--ease-smooth), background 0.18s var(--ease-smooth);
+  box-shadow: none;        /* Instrument: depth = hairline + one surface step. */
+  transition: border-color 0.18s var(--ease-smooth), background 0.18s var(--ease-smooth);
 }
 
 .card--compact { padding: var(--space-4); }
 .card--flush { padding: 0; overflow: hidden; }
+
+/* Ledger flush — the running document sits directly on canvas with only
+   hairline row dividers; no box, no radius, no side padding. */
+.card--ledger {
+  border: 0;
+  border-radius: 0;
+  padding-inline: 0;
+  background: transparent;
+  box-shadow: none;
+}
 .card--pain { background: var(--color-pain-soft); border-color: var(--color-pain-muted); }
 .card--opportunity { background: var(--color-accent-soft); border-color: var(--color-accent-muted); }
 .card--gap { background: var(--color-gap-soft); border-color: var(--color-gap-muted); }
@@ -1147,16 +1199,67 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: 2px var(--space-2);
-  font-size: var(--text-eyebrow);
+  padding: 0.125rem 0.375rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-caps);
   font-weight: 600;
   line-height: 1.4;
   letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   color: var(--color-text-secondary);
   white-space: nowrap;
+}
+
+/* Canonical square tag / count primitive (DataChip). Mono, tabular, 3px. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.125rem 0.375rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-caps);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+.chip--count {
+  color: var(--color-text-secondary);
+  background: var(--color-surface-2);
+}
+.chip--accent {
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent-muted);
+}
+.chip--success {
+  color: var(--color-success);
+  background: var(--color-success-soft);
+  border-color: rgba(74, 111, 85, 0.24);
+}
+.chip--danger {
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+  border-color: var(--color-pain-muted);
+}
+/* Interactive chip (citation / suggestion) — amber on hover, the one signal. */
+button.chip,
+.chip--button {
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease-smooth), color 0.15s var(--ease-smooth), background 0.15s var(--ease-smooth);
+}
+button.chip:hover,
+.chip--button:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .badge--pain {
@@ -1226,34 +1329,522 @@
 .status-disc--sm { width: 6px; height: 6px; }
 .status-disc--lg { width: 10px; height: 10px; }
 
-/* Live: accent fill, pulsing. Idle: hollow ring. Done: filled near-black
-   (matches the completed stepper marker). Error: danger fill. */
+/* STATUS LEXICON — the universal truth-state, read identically across clusters,
+   hypotheses, insights, participants, interviews, and the pipeline:
+     done (CheckCircle2)        = verified / stable      → ink fill
+     live (CircleDotDashed)     = live / forming         → amber fill + PULSE
+     pending (CircleAlert)      = weak / needs-evidence  → warning
+     error (CircleX)            = contradicted / failed  → danger
+     idle (Circle)              = idle / draft           → hollow ring
+   Amber is reserved to the single live disc; verified/contradicted carry their
+   state tonally so amber stays singular ('attention is here, right now'). */
 .status-disc--live { background: var(--color-accent); }
 .status-disc--idle { background: transparent; border: 1px solid var(--color-border-strong); }
 .status-disc--done { background: var(--color-text-primary); }
+.status-disc--pending { background: var(--color-warning); }
 .status-disc--error { background: var(--color-danger); }
 
-/* The ONLY continuous animation in the system, Apple-eased, gated behind
-   prefers-reduced-motion. */
-.status-disc--pulse { animation: status-pulse 1.6s var(--ease-out) infinite; }
+/* The ONLY continuous animation in the system — a 2s amber 'breath' on the
+   single live/processing disc. Apple-eased, gated behind reduced-motion. */
+.status-disc--pulse { animation: status-pulse 2s var(--ease-out) infinite; }
 
 @keyframes status-pulse {
-  0%   { box-shadow: 0 0 0 0 var(--color-accent-glow); }
-  70%  { box-shadow: 0 0 0 6px transparent; }
-  100% { box-shadow: 0 0 0 0 transparent; }
+  0%   { box-shadow: 0 0 0 0 var(--color-accent-glow); opacity: 1; transform: scale(1); }
+  70%  { box-shadow: 0 0 0 6px transparent;            opacity: 0.7; transform: scale(0.92); }
+  100% { box-shadow: 0 0 0 0 transparent;              opacity: 1; transform: scale(1); }
+}
+
+/* One-shot scale bounce fired once on a state change (e.g. live → done). */
+.status-disc--flip { animation: status-flip 280ms cubic-bezier(0.34, 1.56, 0.64, 1) 1; }
+
+@keyframes status-flip {
+  0%   { transform: scale(0.4); }
+  60%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .status-disc--pulse { animation: none; }
+  /* Reduced = instant state change; pulse collapses to a static amber ring. */
+  .status-disc--pulse { animation: none; box-shadow: 0 0 0 2px var(--color-accent-muted); }
+  .status-disc--flip { animation: none; }
 }
 
-/* Connector — a 1px line shared by the stepper and synthesis pipeline. */
+/* Connector — the global brand spine. One repeated dashed line at a fixed
+   gutter column unifies the spine, stepper, pipeline, AND index rail. The
+   active segment goes solid amber. */
 .connector {
   height: 0;
   border-top: 1px solid var(--color-border);
 }
 .connector--dashed { border-top: 1px dashed var(--color-border-strong); }
 .connector--active { border-top: 1px solid var(--color-accent); }
+
+/* Vertical variant — the page spine threading the ledger. Absolutely placed at
+   --connector-left so it aligns to every disc center. */
+.connector--vertical {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--connector-left);
+  height: auto;
+  border-top: 0;
+  border-left: 1px dashed var(--color-border-strong);
+}
+.connector--vertical.connector--active {
+  border-left-color: var(--color-accent);
+  border-left-style: solid;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * INSTRUMENT — three-zone editorial shell + the research-ledger recipe layer.
+ * Index rail (fixed) | measure column (scrolls) | spec gutter (fixed).
+ * ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── EditorialShell — three-zone instrument frame ────────────────────────── */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--rail-width) minmax(0, 1fr) var(--gutter-width);
+  grid-template-rows: 100dvh;
+  min-height: 100dvh;
+}
+.app-shell--no-gutter {
+  grid-template-columns: var(--rail-width) minmax(0, 1fr);
+}
+.app-shell--collapsed {
+  grid-template-columns: var(--rail-width-collapsed) minmax(0, 1fr) var(--gutter-width);
+}
+.app-shell--collapsed.app-shell--no-gutter {
+  grid-template-columns: var(--rail-width-collapsed) minmax(0, 1fr);
+}
+
+@media (max-width: 1024px) {
+  /* Gutter folds away first; rail + measure remain. */
+  .app-shell,
+  .app-shell--collapsed {
+    grid-template-columns: var(--rail-width) minmax(0, 1fr);
+  }
+  .app-shell--collapsed {
+    grid-template-columns: var(--rail-width-collapsed) minmax(0, 1fr);
+  }
+}
+@media (max-width: 767px) {
+  .app-shell,
+  .app-shell--collapsed,
+  .app-shell--no-gutter {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+}
+
+/* The scrolling measure column. Ledgers run full-bleed; prose self-constrains
+   via .measure-column. */
+.app-shell .app-work {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: var(--space-6) var(--space-6) var(--space-8);
+}
+.app-shell .app-work > * { max-width: none; margin-inline: 0; }
+
+/* Optical line length for any running text (quotes, hypothesis statements,
+   RAG answers). The ledger itself runs full-width with right-flush numerals. */
+.measure-column {
+  max-width: var(--measure-width);
+  margin-inline: 0;
+}
+
+/* ─── IndexRail — typeset numbered table-of-contents nav ───────────────────── */
+
+.index-rail {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow-y: auto;
+  padding: var(--space-5) var(--space-3);
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.index-group { display: flex; flex-direction: column; }
+.index-group + .index-group {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.index-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-caps);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s var(--ease-smooth), box-shadow 0.15s var(--ease-smooth);
+}
+.index-item:hover { color: var(--color-text-primary); }
+.index-item__num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary);
+}
+/* Active = 2px amber inset tick + weight shift only. NO fill. */
+.index-item--active {
+  color: var(--color-text-primary);
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+.index-item--active .index-item__num { color: var(--color-text-primary); }
+
+/* Collapsed 56px rail — numeral only. */
+.app-shell--collapsed .index-item { grid-template-columns: auto; justify-content: center; }
+.app-shell--collapsed .index-item__label { display: none; }
+
+/* ─── SectionMasthead — printed-journal page header ────────────────────────── */
+
+.masthead {
+  display: grid;
+  gap: var(--space-2);
+  padding-block: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+.masthead__num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-display);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-text-tertiary);
+  letter-spacing: -0.01em;
+}
+.masthead__title {
+  font-size: var(--text-display);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+}
+.masthead__dek {
+  max-width: var(--measure-width);
+  font-size: var(--text-body);
+  line-height: 1.571;
+  color: var(--color-text-secondary);
+}
+.masthead__metric {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.masthead__metric-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-display);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+.masthead__metric-label {
+  font-size: var(--text-caps);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+/* ─── SpecStrip — kills the stat-card grid (one ruled enclosure) ───────────── */
+
+.spec-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  border-block: 1px solid var(--color-border);
+}
+.spec-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-left: 1px solid var(--color-border);
+}
+.spec-cell:first-child { border-left: 0; }
+.spec-cell__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-caps);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+.spec-cell__value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-display);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+}
+.spec-cell__delta {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-caps);
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+}
+.spec-cell__delta--up { color: var(--color-success); }
+.spec-cell__delta--down { color: var(--color-danger); }
+a.spec-cell { text-decoration: none; transition: background 0.15s var(--ease-smooth); }
+a.spec-cell:hover { background: var(--color-surface-2); }
+
+@media (max-width: 640px) {
+  .spec-strip { grid-auto-flow: row; grid-template-columns: repeat(2, 1fr); }
+  .spec-cell:nth-child(odd) { border-left: 0; }
+  .spec-cell:nth-child(n + 3) { border-top: 1px solid var(--color-border); }
+}
+
+/* ─── SpecGutter — the live synthesis machine as label/value pairs ─────────── */
+
+.spec-gutter {
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: var(--space-5);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+}
+.spec-gutter__title {
+  font-size: var(--text-caps);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-3);
+}
+.spec-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+.spec-row__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-caps);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+.spec-row__value {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-body);
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 1024px) {
+  /* When the gutter folds out of the grid it should not occupy flow. */
+  .app-shell .spec-gutter,
+  .app-shell--collapsed .spec-gutter { display: none; }
+}
+
+/* ─── EvidenceTree — the universal recursive ledger (agent-plan promoted) ──── */
+
+.evidence-tree { position: relative; }
+.tree-node { position: relative; }
+/* Children are indented by one shared --tree-indent at every level. */
+.tree-node__children {
+  position: relative;
+  margin-left: var(--tree-indent);
+}
+/* The dashed spine for a node's children, aligned to the disc center column. */
+.tree-node__children::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--connector-left);
+  border-left: 1px dashed var(--color-border-strong);
+}
+.tree-node__children--active::before {
+  border-left-color: var(--color-accent);
+  border-left-style: solid;
+}
+.tree-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+  min-height: calc(var(--baseline) * 5);
+  border-bottom: 1px solid var(--color-border);
+  cursor: default;
+}
+.tree-row--button { cursor: pointer; }
+.tree-row__lead {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.tree-row__chevron {
+  display: inline-flex;
+  color: var(--color-text-tertiary);
+  transition: transform 0.2s var(--ease-spring);
+  flex-shrink: 0;
+}
+.tree-row--open > .tree-row__lead > .tree-row__chevron { transform: rotate(90deg); }
+.tree-row__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--text-body);
+  color: var(--color-text-primary);
+}
+/* Hierarchy by WEIGHT, not size: parent/cluster 600, active 500, leaf 400. */
+.tree-row--parent > .tree-row__lead > .tree-row__label { font-weight: 600; }
+.tree-row--active > .tree-row__lead > .tree-row__label { font-weight: 500; }
+.tree-row__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+/* Amber left-tick on hover — never a fill. */
+.tree-row--button:hover { box-shadow: inset 2px 0 0 var(--color-accent); }
+/* Citation-targeted row lights its spine amber + scrolls into view. */
+.tree-row.is-cited { box-shadow: inset 2px 0 0 var(--color-accent); }
+
+/* Spring height/opacity reveal for children (gated by reduced-motion). */
+.tree-node__children {
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tree-row__chevron { transition: none; }
+}
+
+/* ─── Scorecard — falsification spec read against printed thresholds ───────── */
+
+.scorecard {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: var(--space-4);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.scorecard__cell { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.scorecard__num {
+  font-size: var(--text-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.scorecard__num--ok { color: var(--color-success); }
+.scorecard__num--bad { color: var(--color-danger); }
+.scorecard__label {
+  font-size: var(--text-caps);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+/* Faint reference mark printing the threshold (>=5, <=1, >=2). */
+.scorecard__threshold { color: var(--color-text-quaternary); }
+
+/* ─── StatusRegister — typeset register (built on .register) ───────────────── */
+
+.register {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-body);
+  font-variant-numeric: tabular-nums;
+}
+.register thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  font-size: var(--text-caps);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-tertiary);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+.register tbody td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  vertical-align: middle;
+}
+.register tbody tr:last-child td { border-bottom: 0; }
+/* Amber left-tick on hover — never a fill, never zebra. */
+.register tbody tr { transition: box-shadow 0.12s var(--ease-smooth); }
+.register tbody tr:hover { box-shadow: inset 2px 0 0 var(--color-accent); }
+.register__id { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+/* Active sort column header carries the one amber underline. */
+.register__sort {
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.register__sort--active { border-bottom-color: var(--color-accent); color: var(--color-text-primary); }
+
+/* ─── LivePhaseBar — the one licensed live amber band ──────────────────────── */
+
+.live-phase-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-body);
+}
+.live-phase-bar__track {
+  position: relative;
+  flex: 1;
+  height: 1px;
+  background: var(--color-border-strong);
+}
+.live-phase-bar__fill {
+  position: absolute;
+  left: 0;
+  top: -1px;
+  height: 3px;
+  background: var(--color-accent);
+  transition: width 0.3s var(--ease-smooth);
+}
+.live-phase-bar__count { color: var(--color-text-secondary); }
+
+/* ─── Dev-only baseline grid overlay (?grid) ──────────────────────────────── */
+
+.grid-overlay-on .measure-column,
+.grid-overlay-on .app-work {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-accent) 12%, transparent) 0,
+    color-mix(in srgb, var(--color-accent) 12%, transparent) 1px,
+    transparent 1px,
+    transparent var(--baseline)
+  );
+}
 
 /* ─── Pill ────────────────────────────────────────────────────────────────── */
 
@@ -1425,9 +2016,51 @@
   border-left: 2px solid var(--color-accent-muted);
   padding: var(--space-1) 0 var(--space-1) var(--space-4);
   margin-top: var(--space-3);
-  font-size: var(--text-body-sm);
+  max-width: var(--measure-width);
+  font-size: var(--text-body);
+  line-height: 1.571;
   color: var(--color-text-secondary);
   font-style: italic;
+}
+
+/* Conversation bubble variants for the AI-interview / RAG pattern. */
+.quote--participant,
+.quote--interviewer {
+  border-left: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-style: normal;
+  color: var(--color-text-primary);
+}
+.quote--participant {
+  background: var(--color-surface-2);
+}
+.quote--interviewer {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+/* Square citation chip — [ANON-xxxx · u#]. On hover, the cited row lights up. */
+.cite-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.0625rem 0.3125rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-caps);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s var(--ease-smooth), color 0.15s var(--ease-smooth);
+}
+.cite-chip:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 /* ─── Section fade ────────────────────────────────────────────────────────── */
@@ -1478,11 +2111,10 @@
   left: 0;
   z-index: 30;
   width: var(--sidebar-w);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 96%, transparent) 0%, var(--color-bg) 100%);
-  border-right: 1px solid var(--color-border-subtle);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  /* The journal's bound spine: a flat surface with a single hairline right
+     rule. No frosted gradient, no blur — depth is the rule, not a wash. */
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
 }
 
 .sidebar__inner {
@@ -1494,7 +2126,6 @@
 
 .sidebar__brand {
   padding: var(--space-5) var(--space-5) var(--space-4);
-  border-bottom: 1px solid var(--color-border-subtle);
   flex-shrink: 0;
 }
 .sidebar__brand-mark {
@@ -1516,8 +2147,10 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--color-border-subtle);
+  margin: 0 var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-ui);
   flex-shrink: 0;
   min-width: 0;
 }
@@ -1538,26 +2171,30 @@
   text-overflow: ellipsis;
 }
 .sidebar__org-role {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  font-size: var(--text-eyebrow);
+  font-weight: 600;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--color-text-tertiary);
 }
 
+/* Demoted from the amber gradient chip to a flat surface step carrying mono
+   initials — the rail holds exactly one accent (the LIVE folio), nothing else. */
 .sidebar__avatar {
   width: 32px;
   height: 32px;
   border-radius: var(--radius-ui);
-  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-strong) 100%);
-  color: #1a1100;
-  font-size: 13px;
-  font-weight: 700;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(245, 166, 35, 0.18);
 }
 .sidebar__avatar--sm {
   width: 24px;
@@ -1582,15 +2219,25 @@
   flex-direction: column;
   gap: 2px;
 }
+/* Section folio: a tiny tracked-caps label sitting on a leading hairline so
+   each nav group reads as a ruled subsection of the bound spine. */
 .sidebar__section-label {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   padding: 0 var(--space-3);
   margin-bottom: var(--space-2);
-  font-size: 10px;
-  font-weight: 700;
+  font-size: var(--text-eyebrow);
+  font-weight: 600;
   letter-spacing: 0.10em;
   text-transform: uppercase;
-  color: var(--color-text-quaternary);
+  color: var(--color-text-tertiary);
+}
+.sidebar__section-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border-subtle);
 }
 
 .sidebar__item {
@@ -1616,23 +2263,20 @@
   background: var(--color-surface-2);
   color: var(--color-text-primary);
 }
+/* Active item — identical treatment in BOTH themes: a flat surface-3 fill plus
+   a single 2px inset-left accent tick. The tick is the ONLY amber in the rail;
+   no gradient, no border, no shadow. Depth is the surface step alone. */
 .sidebar__item.is-active {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 18%, var(--color-surface-2)) 0%, var(--color-surface-2) 100%);
-  color: var(--color-text-primary);
-  border-color: var(--color-accent-muted);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 6px 14px rgba(0, 0, 0, 0.25);
-}
-[data-theme="light"] .sidebar__item.is-active {
   background: var(--color-surface-3);
   color: var(--color-text-primary);
   border-color: transparent;
-  box-shadow: none;
+  box-shadow: inset 2px 0 0 var(--color-accent);
+  font-weight: 600;
 }
-[data-theme="light"] .sidebar__item.is-active .sidebar__item-icon { color: var(--color-text-primary); }
-.sidebar__item.is-active .sidebar__item-icon { color: var(--color-accent); }
+.sidebar__item.is-active .sidebar__item-icon { color: var(--color-text-primary); }
 .sidebar__item.is-active .sidebar__item-badge {
-  background: var(--color-accent-muted);
-  color: var(--color-accent-strong);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
 }
 
 .sidebar__item-icon {
@@ -1653,18 +2297,21 @@
   min-width: 0;
 }
 
+/* Square mono data-chip — no decorative amber. Tint-only on a surface step. */
 .sidebar__item-badge {
   display: inline-flex;
   align-items: center;
-  height: 18px;
-  padding: 0 6px;
+  height: 16px;
+  padding: 0 5px;
   border-radius: var(--radius-sm);
-  background: var(--color-accent-soft);
-  color: var(--color-accent-strong);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-2);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   flex-shrink: 0;
 }
 
@@ -1674,6 +2321,86 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex-shrink: 0;
+}
+
+/* ─── Rail spine tail: the persistent LIVE folio + ⌘K command affordance ──── */
+
+/* Pinned at the very foot of the rail — ties the bound spine to the realtime
+   plane. A single pulsing status disc + a mono count of running interviews;
+   this is the ONE place amber lives in the rail besides the active tick. */
+.sidebar__live {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-2) var(--space-3) 0;
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--color-border-subtle);
+}
+.sidebar[data-state="icon"] .sidebar__live {
+  justify-content: center;
+  margin-inline: 0;
+  padding-inline: 0;
+}
+.sidebar__live-label {
+  font-size: var(--text-eyebrow);
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  line-height: 1.2;
+  flex: 1;
+  min-width: 0;
+}
+.sidebar__live-count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-mono);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+.sidebar__live[data-idle="true"] .sidebar__live-count {
+  color: var(--color-text-quaternary);
+}
+
+/* ⌘K command / RAG affordance anchored near the live folio. */
+.sidebar__command {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  height: 32px;
+  padding: 0 var(--space-3);
+  margin-bottom: var(--space-1);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-ui);
+  background: var(--color-surface-2);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.12s var(--ease-smooth), color 0.12s var(--ease-smooth), background-color 0.12s var(--ease-smooth);
+}
+.sidebar__command:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+}
+.sidebar[data-state="icon"] .sidebar__command { justify-content: center; padding-inline: 0; }
+.sidebar__command-label { flex: 1; min-width: 0; }
+.sidebar__command-kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 1px 5px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
   flex-shrink: 0;
 }
 

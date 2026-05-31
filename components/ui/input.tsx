@@ -2,7 +2,15 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+function Input({
+  className,
+  type,
+  mono = false,
+  ...props
+}: React.ComponentProps<"input"> & { mono?: boolean }) {
+  // Numeric / ID / token fields opt into JetBrains Mono + tabular-nums so the
+  // figures align on the same machine-identity register as every data surface.
+  const isNumeric = type === "number"
   return (
     <input
       type={type}
@@ -14,6 +22,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
         // Focus = single amber signal: tight 2px ring + accent border.
         "focus-visible:border-accent focus-visible:shadow-[var(--shadow-focus)]",
         "aria-invalid:border-danger aria-invalid:shadow-none",
+        (mono || isNumeric) && "font-mono tabular-nums",
         className
       )}
       {...props}

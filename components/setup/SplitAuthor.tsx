@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StatusDisc } from "@/components/ui/status-disc";
 import { clientApi } from "@/lib/client-api";
 import type {
   CampaignDraft,
@@ -212,12 +212,14 @@ export function SplitAuthor({
         <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto pr-0.5">
           <Catalog draft={draft} onPatch={onPatch} recentlyTouched={touched} />
         </div>
-        <div className="flex shrink-0 items-center justify-between gap-4 rounded-card border border-line bg-surface px-4 py-3">
+        {/* Launch bar — the spine checklist + the near-black primary CTA. */}
+        <div className="flex shrink-0 flex-col gap-3 rounded-card border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <ChecklistSummary reasons={reasons} />
           <Button
             onClick={onReview}
             disabled={reasons.length > 0 || launching}
             size="lg"
+            className="shrink-0"
           >
             {tReview("reviewCta")}
           </Button>
@@ -227,22 +229,27 @@ export function SplitAuthor({
   );
 }
 
+/**
+ * Launch readiness as a status-spine register — every blocking gate is a row
+ * on the shared spine (idle disc + gate copy), collapsing to one "ready" line
+ * with the lone done disc when the draft validates.
+ */
 function ChecklistSummary({ reasons }: { reasons: string[] }) {
   const t = useTranslations("setup.review");
   if (reasons.length === 0) {
     return (
-      <span className="flex items-center gap-2 text-sm font-medium text-success">
-        <CheckCircle2 className="size-4 shrink-0" aria-hidden />
+      <span className="flex items-center gap-2 text-[13px] font-medium text-fg">
+        <StatusDisc state="done" size="sm" />
         {t("ready")}
       </span>
     );
   }
   return (
-    <ul className="flex flex-col gap-1 text-xs text-fg-muted">
+    <ul className="flex flex-col gap-1.5">
       {reasons.map((r) => (
-        <li key={r} className="flex items-start gap-2">
-          <span className="status-disc status-disc--sm status-disc--idle mt-1 shrink-0" />
-          <span>{t(`gates.${r}`)}</span>
+        <li key={r} className="flex items-center gap-2.5">
+          <StatusDisc state="idle" size="sm" />
+          <span className="text-[13px] text-fg-muted">{t(`gates.${r}`)}</span>
         </li>
       ))}
     </ul>

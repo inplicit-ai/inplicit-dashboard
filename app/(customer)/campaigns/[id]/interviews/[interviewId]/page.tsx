@@ -4,7 +4,10 @@ import { makeApi, type InterviewDetail } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ErrorState";
-import { PageHeader, StatusBadge } from "@/components/PageChrome";
+import { StatusBadge } from "@/components/PageChrome";
+import { StatusDisc, toStatusState } from "@/components/ui/status-disc";
+import { SpecBlock, type SpecRow } from "@/components/ui/spec-block";
+import { InstrumentBand, type InstrumentCell } from "@/components/ui/instrument-band";
 import { InterviewDetailView } from "@/components/InterviewDetailView";
 
 export default async function InterviewDetailPage({
@@ -37,7 +40,7 @@ export default async function InterviewDetailPage({
             asChild
             variant="link"
             size="sm"
-            className="mb-2 px-0 text-fg-muted"
+            className="mb-4 px-0 text-fg-muted"
           >
             <Link href={`/campaigns/${campaignId}/interviews`}>
               <ArrowLeft className="h-3.5 w-3.5" />
@@ -45,19 +48,21 @@ export default async function InterviewDetailPage({
             </Link>
           </Button>
 
-          <PageHeader
-            eyebrow={`Interview · ${detail.interview.anon_id}`}
-            title="Detailansicht"
-            meta={
-              <MetaLine
-                department={detail.interview.department}
-                mode={detail.interview.mode}
-                started={detail.interview.started_at}
-                ended={detail.interview.ended_at}
-                duration={detail.interview.duration_seconds}
-              />
-            }
-            actions={
+          {/* ─── Ledger masthead: two tracks ──────────────────────────────── */}
+          <header className="mb-8 grid gap-8 lg:grid-cols-[minmax(220px,260px)_1fr]">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-start gap-3">
+                <span className="flex w-7 shrink-0 items-center justify-center pt-1.5">
+                  <StatusDisc state={toStatusState(detail.interview.status)} size="lg" />
+                </span>
+                <div className="flex flex-col gap-1">
+                  <span className="eyebrow">Interview</span>
+                  <h1 className="title font-mono tabular-nums tracking-[-0.01em]">
+                    {detail.interview.anon_id}
+                  </h1>
+                </div>
+              </div>
+              <SpecBlock rows={mastheadRows(detail.interview)} />
               <div className="inline-flex flex-wrap gap-2">
                 <StatusBadge status={detail.interview.status} />
                 {detail.interview.processing_status &&
@@ -65,52 +70,44 @@ export default async function InterviewDetailPage({
                     <StatusBadge status={detail.interview.processing_status} />
                   )}
               </div>
-            }
-          />
+            </div>
 
-          <div className="surface-bleed">
-            <InterviewDetailView
-              utterances={detail.utterances}
-              insights={detail.insights}
-              processingStatus={detail.interview.processing_status ?? undefined}
-            />
-          </div>
+            <div className="min-w-0">
+              <InstrumentBand cells={instrumentCells(detail)} />
+            </div>
+          </header>
+
+          <InterviewDetailView
+            utterances={detail.utterances}
+            insights={detail.insights}
+            processingStatus={detail.interview.processing_status ?? undefined}
+          />
         </>
       )}
     </>
   );
 }
 
-function MetaLine({
-  department,
-  mode,
-  started,
-  ended,
-  duration,
-}: {
-  department?: string;
-  mode: string;
-  started?: string;
-  ended?: string;
-  duration?: number;
-}) {
-  const parts: Array<{ text: string; mono?: boolean }> = [];
-  if (department) parts.push({ text: department });
-  parts.push({ text: mode === "voice" ? "Voice" : "Chat" });
-  if (started) parts.push({ text: `Start ${formatDate(started)}`, mono: true });
-  if (ended) parts.push({ text: `Ende ${formatDate(ended)}`, mono: true });
-  if (duration) parts.push({ text: formatDuration(duration), mono: true });
+function mastheadRows(iv: InterviewDetail["interview"]): SpecRow[] {
+  const rows: SpecRow[] = [];
+  if (iv.department) rows.push({ label: "Abteilung", value: iv.department });
+  rows.push({ label: "Modus", value: iv.mode === "voice" ? "Voice" : "Chat" });
+  if (iv.started_at) rows.push({ label: "Start", value: formatDate(iv.started_at) });
+  if (iv.ended_at) rows.push({ label: "Ende", value: formatDate(iv.ended_at) });
+  return rows;
+}
 
-  return (
-    <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-fg-muted">
-      {parts.map((p, i) => (
-        <span key={i} className="inline-flex items-center gap-3">
-          {i > 0 && <span aria-hidden className="text-fg-subtle">·</span>}
-          <span className={p.mono ? "font-mono tabular-nums" : undefined}>{p.text}</span>
-        </span>
-      ))}
-    </span>
-  );
+function instrumentCells(detail: InterviewDetail): InstrumentCell[] {
+  const iv = detail.interview;
+  return [
+    {
+      label: "Dauer",
+      value: iv.duration_seconds != null ? formatDuration(iv.duration_seconds) : "—",
+    },
+    { label: "Wortbeiträge", value: detail.utterances.length },
+    { label: "Insights", value: detail.insights.length },
+    { label: "Modus", value: iv.mode === "voice" ? "VOICE" : "CHAT" },
+  ];
 }
 
 function formatDate(iso: string): string {
@@ -127,5 +124,5 @@ function formatDate(iso: string): string {
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
-  return `${m} min ${s.toString().padStart(2, "0")}s`;
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }

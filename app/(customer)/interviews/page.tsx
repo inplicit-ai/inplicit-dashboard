@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { ArrowRight, MessagesSquare } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { makeApi, type OrgInterviewRow, type OrgStats } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
 import { ErrorState } from "@/components/ErrorState";
-import { PageHeader, StatusBadge } from "@/components/PageChrome";
-import { StatsCard, StatsRow } from "@/components/StatsCard";
+import { Folio } from "@/components/ui/folio";
+import { InstrumentBand } from "@/components/ui/instrument-band";
+import { Ledger } from "@/components/ui/ledger";
+import { LedgerRow } from "@/components/ui/ledger-row";
+import { DataChip } from "@/components/ui/data-chip";
+import { SpecBlock } from "@/components/ui/spec-block";
+import { StatusDisc, toStatusState } from "@/components/ui/status-disc";
 
 function fmtDuration(seconds?: number): string {
   if (!seconds || seconds <= 0) return "—";
@@ -30,112 +35,106 @@ export default async function OrgInterviewsPage() {
 
   return (
     <>
-      <PageHeader
-        eyebrow={t("eyebrow")}
-        title={t("title")}
-        meta={t("count", { count: rows.length })}
-      />
+      <Folio index="§" label={t("title")} count={rows.length} />
 
       {error && (
-        <div className="mb-6">
+        <div className="mt-6">
           <ErrorState error={error} />
         </div>
       )}
 
       {stats && (
-        <StatsRow>
-          <StatsCard label={t("statCampaigns")} value={stats.campaigns} />
-          <StatsCard label={t("statTotal")} value={stats.interviews_total} />
-          <StatsCard
-            label={t("statCompleted")}
-            value={stats.interviews_completed}
+        <div className="mt-6">
+          <InstrumentBand
+            cells={[
+              { label: t("statCampaigns"), value: stats.campaigns },
+              { label: t("statTotal"), value: stats.interviews_total },
+              { label: t("statCompleted"), value: stats.interviews_completed },
+              { label: t("statInsights"), value: stats.insights },
+              { label: t("statHypotheses"), value: stats.hypotheses },
+            ]}
           />
-          <StatsCard label={t("statInsights")} value={stats.insights} />
-          <StatsCard label={t("statHypotheses")} value={stats.hypotheses} />
-        </StatsRow>
+        </div>
       )}
 
       {rows.length === 0 && !error ? (
-        <div className="card card--flush">
-          <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-            <div className="grid size-11 place-items-center rounded-full bg-surface-2 text-fg-muted">
-              <MessagesSquare className="h-5 w-5" />
-            </div>
-            <div className="space-y-1">
-              <p className="subtitle text-fg">
+        <div className="mt-8 max-w-[68ch] overflow-hidden rounded-card border border-dashed border-line-strong bg-surface">
+          <div className="flex flex-col gap-4 px-8 py-12">
+            <span className="flex items-center gap-2.5">
+              <StatusDisc state="idle" />
+              <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
                 {t("emptyTitle")}
-              </p>
-              <p className="body-sm text-fg-muted">{t("emptyBody")}</p>
-            </div>
+              </span>
+            </span>
+            <p className="body-lg max-w-[52ch] text-fg-muted">{t("emptyBody")}</p>
           </div>
         </div>
       ) : (
         rows.length > 0 && (
-          <div className="surface-bleed card card--flush">
-            <div className="w-full overflow-x-auto">
-              <table className="table min-w-[820px]">
-                <thead>
-                  <tr>
-                    <th>{t("colCampaign")}</th>
-                    <th>{t("colAnon")}</th>
-                    <th>{t("colStatus")}</th>
-                    <th>{t("colDuration")}</th>
-                    <th>{t("colLanguage")}</th>
-                    <th>{t("colDate")}</th>
-                    <th className="text-right" aria-label="" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((i) => {
-                    const href = `/campaigns/${i.campaign_id}/interviews/${i.id}`;
-                    return (
-                      <tr key={i.id} className="group">
-                        <td className="font-medium text-fg">
-                          <Link
-                            href={`/campaigns/${i.campaign_id}`}
-                            className="hover:text-accent"
-                          >
-                            {i.campaign_label}
-                          </Link>
-                        </td>
-                        <td>
-                          <Link
-                            href={href}
-                            className="font-mono text-caption font-medium text-fg hover:text-accent"
-                          >
-                            {i.anon_id}
-                          </Link>
-                        </td>
-                        <td>
-                          <StatusBadge status={i.status} />
-                        </td>
-                        <td className="font-mono text-fg-muted tabular-nums">
-                          {fmtDuration(i.duration_seconds)}
-                        </td>
-                        <td className="font-mono uppercase tabular-nums text-fg-muted">
-                          {i.language ?? "—"}
-                        </td>
-                        <td className="font-mono text-caption tabular-nums text-fg-muted">
-                          {i.created_at
+          <Ledger framed className="mt-8">
+            {rows.map((i) => {
+              const href = `/campaigns/${i.campaign_id}/interviews/${i.id}`;
+              return (
+                <LedgerRow
+                  key={i.id}
+                  status={toStatusState(i.status)}
+                  index={i.anon_id}
+                  title={i.campaign_label}
+                  expandable
+                  metric={
+                    <span className="font-mono tabular-nums text-fg-muted">
+                      {fmtDuration(i.duration_seconds)}
+                    </span>
+                  }
+                >
+                  <div className="flex flex-col gap-3 py-1">
+                    <div className="cluster">
+                      <DataChip tone="neutral">{i.status}</DataChip>
+                      <DataChip mono>{(i.language ?? "—").toUpperCase()}</DataChip>
+                      <DataChip mono>{fmtDuration(i.duration_seconds)}</DataChip>
+                    </div>
+                    <SpecBlock
+                      rows={[
+                        { label: t("colAnon"), value: i.anon_id },
+                        { label: t("colStatus"), value: i.status },
+                        {
+                          label: t("colDuration"),
+                          value: fmtDuration(i.duration_seconds),
+                        },
+                        {
+                          label: t("colLanguage"),
+                          value: (i.language ?? "—").toUpperCase(),
+                        },
+                        {
+                          label: t("colDate"),
+                          value: i.created_at
                             ? new Date(i.created_at).toLocaleString()
-                            : "—"}
-                        </td>
-                        <td className="text-right">
-                          <Link
-                            href={href}
-                            aria-label={t("open", { anon: i.anon_id })}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-full text-fg-subtle transition-colors group-hover:text-fg hover:bg-surface-2"
-                          >
-                            <ArrowRight className="h-4 w-4" />
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                            : "—",
+                        },
+                      ]}
+                    />
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                      <Link
+                        href={href}
+                        aria-label={t("open", { anon: i.anon_id })}
+                        className="inline-flex items-center gap-1.5 text-meta text-accent-strong hover:underline"
+                      >
+                        {t("colAnon")} {i.anon_id}
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                      <Link
+                        href={`/campaigns/${i.campaign_id}`}
+                        className="inline-flex items-center gap-1.5 text-meta text-fg-muted hover:text-fg"
+                      >
+                        {i.campaign_label}
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                </LedgerRow>
+              );
+            })}
+          </Ledger>
         )
       )}
     </>

@@ -1,6 +1,8 @@
 "use client";
 
-import type { AgentStatus, ConnState, Latency } from "./types";
+import { StatusDisc, type StatusState } from "@/components/ui/status-disc";
+import { DataChip } from "@/components/ui/data-chip";
+import type { AgentStatus, ConnState, Latency, Phase } from "./types";
 import type { Lang } from "./copy";
 import { roomCopy } from "./copy";
 
@@ -9,10 +11,27 @@ interface Props {
   agentStatus: AgentStatus;
   conn: ConnState;
   latency: Latency;
+  phase?: Phase;
 }
 
-/** Agent-status pill + latency badge + connection dot (doc 04 §5.3). */
-export function StatusHud({ lang, agentStatus, conn, latency }: Props) {
+const PHASE_LABEL: Record<Phase, Record<Lang, string>> = {
+  open: { de: "PHASE 1 · OFFEN", en: "PHASE 1 · OPEN", fr: "PHASE 1 · OUVERT", es: "PHASE 1 · ABIERTO" },
+  validation: {
+    de: "PHASE 2 · VALIDIERUNG",
+    en: "PHASE 2 · VALIDATION",
+    fr: "PHASE 2 · VALIDATION",
+    es: "PHASE 2 · VALIDACIÓN",
+  },
+};
+
+/**
+ * StatusHud — the live state on a tiny spine (manifesto: interview-experience).
+ *
+ * One canonical amber pulse: a StatusDisc(live) while listening + the status
+ * word, a phase DataChip, then a monochrome connection/latency readout. Amber
+ * never appears except on the single live disc.
+ */
+export function StatusHud({ lang, agentStatus, conn, latency, phase }: Props) {
   const c = roomCopy(lang);
   const rt = latency.round_trip_ms;
   const latColor =
@@ -24,27 +43,23 @@ export function StatusHud({ lang, agentStatus, conn, latency }: Props) {
           ? "var(--color-warning)"
           : "var(--color-danger)";
 
+  // Live (amber pulse) only while the agent is actively listening for the
+  // participant. Thinking / speaking are monochrome — amber means the floor is
+  // the participant's.
+  const discState: StatusState = agentStatus === "listening" ? "live" : "idle";
+
   return (
     <div className="iv-hud">
-      <span className={`iv-pill iv-pill--${agentStatus}`}>
-        {agentStatus === "thinking" ? (
-          <span className="iv-dots" aria-hidden>
-            <i />
-            <i />
-            <i />
-          </span>
-        ) : (
-          <span
-            className={`status-disc ${
-              agentStatus === "listening"
-                ? "status-disc--live status-disc--pulse"
-                : "status-disc--idle"
-            }`}
-            aria-hidden
-          />
-        )}
-        {c.status[agentStatus]}
+      <span className="iv-hud__state">
+        <StatusDisc state={discState} size="sm" />
+        <span className="iv-hud__state-label">{c.status[agentStatus]}</span>
       </span>
+
+      {phase && (
+        <DataChip tone="neutral">{PHASE_LABEL[phase][lang]}</DataChip>
+      )}
+
+      <span className="iv-hud__rule" aria-hidden />
 
       <span className="iv-hud__conn">
         <span className={`iv-conndot iv-conndot--${connClass(conn)}`} aria-hidden />
@@ -60,22 +75,16 @@ export function StatusHud({ lang, agentStatus, conn, latency }: Props) {
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        .iv-hud { display: inline-flex; align-items: center; gap: var(--space-3); font-size: var(--text-meta); color: var(--color-text-secondary); }
-        .iv-pill { display: inline-flex; align-items: center; gap: var(--space-2); padding: 4px var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-surface-2); }
-        .iv-pill--listening { color: var(--color-accent); border-color: var(--color-accent-muted); background: var(--color-accent-soft); }
-        .iv-pill--speaking { color: var(--color-success); }
-        .iv-dots { display: inline-flex; gap: 3px; }
-        .iv-dots i { width: 4px; height: 4px; border-radius: 50%; background: var(--color-accent); animation: iv-bounce 1.1s var(--ease-smooth) infinite; }
-        .iv-dots i:nth-child(2) { animation-delay: 0.15s; }
-        .iv-dots i:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes iv-bounce { 0%, 60%, 100% { opacity: 0.3; } 30% { opacity: 1; } }
+        .iv-hud { display: inline-flex; align-items: center; gap: var(--space-3); font-size: var(--text-meta); color: var(--color-text-tertiary); }
+        .iv-hud__state { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-text-secondary); }
+        .iv-hud__state-label { font-size: var(--text-eyebrow); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+        .iv-hud__rule { width: 1px; height: 14px; background: var(--color-border); }
         .iv-hud__conn { display: inline-flex; align-items: center; gap: var(--space-2); }
         .iv-conndot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
         .iv-conndot--ok { background: var(--color-success); }
         .iv-conndot--pending { background: var(--color-warning); }
         .iv-conndot--err { background: var(--color-danger); }
         .iv-hud__lat { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
-        @media (prefers-reduced-motion: reduce) { .iv-dots i { animation: none; } }
       `,
         }}
       />

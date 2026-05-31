@@ -48,7 +48,7 @@ export function OrgAvatar({
     <span
       aria-hidden="true"
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-ui border border-line bg-surface-2 text-[13px] font-bold text-fg",
+        "inline-flex shrink-0 items-center justify-center rounded-ui border border-line bg-surface-2 font-mono text-[12px] font-semibold tabular-nums text-fg-muted",
         className,
       )}
       style={dim}

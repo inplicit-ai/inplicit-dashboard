@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { ApiError, makeApi } from "@/lib/api";
 import { requireAdmin, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { PageHeader } from "@/components/PageChrome";
+import { StatusDisc } from "@/components/ui/status-disc";
+import { SpecBlock } from "@/components/ui/spec-block";
 
 interface SearchParams {
   error?: string;
@@ -63,40 +64,59 @@ export default async function NewStaffUserPage({
   }
 
   return (
-    <div className="mx-auto max-w-[540px]">
-      <Button asChild variant="link" size="sm" className="mb-4 px-0 text-fg-muted">
-        <Link href="/staff/users">
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Team
-        </Link>
-      </Button>
+    <div className="grid gap-8 lg:grid-cols-[minmax(220px,260px)_1fr]">
+      {/* ── Left rail: intent + spec ──────────────────────────────────────── */}
+      <aside className="flex flex-col gap-6 lg:sticky lg:top-6 lg:self-start">
+        <Button asChild variant="link" size="sm" className="px-0 text-fg-muted">
+          <Link href="/staff/users">
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Team
+          </Link>
+        </Button>
 
-      <PageHeader
-        eyebrow="Inplicit Staff"
-        title="Staff hinzufügen"
-        muted="Magic-Link Login"
-      />
-
-      {sp.error && (
-        <div
-          role="alert"
-          className="mb-6 flex items-start gap-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-meta text-danger"
-        >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          <p className="leading-snug">{sp.error}</p>
+        <div>
+          <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
+            Inplicit Staff
+          </span>
+          <h1 className="mt-2 text-2xl font-semibold leading-tight tracking-[-0.02em] text-fg">
+            Staff hinzufügen
+          </h1>
+          <p className="mt-2 body-sm text-fg-muted">Magic-Link Login</p>
         </div>
-      )}
 
-      <Card className="rounded-card border border-line bg-surface p-8">
-        <form action={createStaff} className="flex flex-col gap-5">
-          <p className="body-sm leading-relaxed text-fg-muted">
-            Neuer Staff-User bekommt einen Magic-Link per Email (15 Min gültig).
-            Die Person loggt sich damit ein und nutzt für jeden weiteren Login
-            ebenfalls den Magic-Link-Flow. Passwort gibt&apos;s nur für dich als
-            Admin.
-          </p>
+        <SpecBlock
+          rows={[
+            { label: "Login", value: "Magic-Link" },
+            { label: "Gültig", value: "15 min" },
+            { label: "Passwort", value: "nur Admin" },
+          ]}
+        />
+      </aside>
 
-          <Field id="staff-name" label="Name" required>
+      {/* ── Right track: the form ─────────────────────────────────────────── */}
+      <div className="min-w-0 max-w-[540px]">
+        {sp.error && (
+          <div
+            role="alert"
+            className="mb-6 grid grid-cols-[20px_1fr] items-start gap-x-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-meta text-danger"
+          >
+            <span className="flex justify-center pt-0.5">
+              <StatusDisc state="error" size="sm" />
+            </span>
+            <p className="leading-snug">{sp.error}</p>
+          </div>
+        )}
+
+        <Card className="rounded-card border border-line bg-surface p-8">
+          <form action={createStaff} className="flex flex-col gap-5">
+            <p className="body-sm leading-relaxed text-fg-muted">
+              Neuer Staff-User bekommt einen Magic-Link per Email (15 Min
+              gültig). Die Person loggt sich damit ein und nutzt für jeden
+              weiteren Login ebenfalls den Magic-Link-Flow. Passwort gibt&apos;s
+              nur für dich als Admin.
+            </p>
+
+            <Field id="staff-name" label="Name" required>
             <Input
               id="staff-name"
               name="name"
@@ -138,11 +158,12 @@ export default async function NewStaffUserPage({
             </span>
           </label>
 
-          <Button type="submit" size="lg" className="w-full">
-            Staff anlegen
-          </Button>
-        </form>
-      </Card>
+            <Button type="submit" size="lg" className="w-full">
+              Staff anlegen
+            </Button>
+          </form>
+        </Card>
+      </div>
     </div>
   );
 }

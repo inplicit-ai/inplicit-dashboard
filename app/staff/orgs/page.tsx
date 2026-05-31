@@ -1,12 +1,16 @@
 import Link from "next/link";
-import { ArrowRight, Building2, Plus } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { makeApi, type Organization } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/ErrorState";
-import { OrgAvatar } from "@/components/OrgAvatar";
-import { PageHeader, StatusBadge } from "@/components/PageChrome";
+import { Folio } from "@/components/ui/folio";
+import { InstrumentBand } from "@/components/ui/instrument-band";
+import { Ledger } from "@/components/ui/ledger";
+import { LedgerRow } from "@/components/ui/ledger-row";
+import { DataChip } from "@/components/ui/data-chip";
+import { StatusDisc, toStatusState } from "@/components/ui/status-disc";
+import { SpecBlock } from "@/components/ui/spec-block";
 
 export default async function StaffOrgsPage() {
   const api = makeApi(await requestCookie());
@@ -18,13 +22,16 @@ export default async function StaffOrgsPage() {
     error = e;
   }
 
+  const active = orgs.filter((o) => o.status === "ACTIVE").length;
+  const suspended = orgs.filter((o) => o.status === "SUSPENDED").length;
+
   return (
     <>
-      <PageHeader
-        eyebrow="Inplicit Staff"
-        title="Organisationen"
-        muted={`${orgs.length} aktiv`}
-        actions={
+      <Folio
+        index="§"
+        label="Organisationen"
+        count={orgs.length}
+        action={
           <Button asChild size="sm">
             <Link href="/staff/orgs/new">
               <Plus className="h-4 w-4" />
@@ -35,74 +42,107 @@ export default async function StaffOrgsPage() {
       />
 
       {error && (
-        <div className="mb-6">
+        <div className="mt-6">
           <ErrorState error={error} />
         </div>
       )}
 
+      {orgs.length > 0 && (
+        <div className="mt-6">
+          <InstrumentBand
+            cells={[
+              { label: "Organisationen", value: orgs.length },
+              { label: "Aktiv", value: active },
+              { label: "Suspendiert", value: suspended },
+            ]}
+          />
+        </div>
+      )}
+
       {!error && orgs.length === 0 && (
-        <Card className="rounded-card border border-dashed border-line-strong bg-surface p-10">
-          <div className="flex flex-col items-center justify-center gap-3 text-center">
-            <div className="grid size-11 place-items-center rounded-full bg-accent-soft text-accent">
-              <Building2 className="h-5 w-5" />
-            </div>
-            <div className="space-y-1">
-              <p className="subtitle text-fg">
-                Noch keine Kunden-Organisation.
-              </p>
-              <p className="max-w-[48ch] body-sm text-fg-muted">
-                Lege die erste an. Pro Org genau ein Customer-User, das
-                Inplicit-Team behält Cross-Org-Zugriff.
-              </p>
-            </div>
-            <Button asChild className="mt-2">
+        <div className="mt-6 max-w-[68ch] overflow-hidden rounded-card border border-dashed border-line-strong bg-surface">
+          <div className="flex flex-col gap-4 px-8 py-12">
+            <span className="flex items-center gap-2.5">
+              <StatusDisc state="idle" />
+              <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
+                Keine Organisation auf der Platte
+              </span>
+            </span>
+            <p className="body-lg max-w-[52ch] text-fg-muted">
+              Lege die erste an. Pro Org genau ein Customer-User, das
+              Inplicit-Team behält Cross-Org-Zugriff.
+            </p>
+            <Button asChild variant="outline" size="sm" className="mt-1 self-start">
               <Link href="/staff/orgs/new">
                 <Plus className="h-4 w-4" />
                 Erste Organisation anlegen
               </Link>
             </Button>
           </div>
-        </Card>
+        </div>
       )}
 
       {orgs.length > 0 && (
-        <div className="surface-bleed space-y-3">
+        <Ledger framed className="mt-8">
           {orgs.map((o) => (
-            <Link
+            <LedgerRow
               key={o.id}
-              href={`/staff/orgs/${o.id}`}
-              className="group flex items-center justify-between gap-4 rounded-card border border-line bg-surface p-5 transition-colors hover:border-line-strong hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              status={toStatusState(o.status)}
+              index={o.slug}
+              title={o.name}
+              expandable
+              metric={
+                <Link
+                  href={`/staff/orgs/${o.id}`}
+                  aria-label={`${o.name} öffnen`}
+                  className="inline-flex h-6 items-center gap-1.5 text-meta text-fg-muted transition-colors hover:text-fg"
+                >
+                  Öffnen
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              }
             >
-              <div className="flex min-w-0 items-center gap-4">
-                <OrgAvatar name={o.name} logoUrl={o.logo_url} size={40} />
-                <div className="min-w-0 space-y-1.5">
-                  <p className="truncate body-sm font-medium text-fg">
-                    {o.name}
-                  </p>
-                  <p className="text-caption text-fg-muted">
-                    <span className="font-mono tabular-nums">{o.slug}</span>
-                    {o.industry && <> · {o.industry}</>}{" "}
-                    · <span className="font-mono tabular-nums">{o.default_locale.toUpperCase()}</span>{" "}
-                    · <span className="font-mono tabular-nums">{o.default_interview_length_min} Min</span>
-                    {o.created_at && (
-                      <>
-                        {" "}
-                        · seit{" "}
-                        <span className="font-mono tabular-nums">
-                          {new Date(o.created_at).toLocaleDateString("de-DE")}
-                        </span>
-                      </>
-                    )}
-                  </p>
+              <div className="flex flex-col gap-3 py-1">
+                <div className="cluster">
+                  <DataChip tone="neutral">{o.status}</DataChip>
+                  {o.industry && <DataChip tone="neutral">{o.industry}</DataChip>}
+                  <DataChip mono>{o.default_locale.toUpperCase()}</DataChip>
+                  <DataChip mono>{o.default_interview_length_min} min</DataChip>
                 </div>
+                <SpecBlock
+                  rows={[
+                    { label: "Slug", value: o.slug },
+                    {
+                      label: "Sprache",
+                      value: o.default_locale.toUpperCase(),
+                    },
+                    {
+                      label: "Interviewdauer",
+                      value: `${o.default_interview_length_min} min`,
+                    },
+                    ...(o.created_at
+                      ? [
+                          {
+                            label: "Erstellt",
+                            value: new Date(o.created_at).toLocaleDateString(
+                              "de-DE",
+                            ),
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+                <Link
+                  href={`/staff/orgs/${o.id}`}
+                  className="inline-flex items-center gap-1.5 self-start text-meta text-accent-strong hover:underline"
+                >
+                  Organisation verwalten
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <StatusBadge status={o.status} />
-                <ArrowRight className="h-4 w-4 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-fg" />
-              </div>
-            </Link>
+            </LedgerRow>
           ))}
-        </div>
+        </Ledger>
       )}
     </>
   );

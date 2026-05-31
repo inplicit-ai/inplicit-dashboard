@@ -5,10 +5,17 @@ import { requireUser, requestCookie } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/PageChrome";
 import { ErrorState } from "@/components/ErrorState";
+import { Folio } from "@/components/ui/folio";
+import { Ledger } from "@/components/ui/ledger";
+import { LedgerRow } from "@/components/ui/ledger-row";
+import { InstrumentBand } from "@/components/ui/instrument-band";
+import { SpecBlock } from "@/components/ui/spec-block";
+import { DataChip } from "@/components/ui/data-chip";
 
 // O-9: Digital Twin drill-in (07-digital-twin-ctsim §7). Predicted vs. validated
-// side-by-side + divergence. Predicted = hairline/muted; validated = solid.
-// Everything carries the SIMULATION badge (EU AI Act / honest-AI).
+// rendered as ONE evidence tree on the spine — predicted = needs-evidence disc,
+// validated = verified disc, divergence = the surprise branch. Everything carries
+// the SIMULATION badge (EU AI Act / honest-AI).
 export default async function TwinDetailPage({
   params,
 }: {
@@ -35,6 +42,7 @@ export default async function TwinDetailPage({
   const validated: TwinPain[] = detail.model?.validated_pains ?? [];
   const divergence = detail.model?.divergence ?? [];
   const cold = validated.length === 0;
+  const confidencePct = Math.round(detail.confidence * 100);
 
   return (
     <>
@@ -46,7 +54,7 @@ export default async function TwinDetailPage({
             ? t("coldMeta")
             : t("refinedMeta", {
                 version: detail.version,
-                confidence: Math.round(detail.confidence * 100),
+                confidence: confidencePct,
               })
         }
         actions={
@@ -56,85 +64,183 @@ export default async function TwinDetailPage({
         }
       />
 
-      <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
-        {/* Predicted — hairline / muted (dashed accent = simulated, not yet real). */}
-        <section className="card card--compact card--opportunity flex flex-col gap-5 border-dashed">
-          <header className="flex items-center justify-between gap-3">
-            <span className="label-eyebrow text-accent">{t("predicted")}</span>
-            <span className="text-xs text-fg-subtle">
-              {t("predictedCount", { count: predicted.length })}
-            </span>
-          </header>
-          {predicted.length === 0 ? (
-            <p className="text-base leading-relaxed text-fg-muted">
-              {t("noPredicted")}
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {predicted.map((p, i) => (
-                <li
-                  key={i}
-                  className="flex items-start justify-between gap-3 border-t border-line-subtle pt-3 first:border-t-0 first:pt-0"
-                >
-                  <span className="text-base leading-relaxed text-fg-muted">
-                    {p.pain}
+      {/* Two-track masthead: sticky SpecBlock rail | the evidence-tree track. */}
+      <div className="grid gap-8 lg:grid-cols-[minmax(200px,260px)_1fr]">
+        <aside className="lg:sticky lg:top-6 lg:self-start">
+          <SpecBlock
+            rows={[
+              { label: t("eyebrow"), value: detail.role_name },
+              {
+                label: "Twin",
+                value: (
+                  <span className="font-mono tabular-nums">
+                    v{detail.version}
                   </span>
-                  {typeof p.confidence === "number" && (
-                    <span className="shrink-0 font-mono text-[11px] tabular-nums text-fg-subtle">
-                      {Math.round(p.confidence * 100)}%
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+                ),
+              },
+              {
+                label: t("validated"),
+                value: (
+                  <span className="font-mono tabular-nums">
+                    {validated.length}
+                  </span>
+                ),
+              },
+              {
+                label: t("predicted"),
+                value: (
+                  <span className="font-mono tabular-nums">
+                    {predicted.length}
+                  </span>
+                ),
+              },
+              {
+                label: "Status",
+                value: (
+                  <DataChip tone={cold ? "warning" : "success"} mono>
+                    {cold ? "COLD" : `${confidencePct}%`}
+                  </DataChip>
+                ),
+              },
+            ]}
+          />
+        </aside>
 
-        {/* Validated — solid (real-interview evidence). */}
-        <section className="card card--compact flex flex-col gap-5">
-          <header className="flex items-center justify-between gap-3">
-            <span className="label-eyebrow text-fg">{t("validated")}</span>
-            <span className="text-xs text-fg-subtle">
-              {t("validatedCount", { count: validated.length })}
-            </span>
-          </header>
-          {validated.length === 0 ? (
-            <p className="text-base leading-relaxed text-fg-muted">
-              {t("noValidated")}
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {validated.map((p, i) => (
-                <li
-                  key={i}
-                  className="border-t border-line-subtle pt-3 text-base leading-relaxed text-fg first:border-t-0 first:pt-0"
-                >
-                  {p.pain}
-                </li>
-              ))}
-            </ul>
+        <div className="flex flex-col gap-8">
+          {/* Confidence instrument band. */}
+          <InstrumentBand
+            cells={[
+              {
+                label: t("validated"),
+                value: validated.length,
+              },
+              {
+                label: t("predicted"),
+                value: predicted.length,
+              },
+              {
+                label: "Confidence",
+                value: cold ? "—" : `${confidencePct}%`,
+              },
+            ]}
+          />
+
+          {/* Predicted — needs-evidence discs (simulated, not yet real). */}
+          <section className="flex flex-col gap-3">
+            <Folio
+              index="§"
+              label={t("predicted")}
+              count={predicted.length}
+              tone="subtle"
+              action={
+                <span className="text-[length:var(--text-eyebrow)] uppercase tracking-[0.1em] text-fg-subtle">
+                  {t("predictedCount", { count: predicted.length })}
+                </span>
+              }
+            />
+            {predicted.length === 0 ? (
+              <PlatePlaceholder>{t("noPredicted")}</PlatePlaceholder>
+            ) : (
+              <Ledger>
+                {predicted.map((p, i) => (
+                  <LedgerRow
+                    key={i}
+                    status="needs-evidence"
+                    index={`P-${String(i + 1).padStart(2, "0")}`}
+                    title={
+                      <span className="text-[length:var(--text-body)] leading-relaxed text-fg-muted">
+                        {p.pain}
+                      </span>
+                    }
+                    metric={
+                      typeof p.confidence === "number" ? (
+                        <span className="font-mono tabular-nums">
+                          {Math.round(p.confidence * 100)}%
+                        </span>
+                      ) : undefined
+                    }
+                  />
+                ))}
+              </Ledger>
+            )}
+          </section>
+
+          {/* Validated — verified discs (real-interview evidence). */}
+          <section className="flex flex-col gap-3">
+            <Folio
+              index="§"
+              label={t("validated")}
+              count={validated.length}
+              tone="subtle"
+              action={
+                <span className="text-[length:var(--text-eyebrow)] uppercase tracking-[0.1em] text-fg-subtle">
+                  {t("validatedCount", { count: validated.length })}
+                </span>
+              }
+            />
+            {validated.length === 0 ? (
+              <PlatePlaceholder>{t("noValidated")}</PlatePlaceholder>
+            ) : (
+              <Ledger>
+                {validated.map((p, i) => (
+                  <LedgerRow
+                    key={i}
+                    status="verified"
+                    index={`V-${String(i + 1).padStart(2, "0")}`}
+                    title={
+                      <span className="text-[length:var(--text-body)] leading-relaxed text-fg">
+                        {p.pain}
+                      </span>
+                    }
+                  />
+                ))}
+              </Ledger>
+            )}
+          </section>
+
+          {/* Divergence — the surprise branch (predicted vs. validated gap). */}
+          {divergence.length > 0 && (
+            <section className="flex flex-col gap-3">
+              <Folio
+                index="§"
+                label={t("divergence")}
+                count={divergence.length}
+                tone="subtle"
+              />
+              <Ledger>
+                {divergence.map((d, i) => (
+                  <LedgerRow
+                    key={i}
+                    status="contradicted"
+                    index={`D-${String(i + 1).padStart(2, "0")}`}
+                    title={
+                      <span className="text-[length:var(--text-body)] leading-relaxed text-fg-muted">
+                        {d.pain}
+                      </span>
+                    }
+                    metric={
+                      <DataChip tone="gap" mono>
+                        {d.kind}
+                      </DataChip>
+                    }
+                  />
+                ))}
+              </Ledger>
+            </section>
           )}
-        </section>
+        </div>
       </div>
-
-      {/* Divergence — the most valuable signal (predicted vs. validated surprise). */}
-      {divergence.length > 0 && (
-        <section className="card card--compact mt-6 flex flex-col gap-4">
-          <span className="label-eyebrow">{t("divergence")}</span>
-          <ul className="flex flex-col gap-3">
-            {divergence.map((d, i) => (
-              <li key={i} className="flex items-start gap-3">
-                <span className="badge badge--knowledge mt-0.5 shrink-0 font-mono text-[11px] uppercase tabular-nums">
-                  {d.kind}
-                </span>
-                <span className="text-base leading-relaxed text-fg-muted">
-                  {d.pain}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
     </>
+  );
+}
+
+/** Printed-plate placeholder — hairline rule + quiet caption. */
+function PlatePlaceholder({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-card border border-dashed border-line bg-surface-2 px-4 py-3">
+      <p className="text-[length:var(--text-body)] leading-relaxed text-fg-muted">
+        {children}
+      </p>
+    </div>
   );
 }

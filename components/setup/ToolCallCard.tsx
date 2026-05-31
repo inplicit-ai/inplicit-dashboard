@@ -2,15 +2,28 @@
 
 import { useTranslations } from "next-intl";
 import { motion, useReducedMotion } from "framer-motion";
-import { Check, CircleAlert, HelpCircle } from "lucide-react";
+
+import { StatusDisc, type StatusState } from "@/components/ui/status-disc";
+import { DataChip } from "@/components/ui/data-chip";
 import { cn } from "@/lib/utils";
 import type { SetupToolCallCard } from "@/lib/api";
 
 /**
- * The "AI explains itself" surface (Rams #4, doc 03 §3), restyled to the
- * agent-plan card aesthetic (design-contract §2/§3): hairline `rounded-card`
- * surface, a tinted status disc on the left, human label + one-line field diff.
- * Tokens only — accent for request-input, pain-soft for a rejected patch.
+ * The "AI explains itself" surface (Rams #4, doc 03 §3), recomposed into the
+ * agent-plan STATUS LANGUAGE (manifesto §"ONE STRUCTURE"). Every tool call is a
+ * ledger row on the spine:
+ *
+ *   [StatusDisc] [mono tool index] [human label + one-line field diff]
+ *
+ * Status encodes lifecycle, not colour-as-decoration:
+ *   applied        → done disc
+ *   request_input  → pending disc (the agent is waiting on the human)
+ *   rejected patch → error disc
+ *
+ * A follow-up question renders its prompt prominently with the agent's example
+ * answers as one-tap reply chips — square DataChips, never pills — so the
+ * question is actionable. Amber never appears here; the live pulse lives on the
+ * header disc only.
  */
 export function ToolCallCard({
   card,
@@ -27,9 +40,13 @@ export function ToolCallCard({
   const isRequestInput = card.tool === "request_input";
   const rejected = card.applied === false && !isRequestInput;
 
-  // A follow-up question: render the prompt prominently with the agent's
-  // example answers as one-tap reply chips so the question is actionable, not
-  // just prose to read.
+  const status: StatusState = rejected
+    ? "error"
+    : isRequestInput
+      ? "pending"
+      : "done";
+
+  // A follow-up question: surface the prompt + example answers as reply chips.
   const question = isRequestInput
     ? String(card.args?.question ?? card.args?.prompt ?? "")
     : "";
@@ -40,40 +57,34 @@ export function ToolCallCard({
 
   return (
     <motion.div
-      initial={prefersReducedMotion ? false : { opacity: 0, y: 6, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={
         prefersReducedMotion
           ? { duration: 0.15 }
           : { type: "spring", stiffness: 500, damping: 28 }
       }
       className={cn(
-        "flex items-start gap-2.5 rounded-card border border-line bg-surface px-3 py-2.5 text-sm transition-colors",
+        // Hairline ledger row — depth is the border + a faint surface wash on
+        // the actionable states, never a shadow.
+        "grid grid-cols-[1.25rem_1fr] items-start gap-2.5 rounded-card border border-line bg-surface px-3 py-2.5 text-sm",
         isRequestInput && "border-accent-muted bg-accent-soft",
         rejected && "border-pain-muted bg-pain-soft",
       )}
     >
-      <span
-        className={cn(
-          "mt-px flex size-5 shrink-0 items-center justify-center rounded-full",
-          rejected
-            ? "bg-pain-soft text-pain"
-            : isRequestInput
-              ? "bg-accent-soft text-accent"
-              : "bg-surface-2 text-fg-subtle",
-        )}
-        aria-hidden
-      >
-        {rejected ? (
-          <CircleAlert className="size-3" />
-        ) : isRequestInput ? (
-          <HelpCircle className="size-3" />
-        ) : (
-          <Check className="size-3" />
-        )}
+      {/* Spine cell — the status disc on the shared x-axis. */}
+      <span className="flex h-5 items-center justify-center">
+        <StatusDisc state={status} size="sm" />
       </span>
-      <div className="min-w-0 flex-1">
-        <p className="font-medium text-fg">{label}</p>
+
+      <div className="min-w-0">
+        <div className="flex min-w-0 items-baseline gap-2">
+          <span className="truncate font-medium text-fg">{label}</span>
+          <span className="shrink-0 font-mono text-[11px] tabular-nums text-fg-faint">
+            {card.tool}
+          </span>
+        </div>
+
         {isRequestInput ? (
           <>
             {question && (
@@ -86,9 +97,14 @@ export function ToolCallCard({
                     key={i}
                     type="button"
                     onClick={() => onReply(ex)}
-                    className="rounded-full border border-accent-muted bg-surface px-3 py-1 text-[13px] font-medium text-accent transition-colors hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="appearance-none border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
                   >
-                    {ex}
+                    <DataChip
+                      tone="neutral"
+                      className="cursor-pointer transition-colors hover:border-line-strong hover:bg-surface-2 hover:text-fg"
+                    >
+                      {ex}
+                    </DataChip>
                   </button>
                 ))}
               </div>

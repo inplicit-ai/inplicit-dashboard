@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Lock, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { StatusDisc } from "@/components/ui/status-disc";
+import { DataChip, type DataChipTone } from "@/components/ui/data-chip";
 import type { RefineFieldLock, RefineInfo } from "@/lib/api";
 
 async function fetchRefineInfo(campaignId: string): Promise<RefineInfo> {
@@ -66,7 +67,7 @@ export function RefineButton({ campaignId }: { campaignId: string }) {
         )}
 
         {info && (
-          <ul className="divide-y divide-line-subtle overflow-hidden rounded-card border border-line">
+          <ul className="overflow-hidden rounded-card border border-line">
             {info.fields.map((f) => (
               <FieldRow key={f.field} field={f} />
             ))}
@@ -77,24 +78,29 @@ export function RefineButton({ campaignId }: { campaignId: string }) {
   );
 }
 
+/** mode → DataChip tint. Editable is the only unlocked, "go" state. */
+const MODE_TONE: Record<string, DataChipTone> = {
+  editable: "success",
+  append_only: "neutral",
+  future_only: "warning",
+  locked: "neutral",
+};
+
+/** A refine-field row in the spine language: a status disc encodes lock state,
+ *  a mono-tracked DataChip carries the server-enforced edit mode. */
 function FieldRow({ field }: { field: RefineFieldLock }) {
   const t = useTranslations("campaignChat");
   return (
-    <li className="flex items-center justify-between gap-3 bg-surface px-3 py-2.5 text-sm">
-      <span className="capitalize text-fg">
+    <li className="grid grid-cols-[1.25rem_1fr_auto] items-center gap-3 border-b border-line-subtle bg-surface px-3 py-2.5 text-sm last:border-b-0">
+      <span className="flex justify-center">
+        <StatusDisc state={field.locked ? "idle" : "done"} size="sm" />
+      </span>
+      <span className="truncate capitalize text-fg">
         {field.field.replace(/_/g, " ")}
       </span>
-      <span
-        className={cn(
-          "inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
-          field.locked
-            ? "border-line bg-surface-2 text-fg-subtle"
-            : "border-accent-muted bg-accent-soft text-accent",
-        )}
-      >
-        {field.locked && <Lock className="h-3 w-3" />}
+      <DataChip tone={MODE_TONE[field.mode] ?? "neutral"}>
         {t(`refineMode.${field.mode}`)}
-      </span>
+      </DataChip>
     </li>
   );
 }

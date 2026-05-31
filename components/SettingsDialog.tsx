@@ -204,7 +204,7 @@ function IdentityCard({ me }: { me: Me }) {
     <div className="flex items-center gap-3 rounded-ui border border-line bg-surface px-4 py-3">
       <span
         aria-hidden="true"
-        className="grid size-10 place-items-center rounded-ui border border-line bg-surface-2 text-sm font-bold text-fg"
+        className="grid size-10 place-items-center rounded-ui border border-line bg-surface-2 font-mono text-[13px] font-semibold tabular-nums text-fg-muted"
       >
         {initial}
       </span>

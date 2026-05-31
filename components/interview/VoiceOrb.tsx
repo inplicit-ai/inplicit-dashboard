@@ -102,19 +102,21 @@ function CssOrb({
       <style
         dangerouslySetInnerHTML={{
           __html: `
+        /* Braun fallback: a flat accent disc on a hairline ring — no gradient,
+           no glow. The disc is the lone accent (live), scaled by VAD level. */
         .iv-cssorb { --lvl: 0; position: relative; display: grid; place-items: center; }
         .iv-cssorb__core {
           width: 38%; height: 38%; border-radius: 50%;
-          background: radial-gradient(circle at 35% 30%, var(--color-accent), var(--color-accent-strong));
-          opacity: calc(0.55 + var(--lvl) * 0.45);
+          background: var(--color-accent);
+          opacity: calc(0.6 + var(--lvl) * 0.4);
           transition: transform 0.08s linear, opacity 0.12s linear;
           transform: scale(calc(1 + var(--lvl) * 0.18));
         }
         .iv-cssorb__ring {
           position: absolute; inset: 0; border-radius: 50%;
-          border: 1.5px solid var(--color-accent-muted);
+          border: 1px solid var(--color-accent-muted);
           transform: scale(calc(0.72 + var(--lvl) * 0.28));
-          opacity: calc(0.35 + var(--lvl) * 0.4);
+          opacity: calc(0.3 + var(--lvl) * 0.35);
           transition: transform 0.08s linear, opacity 0.12s linear;
         }
         @media (prefers-reduced-motion: reduce) {

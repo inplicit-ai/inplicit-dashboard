@@ -1,14 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AlertCircle } from "lucide-react";
 import { ApiError, makeApi } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eyebrow } from "@/components/PageChrome";
+import { StatusDisc } from "@/components/ui/status-disc";
 
 interface SetPasswordSearchParams {
   error?: string;
@@ -63,8 +62,18 @@ export default async function SetPasswordPage({
   const isFirstTime = me.must_set_password === true;
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="flex w-full max-w-[440px] flex-col items-center gap-8">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
+      {/* Hero accent wash — sanctioned for auth only. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[42vh]"
+        style={{
+          background:
+            "radial-gradient(60% 100% at 50% 0%, var(--color-accent-soft), transparent 70%)",
+        }}
+      />
+
+      <div className="relative flex w-full max-w-[440px] flex-col items-center gap-8">
         <Link href="/" aria-label="Inplicit">
           <Image
             src="/logo.svg"
@@ -76,10 +85,10 @@ export default async function SetPasswordPage({
           />
         </Link>
 
-        <Card className="card-elevated w-full rounded-card border border-line bg-surface p-7 sm:p-8">
-          <Eyebrow>
+        <Card className="card--reading w-full rounded-card border border-line bg-surface p-8 sm:p-9">
+          <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-accent">
             {isFirstTime ? "Konto einrichten" : "Passwort ändern"}
-          </Eyebrow>
+          </span>
           <h1 className="headline mt-3 text-fg">
             {isFirstTime ? "Lege dein Passwort fest." : "Neues Passwort."}
           </h1>
@@ -92,9 +101,11 @@ export default async function SetPasswordPage({
           {sp.error && (
             <div
               role="alert"
-              className="mt-6 flex items-start gap-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-meta text-danger"
+              className="mt-6 grid grid-cols-[20px_1fr] items-start gap-x-2.5 rounded-ui border border-danger/22 bg-danger-soft px-3.5 py-2.5 text-meta text-danger"
             >
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span className="flex justify-center pt-0.5">
+                <StatusDisc state="error" size="sm" />
+              </span>
               <p className="leading-snug">{sp.error}</p>
             </div>
           )}

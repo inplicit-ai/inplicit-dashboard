@@ -81,7 +81,9 @@ function PromptInput({
       >
         <div
           className={cn(
-            "rounded-card border border-line bg-surface p-2 transition-colors focus-within:border-accent",
+            // The single composer: one elevated input. The lone amber on a form
+            // is the focus ring — a 2px accent edge that arms only on focus.
+            "rounded-card border border-line bg-surface p-2 transition-colors focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25",
             className,
           )}
         >
@@ -131,7 +133,9 @@ function PromptInputTextarea({
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={handleKeyDown}
       className={cn(
-        "min-h-[44px] w-full resize-none border-none bg-transparent px-2 py-1.5 text-[length:var(--text-body-lg)] leading-relaxed shadow-none outline-none placeholder:text-fg-faint focus-visible:ring-0 focus-visible:ring-offset-0",
+        // Reading register inside the composer: 17px/1.6, no inner ring (the
+        // wrapper owns the lone amber focus edge).
+        "min-h-[44px] w-full resize-none border-none bg-transparent px-2 py-1.5 text-[length:var(--text-body-lg)] leading-relaxed text-fg shadow-none outline-none placeholder:text-fg-faint focus-visible:ring-0 focus-visible:ring-offset-0",
         className,
       )}
       rows={1}

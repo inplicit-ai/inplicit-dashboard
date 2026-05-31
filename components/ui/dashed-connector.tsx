@@ -13,13 +13,17 @@ import { cn } from "@/lib/utils";
  *             (parent must be `relative`; component is absolutely positioned)
  * Horizontal: <DashedConnector orientation="horizontal" className="w-6" />
  *
+ * `tone="active"` lights the connector AMBER (.border-accent) so the lone
+ * running synthesis / live branch of a Ledger can thread an accent spine —
+ * the one place a connector may carry the accent (manifesto: amber means live).
+ *
  * See docs/plans/overhaul/design-contract.md §4.
  * ────────────────────────────────────────────────────────────────────────── */
 
 export interface DashedConnectorProps
   extends React.HTMLAttributes<HTMLDivElement> {
   orientation?: "vertical" | "horizontal";
-  tone?: "default" | "muted" | "strong";
+  tone?: "default" | "muted" | "strong" | "active";
   /** Stroke weight. Default 2 for vertical spines, 1 reads better horizontally. */
   weight?: 1 | 2;
 }
@@ -28,6 +32,8 @@ const TONE_BORDER: Record<NonNullable<DashedConnectorProps["tone"]>, string> = {
   default: "border-line",
   muted: "border-line-subtle",
   strong: "border-line-strong",
+  // The single accent connector — reserved for the live/running branch.
+  active: "border-accent",
 };
 
 export function DashedConnector({

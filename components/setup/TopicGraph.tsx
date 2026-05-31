@@ -18,7 +18,13 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
   const edges = data?.edges ?? [];
 
   if (nodes.length === 0) {
-    return <p className="text-sm text-fg-muted">{t("topicsEmpty")}</p>;
+    return (
+      <div className="rounded-card border border-dashed border-line-strong bg-surface-2 px-4 py-3">
+        <p className="font-mono text-[length:var(--text-eyebrow)] uppercase tracking-[0.06em] text-fg-subtle">
+          {t("topicsEmpty")}
+        </p>
+      </div>
+    );
   }
 
   const colW = 220;

@@ -1,12 +1,30 @@
 import type { ReactNode } from "react";
+import { DataChip } from "@/components/ui/data-chip";
 import { statusTone } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils";
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * PageChrome — the shared masthead vocabulary for every instrument screen.
+ *
+ * Reframed onto the Research Ledger discipline:
+ *  • Eyebrow    → the universal tracked-uppercase TERTIARY folio voice (amber is
+ *                 reserved for the single live object, never a static label).
+ *  • PageHeader → a folio masthead: one display title, a tracked eyebrow index,
+ *                 a mono spec meta line, and an action slot — set off by a single
+ *                 full-bleed hairline rule, not a boxed card.
+ *  • StatusBadge→ the localized domain-status chip, delegating tone to the shared
+ *                 statusTone() map and rendering through the canonical DataChip.
+ *
+ * Public exports (Eyebrow / PageHeader / StatusBadge) and their prop contracts
+ * are unchanged — only the composition is rebuilt.
+ * ────────────────────────────────────────────────────────────────────────── */
 
 // ─── Eyebrow ──────────────────────────────────────────────────────────────────
 
 /**
- * Small uppercase label that sits above a headline. Brand styling: accent
- * color + a short leading rule (the `before:` pseudo-element below).
+ * Small uppercase tracked label — the folio voice that opens a section or sits
+ * above a masthead title. Monochrome tertiary ink (Braun discipline): amber is
+ * the live signal only, never decoration on a static label.
  */
 export function Eyebrow({
   children,
@@ -18,8 +36,8 @@ export function Eyebrow({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] leading-none text-accent",
-        "before:block before:h-px before:w-3 before:bg-current before:opacity-60",
+        "inline-flex items-center gap-2 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] leading-none text-fg-subtle",
+        "before:block before:h-px before:w-3 before:bg-current before:opacity-50",
         className,
       )}
     >
@@ -39,6 +57,12 @@ interface PageHeaderProps {
   actions?: ReactNode;
 }
 
+/**
+ * The masthead folio. Title carries the lone display weight on the screen; the
+ * eyebrow is the tracked-caps index; the meta line is the supporting spec. The
+ * whole header is closed by a single hairline rule so the page reads as one
+ * ruled instrument — never a floating titled card.
+ */
 export function PageHeader({
   eyebrow,
   title,
@@ -47,26 +71,28 @@ export function PageHeader({
   actions,
 }: PageHeaderProps) {
   return (
-    <header className="mb-6 flex flex-col items-start justify-between gap-6 sm:flex-row">
-      <div className="min-w-0 space-y-3">
-        {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-        <h1 className="text-3xl font-semibold leading-[1.08] tracking-[-0.022em] text-fg sm:text-4xl">
-          {title}
-          {muted && (
-            <>
-              {" "}
-              <span className="font-normal text-fg-subtle">{muted}</span>
-            </>
-          )}
-        </h1>
-        {meta && (
-          <div className="max-w-[60ch] text-[length:var(--text-body-sm)] leading-relaxed text-fg-muted">
-            {meta}
-          </div>
+    <header className="mb-8 border-b border-line pb-5">
+      <div className="flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-end">
+        <div className="min-w-0 space-y-3">
+          {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+          <h1 className="text-3xl font-semibold leading-[1.08] tracking-[-0.022em] text-fg sm:text-4xl">
+            {title}
+            {muted && (
+              <>
+                {" "}
+                <span className="font-normal text-fg-subtle">{muted}</span>
+              </>
+            )}
+          </h1>
+        </div>
+        {actions && (
+          <div className="flex shrink-0 items-center gap-2">{actions}</div>
         )}
       </div>
-      {actions && (
-        <div className="flex shrink-0 items-center gap-2">{actions}</div>
+      {meta && (
+        <div className="mt-4 max-w-[68ch] text-[length:var(--text-body-sm)] leading-relaxed text-fg-muted">
+          {meta}
+        </div>
       )}
     </header>
   );
@@ -98,13 +124,16 @@ const STATUS_LABEL: Record<string, string> = {
   FALSIFYING: "Validierung",
 };
 
-/** tone → design.css `.badge--*` class (one border per edge, token-tuned). */
-const TONE_BADGE: Record<ReturnType<typeof statusTone>, string> = {
-  success: "badge badge--success",
-  opportunity: "badge badge--opportunity",
-  warning: "badge badge--warning",
-  danger: "badge badge--danger",
-  neutral: "badge badge--knowledge",
+/** tone → DataChip tint (the canonical square data-chip, tint-only). */
+const TONE_CHIP: Record<
+  ReturnType<typeof statusTone>,
+  React.ComponentProps<typeof DataChip>["tone"]
+> = {
+  success: "success",
+  opportunity: "opportunity",
+  warning: "warning",
+  danger: "danger",
+  neutral: "neutral",
 };
 
 export function StatusBadge({
@@ -116,8 +145,8 @@ export function StatusBadge({
 }) {
   const label = STATUS_LABEL[status] ?? status;
   return (
-    <span className={cn(TONE_BADGE[statusTone(status)], className)}>
+    <DataChip tone={TONE_CHIP[statusTone(status)]} className={className}>
       {label}
-    </span>
+    </DataChip>
   );
 }

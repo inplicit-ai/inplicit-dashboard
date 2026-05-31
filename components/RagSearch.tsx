@@ -12,11 +12,11 @@ import {
   Wrench,
   type LucideIcon,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { StatusDisc } from "@/components/ui/status-disc";
 
 // Stage-1 vector search: embed → Qdrant → cited insight rows. Stage-2
 // (LLM-summarized cite-or-decline answer) hangs off the same endpoint later;
-// the result-card shape here is what that variant will render too.
+// the result-row shape here is what that variant will render too.
 
 interface SearchResult {
   vse_insight_id: string;
@@ -40,41 +40,29 @@ const SUGGESTIONS: Array<{
   label: string;
   prompt: string;
   icon: LucideIcon;
-  tone: "amber" | "green" | "violet" | "blue";
 }> = [
   {
     label: "Onboarding-Pain",
     prompt: "Welche Onboarding-Probleme erwähnen neue Mitarbeitende?",
     icon: Sparkles,
-    tone: "amber",
   },
   {
     label: "Tool-Workarounds",
     prompt: "Welche Tools werden umgangen, doppelt genutzt oder selbst gebaut?",
     icon: Wrench,
-    tone: "green",
   },
   {
     label: "Team-Reibung",
     prompt: "Wo entsteht Reibung zwischen Abteilungen oder Teams?",
     icon: Network,
-    tone: "violet",
   },
   {
     label: "Top-Schmerzen",
     prompt:
       "Was sind die meistgenannten Pain-Points über alle Kampagnes hinweg?",
     icon: GitBranch,
-    tone: "blue",
   },
 ];
-
-const TONE_CLASSES: Record<(typeof SUGGESTIONS)[number]["tone"], string> = {
-  amber: "text-accent",
-  green: "text-success",
-  violet: "text-gap",
-  blue: "text-accent",
-};
 
 export function RagSearch() {
   const [query, setQuery] = useState("");
@@ -131,7 +119,7 @@ export function RagSearch() {
 
   return (
     <div className="space-y-4">
-      {/* Results — rendered ABOVE the prompt card */}
+      {/* Cited evidence — rendered ABOVE the composer as a ledger of rows. */}
       {(error || response) && (
         <ResultsArea
           error={error}
@@ -141,7 +129,8 @@ export function RagSearch() {
         />
       )}
 
-      {/* Prompt card */}
+      {/* Composer — the one elevated input; amber lives only on its focus ring
+          and the live streaming indicator. */}
       <div className="rag__card">
         <textarea
           ref={textareaRef}
@@ -167,7 +156,7 @@ export function RagSearch() {
         </button>
       </div>
 
-      {/* Suggestion pills — concrete RAG examples */}
+      {/* Reply-suggestion chips — square data-chips, not pills. */}
       <div className="flex flex-wrap gap-2">
         {SUGGESTIONS.map((s) => {
           const Icon = s.icon;
@@ -177,9 +166,9 @@ export function RagSearch() {
               type="button"
               onClick={() => onSuggestion(s.prompt)}
               title={s.prompt}
-              className="group inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-medium text-fg-muted transition-colors hover:border-line-strong hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="badge badge--knowledge inline-flex items-center gap-1.5 transition-colors hover:border-line-strong hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Icon className={cn("h-3.5 w-3.5 shrink-0", TONE_CLASSES[s.tone])} />
+              <Icon className="h-3.5 w-3.5 shrink-0 text-fg-subtle" aria-hidden />
               <span>{s.label}</span>
             </button>
           );
@@ -189,7 +178,7 @@ export function RagSearch() {
   );
 }
 
-// ─── Results ──────────────────────────────────────────────────────────────────
+// ─── Cited results ──────────────────────────────────────────────────────────
 
 function ResultsArea({
   error,
@@ -212,7 +201,6 @@ function ResultsArea({
 
   if (!response) return null;
 
-  // Empty: single small box with the message
   if (isEmpty) {
     return (
       <div className="rounded-card border border-line bg-surface px-5 py-4">
@@ -224,11 +212,10 @@ function ResultsArea({
             <Search className="h-4 w-4" />
           </span>
           <div className="min-w-0 space-y-1">
-            <p className="text-sm font-medium text-fg">
-              Keine Belege gefunden
-            </p>
+            <p className="text-sm font-medium text-fg">Keine Belege gefunden</p>
             <p className="text-xs text-fg-muted">
-              Für „{response.query}&rdquo; konnten wir nichts in deinen Kampagnes finden.
+              Für „{response.query}&rdquo; konnten wir nichts in deinen
+              Kampagnes finden.
             </p>
           </div>
         </div>
@@ -239,64 +226,51 @@ function ResultsArea({
   if (!hasResults) return null;
 
   const count = response.results.length;
-  const single = count === 1;
 
   return (
-    <section className="space-y-3">
-      <p className="px-1 text-xs text-fg-muted">
-        <span className="font-mono tabular-nums">{count}</span> Beleg
-        {count === 1 ? "" : "e"} aus{" "}
-        <span className="font-mono tabular-nums">
-          {response.searched_campaigns}
-        </span>{" "}
-        Kampagne{response.searched_campaigns === 1 ? "" : "s"} für „
-        {response.query}&rdquo;.
-      </p>
+    <section>
+      <header className="mb-3 flex items-baseline justify-between gap-4 border-b border-line-subtle pb-2">
+        <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
+          § BELEGE
+        </span>
+        <span className="font-mono text-xs tabular-nums text-fg-muted">
+          n={count} · {response.searched_campaigns} kmp
+        </span>
+      </header>
 
-      <div
-        className={cn(
-          "grid gap-3",
-          single ? "grid-cols-1 md:max-w-xl" : "sm:grid-cols-2 xl:grid-cols-3",
-        )}
-      >
+      <div className="evidence-tree">
         {response.results.map((r) => (
-          <ResultCard key={r.vse_insight_id} r={r} />
+          <ResultRow key={r.vse_insight_id} r={r} />
         ))}
       </div>
     </section>
   );
 }
 
-function ResultCard({ r }: { r: SearchResult }) {
+function ResultRow({ r }: { r: SearchResult }) {
   return (
-    <Link
-      href={`/campaigns/${r.campaign_id}/interviews/${r.interview_id}`}
-      className="group flex h-full flex-col gap-3 rounded-card border border-line bg-surface p-5 transition-colors hover:border-line-strong hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-sm leading-relaxed text-fg">{r.problem_statement}</p>
-        <span className="badge badge--opportunity shrink-0">
-          <span className="font-mono tabular-nums">
+    <div className="tree-node">
+      <Link
+        href={`/campaigns/${r.campaign_id}/interviews/${r.interview_id}`}
+        className="tree-row tree-row--button tree-row--parent group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <div className="tree-row__lead">
+          <StatusDisc state="done" />
+          <span className="tree-row__label">{r.problem_statement}</span>
+        </div>
+        <div className="tree-row__meta">
+          {r.department && (
+            <span className="badge badge--knowledge">{r.department}</span>
+          )}
+          <span className="badge badge--knowledge font-mono tabular-nums">
+            {r.anon_id}
+          </span>
+          <span className="font-mono tabular-nums text-fg-muted">
             {(r.score * 100).toFixed(0)}%
           </span>
-        </span>
-      </div>
-
-      {r.human_solution && (
-        <p className="border-l-2 border-accent-muted pl-3 text-xs italic leading-relaxed text-fg-muted">
-          „{r.human_solution}&rdquo;
-        </p>
-      )}
-
-      <div className="mt-auto flex items-center gap-2">
-        {r.department && (
-          <span className="badge badge--knowledge">{r.department}</span>
-        )}
-        <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-medium text-fg-subtle transition-colors group-hover:text-fg">
-          Interview öffnen
-          <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-        </span>
-      </div>
-    </Link>
+          <ArrowRight className="h-4 w-4 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-fg" />
+        </div>
+      </Link>
+    </div>
   );
 }

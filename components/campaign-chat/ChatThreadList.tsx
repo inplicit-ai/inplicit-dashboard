@@ -16,8 +16,11 @@ function relativeTime(iso: string): string {
 }
 
 /**
- * Left thread list — the persistence affordance. Newest first, active row
- * marked with the accent (Braun: accent only for active/focus, never as a fill).
+ * Left thread rail — the journal's bound spine for stored conversations. A
+ * tracked-caps folio header with a square "new" affordance, then a ledger of
+ * thread rows: title in one weight, relative time as a right-aligned mono
+ * metric. The active row uses the sidebar policy — surface step + a 2px inset
+ * accent tick (the only amber in the rail), never a fill or border-left bar.
  */
 export function ChatThreadList({
   threads,
@@ -38,39 +41,43 @@ export function ChatThreadList({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-center justify-between border-b border-line-subtle px-3 py-3">
+      <div className="flex shrink-0 items-center justify-between border-b border-line px-3 py-3">
         <span className="label-eyebrow">{t("threadsTitle")}</span>
         <button
           type="button"
           onClick={onNew}
           disabled={busy}
-          className="inline-flex items-center gap-1 rounded-ui border border-line bg-surface px-2 py-1 text-[13px] font-medium text-fg-muted transition-colors hover:border-line-strong hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+          aria-label={t("newChat")}
+          className="inline-flex items-center gap-1 rounded-sm border border-line bg-surface px-2 py-1 text-[13px] font-medium text-fg-muted transition-colors hover:border-line-strong hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
         >
           <Plus className="h-3.5 w-3.5" />
           {t("newChat")}
         </button>
       </div>
 
-      <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto px-2 py-2">
+      <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto py-1">
         {threads.length === 0 ? (
-          <p className="px-2 py-3 text-[13px] text-fg-subtle">
+          <p className="px-3 py-3 text-[13px] text-fg-subtle">
             {t("emptyThreads")}
           </p>
         ) : (
-          <ul className="space-y-0.5">
+          <ul>
             {threads.map((thread) => {
               const active = thread.id === activeId;
               return (
-                <li key={thread.id} className="group relative">
+                <li
+                  key={thread.id}
+                  className="group relative border-b border-line-subtle last:border-b-0"
+                >
                   <button
                     type="button"
                     onClick={() => onSelect(thread.id)}
                     aria-current={active ? "true" : undefined}
                     className={cn(
-                      "flex w-full items-center gap-2 rounded-ui border-l-2 px-2.5 py-2 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      "flex w-full items-center gap-2 px-3 py-2.5 pr-8 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                       active
-                        ? "border-accent bg-surface-2 font-medium text-fg"
-                        : "border-transparent text-fg-muted hover:bg-surface-2 hover:text-fg",
+                        ? "bg-surface-2 font-medium text-fg shadow-[inset_2px_0_0_var(--color-accent)]"
+                        : "text-fg-muted hover:bg-surface-2 hover:text-fg",
                     )}
                   >
                     <span className="min-w-0 flex-1 truncate">
@@ -84,7 +91,7 @@ export function ChatThreadList({
                     type="button"
                     onClick={() => onDelete(thread.id)}
                     aria-label={t("deleteThread")}
-                    className="absolute right-1 top-1/2 hidden -translate-y-1/2 rounded-ui p-1 text-fg-subtle hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:block"
+                    className="absolute right-1.5 top-1/2 hidden -translate-y-1/2 rounded-sm p-1 text-fg-subtle transition-colors hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:block"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>

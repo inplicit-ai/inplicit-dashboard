@@ -1,16 +1,16 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Vault as VaultIcon } from "lucide-react";
 import { makeApi, type Vault, type VaultItem, ApiError } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/select";
-import { PageHeader } from "@/components/PageChrome";
 import { ErrorState } from "@/components/ErrorState";
+import { Folio } from "@/components/ui/folio";
+import { DataChip } from "@/components/ui/data-chip";
+import { StatusDisc } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 
 interface SearchParams {
@@ -112,32 +112,27 @@ export default async function VaultsPage({
 
   return (
     <>
-      <PageHeader
-        eyebrow={t("eyebrow")}
-        title={t("title")}
-        meta={t("count", { count: vaults.length })}
-      />
+      <Folio index="§" label={t("title")} count={vaults.length} />
 
       {error && (
-        <div className="mb-6">
+        <div className="mt-6">
           <ErrorState error={error} />
         </div>
       )}
 
       {sp.flash && (
         <div
-          className={cn(
-            "mb-6 rounded-ui border px-4 py-3 text-meta",
-            sp.flashType === "err"
-              ? "border-pain-muted bg-pain-soft text-pain"
-              : "border-success/22 bg-success-soft text-success",
-          )}
+          role="status"
+          className="mt-6 grid grid-cols-[20px_1fr] items-start gap-x-2.5 rounded-ui border border-line-subtle bg-surface-2 px-3.5 py-2.5 text-meta text-fg"
         >
-          {sp.flash}
+          <span className="flex justify-center pt-0.5">
+            <StatusDisc state={sp.flashType === "err" ? "error" : "done"} size="sm" />
+          </span>
+          <p className="leading-snug">{sp.flash}</p>
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[20rem_1fr]">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[20rem_1fr]">
         {/* Vault list + create */}
         <div className="space-y-4">
           {canWrite && (
@@ -160,10 +155,13 @@ export default async function VaultsPage({
           )}
 
           {vaults.length === 0 ? (
-            <div className="card card--compact border-dashed text-center">
-              <div className="flex flex-col items-center gap-3">
-                <span className="grid size-10 place-items-center rounded-full bg-surface-2 text-fg-muted">
-                  <VaultIcon className="h-5 w-5" />
+            <div className="overflow-hidden rounded-card border border-dashed border-line-strong bg-surface">
+              <div className="flex flex-col gap-3 px-5 py-8">
+                <span className="flex items-center gap-2.5">
+                  <StatusDisc state="idle" />
+                  <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
+                    {t("eyebrow")}
+                  </span>
                 </span>
                 <p className="body-sm leading-relaxed text-fg-muted">
                   {t("empty")}
@@ -171,25 +169,43 @@ export default async function VaultsPage({
               </div>
             </div>
           ) : (
-            <ul className="space-y-1">
+            <ul className="ledger" style={{ ["--spine-w" as string]: "20px" }}>
               {vaults.map((v) => (
-                <li key={v.id}>
+                <li
+                  key={v.id}
+                  className="border-b border-line-subtle last:border-b-0"
+                >
                   <a
                     href={`/vaults?vault=${v.id}`}
                     aria-current={v.id === activeId ? "true" : undefined}
                     className={cn(
-                      "flex flex-col gap-0.5 rounded-ui border-l-2 px-3 py-2.5 transition-colors",
+                      "grid grid-cols-[20px_1fr] items-start gap-x-2.5 px-2 py-2.5 transition-colors",
                       v.id === activeId
-                        ? "border-accent bg-surface-2"
-                        : "border-transparent hover:bg-surface-2",
+                        ? "bg-surface-2"
+                        : "hover:bg-surface-2",
                     )}
                   >
-                    <span className="body-sm font-medium text-fg">{v.name}</span>
-                    {v.description && (
-                      <span className="truncate text-caption text-fg-muted">
-                        {v.description}
+                    <span className="flex justify-center pt-1">
+                      <StatusDisc
+                        state={v.id === activeId ? "live" : "idle"}
+                        size="sm"
+                      />
+                    </span>
+                    <span className="min-w-0">
+                      <span
+                        className={cn(
+                          "block truncate text-body-sm text-fg",
+                          v.id === activeId ? "font-semibold" : "font-medium",
+                        )}
+                      >
+                        {v.name}
                       </span>
-                    )}
+                      {v.description && (
+                        <span className="mt-0.5 block truncate text-caption text-fg-muted">
+                          {v.description}
+                        </span>
+                      )}
+                    </span>
                   </a>
                 </li>
               ))}
@@ -203,9 +219,9 @@ export default async function VaultsPage({
             <div className="card card--flush flex flex-col">
               <div className="flex items-center justify-between gap-3 border-b border-line-subtle px-6 py-4">
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">
+                  <DataChip tone="neutral">
                     {vaults.find((v) => v.id === activeId)?.scope ?? "ORG"}
-                  </Badge>
+                  </DataChip>
                   <span className="body-sm font-medium text-fg">
                     {t("entriesCount", { count: items.length })}
                   </span>
@@ -232,12 +248,9 @@ export default async function VaultsPage({
                   items.map((it) => (
                     <li key={it.id} className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className="font-mono text-eyebrow tabular-nums"
-                        >
+                        <DataChip tone="neutral" mono>
                           {it.kind}
-                        </Badge>
+                        </DataChip>
                         {it.title && (
                           <span className="body-sm font-medium text-fg">
                             {it.title}
@@ -291,8 +304,16 @@ export default async function VaultsPage({
               )}
             </div>
           ) : (
-            <div className="card border-dashed text-center">
-              <p className="body-sm text-fg-muted">{t("selectPrompt")}</p>
+            <div className="overflow-hidden rounded-card border border-dashed border-line-strong bg-surface">
+              <div className="flex flex-col gap-3 px-8 py-12">
+                <span className="flex items-center gap-2.5">
+                  <StatusDisc state="idle" />
+                  <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
+                    {t("eyebrow")}
+                  </span>
+                </span>
+                <p className="body-lg text-fg-muted">{t("selectPrompt")}</p>
+              </div>
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
-import { ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 import {
   makeApi,
   type Campaign,
@@ -10,8 +10,10 @@ import {
 import { requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ErrorState";
-import { Eyebrow, PageHeader, StatusBadge } from "@/components/PageChrome";
-import { StatsCard } from "@/components/StatsCard";
+import { StatusBadge } from "@/components/PageChrome";
+import { SpecStrip, type SpecCell } from "@/components/ui/spec-strip";
+import { EvidenceTree, type EvidenceNode } from "@/components/ui/agent-list";
+import { StatusDisc } from "@/components/ui/status-disc";
 import { RefineButton } from "@/components/campaign-chat/RefineButton";
 import { cn } from "@/lib/utils";
 
@@ -87,104 +89,256 @@ export default async function CampaignOverview({
       ? Math.round((stats.interviews_completed / stats.participants) * 100)
       : 0;
 
+  const inProgress = stats?.interviews_in_progress ?? 0;
+  const isLive = inProgress > 0;
   const isDraft = campaign.status === "DRAFT";
   const launchLabel = isDraft
     ? "Kampagne starten — alle einladen"
     : "Ausstehende Einladungen versenden";
 
+  // Instrument band — five readouts deep-linking into their branches.
+  const cells: SpecCell[] = [
+    {
+      label: "Teilnehmer",
+      value: stats?.participants ?? 0,
+      href: `/campaigns/${id}/participants`,
+    },
+    {
+      label: "Abgeschlossen",
+      value: stats?.interviews_completed ?? 0,
+      delta: { dir: "up", value: `${completionRate}%` },
+      href: `/campaigns/${id}/interviews`,
+    },
+    {
+      label: "Insights",
+      value: stats?.insights ?? 0,
+      href: `/campaigns/${id}/insights`,
+    },
+    {
+      label: "Hypothesen",
+      value: stats?.hypotheses ?? 0,
+      href: `/campaigns/${id}/hypotheses`,
+    },
+    { label: "Abdeckung", value: `${completionRate}%` },
+  ];
+
+  // The synthesis pipeline as a vertical agent-plan ledger down the spine. The
+  // running stage carries the lone amber pulse + active connector; everything
+  // before it is done, everything after pending. The status is derived from the
+  // coarse signals we already have (completed interviews / insights / hypotheses).
+  const pipeline = buildPipeline({
+    completed: stats?.interviews_completed ?? 0,
+    insights: stats?.insights ?? 0,
+    hypotheses: stats?.hypotheses ?? 0,
+    live: isLive,
+  });
+
+  // Spec rows for the sticky masthead rail.
+  const created = new Date(campaign.created_at).toLocaleDateString("de-DE");
+
   return (
-    <>
-      <PageHeader
-        title={campaign.org_name}
-        actions={
-          <div className="flex items-center gap-3">
-            <RefineButton campaignId={id} />
-            <StatusBadge status={campaign.status} />
+    <div className="grid grid-cols-1 gap-x-10 gap-y-8 lg:grid-cols-[minmax(220px,280px)_minmax(0,1fr)]">
+      {/* ── Left rail — sticky masthead + spec readout ───────────────────── */}
+      <aside className="lg:sticky lg:top-6 lg:self-start">
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="masthead__title min-w-0 break-words">
+            {campaign.org_name}
+          </h1>
+        </div>
+
+        <dl className="mt-6">
+          {isLive && (
+            <div className="spec-row">
+              <dt className="spec-row__label">Status</dt>
+              <dd className="spec-row__value text-accent">
+                <StatusDisc state="live" size="sm" />
+                LIVE
+              </dd>
+            </div>
+          )}
+          <div className="spec-row">
+            <dt className="spec-row__label">Status</dt>
+            <dd className="spec-row__value">
+              <StatusBadge status={campaign.status} />
+            </dd>
           </div>
-        }
-      />
-
-      {sp.flash && (
-        <FlashBanner
-          type={sp.flashType === "error" ? "err" : "ok"}
-          message={sp.flash}
-        />
-      )}
-
-      {/* Stat grid */}
-      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatsCard label="Teilnehmer" value={stats?.participants ?? 0} />
-        <StatsCard
-          label="Abgeschlossen"
-          value={stats?.interviews_completed ?? 0}
-          hint={`${completionRate}% Abdeckung`}
-        />
-        <StatsCard label="Insights" value={stats?.insights ?? 0} />
-        <StatsCard label="Hypothesen" value={stats?.hypotheses ?? 0} />
-      </div>
-
-      {/* Dashboard body — primary action column + context rail */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-        {/* CTA */}
-        <section className="card flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center sm:gap-8">
-          <div className="max-w-[48ch] space-y-2">
-            <Eyebrow>Step 01 · Einladen</Eyebrow>
-            <h2 className="text-xl font-semibold tracking-tight text-fg">
-              Teilnehmer aktivieren.
-            </h2>
-            <p className="text-sm leading-relaxed text-fg-muted">
-              Bulk-Versand an alle, die noch nicht eingeladen wurden. Bereits
-              versendete werden übersprungen.
-            </p>
+          <div className="spec-row">
+            <dt className="spec-row__label">Sprache</dt>
+            <dd className="spec-row__value">{campaign.language.toUpperCase()}</dd>
           </div>
-          <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
-            <form action={launchCampaign}>
-              <Button type="submit">{launchLabel}</Button>
-            </form>
-            <Button
-              asChild
-              variant="link"
-              size="sm"
-              className="px-0 text-fg-muted"
-            >
-              <Link href={`/campaigns/${id}/participants`}>
-                Einzeln verwalten
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
+          <div className="spec-row">
+            <dt className="spec-row__label">Länge</dt>
+            <dd className="spec-row__value">{campaign.interview_length_min} min</dd>
           </div>
-        </section>
+          <div className="spec-row">
+            <dt className="spec-row__label">n=</dt>
+            <dd className="spec-row__value">{stats?.participants ?? 0}</dd>
+          </div>
+          <div className="spec-row">
+            <dt className="spec-row__label">Läuft</dt>
+            <dd className="spec-row__value">{inProgress}</dd>
+          </div>
+          <div className="spec-row">
+            <dt className="spec-row__label">Erstellt</dt>
+            <dd className="spec-row__value">{created}</dd>
+          </div>
+        </dl>
 
-        {/* Progress */}
-        <section className="card card--compact flex flex-col gap-4">
-          <div className="flex items-baseline justify-between gap-3">
-            <Eyebrow>Fortschritt</Eyebrow>
-            <span className="text-2xl-tabular font-medium tracking-tight text-fg">
-              {completionRate}%
+        <div className="mt-5">
+          <RefineButton campaignId={id} />
+        </div>
+      </aside>
+
+      {/* ── Right track — instrument band + pipeline + activation + context ─ */}
+      <div className="min-w-0 space-y-8">
+        {sp.flash && (
+          <FlashBanner
+            type={sp.flashType === "error" ? "err" : "ok"}
+            message={sp.flash}
+          />
+        )}
+
+        <SpecStrip cells={cells} />
+
+        {/* Synthesis pipeline — agent-plan ledger on the spine. */}
+        <section>
+          <header className="mb-1 flex items-baseline justify-between gap-4 border-b border-line pb-2">
+            <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
+              § SYNTHESE-PIPELINE
             </span>
-          </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
-            <div
-              className="h-full rounded-full bg-accent transition-[width] duration-500"
-              style={{ width: `${completionRate}%` }}
-            />
-          </div>
-          <p className="text-sm text-fg-muted">
-            {stats?.interviews_completed ?? 0} von {stats?.participants ?? 0}{" "}
-            Interviews abgeschlossen
-          </p>
+            <span className="font-mono text-xs tabular-nums text-fg-muted">
+              {pipeline.filter((p) => p.status === "done").length}/
+              {pipeline.length}
+            </span>
+          </header>
+          <EvidenceTree nodes={pipeline} defaultExpandedDepth={0} />
         </section>
 
-        {/* Company context — spans both columns */}
-        <section className="card lg:col-span-2">
-          <Eyebrow>Unternehmenskontext</Eyebrow>
-          <p className="mt-3 max-w-[72ch] whitespace-pre-wrap text-sm leading-relaxed text-fg-muted">
+        {/* Activation — the one primary action. */}
+        <section className="border-t border-line pt-6">
+          <div className="flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-end">
+            <div className="max-w-[52ch] space-y-2">
+              <span className="eyebrow">Step 01 · Einladen</span>
+              <h2 className="text-lg font-semibold tracking-tight text-fg">
+                Teilnehmer aktivieren.
+              </h2>
+              <p className="text-sm leading-relaxed text-fg-muted">
+                Bulk-Versand an alle, die noch nicht eingeladen wurden. Bereits
+                versendete werden übersprungen.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+              <form action={launchCampaign}>
+                <Button type="submit">{launchLabel}</Button>
+              </form>
+              <Button
+                asChild
+                variant="link"
+                size="sm"
+                className="px-0 text-fg-muted"
+              >
+                <Link href={`/campaigns/${id}/participants`}>
+                  Einzeln verwalten
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* Company context — reading register. */}
+        <section className="border-t border-line pt-6">
+          <span className="eyebrow">Unternehmenskontext</span>
+          <p className="card--reading mt-3 whitespace-pre-wrap text-fg-muted">
             {campaign.company_context}
           </p>
         </section>
       </div>
-    </>
+    </div>
   );
+}
+
+/**
+ * Map the coarse campaign signals onto the four-stage synthesis pipeline,
+ * carrying the lone amber pulse on the first stage that is still working.
+ */
+function buildPipeline(input: {
+  completed: number;
+  insights: number;
+  hypotheses: number;
+  live: boolean;
+}): EvidenceNode[] {
+  const { completed, insights, hypotheses, live } = input;
+
+  // Each stage: done once its downstream output exists; live when it is the
+  // current frontier and work is flowing; pending otherwise.
+  const extractDone = insights > 0;
+  const clusterDone = insights > 0;
+  const hypoDone = hypotheses > 0;
+
+  // The single running frontier (only when an interview is live OR there is
+  // unprocessed-but-present material). Keep exactly one amber.
+  const frontier = live
+    ? completed === 0
+      ? "ingest"
+      : !extractDone
+        ? "extract"
+        : !hypoDone
+          ? "hypothesis"
+          : "falsify"
+    : null;
+
+  function state(
+    key: string,
+    done: boolean,
+  ): { status: EvidenceNode["status"]; pulse?: boolean; active?: boolean } {
+    if (frontier === key) return { status: "live", pulse: true, active: true };
+    if (done) return { status: "done" };
+    return { status: "pending" };
+  }
+
+  const ingest = state("ingest", completed > 0);
+  const extract = state("extract", extractDone);
+  const cluster = state("cluster", clusterDone);
+  const hypothesis = state("hypothesis", hypoDone);
+
+  return [
+    {
+      id: "ingest",
+      kind: "step",
+      status: ingest.status,
+      pulse: ingest.pulse,
+      activeConnector: ingest.active,
+      label: "Interviews aufnehmen",
+      meta: <span className="font-mono tabular-nums">n={completed}</span>,
+    },
+    {
+      id: "extract",
+      kind: "step",
+      status: extract.status,
+      pulse: extract.pulse,
+      activeConnector: extract.active,
+      label: "VSE-Extraktion · Mistral",
+      meta: <span className="font-mono tabular-nums">{insights} insights</span>,
+    },
+    {
+      id: "cluster",
+      kind: "step",
+      status: cluster.status,
+      pulse: cluster.pulse,
+      activeConnector: cluster.active,
+      label: "Embedding · Clustering · Qdrant",
+      meta: <span className="font-mono tabular-nums">cos&gt;0.82</span>,
+    },
+    {
+      id: "hypothesis",
+      kind: "step",
+      status: hypothesis.status,
+      pulse: hypothesis.pulse,
+      activeConnector: hypothesis.active,
+      label: "Hypothesen · Falsifikation",
+      meta: <span className="font-mono tabular-nums">{hypotheses} hyp</span>,
+    },
+  ];
 }
 
 function FlashBanner({
@@ -199,7 +353,7 @@ function FlashBanner({
     <div
       role="status"
       className={cn(
-        "mb-6 flex items-start gap-3 rounded-ui border px-4 py-3 text-sm",
+        "flex items-start gap-3 rounded-ui border px-4 py-3 text-sm",
         type === "ok"
           ? "border-success/22 bg-success-soft text-success"
           : "border-pain-muted bg-pain-soft text-pain",

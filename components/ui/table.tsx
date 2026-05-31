@@ -2,6 +2,20 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * Table — the spine register in tabular form.
+ *
+ * Drops zebra and the header surface fill: rows are separated only by hairlines,
+ * the header is a bare tracked-eyebrow rule, hover is a surface step (never a
+ * lift). The optional spine column (TableSpineHead / TableSpineCell) is a fixed
+ * 28px cell holding a StatusDisc, so a data table lands its discs on the SAME
+ * x-axis as every Ledger on every other screen. `mono` on a cell switches its
+ * content to JetBrains Mono + tabular-nums for email / anon_id / status / score.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+/** The fixed spine column width — matches the Ledger --spine-w (28px). */
+const SPINE = "w-7 min-w-7 pl-4 pr-0"
+
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
@@ -78,16 +92,44 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   )
 }
 
-function TableCell({ className, ...props }: React.ComponentProps<"td">) {
+function TableCell({
+  className,
+  mono = false,
+  ...props
+}: React.ComponentProps<"td"> & { mono?: boolean }) {
   return (
     <td
       data-slot="table-cell"
       className={cn(
-        // Dense row rhythm: space-3 vertical / space-4 horizontal. Numeric/ID/
-        // status/timestamp cells should add `font-mono tabular-nums` at call site.
+        // Dense row rhythm: space-3 vertical / space-4 horizontal.
         "px-4 py-3 align-middle whitespace-nowrap text-fg [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        // Numeric / ID / status / timestamp cells render mono + tabular by prop.
+        mono && "font-mono text-[length:var(--text-mono)] tabular-nums text-fg-muted",
         className
       )}
+      {...props}
+    />
+  )
+}
+
+/** Bare spine header cell — the empty 28px column the status discs live under. */
+function TableSpineHead({ className, ...props }: React.ComponentProps<"th">) {
+  return (
+    <th
+      data-slot="table-spine-head"
+      aria-hidden
+      className={cn(SPINE, "h-9 py-3", className)}
+      {...props}
+    />
+  )
+}
+
+/** Spine body cell — holds a StatusDisc centered on the shared x-axis. */
+function TableSpineCell({ className, ...props }: React.ComponentProps<"td">) {
+  return (
+    <td
+      data-slot="table-spine-cell"
+      className={cn(SPINE, "py-3 align-middle", className)}
       {...props}
     />
   )
@@ -114,5 +156,7 @@ export {
   TableHead,
   TableRow,
   TableCell,
+  TableSpineHead,
+  TableSpineCell,
   TableCaption,
 }

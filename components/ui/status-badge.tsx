@@ -8,18 +8,22 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { DataChip, type DataChipTone } from "@/components/ui/data-chip";
+import { StatusDisc, toStatusState } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 
 /* ────────────────────────────────────────────────────────────────────────────
  * StatusBadge — single source of truth for status → tone mapping.
  *
- * Centralizes the logic previously duplicated across PageChrome / ParticipantsTable
- * / agent-plan. Maps both the agent-plan vocabulary (completed / in-progress /
- * need-help / failed / pending) AND the domain enums (COMPLETED, IN_PROGRESS,
- * FAILED, VERIFIED, CONTRADICTED, …) onto the design.css `.badge--*` classes.
+ * Now DELEGATES to the spine vocabulary: a status string resolves to a canonical
+ * tone (for the DataChip tint) and, when `withIcon`, leads with a StatusDisc icon
+ * glyph so the chip speaks the exact same language as every LedgerRow disc. The
+ * status→tone map lives here once; PageChrome / tables / agent-plan reuse it.
  *
- * Server-safe: no "use client", no framer-motion. For the animated bounce, wrap
- * <StatusBadge> in a motion element inside a client component (see agent-plan).
+ * Server-safe: StatusDisc(as="icon") and DataChip are both server components.
+ * The lone amber pulse never appears here — chips are static labels, not the
+ * single live object — so even a "live"/"in-progress" status renders its disc
+ * unpulsed (the opportunity tint carries the "forming" signal instead).
  *
  * See docs/plans/overhaul/design-contract.md §3.
  * ────────────────────────────────────────────────────────────────────────── */
@@ -31,31 +35,32 @@ export type StatusTone =
   | "danger"
   | "neutral";
 
-type ToneSpec = { badgeClass: string; iconClass: string; Icon: LucideIcon };
+type ToneSpec = { chipTone: DataChipTone; iconClass: string; Icon: LucideIcon };
 
+/** tone → (DataChip tint, agent-plan icon, semantic ink). */
 const TONE: Record<StatusTone, ToneSpec> = {
   success: {
-    badgeClass: "badge badge--success",
+    chipTone: "success",
     iconClass: "text-success",
     Icon: CheckCircle2,
   },
   opportunity: {
-    badgeClass: "badge badge--opportunity",
+    chipTone: "opportunity",
     iconClass: "text-accent",
     Icon: CircleDotDashed,
   },
   warning: {
-    badgeClass: "badge badge--warning",
+    chipTone: "warning",
     iconClass: "text-warning",
     Icon: CircleAlert,
   },
   danger: {
-    badgeClass: "badge badge--danger",
+    chipTone: "danger",
     iconClass: "text-danger",
     Icon: CircleX,
   },
   neutral: {
-    badgeClass: "badge badge--knowledge",
+    chipTone: "neutral",
     iconClass: "text-fg-subtle",
     Icon: Circle,
   },
@@ -99,7 +104,7 @@ export function statusTone(status: string): StatusTone {
 export interface StatusBadgeProps
   extends React.HTMLAttributes<HTMLSpanElement> {
   status: string;
-  /** Show the leading status icon. Default: false (text-only pill). */
+  /** Show the leading status disc glyph. Default: false (text-only chip). */
   withIcon?: boolean;
   /** Override the displayed text; defaults to the raw status string. */
   label?: string;
@@ -113,12 +118,19 @@ export function StatusBadge({
   ...props
 }: StatusBadgeProps) {
   const tone = statusTone(status);
-  const { badgeClass, iconClass, Icon } = TONE[tone];
+  const { chipTone } = TONE[tone];
   return (
-    <span className={cn(badgeClass, className)} {...props}>
-      {withIcon && <Icon aria-hidden className={cn("size-3", iconClass)} />}
+    <DataChip tone={chipTone} className={cn("gap-1.5", className)} {...props}>
+      {withIcon && (
+        <StatusDisc
+          state={toStatusState(status)}
+          as="icon"
+          size="sm"
+          pulse={false}
+        />
+      )}
       {label ?? status}
-    </span>
+    </DataChip>
   );
 }
 

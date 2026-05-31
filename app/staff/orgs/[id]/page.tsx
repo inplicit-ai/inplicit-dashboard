@@ -1,13 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  AlertCircle,
-  AlertTriangle,
-  ArrowLeft,
-  CheckCircle2,
-  KeyRound,
-  Pencil,
-} from "lucide-react";
+import { AlertTriangle, ArrowLeft, KeyRound, Pencil } from "lucide-react";
 import {
   ApiError,
   makeApi,
@@ -23,7 +16,10 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { ErrorState } from "@/components/ErrorState";
 import { OrgAvatar } from "@/components/OrgAvatar";
-import { Eyebrow, PageHeader, StatusBadge } from "@/components/PageChrome";
+import { Folio } from "@/components/ui/folio";
+import { SpecBlock } from "@/components/ui/spec-block";
+import { DataChip } from "@/components/ui/data-chip";
+import { StatusDisc, toStatusState } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 
 interface OrgDetailSearchParams {
@@ -159,160 +155,187 @@ export default async function OrgDetailPage({
       )}
 
       {!editing && (
-        <>
-          <PageHeader
-            eyebrow="Organisation"
-            title={org.name}
-            muted={org.slug}
-            meta={
-              <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                <StatusBadge status={org.status} />
-                <span className="font-mono text-caption tabular-nums text-fg-muted">
-                  {org.default_locale.toUpperCase()} ·{" "}
-                  {org.default_interview_length_min} Min · Voice{" "}
-                  {org.default_voice_id}
-                </span>
-              </span>
-            }
-            actions={
-              <>
-                <Button asChild variant="outline" size="sm">
-                  <Link href={`/staff/orgs/${org.id}?edit=1`}>
-                    <Pencil className="h-3.5 w-3.5" />
-                    Bearbeiten
-                  </Link>
-                </Button>
-                <form action={issueMagicLinkAction}>
-                  <Button type="submit" size="sm">
-                    <KeyRound className="h-3.5 w-3.5" />
-                    Magic-Link ausgeben
-                  </Button>
-                </form>
-              </>
-            }
-          />
-
-          {sp.updated === "1" && (
-            <Flash type="ok" message="Organisation aktualisiert." />
-          )}
-          {sp.suspended === "1" && (
-            <Flash type="ok" message="Organisation suspendiert." />
-          )}
-
-          {sp.magic_link && (
-            <Card className="card--opportunity mb-6 rounded-card border border-accent-muted bg-accent-soft p-5">
-              <p className="subtitle font-semibold text-fg">
-                Magic-Link bereit
-                {sp.reissued_for && (
-                  <span className="ml-2 text-caption font-normal text-fg-muted">
-                    für {sp.reissued_for}
-                  </span>
-                )}
-              </p>
-              <p className="mt-1 text-caption text-fg-muted">
-                15 Minuten gültig, single-use.
-                {sp.email_sent === "1"
-                  ? " Eine Email mit dem Link wurde an den Owner verschickt."
-                  : ""}
-              </p>
-              <div className="mt-4 break-all rounded-ui border border-line bg-canvas p-3 font-mono text-mono tabular-nums">
-                <a
-                  className="text-accent-strong hover:underline"
-                  href={sp.magic_link}
-                >
-                  {sp.magic_link}
-                </a>
+        <div className="grid gap-8 lg:grid-cols-[minmax(220px,260px)_1fr]">
+          {/* ── Left rail: sticky masthead + spec readout ─────────────────── */}
+          <aside className="flex flex-col gap-6 lg:sticky lg:top-6 lg:self-start">
+            <div className="flex items-start gap-3">
+              <OrgAvatar name={org.name} logoUrl={org.logo_url} size={44} />
+              <div className="min-w-0">
+                <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] text-fg">
+                  {org.name}
+                </h1>
+                <p className="mt-1 font-mono font-mono tabular-nums tabular-nums text-fg-muted">
+                  {org.slug}
+                </p>
               </div>
-              <p className="mt-3 text-caption text-fg-subtle">
-                Tipp: in einem Inkognito-Tab öffnen, um nicht deine
-                Staff-Session zu überschreiben.
-              </p>
-            </Card>
-          )}
+            </div>
 
-          {sp.email_error && (
-            <Card className="card--pain mb-6 rounded-card border border-pain-muted bg-pain-soft p-5">
-              <p className="subtitle font-semibold text-pain">
-                Welcome-Email konnte nicht versendet werden
-              </p>
-              <p className="mt-2 break-all font-mono text-mono text-fg-muted">
-                {sp.email_error}
-              </p>
-              <p className="mt-3 text-caption text-fg-subtle">
-                Häufige Ursachen: <Mono>RESEND_API_KEY</Mono> fehlt,{" "}
-                <Mono>FROM_EMAIL</Mono> nicht domain-verifiziert, oder die
-                Resend-Sandbox erlaubt nur Versand an die Account-Email.
-              </p>
-            </Card>
-          )}
+            <div className="flex items-center gap-2.5">
+              <StatusDisc state={toStatusState(org.status)} />
+              <DataChip tone="neutral">{org.status}</DataChip>
+            </div>
 
-          <Card className="mb-6 rounded-card border border-line bg-surface p-6">
-            <Eyebrow>Unternehmenskontext</Eyebrow>
-            <p className="mt-3 text-caption text-fg-muted">
-              Wird in jeden Interview-System-Prompt der Org eingespeist. Kampagnes
-              können das pro Kampagne überschreiben.
-            </p>
-            <p className="mt-3 whitespace-pre-wrap body-sm leading-relaxed text-fg">
-              {org.company_context}
-            </p>
-            {org.industry && (
-              <p className="mt-3 text-caption text-fg-muted">
-                Branche: <Mono>{org.industry}</Mono>
-              </p>
+            <SpecBlock
+              rows={[
+                { label: "Sprache", value: org.default_locale.toUpperCase() },
+                {
+                  label: "Interviewdauer",
+                  value: `${org.default_interview_length_min} min`,
+                },
+                { label: "Voice-ID", value: org.default_voice_id },
+                {
+                  label: "Erstellt",
+                  value: org.created_at
+                    ? new Date(org.created_at).toLocaleDateString("de-DE")
+                    : "—",
+                },
+              ]}
+            />
+
+            <div className="flex flex-col gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/staff/orgs/${org.id}?edit=1`}>
+                  <Pencil className="h-3.5 w-3.5" />
+                  Bearbeiten
+                </Link>
+              </Button>
+              <form action={issueMagicLinkAction}>
+                <Button type="submit" size="sm" className="w-full">
+                  <KeyRound className="h-3.5 w-3.5" />
+                  Magic-Link ausgeben
+                </Button>
+              </form>
+            </div>
+          </aside>
+
+          {/* ── Right track: the instrument register ──────────────────────── */}
+          <div className="min-w-0 space-y-8">
+            {sp.updated === "1" && (
+              <Flash type="ok" message="Organisation aktualisiert." />
             )}
-          </Card>
+            {sp.suspended === "1" && (
+              <Flash type="ok" message="Organisation suspendiert." />
+            )}
 
-          <Card className="mb-6 rounded-card border border-line bg-surface p-6">
-            <Eyebrow>Defaults für neue Kampagnes</Eyebrow>
-            <DefList className="mt-4">
-              <DefRow
-                label="Sprache"
-                value={<Mono>{org.default_locale.toUpperCase()}</Mono>}
-              />
-              <DefRow
-                label="Interviewdauer"
-                value={<Mono>{org.default_interview_length_min} Min</Mono>}
-              />
-              <DefRow
-                label="ElevenLabs Voice-ID"
-                value={<Mono>{org.default_voice_id}</Mono>}
-              />
-              <DefRow label="Status" value={<StatusBadge status={org.status} />} />
-            </DefList>
-          </Card>
+            {sp.magic_link && (
+              <div className="rounded-card border border-line bg-surface-2 p-5">
+                <div className="flex items-center gap-2.5">
+                  <StatusDisc state="live" />
+                  <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg">
+                    Magic-Link bereit
+                    {sp.reissued_for && (
+                      <span className="ml-2 lowercase tracking-normal text-fg-muted">
+                        für {sp.reissued_for}
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <p className="mt-2 text-caption text-fg-muted">
+                  15 Minuten gültig, single-use.
+                  {sp.email_sent === "1"
+                    ? " Eine Email mit dem Link wurde an den Owner verschickt."
+                    : ""}
+                </p>
+                <div className="mt-4 break-all rounded-ui border border-line bg-canvas p-3 font-mono font-mono tabular-nums tabular-nums">
+                  <a
+                    className="text-accent-strong hover:underline"
+                    href={sp.magic_link}
+                  >
+                    {sp.magic_link}
+                  </a>
+                </div>
+                <p className="mt-3 text-caption text-fg-subtle">
+                  Tipp: in einem Inkognito-Tab öffnen, um nicht deine
+                  Staff-Session zu überschreiben.
+                </p>
+              </div>
+            )}
 
-          <Card className="mb-6 rounded-card border border-line bg-surface p-6">
-            <Eyebrow>Metadaten</Eyebrow>
-            <DefList className="mt-4">
-              <DefRow
-                label="Org-ID"
-                value={<Mono className="text-[10px]">{org.id}</Mono>}
+            {sp.email_error && (
+              <div className="rounded-card border border-pain-muted bg-pain-soft p-5">
+                <div className="flex items-center gap-2.5">
+                  <StatusDisc state="error" />
+                  <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-pain">
+                    Welcome-Email konnte nicht versendet werden
+                  </p>
+                </div>
+                <p className="mt-2 break-all font-mono font-mono tabular-nums text-fg-muted">
+                  {sp.email_error}
+                </p>
+                <p className="mt-3 text-caption text-fg-subtle">
+                  Häufige Ursachen: <Mono>RESEND_API_KEY</Mono> fehlt,{" "}
+                  <Mono>FROM_EMAIL</Mono> nicht domain-verifiziert, oder die
+                  Resend-Sandbox erlaubt nur Versand an die Account-Email.
+                </p>
+              </div>
+            )}
+
+            <section>
+              <Folio index="§ 01" label="Unternehmenskontext" tone="subtle" />
+              <p className="mt-3 text-caption text-fg-muted">
+                Wird in jeden Interview-System-Prompt der Org eingespeist.
+                Kampagnes können das pro Kampagne überschreiben.
+              </p>
+              <p className="card--reading mt-4 whitespace-pre-wrap leading-relaxed text-fg">
+                {org.company_context}
+              </p>
+              {org.industry && (
+                <p className="mt-3 text-caption text-fg-muted">
+                  Branche: <Mono>{org.industry}</Mono>
+                </p>
+              )}
+            </section>
+
+            <section>
+              <Folio
+                index="§ 02"
+                label="Defaults für neue Kampagnes"
+                tone="subtle"
               />
-              <DefRow label="Slug" value={<Mono>{org.slug}</Mono>} />
-              <DefRow
-                label="Erstellt"
-                value={
-                  <Mono>
-                    {org.created_at
+              <SpecBlock
+                className="mt-4"
+                rows={[
+                  {
+                    label: "Sprache",
+                    value: org.default_locale.toUpperCase(),
+                  },
+                  {
+                    label: "Interviewdauer",
+                    value: `${org.default_interview_length_min} min`,
+                  },
+                  {
+                    label: "ElevenLabs Voice-ID",
+                    value: org.default_voice_id,
+                  },
+                  { label: "Status", value: org.status },
+                ]}
+              />
+            </section>
+
+            <section>
+              <Folio index="§ 03" label="Metadaten" tone="subtle" />
+              <SpecBlock
+                className="mt-4"
+                rows={[
+                  { label: "Org-ID", value: org.id },
+                  { label: "Slug", value: org.slug },
+                  {
+                    label: "Erstellt",
+                    value: org.created_at
                       ? new Date(org.created_at).toLocaleString("de-DE")
-                      : "—"}
-                  </Mono>
-                }
-              />
-              <DefRow
-                label="Aktualisiert"
-                value={
-                  <Mono>
-                    {org.updated_at
+                      : "—",
+                  },
+                  {
+                    label: "Aktualisiert",
+                    value: org.updated_at
                       ? new Date(org.updated_at).toLocaleString("de-DE")
-                      : "—"}
-                  </Mono>
-                }
+                      : "—",
+                  },
+                ]}
               />
-            </DefList>
-          </Card>
+            </section>
 
-          <Card className="card--pain rounded-card border border-pain-muted bg-pain-soft p-6">
+            <Card className="card--pain rounded-card border border-pain-muted bg-pain-soft p-6">
             <header className="mb-5 flex items-start gap-3">
               <span className="grid size-8 place-items-center rounded-ui bg-pain-soft text-pain">
                 <AlertTriangle className="h-4 w-4" />
@@ -378,19 +401,16 @@ export default async function OrgDetailPage({
                 </Button>
               </form>
             </DangerRow>
-          </Card>
-        </>
+            </Card>
+          </div>
+        </div>
       )}
 
       {editing && (
-        <>
-          <PageHeader
-            eyebrow="Bearbeiten"
-            title={org.name}
-            muted={org.slug}
-          />
+        <div className="mx-auto max-w-[680px]">
+          <Folio index="§" label={`${org.name} · Bearbeiten`} />
 
-          <Card className="rounded-card border border-line bg-surface p-6">
+          <Card className="mt-6 rounded-card border border-line bg-surface p-6">
             <form action={updateOrgAction} className="flex flex-col gap-5">
               <Field id="edit-name" label="Name" required>
                 <Input
@@ -486,7 +506,7 @@ export default async function OrgDetailPage({
               </div>
             </form>
           </Card>
-        </>
+        </div>
       )}
     </>
   );
@@ -506,55 +526,20 @@ function BackLink() {
 }
 
 function Flash({ type, message }: { type: "ok" | "err"; message: string }) {
-  const Icon = type === "ok" ? CheckCircle2 : AlertCircle;
   return (
     <div
       role="status"
       className={cn(
-        "mb-6 flex items-start gap-2.5 rounded-ui border px-3.5 py-2.5 text-meta",
+        "grid grid-cols-[20px_1fr] items-start gap-x-2.5 rounded-ui border px-3.5 py-2.5 text-meta",
         type === "ok"
-          ? "border-success/22 bg-success-soft text-success"
+          ? "border-line-subtle bg-surface-2 text-fg"
           : "border-danger/22 bg-danger-soft text-danger",
       )}
     >
-      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+      <span className="flex justify-center pt-0.5">
+        <StatusDisc state={type === "ok" ? "done" : "error"} size="sm" />
+      </span>
       <p className="leading-snug">{message}</p>
-    </div>
-  );
-}
-
-function DefList({
-  className,
-  children,
-}: {
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <dl
-      className={cn(
-        "grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4",
-        className,
-      )}
-    >
-      {children}
-    </dl>
-  );
-}
-
-function DefRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <dt className="label-eyebrow text-fg-subtle">
-        {label}
-      </dt>
-      <dd className="m-0 body-sm font-medium text-fg">{value}</dd>
     </div>
   );
 }
@@ -619,7 +604,7 @@ function Mono({
   return (
     <code
       className={cn(
-        "rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono text-mono tabular-nums text-fg",
+        "rounded-sm bg-surface-2 px-1.5 py-0.5 font-mono font-mono tabular-nums tabular-nums text-fg",
         className,
       )}
     >

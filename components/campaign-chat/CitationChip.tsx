@@ -4,9 +4,10 @@ import Link from "next/link";
 import type { ChatCitation } from "@/lib/api";
 
 /**
- * Inline pseudonymous citation chip: `ANON-XXXXXX · #N`. Clicking navigates to
- * the interview detail (same click-to-quote affordance KnowledgeMap uses).
- * NEVER renders participant email/name — only the anon_id.
+ * Inline pseudonymous citation chip: `ANON-XXXXXX · #N` — the canonical square,
+ * mono DataChip vocabulary. Clicking deep-links into the interview detail (the
+ * same click-to-quote affordance the KnowledgeMap uses), so the answer's
+ * evidence is one hop away. NEVER renders participant email/name — anon_id only.
  */
 export function CitationChip({
   citation,

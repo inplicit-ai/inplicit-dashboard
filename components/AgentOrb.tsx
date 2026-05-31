@@ -172,9 +172,13 @@ function clamp01(n: number): number {
   return n;
 }
 
+// The orb is the canonical single "live" element in the interview room, so its
+// default hue sits in the amber accent register (≈28°) rather than the legacy
+// blue — amber means live, and the orb's motion is the one continuous animation
+// in the room besides the status-disc pulse.
 export function AgentOrb({
   size = 96,
-  hue = 215,
+  hue = 28,
   maxRotationSpeed = 1.2,
   maxHoverIntensity = 0.8,
   getLevel,

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { StatusDisc } from "@/components/ui/status-disc";
 import type { CampaignDraft, EmailTemplate, SetupToolCall } from "@/lib/api";
 import { SectionCard } from "./SectionCard";
 
@@ -41,46 +42,45 @@ export function EmailTemplateSection({
   const previewBody = renderTokens(tpl.body, sample);
 
   return (
-    <SectionCard title={t("emailTemplate")} touched={touched}>
+    <SectionCard index="§ 08" title={t("emailTemplate")} touched={touched}>
       <div className="flex flex-col gap-4">
         <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
+          <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
             {t("emailSubject")}
           </span>
           <Input
             value={tpl.subject}
             onChange={(e) => patch({ subject: e.target.value })}
-            className="h-9 text-sm"
+            className="h-9"
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
+          <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
             {t("emailBody")}
           </span>
           <Textarea
             rows={4}
             value={tpl.body}
             onChange={(e) => patch({ body: e.target.value })}
-            className="min-h-[96px] text-sm"
+            className="min-h-[96px]"
           />
         </label>
-        <p className="text-xs leading-snug text-fg-subtle">
+        <p className="font-mono text-[length:var(--text-eyebrow)] uppercase tracking-[0.06em] text-fg-subtle">
           {t("emailVarsHint")}
         </p>
 
-        {/* Live preview — single hairline card, one inner divider */}
+        {/* Rendered preview — quiet instrument plate, monochrome (not a live
+            process, so no accent: a done disc reads it as a settled render). */}
         <div className="overflow-hidden rounded-card border border-line bg-surface-2">
-          <div className="flex items-center gap-1.5 border-b border-line-subtle px-4 py-2">
-            <span className="status-disc status-disc--sm status-disc--live" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-accent">
+          <div className="flex items-center gap-2 border-b border-line-subtle px-4 py-2">
+            <StatusDisc state="done" size="sm" />
+            <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
               {t("preview")}
             </span>
           </div>
           <div className="px-4 py-3">
-            <p className="mb-1 text-sm font-semibold text-fg">
-              {previewSubject || "—"}
-            </p>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-fg-muted">
+            <p className="mb-1 font-semibold text-fg">{previewSubject || "—"}</p>
+            <p className="whitespace-pre-wrap leading-relaxed text-fg-muted">
               {previewBody || "—"}
             </p>
           </div>

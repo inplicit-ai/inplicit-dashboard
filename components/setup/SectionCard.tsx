@@ -2,28 +2,34 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { StatusDisc } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 
 /**
- * Shared catalog-section card (doc 03 §4, design-contract §2). One file so every
- * section — including the O-5 audience/schedule/email sections — renders
- * identically: design.css `.card` recipe (surface + single hairline + radius +
- * dark-only elevation), a section eyebrow, and a fading "updated by assistant"
- * accent pill when an agent tool just touched it.
+ * Catalog section break — re-cut from a rounded card into a Braun FOLIO.
  *
- * Motion: a tasteful Apple-eased reveal on mount (gated behind
- * prefers-reduced-motion), matching the agent-plan aesthetic.
+ * The stack-of-cards is gone. A section is now a full-bleed hairline rule with
+ * a tracked-caps folio: `§ NN` mono index + the section label on the left, an
+ * optional mono count + the lone "updated by assistant" live disc on the right.
+ * Its data lands directly on the page's negative space below — no inner box,
+ * no shadow. Depth is the rule + the spine, never a frame.
+ *
+ * Motion: one Apple-eased reveal on mount (gated by prefers-reduced-motion).
  */
 export function SectionCard({
+  index,
   title,
-  description,
+  count,
   action,
   touched,
   className,
   children,
 }: {
+  /** Mono folio index, e.g. "§ 02". Optional for the O-5 sub-sections. */
+  index?: string;
   title: string;
-  description?: string;
+  /** Right-flush mono count (goals, questions, slots…). */
+  count?: number;
   action?: React.ReactNode;
   touched?: boolean;
   className?: string;
@@ -37,27 +43,31 @@ export function SectionCard({
       initial={reduceMotion ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: [0.2, 0.65, 0.3, 0.9] }}
-      className={cn("card card--compact gap-4", className)}
+      className={cn("flex flex-col gap-4", className)}
     >
-      <header className="flex items-start justify-between gap-3">
-        <div className="min-w-0 space-y-1">
-          <h3 className="text-[13px] font-semibold leading-tight tracking-[-0.01em] text-fg">
-            {title}
-          </h3>
-          {description ? (
-            <p className="text-xs leading-snug text-fg-subtle">{description}</p>
+      {/* Folio — full-bleed hairline + tracked-caps masthead for the section. */}
+      <header className="flex items-baseline justify-between gap-4 border-b border-line pb-2.5">
+        <span className="flex items-baseline gap-2 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
+          {index ? (
+            <span className="font-mono tabular-nums text-fg-faint">{index}</span>
           ) : null}
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
+          <span className="text-fg-muted">{title}</span>
+        </span>
+        <div className="flex shrink-0 items-center gap-3">
           {action}
+          {typeof count === "number" ? (
+            <span className="font-mono text-[length:var(--text-eyebrow)] tabular-nums text-fg-subtle">
+              n={count}
+            </span>
+          ) : null}
           {touched ? (
             <motion.span
               initial={reduceMotion ? false : { opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
-              className="badge badge--live whitespace-nowrap uppercase"
+              className="flex items-center gap-1.5 text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-accent"
             >
-              <span className="status-disc status-disc--sm status-disc--live status-disc--pulse" />
+              <StatusDisc state="live" size="sm" />
               {t("updatedByAgent")}
             </motion.span>
           ) : null}

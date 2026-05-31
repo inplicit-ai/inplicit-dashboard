@@ -1,4 +1,5 @@
 import { InterviewRoom } from "@/components/InterviewRoom";
+import { StatusDisc } from "@/components/ui/status-disc";
 
 const API_BASE = process.env.API_URL ?? "http://localhost:8080";
 
@@ -26,25 +27,32 @@ export default async function ResumePage({
   return <InterviewRoom wsUrl={wsUrl} apiBase={API_BASE} isResume />;
 }
 
-/** Server-safe invalid-link state — narrow centered card, token-styled. */
+/** Server-safe invalid-link state — quiet instrument plate on the spine. */
 function InvalidLink() {
   return (
     <div className="invalid-shell">
-      <div className="card invalid-card">
-        <span className="eyebrow text-pain">Fehler</span>
-        <h1 className="title invalid-card__title">Ungültiger Link</h1>
-        <p className="body-sm invalid-card__body">
-          Dieser Fortsetzungs-Link ist nicht gültig oder abgelaufen. Bitte fordere
-          einen neuen Termin an.
-        </p>
+      <div className="invalid-plate">
+        <span className="invalid-plate__spine" aria-hidden>
+          <StatusDisc state="error" size="lg" />
+        </span>
+        <div className="invalid-plate__body">
+          <span className="eyebrow">Fehler</span>
+          <h1 className="title invalid-plate__title">Ungültiger Link</h1>
+          <p className="body-lg invalid-plate__text">
+            Dieser Fortsetzungs-Link ist nicht gültig oder abgelaufen. Bitte fordere
+            einen neuen Termin an.
+          </p>
+        </div>
       </div>
       <style
         dangerouslySetInnerHTML={{
           __html: `
         .invalid-shell { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: var(--space-8) var(--space-4); background: var(--color-surface); }
-        .invalid-card { max-width: 440px; width: 100%; text-align: left; }
-        .invalid-card__title { margin-top: var(--space-3); }
-        .invalid-card__body { margin-top: var(--space-3); }
+        .invalid-plate { display: grid; grid-template-columns: 28px 1fr; align-items: start; gap: var(--space-4); max-width: 480px; width: 100%; }
+        .invalid-plate__spine { display: flex; align-items: center; justify-content: center; padding-top: 2px; }
+        .invalid-plate__body { display: flex; flex-direction: column; gap: var(--space-2); }
+        .invalid-plate__title { letter-spacing: -0.02em; }
+        .invalid-plate__text { margin-top: var(--space-2); color: var(--color-text-secondary); }
       `,
         }}
       />

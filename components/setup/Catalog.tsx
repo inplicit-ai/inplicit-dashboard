@@ -4,7 +4,8 @@ import { useTranslations } from "next-intl";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, DURATION_OPTIONS } from "@/components/ui/select";
-import { Eyebrow } from "@/components/PageChrome";
+import { EvidenceTree, type EvidenceNode } from "@/components/ui/agent-list";
+import { DataChip } from "@/components/ui/data-chip";
 import { cn } from "@/lib/utils";
 import type { CampaignDraft, Locale, SetupToolCall } from "@/lib/api";
 import { SectionCard } from "./SectionCard";
@@ -14,14 +15,19 @@ import { ScheduleSection } from "./ScheduleSection";
 import { EmailTemplateSection } from "./EmailTemplateSection";
 
 /**
- * The catalog (right pane, doc 03 §4). Grouped section cards in the agent-plan
- * aesthetic — clean hairline cards, generous radii, no light-mode shadow. Every
- * field is both user-editable and agent-populatable: a field edit dispatches a
- * *local* SetupToolCall of the same shape the agent emits — single reducer, two
- * writers.
+ * The catalog (right pane) — re-cut as a Braun SPEC SHEET on the status spine.
  *
- * `recentlyTouched` carries the set of tool names the last agent turn touched,
- * so a card shows a fading "updated by assistant" pill.
+ * The stack of rounded cards is gone. Every group is a FOLIO section break
+ * (full-bleed hairline + tracked-caps folio), and its data lands directly on
+ * the page's negative space. The interview FORMAT becomes one ruled spec band
+ * (the .spec-strip instrument); GOALS and SUCCESS QUESTIONS become an
+ * EvidenceTree whose status discs sit on the one shared spine x-axis.
+ * Provenance becomes spatial, never boxed.
+ *
+ * Every field is both user-editable and agent-populatable: an edit dispatches a
+ * *local* SetupToolCall of the same shape the agent emits — single reducer, two
+ * writers. `recentlyTouched` carries the tool names the last agent turn touched,
+ * so a section surfaces the lone live disc + "updated by assistant" caption.
  */
 export function Catalog({
   draft,
@@ -34,15 +40,48 @@ export function Catalog({
 }) {
   const t = useTranslations("setup.catalog");
 
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="space-y-1.5">
-        <Eyebrow>{t("title")}</Eyebrow>
-        <p className="text-sm text-fg-muted">{t("subtitle")}</p>
-      </div>
+  const goals = draft.goals ?? [];
+  const questions = draft.successCriteria?.questions ?? [];
 
-      {/* Format — interview type · duration · language grouped into one card */}
+  // Goals as a status-spine ledger — each goal is an inline-editable row.
+  const goalNodes: EvidenceNode[] = goals.map((g, i) => ({
+    id: g.id,
+    kind: "insight",
+    status: "done",
+    label: (
+      <input
+        value={g.text}
+        onChange={(e) =>
+          onPatch({ tool: "refine_goal", args: { id: g.id, text: e.target.value } })
+        }
+        className="w-full bg-transparent text-fg outline-none placeholder:text-fg-subtle"
+        aria-label={`${t("goals")} ${i + 1}`}
+      />
+    ),
+    meta: (
+      <span className="font-mono tabular-nums text-fg-faint">
+        G-{String(i + 1).padStart(2, "0")}
+      </span>
+    ),
+  }));
+
+  const questionNodes: EvidenceNode[] = questions.map((q, i) => ({
+    id: `q-${i}`,
+    kind: "insight",
+    status: "done",
+    label: <span className="text-fg">{q}</span>,
+    meta: (
+      <span className="font-mono tabular-nums text-fg-faint">
+        Q-{String(i + 1).padStart(2, "0")}
+      </span>
+    ),
+  }));
+
+  return (
+    <div className="flex flex-col gap-9">
+      {/* ── Format — one ruled instrument band of three peers ───────────── */}
       <SectionCard
+        index="§ 01"
         title={t("interviewType")}
         touched={
           recentlyTouched?.has("set_interview_type") ||
@@ -50,112 +89,93 @@ export function Catalog({
           recentlyTouched?.has("set_language")
         }
       >
-        <div className="flex flex-col gap-4">
-          {/* Type · duration · language — three peers on one responsive row */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Field label={t("interviewType")}>
-              <Segmented
-                value={draft.interviewType ?? "voice"}
-                options={[
-                  { value: "voice", label: t("voice") },
-                  { value: "chat", label: t("chatType") },
-                ]}
-                onChange={(type) =>
-                  onPatch({ tool: "set_interview_type", args: { type } })
-                }
-              />
-            </Field>
+        <div className="spec-strip rounded-card border border-line">
+          <SpecField label={t("interviewType")}>
+            <Segmented
+              value={draft.interviewType ?? "voice"}
+              options={[
+                { value: "voice", label: t("voice") },
+                { value: "chat", label: t("chatType") },
+              ]}
+              onChange={(type) =>
+                onPatch({ tool: "set_interview_type", args: { type } })
+              }
+            />
+          </SpecField>
 
-            {/* Duration — dropdown on the 5-min grid (no range slider) */}
-            <Field label={t("duration")}>
-              <Select
-                aria-label={t("duration")}
-                value={String(draft.durationMin ?? 25)}
-                onValueChange={(v) =>
-                  onPatch({
-                    tool: "set_duration",
-                    args: { minutes: Number(v) },
-                  })
-                }
-                options={DURATION_OPTIONS}
-                size="md"
-              />
-            </Field>
+          <SpecField label={t("duration")}>
+            <Select
+              aria-label={t("duration")}
+              value={String(draft.durationMin ?? 25)}
+              onValueChange={(v) =>
+                onPatch({ tool: "set_duration", args: { minutes: Number(v) } })
+              }
+              options={DURATION_OPTIONS}
+              size="md"
+            />
+          </SpecField>
 
-            {/* Language */}
-            <Field label={t("language")}>
-              <Select
-                aria-label={t("language")}
-                value={draft.language?.default ?? "de"}
-                onValueChange={(v) =>
-                  onPatch({
-                    tool: "set_language",
-                    args: {
-                      default: v as Locale,
-                      allowSwitch: draft.language?.allowSwitch ?? true,
-                    },
-                  })
-                }
-                options={[
-                  { value: "de", label: "Deutsch" },
-                  { value: "en", label: "English" },
-                ]}
-                size="md"
-              />
-            </Field>
-          </div>
-
-          {/* Allow language switch — full-width sub-row under the pickers */}
-          <label className="flex items-center justify-between gap-3 rounded-ui border border-line-subtle bg-surface-2 px-3 py-2.5">
-            <span className="text-sm text-fg-muted">{t("allowSwitch")}</span>
-            <Switch
-              checked={draft.language?.allowSwitch ?? true}
-              onCheckedChange={(checked) =>
+          <SpecField label={t("language")}>
+            <Select
+              aria-label={t("language")}
+              value={draft.language?.default ?? "de"}
+              onValueChange={(v) =>
                 onPatch({
                   tool: "set_language",
                   args: {
-                    default: draft.language?.default ?? "de",
-                    allowSwitch: checked,
+                    default: v as Locale,
+                    allowSwitch: draft.language?.allowSwitch ?? true,
                   },
                 })
               }
+              options={[
+                { value: "de", label: "Deutsch" },
+                { value: "en", label: "English" },
+              ]}
+              size="md"
             />
-          </label>
+          </SpecField>
         </div>
+
+        <label className="flex items-center justify-between gap-3 py-1">
+          <span className="text-fg-muted">{t("allowSwitch")}</span>
+          <Switch
+            checked={draft.language?.allowSwitch ?? true}
+            onCheckedChange={(checked) =>
+              onPatch({
+                tool: "set_language",
+                args: {
+                  default: draft.language?.default ?? "de",
+                  allowSwitch: checked,
+                },
+              })
+            }
+          />
+        </label>
       </SectionCard>
 
-      {/* Goals (query fan-out) */}
-      <SectionCard title={t("goals")} touched={recentlyTouched?.has("set_goals")}>
+      {/* ── Goals (query fan-out) ──────────────────────────────────────── */}
+      <SectionCard
+        index="§ 02"
+        title={t("goals")}
+        count={goals.length}
+        touched={recentlyTouched?.has("set_goals")}
+      >
         {draft.prompt ? (
-          <p className="rounded-ui border-l-2 border-line-strong bg-surface-2 px-3 py-2 text-sm italic text-fg-muted">
+          <p className="border-l-2 border-line-strong pl-3 italic leading-relaxed text-fg-muted">
             {draft.prompt}
           </p>
         ) : null}
-        {(draft.goals?.length ?? 0) === 0 ? (
-          <p className="text-sm text-fg-muted">{t("goalsEmpty")}</p>
+        {goals.length === 0 ? (
+          <PlatePlaceholder>{t("goalsEmpty")}</PlatePlaceholder>
         ) : (
-          <ul className="flex flex-col gap-1">
-            {draft.goals!.map((g) => (
-              <li key={g.id} className="flex items-start gap-2.5">
-                <span className="status-disc status-disc--sm status-disc--done mt-2.5 shrink-0" />
-                <input
-                  value={g.text}
-                  onChange={(e) =>
-                    onPatch({
-                      tool: "refine_goal",
-                      args: { id: g.id, text: e.target.value },
-                    })
-                  }
-                  className="w-full rounded-ui bg-transparent px-2 py-1 text-sm text-fg outline-none transition-colors focus-visible:bg-surface-2"
-                />
-              </li>
-            ))}
-          </ul>
+          <EvidenceTree nodes={goalNodes} defaultExpandedDepth={0} />
         )}
       </SectionCard>
 
-      {/* Background */}
+      {/* ── Background ─────────────────────────────────────────────────── */}
       <SectionCard
+        index="§ 03"
         title={t("background")}
         touched={recentlyTouched?.has("set_background")}
       >
@@ -166,57 +186,44 @@ export function Catalog({
           onChange={(e) =>
             onPatch({ tool: "set_background", args: { notes: e.target.value } })
           }
-          className="min-h-[80px] text-sm"
+          className="min-h-[80px]"
         />
       </SectionCard>
 
-      {/* Success criteria */}
+      {/* ── Success criteria ───────────────────────────────────────────── */}
       <SectionCard
+        index="§ 04"
         title={t("successCriteria")}
+        count={questions.length > 0 ? questions.length : undefined}
         touched={recentlyTouched?.has("set_success_criteria")}
       >
-        <div className="flex flex-col gap-3">
-          <Segmented
-            value={draft.successCriteria?.mode ?? "inductive"}
-            options={[
-              { value: "inductive", label: t("inductive") },
-              { value: "deductive", label: t("deductive") },
-            ]}
-            onChange={(mode) =>
-              onPatch({
-                tool: "set_success_criteria",
-                args: {
-                  mode,
-                  questions: draft.successCriteria?.questions ?? [],
-                  hypotheses: draft.successCriteria?.hypotheses ?? [],
-                },
-              })
-            }
-          />
-          {(draft.successCriteria?.questions?.length ?? 0) > 0 ? (
-            <div className="border-t border-line-subtle pt-3">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
-                {t("questions")}
-              </p>
-              <ul className="flex flex-col gap-1.5">
-                {draft.successCriteria!.questions.map((q, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-2.5 text-sm text-fg"
-                  >
-                    <span className="status-disc status-disc--sm status-disc--done mt-1.5 shrink-0" />
-                    <span>{q}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </div>
+        <Segmented
+          value={draft.successCriteria?.mode ?? "inductive"}
+          options={[
+            { value: "inductive", label: t("inductive") },
+            { value: "deductive", label: t("deductive") },
+          ]}
+          onChange={(mode) =>
+            onPatch({
+              tool: "set_success_criteria",
+              args: {
+                mode,
+                questions: draft.successCriteria?.questions ?? [],
+                hypotheses: draft.successCriteria?.hypotheses ?? [],
+              },
+            })
+          }
+        />
+        {questions.length > 0 ? (
+          <EvidenceTree nodes={questionNodes} defaultExpandedDepth={0} />
+        ) : null}
       </SectionCard>
 
-      {/* Topics */}
+      {/* ── Topics ─────────────────────────────────────────────────────── */}
       <SectionCard
+        index="§ 05"
         title={t("topics")}
+        count={draft.topics?.nodes?.length || undefined}
         touched={
           recentlyTouched?.has("add_topic") ||
           recentlyTouched?.has("link_topics")
@@ -225,21 +232,21 @@ export function Catalog({
         <TopicGraph data={draft.topics} />
       </SectionCard>
 
-      {/* People (name+email rows + CSV upload) */}
+      {/* ── People ─────────────────────────────────────────────────────── */}
       <PeopleSection
         draft={draft}
         onPatch={onPatch}
         touched={recentlyTouched?.has("set_people")}
       />
 
-      {/* Schedule (booking slots, not open-anytime) */}
+      {/* ── Schedule ───────────────────────────────────────────────────── */}
       <ScheduleSection
         draft={draft}
         onPatch={onPatch}
         touched={recentlyTouched?.has("set_schedule")}
       />
 
-      {/* Invite email template (live preview) */}
+      {/* ── Invite email ───────────────────────────────────────────────── */}
       <EmailTemplateSection
         draft={draft}
         onPatch={onPatch}
@@ -249,10 +256,21 @@ export function Catalog({
   );
 }
 
-/* ─── Local field + segmented-control helpers ────────────────────────────── */
+/* ─── Shared spec-sheet helpers ──────────────────────────────────────────── */
 
-/** Labeled form field, design-contract §5 scaffolding. */
-function Field({
+/** A printed-plate placeholder for empty data — hairline rule + mono caption. */
+export function PlatePlaceholder({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-card border border-dashed border-line-strong bg-surface-2 px-4 py-3">
+      <p className="font-mono text-[length:var(--text-eyebrow)] uppercase tracking-[0.06em] text-fg-subtle">
+        {children}
+      </p>
+    </div>
+  );
+}
+
+/** A labelled cell inside the ruled spec band — eyebrow over the control. */
+function SpecField({
   label,
   children,
 }: {
@@ -260,10 +278,8 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
-        {label}
-      </span>
+    <label className="spec-cell !gap-2">
+      <span className="spec-cell__label">{label}</span>
       {children}
     </label>
   );
@@ -271,10 +287,10 @@ function Field({
 
 /**
  * Token-driven segmented control for small discrete choices (interview type,
- * success mode). Single hairline track, near-black active pill — agent-plan
- * aesthetic. Generic over the literal-union value type so callers stay typed.
+ * success mode). Single hairline track, near-black active pill — the in-app
+ * primary surface (amber is never a control fill).
  */
-function Segmented<T extends string>({
+export function Segmented<T extends string>({
   value,
   options,
   onChange,
@@ -304,9 +320,7 @@ function Segmented<T extends string>({
             onClick={() => onChange(opt.value)}
             className={cn(
               "flex-1 rounded-sm px-3 py-1.5 text-[13px] font-medium transition-colors",
-              active
-                ? "bg-fg text-canvas"
-                : "text-fg-muted hover:text-fg",
+              active ? "bg-fg text-canvas" : "text-fg-muted hover:text-fg",
             )}
           >
             {opt.label}
@@ -316,3 +330,6 @@ function Segmented<T extends string>({
     </div>
   );
 }
+
+/** Re-exported so review can use the same chip vocabulary. */
+export { DataChip };

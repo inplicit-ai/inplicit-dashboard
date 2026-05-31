@@ -2,11 +2,13 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * A single KPI tile. Uses the `.stat` recipe: flat surface + hairline + radius,
- * value rendered in JetBrains Mono + tabular-nums so the figure reads as
- * instrument data. Light depth is border + surface-step only — no shadow (Braun
- * rule). The accent is reserved for active/focus states elsewhere; a stat tile
- * is quiet by default. See design-contract §2.
+ * A single instrument cell. Reframed onto the `.spec-cell` recipe so a row of
+ * KPIs reads as ONE ruled control-panel band (hairline-divided cells), never a
+ * grid of floating boxes — the Research Ledger discipline. Value is JetBrains
+ * Mono + tabular-nums (`.spec-cell__value`); label is a tracked-caps eyebrow.
+ *
+ * Designed to sit inside `<StatsRow>` (the `.spec-strip` enclosure). The accent
+ * never appears here — a stat tile is monochrome by default.
  */
 export function StatsCard({
   label,
@@ -20,19 +22,23 @@ export function StatsCard({
   className?: string;
 }) {
   return (
-    <div className={cn("stat", className)}>
-      <span className="stat__label">{label}</span>
-      <span className="stat__value">{value}</span>
-      {hint && <span className="stat__sub">{hint}</span>}
+    <div className={cn("spec-cell", className)}>
+      <span className="spec-cell__label">{label}</span>
+      <span className="spec-cell__value">{value}</span>
+      {hint && (
+        <span className="font-mono text-[length:var(--text-caps)] uppercase tracking-[0.06em] text-fg-subtle">
+          {hint}
+        </span>
+      )}
     </div>
   );
 }
 
-/** Responsive grid wrapper for a row of stat tiles. */
+/**
+ * The instrument band — one hairline enclosure divided into equal cells. Wraps
+ * the `.spec-strip` recipe; collapses to a 2-col grid under 640px via the
+ * recipe. Replaces the old floating stat-card grid.
+ */
 export function StatsRow({ children }: { children: ReactNode }) {
-  return (
-    <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-      {children}
-    </div>
-  );
+  return <div className="spec-strip mb-8">{children}</div>;
 }

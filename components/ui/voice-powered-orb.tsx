@@ -173,9 +173,11 @@ const FRAG = /* glsl */ `
   }
 `;
 
+// Default hue in the amber accent register — the orb is the lone "live" accent
+// surface, so it speaks the same one-accent language as the status-disc pulse.
 export const VoicePoweredOrb: FC<VoicePoweredOrbProps> = ({
   className,
-  hue = 0,
+  hue = 28,
   enableVoiceControl = true,
   voiceSensitivity = 1.5,
   maxRotationSpeed = 1.2,

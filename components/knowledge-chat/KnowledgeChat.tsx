@@ -1,9 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowUp, Globe, Plus, Sparkles, Trash2 } from "lucide-react";
+import { ArrowUp, Plus, Trash2 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  ChatComposerBar,
+  ChatScrollAnchored,
+  ChatShell,
+} from "@/components/ui/chat-shell";
+import {
+  PromptInput,
+  PromptInputActions,
+  PromptInputTextarea,
+} from "@/components/ui/prompt-input";
+import { ConversationTurn } from "@/components/ui/conversation-turn";
+import { StatusDisc } from "@/components/ui/status-disc";
+import { DataChip } from "@/components/ui/data-chip";
 import { cn } from "@/lib/utils";
 import type {
   ChatThreadSummary,
@@ -28,10 +43,12 @@ async function dapi<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 /**
- * Cross-campaign Knowledge Chat (O-8). Reuses the per-campaign chat shape:
- * left thread rail + AI-Elements-style conversation. The org-specific additions
- * are the scope chip ("searching N campaigns") and campaign-labelled citations.
- * The server re-validates every campaign against org_id — the client never
+ * Cross-campaign Knowledge Chat (O-8), recomposed onto the chat-surfaces
+ * manifesto: a bound-spine thread rail + the 21st.dev AI-conversation pattern
+ * via ConversationTurn inside the canonical ChatShell envelope. The org-specific
+ * scope ("searching N campaigns") rides as a mono DataChip in the fixed folio
+ * header; citations carry the campaign so org-level answers never mislabel a
+ * hit. The server re-validates every campaign against org_id — the client never
  * supplies a campaign set.
  */
 export function KnowledgeChat() {
@@ -156,9 +173,8 @@ export function KnowledgeChat() {
   }
 
   // Full-height chat-container (design-contract §6): the page supplies the
-  // height envelope; this fills it as a `flex min-h-0` row with a thread rail and
-  // a conversation column. The scope chip lives in the conversation's fixed
-  // header so it never scrolls away.
+  // height envelope; this fills it as a `flex min-h-0` row with a bound-spine
+  // thread rail and a conversation column whose folio header never scrolls.
   return (
     <div className="flex h-full min-h-0 overflow-hidden border-t border-line bg-canvas">
       <aside className="hidden w-64 shrink-0 border-r border-line bg-surface sm:flex sm:min-h-0 sm:flex-col">
@@ -172,7 +188,7 @@ export function KnowledgeChat() {
         />
       </aside>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <ScopeHeader count={scope} />
+        <ScopeHeader count={scope} live={pending} />
         <Conversation
           messages={messages}
           pending={pending}
@@ -184,28 +200,30 @@ export function KnowledgeChat() {
   );
 }
 
-function ScopeHeader({ count }: { count: number | null }) {
+/** Folio header — eyebrow title, mono scope chip, live disc while searching. */
+function ScopeHeader({ count, live }: { count: number | null; live: boolean }) {
   const t = useTranslations("knowledgeChat");
   return (
-    <header className="flex shrink-0 items-center gap-3 border-b border-line px-4 py-3.5 sm:px-8">
-      <span className="grid size-8 shrink-0 place-items-center rounded-ui bg-accent-soft text-accent">
-        <Sparkles className="h-4 w-4" />
-      </span>
-      <div className="min-w-0">
+    <header className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-4 py-3.5 sm:px-8">
+      <div className="flex min-w-0 items-baseline gap-3">
+        <span className="label-eyebrow">{t("eyebrow")}</span>
         <p className="truncate text-sm font-semibold tracking-tight text-fg">
           {t("title")}
         </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
         {count !== null && (
-          <span className="inline-flex items-center gap-1 text-[11px] tabular-nums text-fg-muted">
-            <Globe className="h-3 w-3 text-accent" />
+          <DataChip tone="neutral" mono>
             {t("scope", { count })}
-          </span>
+          </DataChip>
         )}
+        <StatusDisc state={live ? "live" : "idle"} size="sm" />
       </div>
     </header>
   );
 }
 
+/** Bound-spine thread rail — same ledger language as the per-campaign list. */
 function ThreadList({
   threads,
   activeId,
@@ -224,38 +242,42 @@ function ThreadList({
   const t = useTranslations("knowledgeChat");
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-center justify-between border-b border-line-subtle px-3 py-3">
+      <div className="flex shrink-0 items-center justify-between border-b border-line px-3 py-3">
         <span className="label-eyebrow">{t("threadsTitle")}</span>
         <button
           type="button"
           onClick={onNew}
           disabled={busy}
-          className="inline-flex items-center gap-1 rounded-ui border border-line bg-surface px-2 py-1 text-[13px] font-medium text-fg-muted transition-colors hover:border-line-strong hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+          aria-label={t("newChat")}
+          className="inline-flex items-center gap-1 rounded-sm border border-line bg-surface px-2 py-1 text-[13px] font-medium text-fg-muted transition-colors hover:border-line-strong hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
         >
           <Plus className="h-3.5 w-3.5" />
           {t("newChat")}
         </button>
       </div>
-      <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto px-2 py-2">
+      <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto py-1">
         {threads.length === 0 ? (
-          <p className="px-2 py-3 text-[13px] text-fg-subtle">
+          <p className="px-3 py-3 text-[13px] text-fg-subtle">
             {t("emptyThreads")}
           </p>
         ) : (
-          <ul className="space-y-0.5">
+          <ul>
             {threads.map((thread) => {
               const active = thread.id === activeId;
               return (
-                <li key={thread.id} className="group relative">
+                <li
+                  key={thread.id}
+                  className="group relative border-b border-line-subtle last:border-b-0"
+                >
                   <button
                     type="button"
                     onClick={() => onSelect(thread.id)}
                     aria-current={active ? "true" : undefined}
                     className={cn(
-                      "flex w-full items-center gap-2 rounded-ui border-l-2 px-2.5 py-2 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      "flex w-full items-center gap-2 px-3 py-2.5 pr-8 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                       active
-                        ? "border-accent bg-surface-2 font-medium text-fg"
-                        : "border-transparent text-fg-muted hover:bg-surface-2 hover:text-fg",
+                        ? "bg-surface-2 font-medium text-fg shadow-[inset_2px_0_0_var(--color-accent)]"
+                        : "text-fg-muted hover:bg-surface-2 hover:text-fg",
                     )}
                   >
                     <span className="min-w-0 flex-1 truncate">
@@ -266,7 +288,7 @@ function ThreadList({
                     type="button"
                     onClick={() => onDelete(thread.id)}
                     aria-label={t("deleteThread")}
-                    className="absolute right-1 top-1/2 hidden -translate-y-1/2 rounded-ui p-1 text-fg-subtle hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:block"
+                    className="absolute right-1.5 top-1/2 hidden -translate-y-1/2 rounded-sm p-1 text-fg-subtle transition-colors hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:block"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -293,11 +315,6 @@ function Conversation({
 }) {
   const t = useTranslations("knowledgeChat");
   const [draft, setDraft] = useState("");
-  const endRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages.length, pending]);
 
   const canSend = draft.trim().length > 0 && !pending;
 
@@ -308,86 +325,92 @@ function Conversation({
     setDraft("");
   }
 
-  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      submit();
-    }
-  }
-
   const isEmpty = messages.length === 0;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      {/* The single scroll region. */}
-      <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">
+    <ChatShell height="fill">
+      <ChatScrollAnchored
+        dep={[messages.length, error]}
+        live={pending}
+        scrollLabel={t("send")}
+        className="px-4 py-6 sm:px-8"
+      >
         {isEmpty ? (
-          <div className="mx-auto flex h-full max-w-md flex-col items-center justify-center gap-4 text-center">
-            <span className="grid size-12 place-items-center rounded-full bg-accent-soft text-accent">
-              <Sparkles className="h-5 w-5" />
-            </span>
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold tracking-tight text-fg">
-                {t("emptyTitle")}
-              </h2>
-              <p className="text-[length:var(--text-body-lg)] leading-relaxed text-fg-muted">
-                {t("emptyBody")}
-              </p>
-            </div>
-            <p className="rounded-full border border-line bg-surface px-3 py-1 text-[11px] font-medium text-fg-subtle">
-              {t("aiLabel")}
-            </p>
-          </div>
+          <EmptyState />
         ) : (
-          <div className="mx-auto flex max-w-3xl flex-col gap-5">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
             <AnimatePresence initial={false}>
               {messages.map((m) => (
-                <MessageRow key={m.id} message={m} />
+                <MessageTurn key={m.id} message={m} />
               ))}
             </AnimatePresence>
             {pending && (
-              <div className="flex items-center gap-2 text-sm text-fg-subtle">
-                <span className="rag__send-loading" aria-hidden="true" />
-                {t("thinking")}
+              <div className="flex items-center gap-2 px-1 text-[13px] text-fg-muted">
+                <StatusDisc state="live" size="sm" />
+                <span className="italic">{t("thinking")}</span>
               </div>
             )}
             {error && (
-              <div className="rounded-card border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
-                {error}
+              <div className="flex items-start gap-2.5 rounded-card border border-pain-muted bg-pain-soft px-4 py-3 text-sm text-danger">
+                <StatusDisc state="error" size="sm" className="mt-0.5" />
+                <span>{error}</span>
               </div>
             )}
-            <div ref={endRef} />
           </div>
         )}
-      </div>
+      </ChatScrollAnchored>
 
-      {/* Pinned composer — never scrolls away. */}
-      <div className="shrink-0 border-t border-line bg-canvas px-4 py-3 sm:px-8">
-        <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-card border border-line bg-surface p-2 transition-colors focus-within:border-accent">
-          <textarea
+      <ChatComposerBar className="px-4 py-3 sm:px-8">
+        <div className="mx-auto w-full max-w-3xl">
+          <PromptInput
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder={t("placeholder")}
-            rows={1}
-            className="max-h-32 flex-1 resize-none bg-transparent px-2 py-1.5 text-[length:var(--text-body-lg)] leading-relaxed text-fg outline-none placeholder:text-fg-faint"
-          />
-          <button
-            type="button"
-            onClick={submit}
-            disabled={!canSend}
-            aria-label={t("send")}
-            className="grid size-8 shrink-0 place-items-center rounded-full bg-fg text-canvas transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+            onValueChange={setDraft}
+            onSubmit={submit}
+            isLoading={pending}
+            className="shadow-none"
           >
-            <ArrowUp className="h-4 w-4" />
-          </button>
+            <PromptInputTextarea
+              placeholder={t("placeholder")}
+              disabled={pending}
+            />
+            <PromptInputActions className="justify-end pt-1">
+              <Button
+                type="button"
+                size="icon-sm"
+                onClick={submit}
+                disabled={!canSend}
+                aria-label={t("send")}
+                className="rounded-full"
+              >
+                <ArrowUp className="size-4" />
+              </Button>
+            </PromptInputActions>
+          </PromptInput>
         </div>
+      </ChatComposerBar>
+    </ChatShell>
+  );
+}
+
+function EmptyState() {
+  const t = useTranslations("knowledgeChat");
+  return (
+    <div className="mx-auto flex h-full w-full max-w-xl flex-col items-center justify-center gap-5 py-10 text-center">
+      <StatusDisc state="idle" size="lg" />
+      <div className="space-y-2">
+        <h2 className="text-[length:var(--text-body-lg)] font-semibold tracking-tight text-fg">
+          {t("emptyTitle")}
+        </h2>
+        <p className="mx-auto max-w-[60ch] text-[length:var(--text-body-lg)] leading-relaxed text-fg-muted">
+          {t("emptyBody")}
+        </p>
       </div>
+      <span className="label-eyebrow text-fg-faint">{t("aiLabel")}</span>
     </div>
   );
 }
 
-function MessageRow({ message }: { message: OrgChatMessage }) {
+function MessageTurn({ message }: { message: OrgChatMessage }) {
   const t = useTranslations("knowledgeChat");
   const reduce = useReducedMotion();
 
@@ -402,23 +425,15 @@ function MessageRow({ message }: { message: OrgChatMessage }) {
 
   if (message.role === "user") {
     return (
-      <motion.div {...enter} className="flex justify-end">
-        <div className="max-w-[min(80%,680px)] rounded-card bg-accent-soft px-5 py-3.5 text-[length:var(--text-body-lg)] leading-relaxed text-fg">
-          {message.content}
-        </div>
+      <motion.div {...enter} className="flex w-full flex-col items-end">
+        <ConversationTurn role="user">{message.content}</ConversationTurn>
       </motion.div>
     );
   }
   return (
-    <motion.div {...enter} className="flex flex-col gap-2">
-      <span className="label-eyebrow">{t("assistant")}</span>
-      <div className="max-w-[min(80%,680px)] rounded-card bg-surface-2 px-5 py-4">
-        <p
-          className={cn(
-            "text-[length:var(--text-body-lg)] leading-relaxed",
-            message.declined ? "text-fg-muted" : "text-fg",
-          )}
-        >
+    <motion.div {...enter} className="flex w-full flex-col">
+      <ConversationTurn role="assistant">
+        <p className={cn(message.declined && "text-fg-muted")}>
           {message.content}
         </p>
         {message.citations.length > 0 && (
@@ -429,9 +444,9 @@ function MessageRow({ message }: { message: OrgChatMessage }) {
             ))}
           </div>
         )}
-      </div>
-      <div className="flex items-center gap-2 pl-1">
-        <span className="text-[11px] text-fg-faint">{t("aiLabel")}</span>
+      </ConversationTurn>
+      <div className="mt-1.5 flex items-center gap-2 pl-1">
+        <span className="label-eyebrow text-fg-faint">{t("aiLabel")}</span>
         {message.cached && (
           <span className="rounded-sm border border-line px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-fg-subtle">
             {t("cachedNote")}

@@ -1,6 +1,7 @@
 "use client";
 
-import { type ReactNode, type RefObject } from "react";
+import { type RefObject } from "react";
+import { ConversationTurn } from "@/components/ui/conversation-turn";
 import type { Lang } from "./copy";
 import { roomCopy } from "./copy";
 import type { Msg } from "./types";
@@ -18,40 +19,51 @@ function cleanAgentText(s: string): string {
 }
 
 /**
- * Conversation transcript. Stick-to-bottom is handled by the orchestrator
- * scrolling `scrollRef` on new content (mirrors the AI Elements Conversation
- * behaviour adopted in 01 without pulling the dependency into this island).
+ * Transcript — the running interview echo as calm ConversationTurn rows
+ * (manifesto: interview-experience). assistant = the AI agent, user = the
+ * participant; 68ch, content-first, no bubble border on the agent side. The
+ * orchestrator sticks-to-bottom by scrolling `scrollRef` on new content.
  */
 export function Transcript({ lang, messages, interimUser, scrollRef }: Props) {
   const c = roomCopy(lang);
   return (
     <div ref={scrollRef} className="iv-transcript">
-      {messages.length === 0 && (
+      {messages.length === 0 && !interimUser && (
         <p className="caption iv-transcript__empty">{c.transcriptEmpty}</p>
       )}
-      {messages.map((m) => (
-        <Bubble key={m.id} role={m.role}>
-          {m.role === "agent" ? cleanAgentText(m.text) : m.text}
-          {m.role === "agent" && m.streaming && <Cursor />}
-        </Bubble>
-      ))}
-      {interimUser && (
-        <div className="iv-bubble-row iv-bubble-row--right">
-          <div className="iv-bubble iv-bubble--user iv-bubble--interim">
-            {interimUser} <Cursor />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
-function Bubble({ role, children }: { role: "agent" | "user"; children: ReactNode }) {
-  const klass = role === "user" ? "iv-bubble iv-bubble--user" : "iv-bubble iv-bubble--agent";
-  const rowKlass = role === "user" ? "iv-bubble-row iv-bubble-row--right" : "iv-bubble-row";
-  return (
-    <div className={rowKlass}>
-      <div className={klass}>{children}</div>
+      {messages.map((m) => (
+        <ConversationTurn key={m.id} role={m.role === "agent" ? "assistant" : "user"}>
+          {m.role === "agent" ? (
+            <>
+              {cleanAgentText(m.text)}
+              {m.streaming && <Cursor />}
+            </>
+          ) : (
+            m.text
+          )}
+        </ConversationTurn>
+      ))}
+
+      {interimUser && (
+        <ConversationTurn role="user" className="iv-turn--interim">
+          {interimUser}
+          <Cursor />
+        </ConversationTurn>
+      )}
+
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        .iv-transcript { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-2) 0 var(--space-4); }
+        .iv-transcript__empty { margin: auto 0; color: var(--color-text-tertiary); text-align: center; }
+        .iv-turn--interim { opacity: 0.6; }
+        .iv-cursor { display: inline-block; width: 2px; height: 0.95em; margin-left: 2px; vertical-align: -2px; background: currentColor; opacity: 0.65; animation: iv-blink 1s steps(2) infinite; }
+        @keyframes iv-blink { to { opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { .iv-cursor { animation: none; } }
+      `,
+        }}
+      />
     </div>
   );
 }

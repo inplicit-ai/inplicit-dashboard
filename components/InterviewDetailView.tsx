@@ -1,19 +1,16 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  Check,
-  ChevronDown,
-  Filter as FilterIcon,
-  Search,
-  Sparkles,
-} from "lucide-react";
+import { Check, Filter as FilterIcon, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eyebrow } from "@/components/PageChrome";
+import { Ledger } from "@/components/ui/ledger";
+import { LedgerRow } from "@/components/ui/ledger-row";
+import { Folio } from "@/components/ui/folio";
+import { DataChip } from "@/components/ui/data-chip";
+import { type StatusState } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 import type { Utterance, VseInsight } from "@/lib/api";
 
@@ -39,14 +36,11 @@ const PHASE_LABEL: Record<string, string> = {
   validation: "Validierung",
 };
 
-const SPEAKER_STYLES: Record<Utterance["speaker"], string> = {
-  agent: "bg-accent-soft text-accent-strong border-accent-muted",
-  participant: "bg-gap-soft text-gap border-gap-muted",
-};
-
-const PHASE_STYLES: Record<string, string> = {
-  open: "bg-surface-2 text-fg-muted border-line",
-  validation: "bg-gap-soft text-gap border-gap-muted",
+// participant turns carry the gap tint (their voice is the evidence);
+// agent turns stay neutral. Disc keeps both on the same spine x-axis.
+const SPEAKER_DISC: Record<Utterance["speaker"], StatusState> = {
+  agent: "idle",
+  participant: "done",
 };
 
 export function InterviewDetailView({
@@ -119,30 +113,22 @@ export function InterviewDetailView({
 
   return (
     <>
-      {/* ─── Insights ─────────────────────────────────────────────────────────── */}
-      <section className="mb-8">
-        <SectionHeader
-          eyebrow="Schlüssel-Insights"
-          title="Was aus diesem Gespräch hervorging"
-          count={insights.length}
-        />
+      {/* ─── § INSIGHTS — evidence tree ─────────────────────────────────────── */}
+      <section className="mb-10">
+        <Folio index="§" label="Schlüssel-Insights" count={insights.length} />
+
         {insights.length === 0 ? (
-          <div className="card card--compact">
-            <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
-              <p className="text-sm font-semibold text-fg">
-                Noch keine Insights extrahiert.
-              </p>
-              <p className="text-xs text-fg-muted">
-                Sie erscheinen, sobald die Auswertung abgeschlossen ist
-                {processingStatus && ` (aktuell: ${processingStatus})`}.
-              </p>
-            </div>
-          </div>
+          <EmptyPlate
+            caption={`Noch keine Insights extrahiert${
+              processingStatus ? ` — aktuell: ${processingStatus}` : ""
+            }. Sie erscheinen, sobald die Auswertung abgeschlossen ist.`}
+          />
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {insights.map((insight) => (
-              <InsightCard
+          <Ledger>
+            {insights.map((insight, i) => (
+              <InsightRow
                 key={insight.id}
+                index={`I-${String(i + 1).padStart(2, "0")}`}
                 insight={insight}
                 selected={insight.id === selectedInsightId}
                 onSelect={() =>
@@ -150,12 +136,15 @@ export function InterviewDetailView({
                 }
               />
             ))}
-          </div>
+          </Ledger>
         )}
 
         {selected && (
           <p className="mt-3 text-sm text-fg-muted">
-            <span>{selected.utterance_ids.length} Stellen markiert.</span>{" "}
+            <span className="font-mono tabular-nums">
+              {selected.utterance_ids.length}
+            </span>{" "}
+            Stellen markiert.{" "}
             <button
               type="button"
               className="text-accent-strong underline underline-offset-2 hover:text-fg"
@@ -167,26 +156,13 @@ export function InterviewDetailView({
         )}
       </section>
 
-      {/* ─── Transcript-as-Logs ───────────────────────────────────────────────── */}
+      {/* ─── § TRANSCRIPT — the spine register ──────────────────────────────── */}
       <section className="mb-8">
-        <SectionHeader
-          eyebrow="Transkript"
-          title="Vollständiger Verlauf"
+        <Folio
+          index="§"
+          label="Transkript"
           count={utterances.length}
-        />
-
-        <div className="card card--flush">
-          {/* Toolbar */}
-          <div className="flex flex-col gap-3 border-b border-line bg-surface-2 p-4 sm:flex-row sm:items-center">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
-              <Input
-                placeholder="Im Transkript suchen…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 pl-9 text-sm"
-              />
-            </div>
+          action={
             <Button
               variant={showFilters ? "default" : "outline"}
               size="sm"
@@ -201,70 +177,71 @@ export function InterviewDetailView({
                 </span>
               )}
             </Button>
-          </div>
+          }
+        />
 
-          <div className="flex min-h-0">
-            {/* Filter panel */}
-            <AnimatePresence initial={false}>
-              {showFilters && (
-                <motion.div
-                  key="filters"
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 240, opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden border-r border-line bg-surface-2"
-                >
-                  <FilterPanel
-                    filters={filters}
-                    onChange={setFilters}
-                    utterances={utterances}
+        {/* Search */}
+        <div className="relative mb-3">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
+          <Input
+            placeholder="Im Transkript suchen…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-9 pl-9 text-sm"
+          />
+        </div>
+
+        <div className="flex min-h-0 gap-4">
+          {/* Filter panel */}
+          <AnimatePresence initial={false}>
+            {showFilters && (
+              <motion.div
+                key="filters"
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 220, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="shrink-0 overflow-hidden"
+              >
+                <FilterPanel
+                  filters={filters}
+                  onChange={setFilters}
+                  utterances={utterances}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Transcript ledger */}
+          <div className="min-w-0 flex-1">
+            {filteredUtterances.length > 0 ? (
+              <Ledger framed>
+                {filteredUtterances.map((u) => (
+                  <UtteranceRow
+                    key={u.id}
+                    u={u}
+                    relatedInsights={insightsByUtterance.get(u.id) ?? []}
+                    highlighted={highlightedUtteranceIds.has(u.id)}
+                    expanded={expandedUtteranceId === u.id}
+                    onToggle={() =>
+                      setExpandedUtteranceId((c) => (c === u.id ? null : u.id))
+                    }
+                    registerRef={(el) => {
+                      if (el) turnRefs.current.set(u.id, el);
+                      else turnRefs.current.delete(u.id);
+                    }}
                   />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Log rows */}
-            <div className="min-w-0 flex-1">
-              <AnimatePresence mode="popLayout" initial={false}>
-                {filteredUtterances.length > 0 ? (
-                  filteredUtterances.map((u, index) => (
-                    <motion.div
-                      key={u.id}
-                      initial={{ opacity: 0, y: -6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.2, delay: Math.min(index * 0.01, 0.15) }}
-                    >
-                      <UtteranceRow
-                        u={u}
-                        relatedInsights={insightsByUtterance.get(u.id) ?? []}
-                        highlighted={highlightedUtteranceIds.has(u.id)}
-                        expanded={expandedUtteranceId === u.id}
-                        onToggle={() =>
-                          setExpandedUtteranceId((c) => (c === u.id ? null : u.id))
-                        }
-                        registerRef={(el) => {
-                          if (el) turnRefs.current.set(u.id, el);
-                          else turnRefs.current.delete(u.id);
-                        }}
-                      />
-                    </motion.div>
-                  ))
-                ) : (
-                  <motion.div
-                    key="empty"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="p-12 text-center text-fg-muted"
-                  >
-                    {utterances.length === 0
-                      ? "Kein Transkript vorhanden."
-                      : "Keine Zeilen passen zu deinen Filtern."}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                ))}
+              </Ledger>
+            ) : (
+              <EmptyPlate
+                caption={
+                  utterances.length === 0
+                    ? "Kein Transkript vorhanden."
+                    : "Keine Zeilen passen zu deinen Filtern."
+                }
+              />
+            )}
           </div>
         </div>
       </section>
@@ -272,93 +249,82 @@ export function InterviewDetailView({
   );
 }
 
-// ─── Insight card ────────────────────────────────────────────────────────────
+// ─── Insight row (expandable evidence branch) ─────────────────────────────────
 
-function InsightCard({
+function InsightRow({
+  index,
   insight,
   selected,
   onSelect,
 }: {
+  index: string;
   insight: VseInsight;
   selected: boolean;
   onSelect: () => void;
 }) {
   const quoteCount = insight.utterance_ids?.length ?? 0;
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={selected}
-      className={cn(
-        "w-full rounded-card border bg-surface p-5 text-left transition-colors",
-        selected
-          ? "border-accent bg-accent-soft"
-          : "border-line hover:border-line-strong hover:bg-surface-2",
-      )}
-    >
-      <div className="mb-3 flex items-center gap-2">
-        {insight.department && (
-          <Badge variant="outline" className="text-xs">
-            {insight.department}
-          </Badge>
-        )}
-        {insight.phase === "validation" && (
-          <Badge className="bg-gap-soft text-gap border-gap-muted">
-            Validierungsphase
-          </Badge>
-        )}
-        {insight.origin_solution === "AI" && (
-          <Badge variant="secondary" className="gap-1">
-            <Sparkles className="h-3 w-3" />
-            Idee inferiert
-          </Badge>
-        )}
-        {quoteCount > 0 && (
-          <span className="ml-auto font-mono tabular-nums text-xs text-fg-subtle">
-            {quoteCount} {quoteCount === 1 ? "Zitat" : "Zitate"}
+    <LedgerRow
+      index={index}
+      title={
+        <span className="flex flex-wrap items-center gap-2">
+          <span className={cn(selected && "text-accent-strong")}>
+            {insight.problem_statement}
           </span>
+          {insight.department && <DataChip tone="neutral">{insight.department}</DataChip>}
+          {insight.phase === "validation" && (
+            <DataChip tone="gap">Validierung</DataChip>
+          )}
+          {insight.origin_solution === "AI" && (
+            <DataChip tone="opportunity">Idee inferiert</DataChip>
+          )}
+        </span>
+      }
+      status={selected ? "live" : "done"}
+      pulse={false}
+      metric={
+        <span className="inline-flex items-center gap-1">
+          <span className="font-mono tabular-nums">{quoteCount}</span>
+          <span className="text-fg-subtle">{quoteCount === 1 ? "Zitat" : "Zitate"}</span>
+        </span>
+      }
+      expandable
+      onToggle={onSelect}
+      open={selected}
+    >
+      <div className="flex flex-col gap-1 pb-2 pt-1">
+        <TriadLine tone="pain" label="Problem" value={insight.problem_statement} />
+        {insight.human_solution && (
+          <TriadLine tone="opportunity" label="Idee" value={insight.human_solution} />
+        )}
+        {insight.business_opportunity && (
+          <TriadLine tone="success" label="Chance" value={insight.business_opportunity} />
         )}
       </div>
-      <p className="text-[1.0625rem] font-medium leading-relaxed text-fg">
-        {insight.problem_statement}
-      </p>
-      {insight.human_solution && (
-        <p className="mt-2 text-sm leading-relaxed text-fg-muted">
-          <strong className="font-semibold text-fg">Idee:</strong> {insight.human_solution}
-        </p>
-      )}
-      {insight.business_opportunity && (
-        <p className="mt-1 text-sm leading-relaxed text-fg-muted">
-          <strong className="font-semibold text-fg">Chance:</strong> {insight.business_opportunity}
-        </p>
-      )}
-    </button>
+    </LedgerRow>
   );
 }
 
-// ─── Section header ──────────────────────────────────────────────────────────
-
-function SectionHeader({
-  eyebrow,
-  title,
-  count,
+function TriadLine({
+  tone,
+  label,
+  value,
 }: {
-  eyebrow: string;
-  title: string;
-  count: number;
+  tone: "pain" | "opportunity" | "success";
+  label: string;
+  value: string;
 }) {
   return (
-    <header className="mb-4 flex items-end justify-between gap-4">
-      <div className="space-y-1.5">
-        <Eyebrow>{eyebrow}</Eyebrow>
-        <h2 className="text-[1.375rem] font-semibold leading-tight tracking-[-0.02em] text-fg">{title}</h2>
-      </div>
-      <span className="font-mono text-sm tabular-nums text-fg-subtle">{count}</span>
-    </header>
+    <div className="flex items-baseline gap-3 pl-[calc(var(--spine-w,28px)+var(--tree-indent,24px))]">
+      <span className="shrink-0">
+        <DataChip tone={tone}>{label}</DataChip>
+      </span>
+      <p className="text-sm leading-relaxed text-fg-muted">{value}</p>
+    </div>
   );
 }
 
-// ─── Utterance row ───────────────────────────────────────────────────────────
+// ─── Utterance row (transcript spine register) ────────────────────────────────
 
 function UtteranceRow({
   u,
@@ -381,130 +347,93 @@ function UtteranceRow({
   return (
     <div
       ref={registerRef}
-      className={cn(
-        "border-b border-line-subtle last:border-b-0 scroll-m-24 transition-colors",
-        highlighted && "bg-accent-soft",
-      )}
+      className={cn("scroll-m-24 transition-colors", highlighted && "bg-accent-soft")}
     >
-      <motion.button
-        onClick={onToggle}
-        className="w-full px-4 py-3 text-left transition-colors hover:bg-surface-2"
-      >
-        <div className="flex items-center gap-4">
-          <motion.div
-            animate={{ rotate: expanded ? 180 : 0 }}
-            transition={{ duration: 0.18 }}
-            className="flex-shrink-0 text-fg-subtle"
-          >
-            <ChevronDown className="h-4 w-4" />
-          </motion.div>
-
-          <Badge
-            variant="outline"
-            className={cn("flex-shrink-0 capitalize", SPEAKER_STYLES[u.speaker])}
-          >
-            {SPEAKER_LABEL[u.speaker]}
-          </Badge>
-
-          <time className="hidden w-16 flex-shrink-0 font-mono text-xs tabular-nums text-fg-subtle sm:block">
-            {time}
-          </time>
-
-          <Badge
-            variant="outline"
-            className={cn(
-              "hidden flex-shrink-0 capitalize sm:inline-flex",
-              PHASE_STYLES[u.phase] ?? PHASE_STYLES.open,
+      <LedgerRow
+        index={`#${u.utterance_index}`}
+        title={
+          <span className="flex min-w-0 items-center gap-3">
+            <DataChip tone={u.speaker === "participant" ? "gap" : "neutral"}>
+              {SPEAKER_LABEL[u.speaker]}
+            </DataChip>
+            <span className="truncate text-fg-muted">{u.text}</span>
+          </span>
+        }
+        status={SPEAKER_DISC[u.speaker]}
+        metric={
+          <span className="inline-flex items-center gap-3">
+            <span className="hidden font-mono tabular-nums text-fg-subtle sm:inline">
+              {time}
+            </span>
+            {relatedInsights.length > 0 && (
+              <DataChip tone="opportunity" mono>
+                {relatedInsights.length}
+              </DataChip>
             )}
-          >
-            {PHASE_LABEL[u.phase] ?? u.phase}
-          </Badge>
+          </span>
+        }
+        expandable
+        open={expanded}
+        onToggle={onToggle}
+      >
+        <div className="flex flex-col gap-4 pb-3 pl-[calc(var(--spine-w,28px)+var(--tree-indent,24px))] pt-1 pr-4">
+          <div>
+            <p className="label-eyebrow mb-2">Wortlaut</p>
+            <p className="rounded-ui border border-line-subtle bg-surface p-4 text-[length:var(--text-body-lg)] leading-relaxed text-fg whitespace-pre-wrap">
+              {u.text}
+            </p>
+          </div>
 
-          <p className="flex-1 truncate text-sm text-fg-muted">{u.text}</p>
+          <div className="flex flex-wrap gap-2">
+            <DataChip tone="neutral" mono>
+              {time}
+            </DataChip>
+            <DataChip tone={u.phase === "validation" ? "gap" : "neutral"}>
+              {PHASE_LABEL[u.phase] ?? u.phase}
+            </DataChip>
+            <DataChip tone="neutral" mono>
+              #{u.utterance_index}
+            </DataChip>
+          </div>
 
           {relatedInsights.length > 0 && (
-            <span className="flex-shrink-0 inline-flex items-center gap-1 font-mono text-xs tabular-nums text-accent-strong">
-              <Sparkles className="h-3 w-3" />
-              {relatedInsights.length}
-            </span>
+            <div>
+              <p className="label-eyebrow mb-2">Beigetragen zu</p>
+              <div className="flex flex-col gap-2">
+                {relatedInsights.map((ins) => (
+                  <div
+                    key={ins.id}
+                    className="rounded-ui border border-line bg-surface p-3"
+                  >
+                    <div className="mb-1 flex items-center gap-2">
+                      <DataChip tone="opportunity">Insight</DataChip>
+                      {ins.department && <DataChip tone="neutral">{ins.department}</DataChip>}
+                    </div>
+                    <p className="text-sm text-fg">{ins.problem_statement}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
-      </motion.button>
-
-      <AnimatePresence initial={false}>
-        {expanded && (
-          <motion.div
-            key="details"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden border-t border-line-subtle bg-surface-2"
-          >
-            <div className="space-y-4 p-4">
-              <div>
-                <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
-                  Wortlaut
-                </p>
-                <p className="rounded-ui border border-line-subtle bg-surface p-4 text-[1.0625rem] leading-relaxed text-fg whitespace-pre-wrap">
-                  {u.text}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
-                <Meta label="Zeit" value={time} mono />
-                <Meta label="Phase" value={PHASE_LABEL[u.phase] ?? u.phase} />
-                <Meta label="Index" value={`#${u.utterance_index}`} mono />
-              </div>
-
-              {relatedInsights.length > 0 && (
-                <div>
-                  <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
-                    Beigetragen zu
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    {relatedInsights.map((ins) => (
-                      <div
-                        key={ins.id}
-                        className="rounded-ui border border-line bg-surface p-3"
-                      >
-                        <div className="mb-1 flex items-center gap-2 text-xs">
-                          <Sparkles className="h-3 w-3 text-accent-strong" />
-                          <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-accent-strong">
-                            Insight
-                          </span>
-                          {ins.department && (
-                            <Badge variant="outline" className="text-xs">
-                              {ins.department}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-fg">{ins.problem_statement}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </LedgerRow>
     </div>
   );
 }
 
-function Meta({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+// ─── Empty plate ──────────────────────────────────────────────────────────────
+
+function EmptyPlate({ caption }: { caption: string }) {
   return (
-    <div>
-      <p className="mb-1 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
-        {label}
+    <div className="rounded-card border border-dashed border-line-strong bg-surface px-6 py-10 text-center">
+      <p className="font-mono text-xs uppercase tracking-[0.1em] text-fg-subtle">
+        {caption}
       </p>
-      <p className={cn("text-sm text-fg", mono && "font-mono text-xs tabular-nums")}>{value}</p>
     </div>
   );
 }
 
-// ─── Filter panel ────────────────────────────────────────────────────────────
+// ─── Filter panel ─────────────────────────────────────────────────────────────
 
 function FilterPanel({
   filters,
@@ -539,10 +468,10 @@ function FilterPanel({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex h-full w-60 flex-col gap-5 overflow-y-auto p-4"
+      className="flex h-full w-[220px] flex-col gap-5 overflow-y-auto pr-1"
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-fg">Filter</h3>
+        <span className="label-eyebrow">Filter</span>
         {hasActive && (
           <Button variant="ghost" size="sm" onClick={clearAll} className="h-6 text-xs">
             Zurücksetzen
@@ -597,9 +526,7 @@ function FilterGroup({
 }) {
   return (
     <div className="space-y-2">
-      <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-fg-subtle">
-        {label}
-      </p>
+      <p className="label-eyebrow">{label}</p>
       <div className="space-y-1.5">{children}</div>
     </div>
   );
@@ -624,7 +551,7 @@ function FilterToggle({
         "flex w-full items-center justify-between gap-2 rounded-ui border px-3 py-2 text-sm transition-colors",
         selected
           ? "border-accent-strong bg-accent-soft text-accent-strong"
-          : "border-line text-fg-muted hover:border-fg-subtle hover:bg-surface",
+          : "border-line text-fg-muted hover:border-fg-subtle hover:bg-surface-2",
       )}
     >
       <span>{label}</span>

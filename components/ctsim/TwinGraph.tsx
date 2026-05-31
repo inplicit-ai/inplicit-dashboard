@@ -116,6 +116,7 @@ export function TwinGraph({
   );
 
   if (nodes.length === 0) {
+    // Printed-plate placeholder — hairline rule + quiet caption.
     return (
       <div className="card rounded-card border-dashed py-16 text-center">
         <p className="mx-auto max-w-[48ch] text-base leading-relaxed text-fg-muted">
@@ -134,7 +135,9 @@ export function TwinGraph({
         role="img"
         className="mx-auto block"
       >
-        {/* Edges: dashed hairline, downward — matches the design connector idiom. */}
+        {/* Edges: dashed hairline, downward — the design connector idiom. The
+            lone edge feeding the active node lights AMBER (manifesto: the live/
+            focused branch is the only accent connector). */}
         {data.edges.map((e, i) => {
           // Draw parent → child top-down regardless of edge direction.
           const childId = e.relation === "manages" ? e.to : e.from;
@@ -147,14 +150,21 @@ export function TwinGraph({
           const x2 = child.x + NODE_W / 2;
           const y2 = child.y;
           const midY = (y1 + y2) / 2;
+          const onActiveBranch =
+            activeId != null &&
+            (childId === activeId || parentId === activeId);
           return (
             <path
               key={i}
               d={`M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`}
               fill="none"
-              stroke="var(--color-line-strong)"
-              strokeWidth={1.5}
-              strokeDasharray="4 3"
+              stroke={
+                onActiveBranch
+                  ? "var(--color-accent)"
+                  : "var(--color-line-strong)"
+              }
+              strokeWidth={onActiveBranch ? 1.5 : 1.5}
+              strokeDasharray={onActiveBranch ? undefined : "4 3"}
             />
           );
         })}
@@ -182,7 +192,7 @@ export function TwinGraph({
               <rect
                 width={NODE_W}
                 height={NODE_H}
-                rx={12}
+                rx={10}
                 fill={
                   isActive ? "var(--color-accent-soft)" : "var(--color-surface)"
                 }
@@ -195,22 +205,32 @@ export function TwinGraph({
                 strokeDasharray={validated ? undefined : "4 3"}
                 className="transition-[stroke,fill] duration-150 group-hover:[stroke:var(--color-accent)]"
               />
-              {/* Check = role twin has VALIDATED data. */}
-              {validated && (
-                <g transform={`translate(${NODE_W - 22}, 10)`}>
-                  <circle cx={6} cy={6} r={8} fill="var(--color-success-soft)" />
-                  <path
-                    d="M 2 6 L 5 9 L 10 3"
-                    fill="none"
-                    stroke="var(--color-success)"
-                    strokeWidth={1.5}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </g>
-              )}
+              {/* Status disc on the node's own spine — the SAME vocabulary as
+                  every LedgerRow: validated = success fill, predicted = hollow
+                  idle ring. (No bespoke check glyph.) */}
+              <circle
+                cx={16}
+                cy={NODE_H / 2}
+                r={4}
+                fill={
+                  isActive
+                    ? "var(--color-accent)"
+                    : validated
+                      ? "var(--color-success)"
+                      : "var(--color-surface)"
+                }
+                stroke={
+                  isActive
+                    ? "var(--color-accent)"
+                    : validated
+                      ? "var(--color-success)"
+                      : "var(--color-line-strong)"
+                }
+                strokeWidth={1}
+                strokeDasharray={validated || isActive ? undefined : "2 2"}
+              />
               <text
-                x={14}
+                x={30}
                 y={NODE_H / 2 + 4}
                 fontSize={13}
                 fontWeight={isActive ? 500 : 400}
@@ -219,7 +239,7 @@ export function TwinGraph({
                 }
                 className="select-none"
               >
-                {n.name.length > 20 ? `${n.name.slice(0, 19)}…` : n.name}
+                {n.name.length > 18 ? `${n.name.slice(0, 17)}…` : n.name}
               </text>
             </g>
           );

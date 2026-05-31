@@ -39,8 +39,11 @@
   --color-success: var(--color-success);
   --color-success-soft: var(--color-success-soft);
   --color-warning: var(--color-warning);
+  --color-warning-soft: var(--color-warning-soft);
   --color-danger: var(--color-danger);
   --color-danger-soft: var(--color-danger-soft);
+  --color-info: var(--color-info);
+  --color-info-soft: var(--color-info-soft);
   --color-cta: var(--color-cta-bg);
   --color-cta-fg: var(--color-cta-text);
 
@@ -48,10 +51,29 @@
   --font-sans: var(--font-family);
   --font-mono: var(--font-mono);
 
+  /* Type scale — expose the design.css --text-* ramp as real `text-*` font-size
+   * utilities (text-body, text-meta, text-eyebrow, …) so the type hierarchy is
+   * driven by tokens, not silently dropped. Mirrors the recipe classes
+   * (.body/.meta/.eyebrow) for callers that prefer utilities. */
+  --text-display: var(--text-display);
+  --text-headline: var(--text-headline);
+  --text-title: var(--text-title);
+  --text-subtitle: var(--text-subtitle);
+  --text-body-lg: var(--text-body-lg);
+  --text-body: var(--text-body);
+  --text-body-sm: var(--text-body-sm);
+  --text-meta: var(--text-meta);
+  --text-caption: var(--text-caption);
+  --text-caps: var(--text-caps);
+  --text-eyebrow: var(--text-eyebrow);
+  --text-mono: var(--text-mono);
+
   /* Radii */
   --radius-sm: var(--radius-sm);
   --radius-ui: var(--radius-ui);
+  --radius-md: var(--radius-md);
   --radius-card: var(--radius-card);
+  --radius-lg: var(--radius-lg);
   --radius-popover: var(--radius-popover);
 
   /* Shadows */

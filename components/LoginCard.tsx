@@ -3,12 +3,12 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AlertCircle, CheckCircle2, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { StatusDisc } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 
 interface LoginCardProps {
@@ -19,6 +19,13 @@ interface LoginCardProps {
   devLink?: string;
 }
 
+/**
+ * Auth is the sanctioned home for display type + the hero accent wash. A single
+ * centered instrument card on warm off-white: eyebrow → display headline → one
+ * supporting line → form. Near-black primary button (amber is NOT a button fill
+ * in-app). The only amber is the input focus ring and the single sent/error
+ * StatusDisc on the magic-link / error confirmation — the lone live signal.
+ */
 export function LoginCard({
   signIn,
   defaultEmail,
@@ -30,47 +37,72 @@ export function LoginCard({
   const [mode, setMode] = useState<"magic" | "password">("magic");
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="flex w-full max-w-[400px] flex-col items-center gap-10">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-12">
+      {/* Hero accent wash — sanctioned for auth only, faint and behind the card. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[42vh]"
+        style={{
+          background:
+            "radial-gradient(60% 100% at 50% 0%, var(--color-accent-soft), transparent 70%)",
+        }}
+      />
 
-        <Link href="/campaigns" aria-label="Inplicit" className="opacity-90 transition-opacity hover:opacity-100">
-          <Image src="/logo.svg" alt="Inplicit" width={110} height={22} priority className="h-5 w-auto" />
+      <div className="relative flex w-full max-w-[420px] flex-col items-center gap-10">
+        <Link
+          href="/campaigns"
+          aria-label="Inplicit"
+          className="opacity-90 transition-opacity hover:opacity-100"
+        >
+          <Image
+            src="/logo.svg"
+            alt="Inplicit"
+            width={110}
+            height={22}
+            priority
+            className="h-5 w-auto"
+          />
         </Link>
 
-        <Card className="card-elevated w-full overflow-hidden rounded-card border border-line bg-surface">
-          <div className="px-7 pb-7 pt-8">
-            <div className="mb-6 space-y-1.5">
-              <h1 className="title text-fg">
-                Willkommen zurück
-              </h1>
-              <p className="body-sm text-fg-muted">
-                {mode === "magic"
-                  ? "Wir schicken dir einen sicheren Einmal-Link."
-                  : "Melde dich mit deinem Passwort an."}
-              </p>
-            </div>
+        <Card className="card--reading w-full overflow-hidden rounded-card border border-line bg-surface p-0">
+          <div className="px-8 pb-8 pt-9">
+            <span className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-accent">
+              {mode === "magic" ? "Magic-Link" : "Passwort"}
+            </span>
+            <h1 className="headline mt-3 text-fg">Willkommen zurück</h1>
+            <p className="body-sm mt-3 text-fg-muted">
+              {mode === "magic"
+                ? "Wir schicken dir einen sicheren Einmal-Link."
+                : "Melde dich mit deinem Passwort an."}
+            </p>
 
-            {error && <StatusBanner type="err" message={error} />}
+            {error && (
+              <div className="mt-6">
+                <StatusBanner type="err" message={error} />
+              </div>
+            )}
             {message && (
-              <StatusBanner type="ok">
-                <p>{message}</p>
-                {devLink && (
-                  <div className="mt-2.5 border-t border-success/22 pt-2.5">
-                    <p className="label-eyebrow mb-1 opacity-70">
-                      Dev-Link
-                    </p>
-                    <a
-                      href={devLink}
-                      className="block break-all font-mono text-mono tabular-nums hover:underline"
-                    >
-                      {devLink}
-                    </a>
-                  </div>
-                )}
-              </StatusBanner>
+              <div className="mt-6">
+                <StatusBanner type="ok">
+                  <p className="text-fg">{message}</p>
+                  {devLink && (
+                    <div className="mt-3 border-t border-line-subtle pt-3">
+                      <p className="text-[length:var(--text-eyebrow)] font-semibold uppercase tracking-[0.10em] text-fg-subtle">
+                        Dev-Link
+                      </p>
+                      <a
+                        href={devLink}
+                        className="mt-1 block break-all font-mono font-mono tabular-nums tabular-nums text-fg hover:underline"
+                      >
+                        {devLink}
+                      </a>
+                    </div>
+                  )}
+                </StatusBanner>
+              </div>
             )}
 
-            <form action={signIn} className="mt-5 space-y-4">
+            <form action={signIn} className="mt-7 space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="label-eyebrow">
                   E-Mail-Adresse
@@ -107,7 +139,9 @@ export function LoginCard({
                     />
                     <button
                       type="button"
-                      aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
+                      aria-label={
+                        showPassword ? "Passwort verbergen" : "Passwort anzeigen"
+                      }
                       onClick={() => setShowPassword((v) => !v)}
                       className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-sm p-1.5 text-fg-subtle transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
@@ -126,21 +160,20 @@ export function LoginCard({
               </Button>
             </form>
 
-            <div className="mt-5 flex items-center gap-3">
-              <Separator className="flex-1" />
-              <span className="shrink-0 text-eyebrow uppercase tracking-[0.10em] text-fg-subtle">oder</span>
-              <Separator className="flex-1" />
+            {/* Mode switch as a hairline-ruled spec line, not a second button. */}
+            <div className="mt-6 border-t border-line-subtle pt-4">
+              <button
+                type="button"
+                onClick={() =>
+                  setMode((m) => (m === "magic" ? "password" : "magic"))
+                }
+                className="text-meta text-fg-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {mode === "magic"
+                  ? "Stattdessen mit Passwort anmelden →"
+                  : "Stattdessen Magic Link senden →"}
+              </button>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setMode((m) => (m === "magic" ? "password" : "magic"))}
-              className="mt-4 h-9 w-full rounded-ui border border-line bg-canvas px-4 text-center text-meta text-fg-muted transition-colors hover:border-line-strong hover:bg-surface hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {mode === "magic"
-                ? "Mit Passwort anmelden"
-                : "Magic Link senden"}
-            </button>
           </div>
         </Card>
 
@@ -152,6 +185,11 @@ export function LoginCard({
   );
 }
 
+/**
+ * Status confirmation — sits on the spine via a single StatusDisc (sent = live,
+ * the lone amber pulse; error = error disc). No icon chrome, no nested box edge
+ * beyond one hairline.
+ */
 function StatusBanner({
   type,
   message,
@@ -161,18 +199,20 @@ function StatusBanner({
   message?: string;
   children?: React.ReactNode;
 }) {
-  const Icon = type === "ok" ? CheckCircle2 : AlertCircle;
   return (
     <div
       role={type === "err" ? "alert" : "status"}
       className={cn(
-        "mb-4 flex items-start gap-2.5 rounded-ui border px-3.5 py-3 text-meta",
+        "grid grid-cols-[var(--spine-w,28px)_1fr] gap-x-2.5 rounded-ui border px-3.5 py-3 text-meta",
         type === "ok"
-          ? "border-success/22 bg-success-soft text-success"
+          ? "border-line-subtle bg-surface-2"
           : "border-danger/22 bg-danger-soft text-danger",
       )}
+      style={{ ["--spine-w" as string]: "20px" }}
     >
-      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+      <span className="flex justify-center pt-0.5">
+        <StatusDisc state={type === "ok" ? "live" : "error"} size="sm" />
+      </span>
       <div className="min-w-0 leading-snug">
         {message && <p>{message}</p>}
         {children}

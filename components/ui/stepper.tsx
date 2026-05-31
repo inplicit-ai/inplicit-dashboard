@@ -1,11 +1,17 @@
 import * as React from "react";
 
+import { StatusDisc } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 
 /* ────────────────────────────────────────────────────────────────────────────
- * Stepper — thin React wrapper over the canonical `.shell-stepper` CSS in
- * design.css (markers 20px, near-black when complete, accent when current,
- * connector line between steps). Server-safe.
+ * Stepper — the setup spine, in the agent-plan status vocabulary.
+ *
+ * Re-skinned onto StatusDisc + the dashed connector (the `.shell-stepper` CSS
+ * is now just a centering slot for the disc): complete steps carry the ink
+ * `done` disc, the current step is the lone amber `live` pulse, upcoming steps
+ * are hollow `idle` rings — the exact same lexicon used on every LedgerRow and
+ * the synthesis pipeline. The connector between markers is the shared dashed
+ * line. Server-safe (the pulse is pure CSS).
  *
  * Drives state from a `steps` array + `currentId` (or `currentIndex`).
  *
@@ -29,14 +35,18 @@ export interface StepperProps extends React.HTMLAttributes<HTMLOListElement> {
   variant?: "default" | "compact";
 }
 
-function resolveState(
-  index: number,
-  activeIndex: number,
-): StepState {
+function resolveState(index: number, activeIndex: number): StepState {
   if (index < activeIndex) return "complete";
   if (index === activeIndex) return "current";
   return "upcoming";
 }
+
+/** step state → the shared StatusDisc lexicon. */
+const STEP_DISC = {
+  complete: "done",
+  current: "live",
+  upcoming: "idle",
+} as const;
 
 export function Stepper({
   steps,
@@ -68,7 +78,7 @@ export function Stepper({
               aria-current={state === "current" ? "step" : undefined}
             >
               <span className="shell-stepper__marker">
-                {state === "complete" ? "✓" : i + 1}
+                <StatusDisc state={STEP_DISC[state]} />
               </span>
               {showLabel && (
                 <span

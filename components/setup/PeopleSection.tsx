@@ -5,17 +5,22 @@ import { useTranslations } from "next-intl";
 import { Plus, Upload, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { StatusDisc } from "@/components/ui/status-disc";
 import type { CampaignDraft, Person, SetupToolCall } from "@/lib/api";
 import { SectionCard } from "./SectionCard";
+import { PlatePlaceholder } from "./Catalog";
 
 /**
- * People section (doc 03 §4 #10): name+email rows + CSV upload. CSV reuses the
- * same column semantics as `POST /api/campaigns/upload` (email required; name,
- * department, role optional). PII stays client-side in the draft until launch
- * materialises participants on the backend — the agent only ever sees counts.
+ * People section (doc 03 §4 #10) — re-cut as a participant register on the spine.
+ *
+ * Each row sits on the shared status spine: a StatusDisc encodes validity
+ * (done = a real email, error = missing "@"), the email is rendered in mono so
+ * the column reads as the anon-id register it becomes after launch. CSV upload
+ * de-dups by email and lands its rows inline immediately — no jump, no box.
  *
  * Every edit dispatches a `set_people` tool call so the catalog stays the single
- * source of truth (same reducer, two writers).
+ * source of truth (same reducer, two writers). PII stays client-side until
+ * launch materialises participants; the agent only ever sees counts.
  */
 export function PeopleSection({
   draft,
@@ -47,52 +52,62 @@ export function PeopleSection({
   };
 
   return (
-    <SectionCard title={t("people")} touched={touched}>
+    <SectionCard
+      index="§ 06"
+      title={t("people")}
+      count={people.length || undefined}
+      touched={touched}
+    >
       <div className="flex flex-col gap-3">
         {people.length === 0 ? (
-          <p className="text-sm text-fg-muted">{t("peopleEmpty")}</p>
+          <PlatePlaceholder>{t("peopleEmpty")}</PlatePlaceholder>
         ) : (
-          <ul className="flex flex-col gap-2">
-            {people.map((p, i) => (
-              <li
-                key={i}
-                className="flex flex-col gap-2 sm:flex-row sm:items-center"
-              >
-                <Input
-                  value={p.name ?? ""}
-                  placeholder={t("personName")}
-                  onChange={(e) => setRow(i, { name: e.target.value })}
-                  className="h-9 text-sm sm:flex-[2]"
-                />
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={p.email}
-                    placeholder={t("personEmail")}
-                    type="email"
-                    onChange={(e) => setRow(i, { email: e.target.value })}
-                    className="h-9 flex-1 text-sm sm:min-w-[14rem]"
-                  />
+          <ul className="flex flex-col">
+            {people.map((p, i) => {
+              const valid = p.email.includes("@");
+              return (
+                <li
+                  key={i}
+                  className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-line-subtle py-2 last:border-b-0"
+                >
+                  {/* Spine — validity disc on the shared x-axis. */}
+                  <StatusDisc state={valid ? "done" : "error"} size="sm" />
+                  <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+                    <Input
+                      value={p.name ?? ""}
+                      placeholder={t("personName")}
+                      onChange={(e) => setRow(i, { name: e.target.value })}
+                      className="h-8 sm:flex-[2]"
+                    />
+                    <Input
+                      value={p.email}
+                      placeholder={t("personEmail")}
+                      type="email"
+                      onChange={(e) => setRow(i, { email: e.target.value })}
+                      className="h-8 font-mono sm:flex-[3] sm:min-w-[14rem]"
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={() => removeRow(i)}
-                    className="grid size-9 shrink-0 place-items-center rounded-ui text-fg-subtle transition-colors hover:bg-surface-2 hover:text-danger"
+                    className="grid size-8 shrink-0 place-items-center rounded-ui text-fg-subtle transition-colors hover:bg-surface-2 hover:text-danger"
                     aria-label={t("removePerson")}
                   >
                     <X className="h-4 w-4" />
                   </button>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
 
-        <div className="flex flex-col gap-3 border-t border-line-subtle pt-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
           <Button type="button" variant="outline" size="sm" onClick={addRow}>
             <Plus className="h-4 w-4" />
             {t("addPerson")}
           </Button>
           <div className="flex items-center gap-3">
-            <span className="font-mono text-xs tabular-nums text-fg-subtle">
+            <span className="font-mono text-[length:var(--text-eyebrow)] tabular-nums text-fg-subtle">
               {t("peopleCount", { count: people.length })}
             </span>
             <input
@@ -116,7 +131,9 @@ export function PeopleSection({
             </Button>
           </div>
         </div>
-        <p className="text-xs leading-snug text-fg-subtle">{t("csvHint")}</p>
+        <p className="font-mono text-[length:var(--text-eyebrow)] uppercase tracking-[0.06em] text-fg-subtle">
+          {t("csvHint")}
+        </p>
       </div>
     </SectionCard>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -12,10 +12,12 @@ import {
 } from "@/components/ui/prompt-input";
 import { Button } from "@/components/ui/button";
 import {
-  ChatScroll,
+  ChatScrollAnchored,
   ChatShell,
   ChatComposerBar,
 } from "@/components/ui/chat-shell";
+import { ConversationTurn } from "@/components/ui/conversation-turn";
+import { StatusDisc } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 import type { SetupToolCallCard } from "@/lib/api";
 import { ToolCallCard } from "./ToolCallCard";
@@ -28,11 +30,14 @@ export type ChatTurn = {
 };
 
 /**
- * The chat pane (doc 03 §7). AI-legible: assistant turns interleave prose with
- * tool-call cards. The header carries the honest-AI label (EU AI Act spirit,
- * doc 03 §9). Follows the canonical chat-container flex height contract
- * (design-contract §6) — header + single scrolling list + pinned composer, no
- * hardcoded viewport heights. Fills whatever height its parent provides.
+ * The setup agent chat pane (doc 03 §7), rebuilt onto the 21st.dev AI-conversation
+ * pattern: calm ConversationTurn rows (user = near-black bubble, assistant = a
+ * borderless 68ch reading column) inside the canonical ChatShell flex envelope.
+ * Assistant turns interleave prose with tool-call cards rendered in the
+ * agent-plan status language (StatusDisc + DataChip). The header carries the
+ * honest-AI label (EU AI Act spirit, doc 03 §9). One scroll region with
+ * stick-to-bottom + a floating "scroll to bottom" pill; pinned composer with the
+ * lone amber focus ring. NO 100vh math — fills whatever height its parent gives.
  */
 export function SetupChat({
   turns,
@@ -47,11 +52,6 @@ export function SetupChat({
   const tAi = useTranslations("setup.ai");
   const prefersReducedMotion = useReducedMotion();
   const [value, setValue] = useState("");
-  const bottomRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [turns, streaming]);
 
   function submit() {
     const msg = value.trim();
@@ -66,8 +66,9 @@ export function SetupChat({
 
   return (
     <ChatShell height="fill">
-      {/* Honest-AI header — fixed, never scrolls */}
-      <header className="flex shrink-0 items-center gap-2.5 border-b border-line px-5 py-3.5">
+      {/* Honest-AI header — fixed, never scrolls. Status disc ties the agent to
+          the spine language; it pulses amber only while the agent is drafting. */}
+      <header className="flex shrink-0 items-center gap-3 border-b border-line px-5 py-3.5">
         <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-ui ring-1 ring-line">
           <Image
             src="/logo_icon.svg"
@@ -78,7 +79,7 @@ export function SetupChat({
             priority
           />
         </span>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold tracking-tight text-fg">
             {t("title")}
           </p>
@@ -86,109 +87,94 @@ export function SetupChat({
             {tAi("disclaimer")}
           </p>
         </div>
+        <StatusDisc state={streaming ? "live" : "idle"} size="sm" />
       </header>
 
-      {/* Conversation — the single scroll region */}
-      <ChatScroll className="px-5 py-5">
-        <AnimatePresence initial={false}>
-          {turns.map((turn) => (
-            <motion.div
-              key={turn.id}
-              layout={!prefersReducedMotion}
-              initial={
-                prefersReducedMotion ? false : { opacity: 0, y: 8 }
-              }
-              animate={{ opacity: 1, y: 0 }}
-              transition={turnTransition}
-              className="flex flex-col gap-2"
-            >
-              {turn.role === "user" ? (
-                <div className="flex justify-end">
-                  <div className="max-w-[min(80%,680px)] rounded-card bg-accent-soft px-5 py-3.5 text-[length:var(--text-body-lg)] leading-relaxed text-fg">
-                    {turn.content}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {turn.content && (
-                    <div className="max-w-[min(80%,680px)] rounded-card bg-surface-2 px-5 py-3.5 text-[length:var(--text-body-lg)] leading-relaxed text-fg">
-                      {turn.content}
-                    </div>
-                  )}
-                  {turn.toolCalls.length > 0 && (
-                    <div className="flex max-w-[min(80%,680px)] flex-col gap-1.5">
-                      {turn.toolCalls.map((c, i) => (
-                        <ToolCallCard
-                          key={i}
-                          card={c}
-                          onReply={streaming ? undefined : onSend}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </motion.div>
-          ))}
-        </AnimatePresence>
+      {/* Conversation — the single scroll region, stick-to-bottom + floating pill. */}
+      <ChatScrollAnchored
+        dep={[turns.length, streaming]}
+        live={streaming}
+        scrollLabel={t("send")}
+        className="px-5 py-6"
+      >
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+          <AnimatePresence initial={false}>
+            {turns.map((turn) => (
+              <motion.div
+                key={turn.id}
+                layout={!prefersReducedMotion}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={turnTransition}
+                className={cn(
+                  "flex w-full flex-col",
+                  turn.role === "user" && "items-end",
+                )}
+              >
+                {turn.role === "user" ? (
+                  <ConversationTurn role="user">{turn.content}</ConversationTurn>
+                ) : (
+                  <ConversationTurn role="assistant">
+                    {turn.content && <p>{turn.content}</p>}
+                    {turn.toolCalls.length > 0 && (
+                      <div className="mt-3 flex flex-col gap-1.5">
+                        {turn.toolCalls.map((c, i) => (
+                          <ToolCallCard
+                            key={i}
+                            card={c}
+                            onReply={streaming ? undefined : onSend}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </ConversationTurn>
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
 
-        {streaming && <ThinkingIndicator label={t("thinking")} />}
-        <div ref={bottomRef} />
-      </ChatScroll>
+          {streaming && <ThinkingIndicator label={t("thinking")} />}
+        </div>
+      </ChatScrollAnchored>
 
-      {/* Composer — pinned, never scrolls away */}
+      {/* Composer — pinned, never scrolls away. */}
       <ChatComposerBar className="p-3 sm:px-5">
-        <PromptInput
-          value={value}
-          onValueChange={setValue}
-          onSubmit={submit}
-          isLoading={streaming}
-          className="shadow-none"
-        >
-          <PromptInputTextarea
-            placeholder={t("placeholder")}
-            disabled={streaming}
-          />
-          <PromptInputActions className="justify-end pt-1">
-            <Button
-              type="button"
-              size="icon-sm"
-              onClick={submit}
-              disabled={streaming || !value.trim()}
-              className={cn("rounded-full")}
-              aria-label={t("send")}
-            >
-              <ArrowUp className="size-4" />
-            </Button>
-          </PromptInputActions>
-        </PromptInput>
+        <div className="mx-auto w-full max-w-3xl">
+          <PromptInput
+            value={value}
+            onValueChange={setValue}
+            onSubmit={submit}
+            isLoading={streaming}
+            className="shadow-none"
+          >
+            <PromptInputTextarea
+              placeholder={t("placeholder")}
+              disabled={streaming}
+            />
+            <PromptInputActions className="justify-end pt-1">
+              <Button
+                type="button"
+                size="icon-sm"
+                onClick={submit}
+                disabled={streaming || !value.trim()}
+                className={cn("rounded-full")}
+                aria-label={t("send")}
+              >
+                <ArrowUp className="size-4" />
+              </Button>
+            </PromptInputActions>
+          </PromptInput>
+        </div>
       </ChatComposerBar>
     </ChatShell>
   );
 }
 
-/** Animated "drafting…" indicator — three pulsing dots + label. */
+/** Animated "drafting…" indicator — the live status disc + label. */
 function ThinkingIndicator({ label }: { label: string }) {
-  const prefersReducedMotion = useReducedMotion();
   return (
     <div className="flex items-center gap-2 px-1 text-[13px] text-fg-muted">
-      <span className="flex gap-1" aria-hidden>
-        {[0, 1, 2].map((i) => (
-          <motion.span
-            key={i}
-            className="size-1.5 rounded-full bg-fg-faint"
-            animate={
-              prefersReducedMotion ? undefined : { opacity: [0.3, 1, 0.3] }
-            }
-            transition={{
-              duration: 1,
-              repeat: Infinity,
-              delay: i * 0.18,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
-      </span>
+      <StatusDisc state="live" size="sm" />
       <span className="italic">{label}</span>
     </div>
   );
