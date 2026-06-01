@@ -140,10 +140,14 @@ export function SplitAuthor({
   // rendered — only an assistant placeholder that the SSE stream fills in.
   // Runs at most once via the ref guard.
   const initiatedRef = useRef(false);
+  // Keep a stable ref to stream.send so the effect dep array stays empty.
+  const sendRef = useRef(stream.send);
+  useEffect(() => { sendRef.current = stream.send; });
+
   useEffect(() => {
     if (initiatedRef.current) return;
     const hasAssistant = turns.some((t) => t.role === "assistant");
-    if (hasAssistant || stream.streaming) return;
+    if (hasAssistant) return;
     initiatedRef.current = true;
     const assistantTurn: ChatTurn = {
       id: `a-open-${Date.now()}`,
@@ -155,12 +159,14 @@ export function SplitAuthor({
     // Defer the placeholder insert + kickoff out of the synchronous effect body
     // so this reads as an external-system trigger (start the SSE stream) rather
     // than a render-time state cascade. The ref guard keeps it strictly once.
+    // Empty dep array + ref guard = fires exactly once on mount.
     queueMicrotask(() => {
       setTurns((prev) => [...prev, assistantTurn]);
       // Empty/kickoff message: the backend opens with its greeting + first probe.
-      void stream.send("");
+      void sendRef.current("");
     });
-  }, [turns, stream]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // User-originated catalog edit: optimistic local apply + persist.
   const onPatch = useCallback(
@@ -169,8 +175,10 @@ export function SplitAuthor({
       clientApi.setup
         .patchDraft(sessionId, { patch: call, base_rev: revRef.current })
         .then((res) => {
+          // Only update the revision, NOT the full draft — overwriting draft
+          // from the server response would race against fast typing (text fields)
+          // and against concurrent AI tool-call patches, causing inputs to reset.
           revRef.current = res.revision;
-          setDraft(res.config);
         })
         .catch(() => {
           // On conflict/failure, re-fetch authoritative state.

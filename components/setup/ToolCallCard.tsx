@@ -72,9 +72,6 @@ export function ToolCallCard({
       <div className="min-w-0">
         <div className="flex min-w-0 items-baseline gap-2">
           <span className="truncate font-medium text-fg">{label}</span>
-          <span className="shrink-0 font-mono text-[length:var(--text-caption)] tabular-nums text-fg-faint">
-            {card.tool}
-          </span>
         </div>
 
         {isRequestInput ? (
