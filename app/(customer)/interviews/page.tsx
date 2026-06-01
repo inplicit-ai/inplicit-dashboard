@@ -46,7 +46,7 @@ export default async function OrgInterviewsPage() {
     {
       key: "status",
       header: t("colStatus"),
-      cell: (i) => <StatusBadge status={i.status} withIcon />,
+      cell: (i) => <StatusBadge status={i.status} label={t(`status.${i.status}` as never, { defaultValue: i.status })} withIcon />,
     },
     {
       key: "language",

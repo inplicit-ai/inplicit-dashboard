@@ -6,8 +6,8 @@
     "create": "Erstellen",
     "campaigns": "Kampagnen",
     "interviews": "Interviews",
-    "knowledgeChat": "Knowledge Chat",
-    "vaults": "Context Vaults",
+    "knowledgeChat": "Wissens-Chat",
+    "vaults": "Kontext-Vaults",
     "integrations": "Integrationen",
     "twin": "Digital Twin",
     "admin": "Admin",
@@ -37,8 +37,8 @@
     "campaigns": "Kampagnen",
     "campaignsNew": "Neue Kampagne",
     "interviews": "Interviews",
-    "chat": "Knowledge Chat",
-    "vaults": "Context Vaults",
+    "chat": "Wissens-Chat",
+    "vaults": "Kontext-Vaults",
     "integrations": "Integrationen",
     "twin": "Digital Twin",
     "admin": "Admin",
@@ -274,7 +274,18 @@
     "colDuration": "Dauer",
     "colLanguage": "Sprache",
     "colDate": "Gestartet",
-    "open": "Interview {anon} öffnen"
+    "open": "Interview {anon} öffnen",
+    "status": {
+      "completed": "Abgeschlossen",
+      "abandoned": "Abgebrochen",
+      "in_progress": "Läuft",
+      "running": "Läuft",
+      "pending": "Ausstehend",
+      "draft": "Entwurf",
+      "live": "Live",
+      "failed": "Fehlgeschlagen",
+      "expired": "Abgelaufen"
+    }
   },
   "knowledgeChat": {
     "eyebrow": "Organisation",
