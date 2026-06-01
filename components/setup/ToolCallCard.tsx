@@ -125,6 +125,7 @@ function labelFor(tool: string, t: (k: string) => string): string {
     "set_success_criteria",
     "add_must_ask",
     "set_audience",
+    "set_email_template",
     "request_input",
   ];
   return known.includes(tool) ? t(tool) : tool;
