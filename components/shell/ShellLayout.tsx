@@ -14,7 +14,6 @@ import {
 import type { CrumbContext } from "@/lib/shell/breadcrumb-map";
 import { Sidebar } from "@/components/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
-import { SidebarTrigger } from "@/components/shell/SidebarTrigger";
 import { MobileTabBar } from "@/components/shell/MobileTabBar";
 import { NavDrawer } from "@/components/shell/NavDrawer";
 import { GuidedTour } from "@/components/shell/GuidedTour";
@@ -110,14 +109,9 @@ export function ShellLayout({
         />
       </div>
 
-      {/* Floating "open nav" pin when fully hidden (desktop). */}
-      {sidebarState === "hidden" && (
-        <SidebarTrigger
-          state={sidebarState}
-          onToggle={onToggle}
-          variant="floating"
-        />
-      )}
+      {/* The "open nav" toggle lives in the topbar lead (next to the
+          breadcrumb) whenever the sidebar isn't expanded — that is the single
+          canonical control, so no separate floating pin here. */}
 
       <div className="app-main">
         <Topbar

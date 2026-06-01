@@ -47,13 +47,20 @@ export default async function CampaignOverview({
   let campaign: Campaign | null = null;
   let stats: CampaignStats | null = null;
   let error: unknown = null;
+  // Fetch independently: the overview must render even if the stats endpoint is
+  // unavailable (a stats failure must NOT turn the whole page into an error /
+  // "not found"). Only a missing campaign is a hard error.
   try {
-    [campaign, stats] = await Promise.all([
-      api.campaigns.get(id),
-      api.stats(id),
-    ]);
+    campaign = await api.campaigns.get(id);
   } catch (e) {
     error = e;
+  }
+  if (campaign) {
+    try {
+      stats = await api.stats(id);
+    } catch {
+      stats = null;
+    }
   }
 
   async function launchCampaign() {

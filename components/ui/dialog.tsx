@@ -61,7 +61,9 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           // Floating layer — popover radius (14px), elevated surface, shadow allowed.
-          "fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-popover border border-line bg-[var(--color-elevated)] p-6 shadow-elevation duration-200 outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg",
+          // Cap height to the viewport and scroll internally so a tall dialog
+          // never overflows past the top edge with a clipped header.
+          "fixed top-[50%] left-[50%] z-50 grid max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto rounded-popover border border-line bg-[var(--color-elevated)] p-6 shadow-elevation duration-200 outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg",
           className
         )}
         {...props}

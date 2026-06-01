@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import type { Me } from "@/lib/api";
 import {
   getNavSections,
+  isNavItemActive,
   type NavItem,
   type NavMode,
   type NavSection,
@@ -69,8 +70,9 @@ export function Sidebar({
   const roleLabel =
     mode === "staff" ? tShell("backOffice") : tShell("workspace");
 
+  const allHrefs = sections.flatMap((s) => s.items.map((i) => i.href));
   const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(`${href}/`);
+    isNavItemActive(pathname, href, allHrefs);
 
   return (
     <aside

@@ -477,17 +477,21 @@
   padding: var(--space-10) var(--space-8) var(--space-20);
 }
 
-/* Chat-fill: a flush, non-scrolling child fills the 1fr work row exactly so the
-   page never scrolls — only the chat's own message region does. The chat page
-   wrapper renders className="surface-bleed chat-fill" as the DIRECT child of
-   .app-work; the chat component is flex min-h-0 flex-col with ONE overflow-y
-   message region + a shrink-0 pinned composer. */
-.app-work:has(> .chat-fill) {
+/* Chat-fill: a flush, non-scrolling chat fills the 1fr work row exactly so the
+   page never scrolls — only the chat's own message region does. When ANY
+   descendant carries .chat-fill (direct, like /chat; or nested under the
+   campaign tabs layout, like the "Ask" tab), .app-work drops its padding/scroll
+   and becomes a flex column; .chat-fill then grows to fill the remaining space.
+   Any wrapper between .app-work and .chat-fill must itself fill+column (see the
+   campaign [id] layout's [&:has(.chat-fill)] flex variant). */
+.app-work:has(.chat-fill) {
   padding: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .chat-fill {
-  height: 100%;
+  flex: 1 1 0%;
   min-height: 0;
   display: flex;
   flex-direction: column;

@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { getMobilePrimary, type NavSection } from "@/lib/shell/nav";
+import {
+  getMobilePrimary,
+  isNavItemActive,
+  type NavSection,
+} from "@/lib/shell/nav";
 import { IconMenu } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
@@ -23,9 +27,8 @@ export function MobileTabBar({
   const pathname = usePathname() ?? "";
   const tNav = useTranslations("nav");
   const primary = getMobilePrimary(sections);
-
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(`${href}/`);
+  const allHrefs = sections.flatMap((s) => s.items.map((i) => i.href));
+  const isActive = (href: string) => isNavItemActive(pathname, href, allHrefs);
 
   return (
     <nav className="shell-tabbar" aria-label={tNav("sectionOrg")}>

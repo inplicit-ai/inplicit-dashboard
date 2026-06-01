@@ -109,8 +109,8 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="overflow-hidden p-0 sm:max-w-[480px]">
-        <DialogHeader className="px-6 pt-6 pb-5">
+      <DialogContent className="flex max-h-[calc(100dvh-2.5rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[480px]">
+        <DialogHeader className="shrink-0 border-b border-line-subtle px-6 pt-6 pb-5">
           <div className="flex items-center gap-3 pr-6">
             <span className="grid size-9 shrink-0 place-items-center rounded-ui border border-line bg-surface-2 text-fg">
               <SettingsIcon className="h-4 w-4" />
@@ -124,7 +124,7 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
           </div>
         </DialogHeader>
 
-        <div className="space-y-6 px-6 py-5">
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-5">
           {me && <IdentityCard me={me} />}
 
           <Section title="Appearance" icon={Sparkles}>
@@ -179,7 +179,7 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
           </Section>
         </div>
 
-        <DialogFooter className="px-6 py-4">
+        <DialogFooter className="shrink-0 border-t border-line-subtle px-6 py-4">
           <DialogClose asChild>
             <Button type="button" variant="ghost" size="sm">
               Close

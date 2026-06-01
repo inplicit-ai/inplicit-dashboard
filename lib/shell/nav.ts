@@ -127,6 +127,26 @@ export function getNavSections(mode: NavMode, role?: Role): NavSection[] {
   return CUSTOMER_SECTIONS;
 }
 
+/**
+ * Active-state resolver shared by the rail, drawer, and bottom-nav. A naive
+ * `startsWith` lights up BOTH `/campaigns` and `/campaigns/new` on the create
+ * route; the active item is instead the one whose href is the LONGEST prefix of
+ * the current path (so `/campaigns/new` wins over `/campaigns`). Pass the full
+ * set of nav hrefs so the comparison is global, not per-item.
+ */
+export function isNavItemActive(
+  pathname: string,
+  href: string,
+  allHrefs: string[],
+): boolean {
+  const matches = (h: string) => pathname === h || pathname.startsWith(`${h}/`);
+  if (!matches(href)) return false;
+  const longest = allHrefs
+    .filter(matches)
+    .reduce((best, h) => (h.length > best.length ? h : best), "");
+  return href === longest;
+}
+
 /** Flatten sections into the bottom-nav primary tabs (mobile). */
 export function getMobilePrimary(sections: NavSection[]): NavItem[] {
   return sections.flatMap((s) => s.items).filter((i) => i.mobilePrimary);
