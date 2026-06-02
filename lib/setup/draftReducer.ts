@@ -15,7 +15,6 @@ import type {
   Goal,
   Locale,
   Person,
-  ResearchBrief,
   ScheduleConfig,
   SetupToolCall,
   TopicGraph,
@@ -36,7 +35,7 @@ export const KNOWN_TOOLS = [
   "set_people",
   "set_schedule",
   "set_email_template",
-  "set_research_brief",
+  "set_objective",
   "request_input",
 ] as const;
 
@@ -231,18 +230,12 @@ export function applyPatch(
       // Any edit marks the invite customized → mode changes leave it alone.
       return { ...draft, emailTemplate: tpl, emailCustomized: true };
     }
-    case "set_research_brief": {
-      const prev = draft.researchBrief;
-      const stance = arg<string>(args, "stance") ?? prev?.stance ?? "open";
-      if (stance !== "open" && stance !== "specific") return draft;
-      const brief: ResearchBrief = {
-        question: arg<string>(args, "question") ?? prev?.question ?? "",
-        stance,
-        scope: arg<string>(args, "scope") ?? prev?.scope ?? "",
-        probesAsked: arg<number>(args, "probesAsked") ?? prev?.probesAsked ?? 0,
-        confirmed: arg<boolean>(args, "confirmed") ?? prev?.confirmed ?? false,
-      };
-      return { ...draft, researchBrief: brief, inductiveFlag: stance === "open" };
+    case "set_objective": {
+      // The sharpened research objective — a plain editable line at the top of
+      // the catalog. It replaces the raw launchpad prompt; the user owns it.
+      const text = arg<string>(args, "text")?.trim();
+      if (!text) return draft;
+      return { ...draft, prompt: text };
     }
     case "request_input":
       // No catalog change — the agent is asking the user to refine.
@@ -272,9 +265,6 @@ export function applyAll(
  */
 export function validateForLaunch(draft: CampaignDraft): string[] {
   const reasons: string[] = [];
-
-  // The sharpened research question must be user-confirmed (hard gate).
-  if (!draft.researchBrief?.confirmed) reasons.push("brief_not_confirmed");
 
   if (!draft.goals || draft.goals.length === 0) reasons.push("no_goals");
 

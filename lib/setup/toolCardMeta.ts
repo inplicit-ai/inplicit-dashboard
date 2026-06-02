@@ -13,9 +13,9 @@ import type { SetupToolCallCard } from "@/lib/api";
  *     because they wait on the human.
  */
 
-/** Tools that wait on the human — rendered as a rich card, not a checklist row.
- *  `set_research_brief` carries the in-chat Confirm affordance. */
-const INTERACTIVE_TOOLS = ["request_input", "set_research_brief"] as const;
+/** Tools that wait on the human — rendered as an inline prompt, not a log row.
+ *  Only a rare design question (request_input) qualifies. */
+const INTERACTIVE_TOOLS = ["request_input"] as const;
 
 /** Known field tools — kept in sync with the server reducer (`tools.rs`). */
 const KNOWN_TOOLS = [
@@ -33,7 +33,7 @@ const KNOWN_TOOLS = [
   "set_people",
   "set_schedule",
   "set_email_template",
-  "set_research_brief",
+  "set_objective",
   "request_input",
 ];
 
@@ -78,8 +78,8 @@ export function summarize(card: SetupToolCallCard): string {
     }
     case "set_schedule":
       return a.mode === "slots" ? "booking slots" : "instant link";
-    case "set_research_brief":
-      return String(a.question ?? "");
+    case "set_objective":
+      return String(a.text ?? "");
     case "request_input":
       return String(a.question ?? a.prompt ?? "");
     default:

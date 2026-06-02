@@ -41,14 +41,10 @@ export function SetupChat({
   turns,
   streaming,
   onSend,
-  onConfirmBrief,
-  briefConfirmed,
 }: {
   turns: ChatTurn[];
   streaming: boolean;
   onSend: (message: string) => void;
-  onConfirmBrief?: () => void;
-  briefConfirmed?: boolean;
 }) {
   const t = useTranslations("setup.chat");
   const tAi = useTranslations("setup.ai");
@@ -101,8 +97,7 @@ export function SetupChat({
       >
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-7">
           <AnimatePresence initial={false}>
-            {turns.map((turn, i) => {
-              const isLast = i === turns.length - 1;
+            {turns.map((turn) => {
               return (
                 <motion.div
                   key={turn.id}
@@ -127,9 +122,6 @@ export function SetupChat({
                       <ToolChecklist
                         cards={turn.toolCalls}
                         onReply={streaming ? undefined : onSend}
-                        onConfirmBrief={onConfirmBrief}
-                        briefConfirmed={briefConfirmed}
-                        streaming={streaming && isLast}
                       />
                     </div>
                   )}
