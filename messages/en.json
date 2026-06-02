@@ -167,7 +167,12 @@
       "updatedCatalog": "Updated the catalog",
       "set_exploration_map": "Mapped the exploration angles",
       "set_topic_method": "Tagged a method",
-      "remove_topic": "Removed an angle"
+      "remove_topic": "Removed an angle",
+      "reweight_topic": "Reweighted an angle",
+      "unlink_topics": "Disconnected angles",
+      "remove_goal": "Removed a goal",
+      "set_success_question": "Set a success question",
+      "remove_success_question": "Removed a success question"
     },
     "catalog": {
       "title": "Campaign catalog",

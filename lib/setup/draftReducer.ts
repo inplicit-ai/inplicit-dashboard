@@ -36,6 +36,11 @@ export const KNOWN_TOOLS = [
   "set_exploration_map",
   "set_topic_method",
   "remove_topic",
+  "reweight_topic",
+  "unlink_topics",
+  "remove_goal",
+  "set_success_question",
+  "remove_success_question",
   "set_audience",
   "set_people",
   "set_schedule",
@@ -240,6 +245,86 @@ export function applyPatch(
         topics: {
           nodes: graph.nodes.filter((n) => n.id !== id),
           edges: graph.edges.filter((e) => e.a !== id && e.b !== id),
+        },
+      };
+    }
+    case "reweight_topic": {
+      const id = arg<string>(args, "id");
+      const weight = (arg<string>(args, "weight") ?? "normal") as
+        | "primary"
+        | "normal"
+        | "muted";
+      if (!id || !["primary", "normal", "muted"].includes(weight)) return draft;
+      const graph: TopicGraph = draft.topics ?? { nodes: [], edges: [] };
+      const nodes = graph.nodes.map((n) => {
+        if (n.id !== id) return n;
+        if (weight === "normal") {
+          const next: TopicNode = { ...n };
+          delete next.weight;
+          return next;
+        }
+        return { ...n, weight };
+      });
+      return { ...draft, topics: { nodes, edges: [...graph.edges] } };
+    }
+    case "unlink_topics": {
+      const a = arg<string>(args, "a");
+      const b = arg<string>(args, "b");
+      if (!a || !b) return draft;
+      const graph: TopicGraph = draft.topics ?? { nodes: [], edges: [] };
+      return {
+        ...draft,
+        topics: {
+          nodes: [...graph.nodes],
+          edges: graph.edges.filter(
+            (e) => !((e.a === a && e.b === b) || (e.a === b && e.b === a)),
+          ),
+        },
+      };
+    }
+    case "remove_goal": {
+      const id = arg<string>(args, "id");
+      if (!id) return draft;
+      const goals = draft.goals ?? [];
+      const exists = goals.some((g) => g.id === id);
+      // Never strip the last goal (mirrors the launch gate + server reject).
+      if (exists && goals.length <= 1) return draft;
+      return { ...draft, goals: goals.filter((g) => g.id !== id) };
+    }
+    case "set_success_question": {
+      const text = arg<string>(args, "text")?.trim();
+      if (!text) return draft;
+      const sc = draft.successCriteria ?? {
+        mode: "inductive" as const,
+        questions: [],
+        hypotheses: [],
+      };
+      const questions = [...sc.questions];
+      const index = arg<number>(args, "index");
+      if (index === undefined || index === questions.length) {
+        questions.push(text);
+      } else if (index >= 0 && index < questions.length) {
+        questions[index] = text;
+      } else {
+        return draft;
+      }
+      return { ...draft, successCriteria: { ...sc, questions } };
+    }
+    case "remove_success_question": {
+      const index = arg<number>(args, "index");
+      const sc = draft.successCriteria;
+      if (
+        !sc ||
+        typeof index !== "number" ||
+        index < 0 ||
+        index >= sc.questions.length
+      )
+        return draft;
+      return {
+        ...draft,
+        successCriteria: {
+          ...sc,
+          questions: sc.questions.filter((_, i) => i !== index),
         },
       };
     }

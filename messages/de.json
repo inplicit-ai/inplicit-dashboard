@@ -167,7 +167,12 @@
       "updatedCatalog": "Katalog aktualisiert",
       "set_exploration_map": "Erkundungsfelder kartiert",
       "set_topic_method": "Methode getaggt",
-      "remove_topic": "Feld entfernt"
+      "remove_topic": "Feld entfernt",
+      "reweight_topic": "Gewichtung angepasst",
+      "unlink_topics": "Verbindung entfernt",
+      "remove_goal": "Ziel entfernt",
+      "set_success_question": "Erfolgsfrage gesetzt",
+      "remove_success_question": "Erfolgsfrage entfernt"
     },
     "catalog": {
       "title": "Kampagnen-Katalog",

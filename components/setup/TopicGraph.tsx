@@ -83,10 +83,16 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
       {nodes.map((n) => {
         const p = pos.get(n.id)!;
         const orphan = !connected.has(n.id);
+        const muted = n.weight === "muted";
+        const primary = n.weight === "primary";
         const methodLabel = n.method ? METHOD_LABEL[n.method] ?? n.method : null;
         const pillW = methodLabel ? methodLabel.length * 5.6 + 16 : 0;
         return (
-          <g key={n.id} transform={`translate(${p.x - 90}, ${p.y - 26})`}>
+          <g
+            key={n.id}
+            transform={`translate(${p.x - 90}, ${p.y - 26})`}
+            opacity={muted ? 0.5 : 1}
+          >
             {n.incidentPrompt && (
               <title>{`${t("participantPrompt")}: ${n.incidentPrompt}`}</title>
             )}
@@ -95,9 +101,15 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
               height={52}
               rx={10}
               fill="var(--color-surface)"
-              stroke={orphan ? "var(--color-border-strong)" : "var(--color-border)"}
-              strokeWidth={1}
-              strokeDasharray={orphan ? "4 3" : undefined}
+              stroke={
+                primary
+                  ? "var(--color-accent)"
+                  : orphan
+                    ? "var(--color-border-strong)"
+                    : "var(--color-border)"
+              }
+              strokeWidth={primary ? 1.75 : 1}
+              strokeDasharray={orphan && !primary ? "4 3" : undefined}
             />
             <text
               x={12}
