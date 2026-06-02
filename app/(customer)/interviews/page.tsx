@@ -8,7 +8,7 @@ import { StatBand } from "@/components/ui/stat-band";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Card } from "@/components/ui/card";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { StatusBadge } from "@/components/PageChrome";
 
 function fmtDuration(seconds?: number): string {
   if (!seconds || seconds <= 0) return "—";
@@ -46,7 +46,7 @@ export default async function OrgInterviewsPage() {
     {
       key: "status",
       header: t("colStatus"),
-      cell: (i) => <StatusBadge status={i.status} label={t(`status.${i.status}` as never, { defaultValue: i.status })} withIcon />,
+      cell: (i) => <StatusBadge status={i.status} withIcon />,
     },
     {
       key: "language",
