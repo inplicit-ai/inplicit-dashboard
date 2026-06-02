@@ -29,6 +29,9 @@ const KNOWN_TOOLS = [
   "link_topics",
   "set_success_criteria",
   "add_must_ask",
+  "set_exploration_map",
+  "set_topic_method",
+  "remove_topic",
   "set_audience",
   "set_people",
   "set_schedule",
@@ -68,6 +71,14 @@ export function summarize(card: SetupToolCallCard): string {
       return String(a.title ?? "");
     case "link_topics":
       return `${a.a ?? "?"} ↔ ${a.b ?? "?"}`;
+    case "set_exploration_map": {
+      const n = Array.isArray(a.nodes) ? a.nodes.length : 0;
+      return n ? `${n} angles` : "";
+    }
+    case "set_topic_method":
+      return a.method ? `${a.id ?? "?"} → ${a.method}` : String(a.id ?? "");
+    case "remove_topic":
+      return String(a.id ?? "");
     case "set_success_criteria":
       return String(a.mode ?? "");
     case "set_email_template":

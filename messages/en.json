@@ -164,7 +164,10 @@
       "request_input": "Asked you to refine",
       "set_objective": "Set the objective",
       "designedStudy": "Designed your study",
-      "updatedCatalog": "Updated the catalog"
+      "updatedCatalog": "Updated the catalog",
+      "set_exploration_map": "Mapped the exploration angles",
+      "set_topic_method": "Tagged a method",
+      "remove_topic": "Removed an angle"
     },
     "catalog": {
       "title": "Campaign catalog",

@@ -164,7 +164,10 @@
       "request_input": "Um Verfeinerung gebeten",
       "set_objective": "Forschungsziel gesetzt",
       "designedStudy": "Studie entworfen",
-      "updatedCatalog": "Katalog aktualisiert"
+      "updatedCatalog": "Katalog aktualisiert",
+      "set_exploration_map": "Erkundungsfelder kartiert",
+      "set_topic_method": "Methode getaggt",
+      "remove_topic": "Feld entfernt"
     },
     "catalog": {
       "title": "Kampagnen-Katalog",

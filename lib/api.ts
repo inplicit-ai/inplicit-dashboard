@@ -798,10 +798,18 @@ export interface TopicGraph {
   nodes: TopicNode[];
   edges: TopicEdge[];
 }
+/** Qualitative method an exploration angle is probed with (mirrors
+ *  `VALID_METHODS` / `template::Method` server-side). */
+export type TopicMethod = "cit" | "journey" | "jtbd" | "laddering" | "paired_cit";
 export interface TopicNode {
   id: string;
   title: string;
   summary?: string;
+  /** The research method tagged onto this angle (set by the CLASSIFY template). */
+  method?: TopicMethod;
+  /** A critical-incident anchor prompt — set on the lead angle only. */
+  incidentPrompt?: string;
+  bidirectional?: boolean;
 }
 export interface TopicEdge {
   a: string;
