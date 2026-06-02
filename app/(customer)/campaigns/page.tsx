@@ -26,7 +26,7 @@ export default async function CampaignsPage() {
   return (
     <div className="surface-bleed">
       <PageHeader
-        title="Kampagnes"
+        title="Kampagnen"
         subtitle="Stichproben deiner Organisation. Jede Kampagne bündelt eine Runde anonymer Interviews mit ausgewerteten Insights."
         actions={
           <Button asChild>
@@ -52,7 +52,7 @@ export default async function CampaignsPage() {
       {!error && campaigns.length === 0 ? (
         <EmptyState
           icon={LayoutGrid}
-          title="Noch keine Kampagnes"
+          title="Noch keine Kampagnen"
           hint="Lege deine erste an, lade Teilnehmer ein, sieh dir die Insights an."
           action={
             <Button asChild>
@@ -66,7 +66,7 @@ export default async function CampaignsPage() {
       ) : (
         campaigns.length > 0 && (
           <>
-            <SectionHeading title="Kampagnes" count={campaigns.length} />
+            <SectionHeading title="Kampagnen" count={campaigns.length} />
             <CardGrid>
               {campaigns.map((c) => (
                 <CampaignCard key={c.id} c={c} />
