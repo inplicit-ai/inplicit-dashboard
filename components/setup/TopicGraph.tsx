@@ -54,7 +54,10 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
     connected.add(e.b);
   });
 
+  const hasIncident = nodes.some((n) => n.incidentPrompt);
+
   return (
+    <div className="flex flex-col gap-2">
     <svg
       viewBox={`0 0 ${width} ${height}`}
       className="h-auto w-full"
@@ -84,7 +87,9 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
         const pillW = methodLabel ? methodLabel.length * 5.6 + 16 : 0;
         return (
           <g key={n.id} transform={`translate(${p.x - 90}, ${p.y - 26})`}>
-            {n.incidentPrompt && <title>{n.incidentPrompt}</title>}
+            {n.incidentPrompt && (
+              <title>{`${t("participantPrompt")}: ${n.incidentPrompt}`}</title>
+            )}
             <rect
               width={180}
               height={52}
@@ -137,6 +142,13 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
         );
       })}
     </svg>
+      {hasIncident && (
+        <p className="flex items-center gap-1.5 text-[length:var(--text-caption)] text-fg-subtle">
+          <span className="inline-block size-1.5 rounded-full bg-accent" />
+          {t("participantPrompt")}
+        </p>
+      )}
+    </div>
   );
 }
 

@@ -223,7 +223,8 @@
       "previewSampleName": "Alex",
       "instantHint": "Each participant gets a direct, single-use link — no booking step. The invite uses {{link}} directly.",
       "objective": "Objective",
-      "objectivePlaceholder": "What exactly do we want to find out?"
+      "objectivePlaceholder": "What exactly do we want to find out?",
+      "participantPrompt": "Question for participants"
     },
     "review": {
       "eyebrow": "Review & launch",
