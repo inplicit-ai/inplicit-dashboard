@@ -1,8 +1,11 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Check } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { StatusDisc } from "@/components/ui/status-disc";
 import { Select, DURATION_OPTIONS } from "@/components/ui/select";
 import { EvidenceTree, type EvidenceNode } from "@/components/ui/agent-list";
 import { DataChip } from "@/components/ui/data-chip";
@@ -77,6 +80,9 @@ export function Catalog({
 
   return (
     <div className="flex flex-col gap-5">
+      {/* ── Research brief — the sharpened question (first-class artifact) ── */}
+      <BriefSection draft={draft} onPatch={onPatch} touched={recentlyTouched?.has("set_research_brief")} />
+
       {/* ── Format — a roomy labeled control grid ───────────────────────── */}
       <SectionCard
         title={t("interviewType")}
@@ -248,6 +254,82 @@ export function Catalog({
         touched={recentlyTouched?.has("set_email_template")}
       />
     </div>
+  );
+}
+
+/* ─── Research brief ─────────────────────────────────────────────────────── */
+
+/**
+ * The sharpened research question as an editable, first-class catalog artifact.
+ * EDDA drafts it in Phase A; the user can refine the wording, scope, and stance
+ * here at any time. The confirmed badge reflects the Phase A→B gate (confirming
+ * happens in the chat). Editing emits the same `set_research_brief` patch the
+ * agent uses — single reducer, two writers.
+ */
+function BriefSection({
+  draft,
+  onPatch,
+  touched,
+}: {
+  draft: CampaignDraft;
+  onPatch: (call: SetupToolCall) => void;
+  touched?: boolean;
+}) {
+  const t = useTranslations("setup.catalog");
+  const brief = draft.researchBrief;
+  const stance = brief?.stance ?? "open";
+  const confirmed = brief?.confirmed ?? false;
+
+  const set = (patch: Record<string, unknown>) =>
+    onPatch({ tool: "set_research_brief", args: patch });
+
+  return (
+    <SectionCard
+      title={t("researchBrief")}
+      touched={touched}
+      action={
+        confirmed ? (
+          <span className="flex items-center gap-1.5 text-[length:var(--text-caption)] font-medium text-fg-muted">
+            <Check className="size-3.5" />
+            {t("briefConfirmed")}
+          </span>
+        ) : (
+          <span className="flex items-center gap-1.5 text-[length:var(--text-caption)] text-fg-subtle">
+            <StatusDisc state="pending" size="sm" />
+            {t("briefUnconfirmed")}
+          </span>
+        )
+      }
+    >
+      <div className="flex flex-col gap-3">
+        <Textarea
+          rows={2}
+          value={brief?.question ?? ""}
+          placeholder={t("briefQuestionPlaceholder")}
+          onChange={(e) => set({ question: e.target.value })}
+          className="min-h-[56px] text-[length:var(--text-body-lg)] font-medium"
+          aria-label={t("researchBrief")}
+        />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
+          <Segmented
+            value={stance}
+            options={[
+              { value: "open", label: t("stanceOpen") },
+              { value: "specific", label: t("stanceSpecific") },
+            ]}
+            onChange={(s) => set({ stance: s })}
+            className="sm:w-56"
+          />
+          <Input
+            value={brief?.scope ?? ""}
+            placeholder={t("briefScopePlaceholder")}
+            onChange={(e) => set({ scope: e.target.value })}
+            className="h-9"
+            aria-label={t("briefScopePlaceholder")}
+          />
+        </div>
+      </div>
+    </SectionCard>
   );
 }
 

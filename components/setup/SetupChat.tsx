@@ -19,7 +19,7 @@ import {
 import { StatusDisc } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 import type { SetupToolCallCard } from "@/lib/api";
-import { ToolCallCard } from "./ToolCallCard";
+import { ToolChecklist } from "./ToolChecklist";
 
 export type ChatTurn = {
   id: string;
@@ -41,10 +41,14 @@ export function SetupChat({
   turns,
   streaming,
   onSend,
+  onConfirmBrief,
+  briefConfirmed,
 }: {
   turns: ChatTurn[];
   streaming: boolean;
   onSend: (message: string) => void;
+  onConfirmBrief?: () => void;
+  briefConfirmed?: boolean;
 }) {
   const t = useTranslations("setup.chat");
   const tAi = useTranslations("setup.ai");
@@ -97,45 +101,44 @@ export function SetupChat({
       >
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-7">
           <AnimatePresence initial={false}>
-            {turns.map((turn) => (
-              <motion.div
-                key={turn.id}
-                layout={!prefersReducedMotion}
-                initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={turnTransition}
-                className={cn(
-                  "flex w-full flex-col",
-                  turn.role === "user" && "items-end",
-                )}
-              >
-                {turn.role === "user" ? (
-                  <div className="max-w-[80%] rounded-lg rounded-br-sm bg-cta px-4 py-2.5 text-[length:var(--text-body-lg)] leading-[1.6] text-cta-fg">
-                    {turn.content}
-                  </div>
-                ) : (
-                  <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
-                    {turn.content && (
-                      <p className="whitespace-pre-wrap">{turn.content}</p>
-                    )}
-                    {turn.toolCalls.length > 0 && (
-                      <div className="mt-3.5 flex flex-col gap-2">
-                        {turn.toolCalls.map((c, i) => (
-                          <ToolCallCard
-                            key={i}
-                            card={c}
-                            onReply={streaming ? undefined : onSend}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </motion.div>
-            ))}
+            {turns.map((turn, i) => {
+              const isLast = i === turns.length - 1;
+              return (
+                <motion.div
+                  key={turn.id}
+                  layout={!prefersReducedMotion}
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={turnTransition}
+                  className={cn(
+                    "flex w-full flex-col",
+                    turn.role === "user" && "items-end",
+                  )}
+                >
+                  {turn.role === "user" ? (
+                    <div className="max-w-[80%] rounded-lg rounded-br-sm bg-cta px-4 py-2.5 text-[length:var(--text-body-lg)] leading-[1.6] text-cta-fg">
+                      {turn.content}
+                    </div>
+                  ) : (
+                    <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
+                      {turn.content && (
+                        <p className="whitespace-pre-wrap">{turn.content}</p>
+                      )}
+                      <ToolChecklist
+                        cards={turn.toolCalls}
+                        onReply={streaming ? undefined : onSend}
+                        onConfirmBrief={onConfirmBrief}
+                        briefConfirmed={briefConfirmed}
+                        streaming={streaming && isLast}
+                      />
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
 
-          {streaming && <ThinkingIndicator label={t("thinking")} />}
+          {streaming && <DraftingShimmer label={t("thinking")} />}
         </div>
       </ChatScrollAnchored>
 
@@ -171,12 +174,12 @@ export function SetupChat({
   );
 }
 
-/** Animated "drafting…" indicator — the live status disc + label. */
-function ThinkingIndicator({ label }: { label: string }) {
+/** "Still drafting…" trailer — a shimmering label sweeping while EDDA streams
+ * its next tool calls. Reduced-motion collapses the sweep to a static label. */
+function DraftingShimmer({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-2 text-[length:var(--text-meta)] text-fg-muted">
-      <StatusDisc state="live" size="sm" />
-      <span>{label}</span>
+    <div className="text-[length:var(--text-meta)]">
+      <span className="edda-shimmer">{label}</span>
     </div>
   );
 }

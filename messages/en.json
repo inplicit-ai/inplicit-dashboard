@@ -161,7 +161,14 @@
       "set_people": "Updated participants",
       "set_schedule": "Set booking schedule",
       "set_email_template": "Drafted invite email",
-      "request_input": "Asked you to refine"
+      "request_input": "Asked you to refine",
+      "set_research_brief": "Sharpened the question",
+      "researchBriefLabel": "Research brief",
+      "stanceOpen": "Open",
+      "stanceSpecific": "Specific",
+      "briefConfirmed": "Confirmed",
+      "confirmBrief": "Confirm & build",
+      "confirmBriefHint": "I’ll fill the catalog next."
     },
     "catalog": {
       "title": "Campaign catalog",
@@ -201,7 +208,7 @@
       "schedule": "Schedule",
       "scheduleMode": "Booking mode",
       "bookingSlots": "Booking slots",
-      "instantLink": "Instant link (legacy)",
+      "instantLink": "Direct link",
       "scheduleHint": "Participants book a slot and receive a calendar invite — not an open-anytime link.",
       "windowStart": "From",
       "windowEnd": "Until",
@@ -214,7 +221,15 @@
       "emailBody": "Body",
       "emailVarsHint": "Tokens: '{participant}', '{slot}', '{link}', '{org}'.",
       "preview": "Preview",
-      "previewSampleName": "Alex"
+      "previewSampleName": "Alex",
+      "instantHint": "Each participant gets a direct, single-use link — no booking step. The invite uses {{link}} directly.",
+      "researchBrief": "Research brief",
+      "briefConfirmed": "Confirmed",
+      "briefUnconfirmed": "Not yet confirmed",
+      "briefQuestionPlaceholder": "What exactly do we want to find out?",
+      "briefScopePlaceholder": "Scope — who / which moment (optional)",
+      "stanceOpen": "Open",
+      "stanceSpecific": "Specific"
     },
     "review": {
       "eyebrow": "Review & launch",
@@ -239,7 +254,8 @@
         "no_goals": "Add at least one goal.",
         "no_success_criteria": "Add at least one success question or hypothesis.",
         "bad_duration": "Set a duration between 5 and 90 minutes.",
-        "no_interview_type": "Choose an interview type."
+        "no_interview_type": "Choose an interview type.",
+        "brief_not_confirmed": "Confirm the research brief."
       },
       "gatesOk": {
         "no_goals": "Goals defined",
