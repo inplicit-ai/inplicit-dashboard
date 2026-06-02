@@ -229,7 +229,8 @@
       "instantHint": "Jede:r Teilnehmer:in erhält einen direkten, einmaligen Link — keine Terminbuchung. Die Einladung nutzt {{link}} direkt.",
       "objective": "Forschungsziel",
       "objectivePlaceholder": "Was genau wollen wir herausfinden?",
-      "participantPrompt": "Frage an Teilnehmer:innen"
+      "participantPrompt": "Frage an Teilnehmer:innen",
+      "previewSampleOrg": "deinem Unternehmen"
     },
     "review": {
       "eyebrow": "Prüfen & starten",

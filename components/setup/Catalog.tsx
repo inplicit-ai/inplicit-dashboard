@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,10 +32,12 @@ export function Catalog({
   draft,
   onPatch,
   recentlyTouched,
+  orgName,
 }: {
   draft: CampaignDraft;
   onPatch: (call: SetupToolCall) => void;
   recentlyTouched?: Set<string>;
+  orgName?: string;
 }) {
   const t = useTranslations("setup.catalog");
 
@@ -47,13 +50,12 @@ export function Catalog({
     kind: "insight",
     status: "done",
     label: (
-      <input
+      <GoalInput
         value={g.text}
-        onChange={(e) =>
-          onPatch({ tool: "refine_goal", args: { id: g.id, text: e.target.value } })
+        onChange={(text) =>
+          onPatch({ tool: "refine_goal", args: { id: g.id, text } })
         }
-        className="w-full bg-transparent text-fg outline-none placeholder:text-fg-subtle"
-        aria-label={`${t("goals")} ${i + 1}`}
+        ariaLabel={`${t("goals")} ${i + 1}`}
       />
     ),
     meta: (
@@ -244,6 +246,7 @@ export function Catalog({
         draft={draft}
         onPatch={onPatch}
         touched={recentlyTouched?.has("set_email_template")}
+        orgName={orgName}
       />
     </div>
   );
@@ -279,6 +282,36 @@ function ObjectiveSection({
         aria-label={t("objective")}
       />
     </SectionCard>
+  );
+}
+
+/** An inline, auto-growing goal editor — wraps long goals instead of truncating
+ *  them (the old single-line input cut the text off). */
+function GoalInput({
+  value,
+  onChange,
+  ariaLabel,
+}: {
+  value: string;
+  onChange: (text: string) => void;
+  ariaLabel: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full resize-none overflow-hidden bg-transparent text-fg leading-snug outline-none placeholder:text-fg-subtle"
+      aria-label={ariaLabel}
+    />
   );
 }
 
