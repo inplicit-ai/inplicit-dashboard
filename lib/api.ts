@@ -859,6 +859,9 @@ export interface SetupSessionCreated {
   draft_id: string;
   revision: number;
   config: CampaignDraft;
+  /** The org's real name — fills the invite email's {{org}} preview. */
+  org_name?: string;
+  company_context?: string;
 }
 export interface SetupSession {
   session_id: string;
@@ -867,6 +870,9 @@ export interface SetupSession {
   status: string;
   config: CampaignDraft;
   messages: SetupMessage[];
+  /** The org's real name — fills the invite email's {{org}} preview. */
+  org_name?: string;
+  company_context?: string;
 }
 export interface SetupPatchInput {
   patch: SetupToolCall;

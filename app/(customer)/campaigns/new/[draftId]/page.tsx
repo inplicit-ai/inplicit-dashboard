@@ -29,6 +29,7 @@ export default async function AuthorPage({
       initialDraft={session.config}
       initialRevision={session.revision}
       initialMessages={session.messages}
+      orgName={session.org_name}
     />
   );
 }

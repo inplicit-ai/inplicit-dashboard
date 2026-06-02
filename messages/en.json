@@ -229,7 +229,8 @@
       "instantHint": "Each participant gets a direct, single-use link — no booking step. The invite uses {{link}} directly.",
       "objective": "Objective",
       "objectivePlaceholder": "What exactly do we want to find out?",
-      "participantPrompt": "Question for participants"
+      "participantPrompt": "Question for participants",
+      "previewSampleOrg": "your company"
     },
     "review": {
       "eyebrow": "Review & launch",

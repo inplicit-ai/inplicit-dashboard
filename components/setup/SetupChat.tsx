@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp } from "lucide-react";
@@ -16,7 +15,7 @@ import {
   ChatShell,
   ChatComposerBar,
 } from "@/components/ui/chat-shell";
-import { StatusDisc } from "@/components/ui/status-disc";
+import { Badge } from "@/components/ui/heroui-badge";
 import { cn } from "@/lib/utils";
 import type { SetupToolCallCard } from "@/lib/api";
 import { ToolChecklist } from "./ToolChecklist";
@@ -67,25 +66,26 @@ export function SetupChat({
       {/* Honest-AI header — fixed, never scrolls. The live disc pulses amber
           only while the agent is drafting. */}
       <header className="flex shrink-0 items-center gap-3 border-b border-line bg-canvas px-5 py-4">
-        <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-2 ring-1 ring-line">
-          <Image
-            src="/logo_icon.svg"
-            alt="Inplicit"
-            width={22}
-            height={22}
-            className="size-[22px]"
-            priority
+        <Badge.Anchor>
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-fg text-[length:var(--text-body)] font-semibold text-canvas ring-1 ring-line">
+            E
+          </span>
+          {/* Live status dot — amber only while EDDA is drafting (one-accent rule). */}
+          <Badge
+            color={streaming ? "accent" : "success"}
+            placement="bottom-right"
+            size="sm"
+            aria-label={streaming ? "drafting" : "ready"}
           />
-        </span>
+        </Badge.Anchor>
         <div className="min-w-0 flex-1">
           <p className="text-[length:var(--text-subtitle)] font-semibold tracking-[-0.01em] text-fg">
-            {t("title")}
+            EDDA
           </p>
           <p className="truncate text-[length:var(--text-meta)] text-fg-muted">
             {tAi("disclaimer")}
           </p>
         </div>
-        <StatusDisc state={streaming ? "live" : "idle"} size="sm" />
       </header>
 
       {/* Conversation — the single scroll region, stick-to-bottom + floating pill. */}

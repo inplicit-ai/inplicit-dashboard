@@ -29,11 +29,13 @@ export function SplitAuthor({
   initialDraft,
   initialRevision,
   initialMessages,
+  orgName,
 }: {
   sessionId: string;
   initialDraft: CampaignDraft;
   initialRevision: number;
   initialMessages: SetupMessage[];
+  orgName?: string;
 }) {
   const router = useRouter();
   const tReview = useTranslations("setup.review");
@@ -224,7 +226,7 @@ export function SplitAuthor({
         {/* Right — campaign catalog + launch bar (50% on md+) */}
         <div className="flex min-h-0 flex-1 flex-col gap-3 md:basis-1/2">
           <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto pr-0.5">
-            <Catalog draft={draft} onPatch={onPatch} recentlyTouched={touched} />
+            <Catalog draft={draft} onPatch={onPatch} recentlyTouched={touched} orgName={orgName} />
           </div>
           {/* Launch bar — the readiness checklist + the near-black primary CTA. */}
           <div className="flex shrink-0 flex-col gap-3 rounded-card border border-line bg-surface px-4 py-3 shadow-card sm:flex-row sm:items-center sm:justify-between">
