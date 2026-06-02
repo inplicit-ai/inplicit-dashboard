@@ -15,10 +15,11 @@ import type {
   Goal,
   Locale,
   Person,
-  ResearchBrief,
   ScheduleConfig,
   SetupToolCall,
   TopicGraph,
+  TopicMethod,
+  TopicNode,
 } from "@/lib/api";
 
 export const KNOWN_TOOLS = [
@@ -32,13 +33,19 @@ export const KNOWN_TOOLS = [
   "link_topics",
   "set_success_criteria",
   "add_must_ask",
+  "set_exploration_map",
+  "set_topic_method",
+  "remove_topic",
   "set_audience",
   "set_people",
   "set_schedule",
   "set_email_template",
-  "set_research_brief",
+  "set_objective",
   "request_input",
 ] as const;
+
+/** Methods an exploration angle may carry — mirrors the server `VALID_METHODS`. */
+const VALID_METHODS = ["cit", "journey", "jtbd", "laddering", "paired_cit"];
 
 export type KnownTool = (typeof KNOWN_TOOLS)[number];
 
@@ -161,6 +168,81 @@ export function applyPatch(
         },
       };
     }
+    case "set_exploration_map": {
+      // Wholesale, idempotent rebuild of the method-tagged exploration map.
+      // Mirrors the server: ≤12 nodes, non-empty titles, valid method if present,
+      // edges filtered to existing nodes.
+      const rawNodes = arg<Array<Record<string, unknown>>>(args, "nodes");
+      if (!Array.isArray(rawNodes) || rawNodes.length > 12) return draft;
+      const ids = new Set<string>();
+      const nodes: TopicNode[] = [];
+      for (let i = 0; i < rawNodes.length; i++) {
+        const n = rawNodes[i] ?? {};
+        const title = typeof n.title === "string" ? n.title.trim() : "";
+        if (!title) return draft;
+        const rawMethod = typeof n.method === "string" ? n.method : undefined;
+        if (rawMethod && !VALID_METHODS.includes(rawMethod)) return draft;
+        const id = typeof n.id === "string" && n.id ? n.id : `t${i + 1}`;
+        ids.add(id);
+        const node: TopicNode = {
+          id,
+          title,
+          summary: typeof n.summary === "string" ? n.summary : "",
+        };
+        if (rawMethod) node.method = rawMethod as TopicMethod;
+        if (typeof n.incidentPrompt === "string" && n.incidentPrompt.trim())
+          node.incidentPrompt = n.incidentPrompt;
+        if (n.bidirectional === true) node.bidirectional = true;
+        nodes.push(node);
+      }
+      const rawEdges = arg<Array<Record<string, unknown>>>(args, "edges") ?? [];
+      const edges = rawEdges
+        .filter(
+          (e) =>
+            e &&
+            typeof e.a === "string" &&
+            typeof e.b === "string" &&
+            e.a !== e.b &&
+            ids.has(e.a) &&
+            ids.has(e.b),
+        )
+        .map((e) => ({
+          a: e.a as string,
+          b: e.b as string,
+          relation: typeof e.relation === "string" ? e.relation : "relates_to",
+        }));
+      return { ...draft, topics: { nodes, edges } };
+    }
+    case "set_topic_method": {
+      const id = arg<string>(args, "id");
+      if (!id) return draft;
+      const method = arg<string>(args, "method");
+      if (method && !VALID_METHODS.includes(method)) return draft;
+      const graph: TopicGraph = draft.topics ?? { nodes: [], edges: [] };
+      const incidentPrompt = arg<string>(args, "incidentPrompt");
+      const bidirectional = arg<boolean>(args, "bidirectional");
+      const nodes = graph.nodes.map((n) => {
+        if (n.id !== id) return n;
+        const next: TopicNode = { ...n };
+        if (method) next.method = method as TopicMethod;
+        if (incidentPrompt !== undefined) next.incidentPrompt = incidentPrompt;
+        if (bidirectional !== undefined) next.bidirectional = bidirectional;
+        return next;
+      });
+      return { ...draft, topics: { nodes, edges: [...graph.edges] } };
+    }
+    case "remove_topic": {
+      const id = arg<string>(args, "id");
+      if (!id) return draft;
+      const graph: TopicGraph = draft.topics ?? { nodes: [], edges: [] };
+      return {
+        ...draft,
+        topics: {
+          nodes: graph.nodes.filter((n) => n.id !== id),
+          edges: graph.edges.filter((e) => e.a !== id && e.b !== id),
+        },
+      };
+    }
     case "set_success_criteria": {
       const mode = arg<string>(args, "mode");
       if (mode !== "deductive" && mode !== "inductive") return draft;
@@ -231,18 +313,12 @@ export function applyPatch(
       // Any edit marks the invite customized → mode changes leave it alone.
       return { ...draft, emailTemplate: tpl, emailCustomized: true };
     }
-    case "set_research_brief": {
-      const prev = draft.researchBrief;
-      const stance = arg<string>(args, "stance") ?? prev?.stance ?? "open";
-      if (stance !== "open" && stance !== "specific") return draft;
-      const brief: ResearchBrief = {
-        question: arg<string>(args, "question") ?? prev?.question ?? "",
-        stance,
-        scope: arg<string>(args, "scope") ?? prev?.scope ?? "",
-        probesAsked: arg<number>(args, "probesAsked") ?? prev?.probesAsked ?? 0,
-        confirmed: arg<boolean>(args, "confirmed") ?? prev?.confirmed ?? false,
-      };
-      return { ...draft, researchBrief: brief, inductiveFlag: stance === "open" };
+    case "set_objective": {
+      // The sharpened research objective — a plain editable line at the top of
+      // the catalog. It replaces the raw launchpad prompt; the user owns it.
+      const text = arg<string>(args, "text")?.trim();
+      if (!text) return draft;
+      return { ...draft, prompt: text };
     }
     case "request_input":
       // No catalog change — the agent is asking the user to refine.
@@ -272,9 +348,6 @@ export function applyAll(
  */
 export function validateForLaunch(draft: CampaignDraft): string[] {
   const reasons: string[] = [];
-
-  // The sharpened research question must be user-confirmed (hard gate).
-  if (!draft.researchBrief?.confirmed) reasons.push("brief_not_confirmed");
 
   if (!draft.goals || draft.goals.length === 0) reasons.push("no_goals");
 

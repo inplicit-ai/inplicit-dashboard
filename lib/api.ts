@@ -699,22 +699,7 @@ export interface CampaignDraft {
   /** True once the user (or an explicit user-requested rewrite) edits the
    *  invite — schedule-mode changes then leave the email untouched. */
   emailCustomized?: boolean;
-  /** EDDA's sharpened research question — the "enough refinement" artifact and
-   *  a hard launch gate (must be confirmed). */
-  researchBrief?: ResearchBrief;
   [key: string]: unknown;
-}
-
-/** The sharpened research question. `stance` is the deductive/inductive axis:
- *  "open" → exploratory/inductive, "specific" → hypothesis-driven/deductive. */
-export interface ResearchBrief {
-  question: string;
-  stance: "open" | "specific";
-  scope: string;
-  /** How many clarifying probes EDDA has spent (capped at 3). */
-  probesAsked: number;
-  /** User-confirmed — unlocks Phase B (catalog fan-out) and launch. */
-  confirmed: boolean;
 }
 
 /** A participant entry in the audience editor (O-5). PII stays client-side
@@ -813,10 +798,18 @@ export interface TopicGraph {
   nodes: TopicNode[];
   edges: TopicEdge[];
 }
+/** Qualitative method an exploration angle is probed with (mirrors
+ *  `VALID_METHODS` / `template::Method` server-side). */
+export type TopicMethod = "cit" | "journey" | "jtbd" | "laddering" | "paired_cit";
 export interface TopicNode {
   id: string;
   title: string;
   summary?: string;
+  /** The research method tagged onto this angle (set by the CLASSIFY template). */
+  method?: TopicMethod;
+  /** A critical-incident anchor prompt — set on the lead angle only. */
+  incidentPrompt?: string;
+  bidirectional?: boolean;
 }
 export interface TopicEdge {
   a: string;

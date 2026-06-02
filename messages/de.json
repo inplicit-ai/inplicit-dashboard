@@ -162,13 +162,12 @@
       "set_schedule": "Buchungsplan gesetzt",
       "set_email_template": "Einladungs-E-Mail entworfen",
       "request_input": "Um Verfeinerung gebeten",
-      "set_research_brief": "Forschungsfrage zugespitzt",
-      "researchBriefLabel": "Forschungsfrage",
-      "stanceOpen": "Offen",
-      "stanceSpecific": "Spezifisch",
-      "briefConfirmed": "Bestätigt",
-      "confirmBrief": "Bestätigen & aufbauen",
-      "confirmBriefHint": "Danach fülle ich den Katalog."
+      "set_objective": "Forschungsziel gesetzt",
+      "designedStudy": "Studie entworfen",
+      "updatedCatalog": "Katalog aktualisiert",
+      "set_exploration_map": "Erkundungsfelder kartiert",
+      "set_topic_method": "Methode getaggt",
+      "remove_topic": "Feld entfernt"
     },
     "catalog": {
       "title": "Kampagnen-Katalog",
@@ -223,13 +222,9 @@
       "preview": "Vorschau",
       "previewSampleName": "Alex",
       "instantHint": "Jede:r Teilnehmer:in erhält einen direkten, einmaligen Link — keine Terminbuchung. Die Einladung nutzt {{link}} direkt.",
-      "researchBrief": "Forschungsfrage",
-      "briefConfirmed": "Bestätigt",
-      "briefUnconfirmed": "Noch nicht bestätigt",
-      "briefQuestionPlaceholder": "Was genau wollen wir herausfinden?",
-      "briefScopePlaceholder": "Umfang — wen / welcher Moment (optional)",
-      "stanceOpen": "Offen",
-      "stanceSpecific": "Spezifisch"
+      "objective": "Forschungsziel",
+      "objectivePlaceholder": "Was genau wollen wir herausfinden?",
+      "participantPrompt": "Frage an Teilnehmer:innen"
     },
     "review": {
       "eyebrow": "Prüfen & starten",
@@ -254,8 +249,7 @@
         "no_goals": "Füge mindestens ein Ziel hinzu.",
         "no_success_criteria": "Füge mindestens eine Erfolgsfrage oder Hypothese hinzu.",
         "bad_duration": "Lege eine Dauer zwischen 5 und 90 Minuten fest.",
-        "no_interview_type": "Wähle einen Interviewtyp.",
-        "brief_not_confirmed": "Bestätige die Forschungsfrage."
+        "no_interview_type": "Wähle einen Interviewtyp."
       },
       "gatesOk": {
         "no_goals": "Ziele definiert",

@@ -13,9 +13,9 @@ import type { SetupToolCallCard } from "@/lib/api";
  *     because they wait on the human.
  */
 
-/** Tools that wait on the human — rendered as a rich card, not a checklist row.
- *  `set_research_brief` carries the in-chat Confirm affordance. */
-const INTERACTIVE_TOOLS = ["request_input", "set_research_brief"] as const;
+/** Tools that wait on the human — rendered as an inline prompt, not a log row.
+ *  Only a rare design question (request_input) qualifies. */
+const INTERACTIVE_TOOLS = ["request_input"] as const;
 
 /** Known field tools — kept in sync with the server reducer (`tools.rs`). */
 const KNOWN_TOOLS = [
@@ -29,11 +29,14 @@ const KNOWN_TOOLS = [
   "link_topics",
   "set_success_criteria",
   "add_must_ask",
+  "set_exploration_map",
+  "set_topic_method",
+  "remove_topic",
   "set_audience",
   "set_people",
   "set_schedule",
   "set_email_template",
-  "set_research_brief",
+  "set_objective",
   "request_input",
 ];
 
@@ -68,6 +71,14 @@ export function summarize(card: SetupToolCallCard): string {
       return String(a.title ?? "");
     case "link_topics":
       return `${a.a ?? "?"} ↔ ${a.b ?? "?"}`;
+    case "set_exploration_map": {
+      const n = Array.isArray(a.nodes) ? a.nodes.length : 0;
+      return n ? `${n} angles` : "";
+    }
+    case "set_topic_method":
+      return a.method ? `${a.id ?? "?"} → ${a.method}` : String(a.id ?? "");
+    case "remove_topic":
+      return String(a.id ?? "");
     case "set_success_criteria":
       return String(a.mode ?? "");
     case "set_email_template":
@@ -78,8 +89,8 @@ export function summarize(card: SetupToolCallCard): string {
     }
     case "set_schedule":
       return a.mode === "slots" ? "booking slots" : "instant link";
-    case "set_research_brief":
-      return String(a.question ?? "");
+    case "set_objective":
+      return String(a.text ?? "");
     case "request_input":
       return String(a.question ?? a.prompt ?? "");
     default:
