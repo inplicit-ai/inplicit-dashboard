@@ -8,7 +8,7 @@ import { StatBand } from "@/components/ui/stat-band";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Card } from "@/components/ui/card";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { StatusBadge } from "@/components/PageChrome";
 
 function fmtDuration(seconds?: number): string {
   if (!seconds || seconds <= 0) return "—";
