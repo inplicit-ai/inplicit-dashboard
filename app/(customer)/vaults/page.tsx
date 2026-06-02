@@ -502,6 +502,17 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/** Map known English backend errors to German. */
+function translateFlash(msg: string): string {
+  const map: Record<string, string> = {
+    "content must be a valid URL for URL items": "Der Inhalt muss eine gültige URL sein (z. B. https://example.com).",
+    "Name required": "Name ist erforderlich.",
+    "Content required": "Inhalt ist erforderlich.",
+    "Vault deleted": "Tresor wurde gelöscht.",
+  };
+  return map[msg] ?? msg;
+}
+
 function Flash({ type, message }: { type: "ok" | "err"; message: string }) {
   const Icon = type === "ok" ? CheckCircle2 : TriangleAlert;
   return (
@@ -521,7 +532,7 @@ function Flash({ type, message }: { type: "ok" | "err"; message: string }) {
           type === "ok" ? "text-success" : "text-danger",
         )}
       />
-      <p className="leading-snug">{message}</p>
+      <p className="leading-snug">{translateFlash(message)}</p>
     </div>
   );
 }
