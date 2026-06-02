@@ -2,32 +2,58 @@
 
 import { useTranslations } from "next-intl";
 import { motion, useReducedMotion } from "framer-motion";
+import { Check } from "lucide-react";
 
 import { StatusDisc, type StatusState } from "@/components/ui/status-disc";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { SetupToolCallCard } from "@/lib/api";
+import { labelFor, summarize } from "@/lib/setup/toolCardMeta";
 
 /**
  * The "AI explains itself" surface (Rams #4, doc 03 §3), in the white-modernist
- * clean style: a soft white card with a status disc, a human label, and a
- * one-line field diff. Status encodes lifecycle:
- *   applied        → done disc
- *   request_input  → pending disc (the agent is waiting on the human)
- *   rejected patch → error disc
- *
- * A follow-up question renders its prompt prominently with the agent's example
- * answers as one-tap soft reply pills so the question is actionable. Amber never
- * appears here; the live pulse lives on the header disc only.
+ * clean style. Three shapes:
+ *   - `set_research_brief` → the sharpened question + stance, with the in-chat
+ *     Confirm affordance (Phase A → B gate). See {@link BriefCard}.
+ *   - `request_input`      → a follow-up question with one-tap reply pills.
+ *   - any field patch      → a soft card with a status disc + one-line diff.
+ * Amber never appears here; the live pulse lives on the header disc only.
  */
 export function ToolCallCard({
   card,
   onReply,
+  onConfirmBrief,
+  briefConfirmed,
+  streaming,
 }: {
   card: SetupToolCallCard;
   onReply?: (message: string) => void;
+  onConfirmBrief?: () => void;
+  briefConfirmed?: boolean;
+  streaming?: boolean;
 }) {
   const t = useTranslations("setup.toolCard");
   const prefersReducedMotion = useReducedMotion();
+
+  const enter = prefersReducedMotion
+    ? { initial: false as const, transition: { duration: 0.15 } }
+    : {
+        initial: { opacity: 0, y: 6 },
+        transition: { type: "spring" as const, stiffness: 500, damping: 28 },
+      };
+
+  if (card.tool === "set_research_brief") {
+    return (
+      <BriefCard
+        card={card}
+        onConfirmBrief={onConfirmBrief}
+        confirmed={briefConfirmed}
+        streaming={streaming}
+        enter={enter}
+      />
+    );
+  }
+
   const label = labelFor(card.tool, t);
   const summary = summarize(card);
 
@@ -40,7 +66,6 @@ export function ToolCallCard({
       ? "pending"
       : "done";
 
-  // A follow-up question: surface the prompt + example answers as reply chips.
   const question = isRequestInput
     ? String(card.args?.question ?? card.args?.prompt ?? "")
     : "";
@@ -51,15 +76,10 @@ export function ToolCallCard({
 
   return (
     <motion.div
-      initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+      initial={enter.initial}
       animate={{ opacity: 1, y: 0 }}
-      transition={
-        prefersReducedMotion
-          ? { duration: 0.15 }
-          : { type: "spring", stiffness: 500, damping: 28 }
-      }
+      transition={enter.transition}
       className={cn(
-        // Clean white card — soft border + a faint tint on the actionable states.
         "grid grid-cols-[1.25rem_1fr] items-start gap-3 rounded-md border border-line bg-surface px-4 py-3 text-[length:var(--text-body)] shadow-card",
         isRequestInput && "border-accent-muted bg-accent-soft shadow-none",
         rejected && "border-pain-muted bg-pain-soft shadow-none",
@@ -108,53 +128,91 @@ export function ToolCallCard({
   );
 }
 
-function labelFor(tool: string, t: (k: string) => string): string {
-  // Known tools have their own key; fall back to the raw tool name.
-  const known = [
-    "set_interview_type",
-    "set_duration",
-    "set_language",
-    "set_goals",
-    "refine_goal",
-    "set_background",
-    "add_topic",
-    "link_topics",
-    "set_success_criteria",
-    "add_must_ask",
-    "set_audience",
-    "set_email_template",
-    "request_input",
-  ];
-  return known.includes(tool) ? t(tool) : tool;
-}
+/**
+ * The research-brief card — EDDA's sharpened question with a stance badge and
+ * the Phase A→B gate. Before confirmation it shows a prominent Confirm button
+ * ("the button appears in the chat"); once confirmed it settles to a done state.
+ */
+function BriefCard({
+  card,
+  onConfirmBrief,
+  confirmed,
+  streaming,
+  enter,
+}: {
+  card: SetupToolCallCard;
+  onConfirmBrief?: () => void;
+  confirmed?: boolean;
+  streaming?: boolean;
+  enter: {
+    initial: false | { opacity: number; y: number };
+    transition: object;
+  };
+}) {
+  const t = useTranslations("setup.toolCard");
+  const question = String(card.args?.question ?? "");
+  const scope = String(card.args?.scope ?? "");
+  const stance = card.args?.stance === "specific" ? "specific" : "open";
+  const isConfirmed = confirmed ?? false;
 
-/** A short, human diff of what changed — pulled from the tool args. */
-function summarize(card: SetupToolCallCard): string {
-  const a = card.args ?? {};
-  switch (card.tool) {
-    case "set_interview_type":
-      return String(a.type ?? "");
-    case "set_duration":
-      return a.minutes ? `${a.minutes} min` : "";
-    case "set_language": {
-      const def = String(a.default ?? "");
-      return a.allowSwitch ? `${def} (switchable)` : def;
-    }
-    case "set_goals": {
-      const g = Array.isArray(a.goals) ? a.goals.length : 0;
-      return g ? `${g} goals` : "";
-    }
-    case "refine_goal":
-      return String(a.text ?? "");
-    case "add_topic":
-      return String(a.title ?? "");
-    case "link_topics":
-      return `${a.a ?? "?"} ↔ ${a.b ?? "?"}`;
-    case "set_success_criteria":
-      return String(a.mode ?? "");
-    case "request_input":
-      return String(a.question ?? a.prompt ?? "");
-    default:
-      return "";
-  }
+  return (
+    <motion.div
+      initial={enter.initial}
+      animate={{ opacity: 1, y: 0 }}
+      transition={enter.transition}
+      className={cn(
+        "flex flex-col gap-3 rounded-md border px-4 py-3.5 shadow-none",
+        isConfirmed
+          ? "border-line bg-surface"
+          : "border-accent-muted bg-accent-soft",
+      )}
+    >
+      <div className="flex items-center gap-2">
+        <StatusDisc state={isConfirmed ? "done" : "pending"} size="sm" />
+        <span className="text-[length:var(--text-caption)] font-semibold uppercase tracking-[0.05em] text-fg-subtle">
+          {t("researchBriefLabel")}
+        </span>
+        <span
+          className={cn(
+            "ml-auto rounded-full border px-2 py-0.5 text-[length:var(--text-caption)] font-medium",
+            stance === "specific"
+              ? "border-line text-fg-muted"
+              : "border-line text-fg-muted",
+          )}
+        >
+          {t(stance === "specific" ? "stanceSpecific" : "stanceOpen")}
+        </span>
+      </div>
+
+      <p className="text-[length:var(--text-body-lg)] font-medium leading-[1.5] text-fg">
+        {question || "—"}
+      </p>
+      {scope && (
+        <p className="text-[length:var(--text-meta)] text-fg-muted">{scope}</p>
+      )}
+
+      {isConfirmed ? (
+        <span className="flex items-center gap-1.5 text-[length:var(--text-meta)] font-medium text-fg-muted">
+          <Check className="size-3.5" />
+          {t("briefConfirmed")}
+        </span>
+      ) : (
+        onConfirmBrief && (
+          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+            <Button
+              type="button"
+              size="sm"
+              onClick={onConfirmBrief}
+              disabled={streaming || !question}
+            >
+              {t("confirmBrief")}
+            </Button>
+            <span className="text-[length:var(--text-caption)] text-fg-subtle">
+              {t("confirmBriefHint")}
+            </span>
+          </div>
+        )
+      )}
+    </motion.div>
+  );
 }

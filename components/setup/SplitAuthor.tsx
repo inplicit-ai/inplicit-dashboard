@@ -194,6 +194,42 @@ export function SplitAuthor({
     [sessionId],
   );
 
+  // Confirm the research brief (Phase A → B). The state flip is DETERMINISTIC
+  // (a plain PATCH, never trusted to the model); once persisted we kick off an
+  // empty turn so EDDA sees `confirmed:true` and runs the Phase B catalog fill.
+  const onConfirmBrief = useCallback(() => {
+    if (stream.streaming) return;
+    const confirmCall: SetupToolCall = {
+      tool: "set_research_brief",
+      args: { confirmed: true },
+    };
+    setDraft((d) => applyPatch(d, confirmCall));
+    clientApi.setup
+      .patchDraft(sessionId, { patch: confirmCall, base_rev: revRef.current })
+      .then((res) => {
+        revRef.current = res.revision;
+        setDraft(res.config);
+        const fillTurn: ChatTurn = {
+          id: `a-fill-${Date.now()}`,
+          role: "assistant",
+          content: "",
+          toolCalls: [],
+        };
+        streamTurnId.current = fillTurn.id;
+        setTurns((prev) => [...prev, fillTurn]);
+        void stream.send("");
+      })
+      .catch(() => {
+        clientApi.setup
+          .getSession(sessionId)
+          .then((s) => {
+            revRef.current = s.revision;
+            setDraft(s.config);
+          })
+          .catch(() => {});
+      });
+  }, [sessionId, stream]);
+
   // Author screen does NOT launch directly (doc 03 §8). "Save" advances to the
   // condensed review + launch pad, which owns the terminal launch step.
   const onReview = useCallback(() => {
@@ -218,7 +254,13 @@ export function SplitAuthor({
       <div className="flex min-h-0 flex-1 flex-col gap-4 md:flex-row">
         {/* Left — EDDA setup agent (50% on md+) */}
         <div className="flex max-h-[50vh] min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card md:max-h-none md:basis-1/2">
-          <SetupChat turns={turns} streaming={stream.streaming} onSend={onSend} />
+          <SetupChat
+            turns={turns}
+            streaming={stream.streaming}
+            onSend={onSend}
+            onConfirmBrief={onConfirmBrief}
+            briefConfirmed={draft.researchBrief?.confirmed ?? false}
+          />
         </div>
 
         {/* Right — campaign catalog + launch bar (50% on md+) */}
