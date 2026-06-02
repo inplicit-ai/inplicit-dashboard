@@ -32,6 +32,11 @@ const KNOWN_TOOLS = [
   "set_exploration_map",
   "set_topic_method",
   "remove_topic",
+  "reweight_topic",
+  "unlink_topics",
+  "remove_goal",
+  "set_success_question",
+  "remove_success_question",
   "set_audience",
   "set_people",
   "set_schedule",
@@ -79,6 +84,16 @@ export function summarize(card: SetupToolCallCard): string {
       return a.method ? `${a.id ?? "?"} → ${a.method}` : String(a.id ?? "");
     case "remove_topic":
       return String(a.id ?? "");
+    case "reweight_topic":
+      return `${a.id ?? "?"} → ${a.weight ?? "normal"}`;
+    case "unlink_topics":
+      return `${a.a ?? "?"} ⁄ ${a.b ?? "?"}`;
+    case "remove_goal":
+      return String(a.id ?? "");
+    case "set_success_question":
+      return String(a.text ?? "");
+    case "remove_success_question":
+      return a.index !== undefined ? `#${a.index}` : "";
     case "set_success_criteria":
       return String(a.mode ?? "");
     case "set_email_template":

@@ -810,6 +810,8 @@ export interface TopicNode {
   /** A critical-incident anchor prompt — set on the lead angle only. */
   incidentPrompt?: string;
   bidirectional?: boolean;
+  /** Emphasis set by conversational refinement ("focus more/less on X"). */
+  weight?: "primary" | "normal" | "muted";
 }
 export interface TopicEdge {
   a: string;
