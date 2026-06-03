@@ -83,7 +83,7 @@ export function ChatConversation({
       </ChatScrollAnchored>
 
       <ChatComposerBar className="px-4 py-3 sm:px-8 sm:py-4">
-        <div className="mx-auto w-full max-w-3xl">
+        <div className="w-full">
           <PromptInput
             value={draft}
             onValueChange={setDraft}

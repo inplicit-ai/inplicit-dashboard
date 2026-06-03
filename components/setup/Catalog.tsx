@@ -63,7 +63,7 @@ export function Catalog({
     meta: (
       // WHY-104: campaign-goal numbers right-aligned within their row — a
       // fixed-width, end-justified tabular figure so 01..09 and 10+ line up.
-      <span className="block w-7 text-right tabular-nums text-fg-subtle">
+      <span className="ml-auto shrink-0 tabular-nums text-fg-subtle">
         {String(i + 1).padStart(2, "0")}
       </span>
     ),

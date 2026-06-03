@@ -366,7 +366,7 @@
   },
   "knowledgeChat": {
     "eyebrow": "Organisation",
-    "title": "Knowledge Chat",
+    "title": "Wissens-Chat",
     "scope": "Durchsucht {count} Kampagnen",
     "newChat": "Neuer Chat",
     "threadsTitle": "Unterhaltungen",
