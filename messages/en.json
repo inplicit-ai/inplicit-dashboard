@@ -161,7 +161,18 @@
       "set_people": "Updated participants",
       "set_schedule": "Set booking schedule",
       "set_email_template": "Drafted invite email",
-      "request_input": "Asked you to refine"
+      "request_input": "Asked you to refine",
+      "set_objective": "Set the objective",
+      "designedStudy": "Designed your study",
+      "updatedCatalog": "Updated the catalog",
+      "set_exploration_map": "Mapped the exploration angles",
+      "set_topic_method": "Tagged a method",
+      "remove_topic": "Removed an angle",
+      "reweight_topic": "Reweighted an angle",
+      "unlink_topics": "Disconnected angles",
+      "remove_goal": "Removed a goal",
+      "set_success_question": "Set a success question",
+      "remove_success_question": "Removed a success question"
     },
     "catalog": {
       "title": "Campaign catalog",
@@ -214,7 +225,11 @@
       "emailBody": "Body",
       "emailVarsHint": "Tokens: '{participant}', '{slot}', '{link}', '{org}'.",
       "preview": "Preview",
-      "previewSampleName": "Alex"
+      "previewSampleName": "Alex",
+      "instantHint": "Each participant gets a direct, single-use link — no booking step. The invite uses {{link}} directly.",
+      "objective": "Objective",
+      "objectivePlaceholder": "What exactly do we want to find out?",
+      "participantPrompt": "Question for participants"
     },
     "review": {
       "eyebrow": "Review & launch",

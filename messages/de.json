@@ -161,7 +161,18 @@
       "set_people": "Teilnehmer:innen aktualisiert",
       "set_schedule": "Buchungsplan gesetzt",
       "set_email_template": "Einladungs-E-Mail entworfen",
-      "request_input": "Um Verfeinerung gebeten"
+      "request_input": "Um Verfeinerung gebeten",
+      "set_objective": "Forschungsziel gesetzt",
+      "designedStudy": "Studie entworfen",
+      "updatedCatalog": "Katalog aktualisiert",
+      "set_exploration_map": "Erkundungsfelder kartiert",
+      "set_topic_method": "Methode getaggt",
+      "remove_topic": "Feld entfernt",
+      "reweight_topic": "Gewichtung angepasst",
+      "unlink_topics": "Verbindung entfernt",
+      "remove_goal": "Ziel entfernt",
+      "set_success_question": "Erfolgsfrage gesetzt",
+      "remove_success_question": "Erfolgsfrage entfernt"
     },
     "catalog": {
       "title": "Kampagnen-Katalog",
@@ -214,7 +225,11 @@
       "emailBody": "Text",
       "emailVarsHint": "Platzhalter: '{participant}', '{slot}', '{link}', '{org}'.",
       "preview": "Vorschau",
-      "previewSampleName": "Alex"
+      "previewSampleName": "Alex",
+      "instantHint": "Jede:r Teilnehmer:in erhält einen direkten, einmaligen Link — keine Terminbuchung. Die Einladung nutzt {{link}} direkt.",
+      "objective": "Forschungsziel",
+      "objectivePlaceholder": "Was genau wollen wir herausfinden?",
+      "participantPrompt": "Frage an Teilnehmer:innen"
     },
     "review": {
       "eyebrow": "Prüfen & starten",
