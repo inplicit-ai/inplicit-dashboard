@@ -32,7 +32,16 @@
     "openMenu": "Open menu",
     "userMenu": "User menu",
     "language": "Language",
-    "replayTour": "Replay tour"
+    "replayTour": "Replay tour",
+    "orgSwitcher": {
+      "trigger": "Switch organization",
+      "heading": "Organizations",
+      "current": "Current",
+      "newOrg": "New organization",
+      "loading": "Loading …",
+      "empty": "No organizations yet",
+      "error": "Could not load organizations"
+    }
   },
   "breadcrumb": {
     "home": "Home",

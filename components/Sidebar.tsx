@@ -27,6 +27,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { OrgAvatar } from "@/components/OrgAvatar";
+import { OrgSwitcher } from "@/components/OrgSwitcher";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import type { SidebarState } from "@/lib/shell/sidebar-policy";
 
@@ -70,6 +71,11 @@ export function Sidebar({
   const roleLabel =
     mode === "staff" ? tShell("backOffice") : tShell("workspace");
 
+  // Staff/internal users get an org-switcher anchored on the avatar (demo aid).
+  const isStaffUser =
+    me?.role === "INPLICIT_ADMIN" || me?.role === "INPLICIT_STAFF";
+  const showOrgSwitcher = isStaffUser && !iconOnly;
+
   const allHrefs = sections.flatMap((s) => s.items.map((i) => i.href));
   const isActive = (href: string) =>
     isNavItemActive(pathname, href, allHrefs);
@@ -101,19 +107,29 @@ export function Sidebar({
             </Link>
           </div>
 
-          {!iconOnly && (
-            <div className="sidebar__org">
-              <OrgAvatar
-                name={mode === "staff" ? "Inplicit" : orgName}
-                logoUrl={mode === "staff" ? null : orgLogoUrl}
-                size={32}
-                className="sidebar__avatar"
-              />
-              <span className="sidebar__org-text">
-                <span className="sidebar__org-name">{orgName}</span>
-                <span className="sidebar__org-role">{roleLabel}</span>
-              </span>
-            </div>
+          {showOrgSwitcher ? (
+            <OrgSwitcher
+              orgName={orgName}
+              roleLabel={roleLabel}
+              orgLogoUrl={mode === "staff" ? null : orgLogoUrl}
+              currentOrgId={me?.org_id ?? null}
+              onNavigate={onNavigate}
+            />
+          ) : (
+            !iconOnly && (
+              <div className="sidebar__org">
+                <OrgAvatar
+                  name={mode === "staff" ? "Inplicit" : orgName}
+                  logoUrl={mode === "staff" ? null : orgLogoUrl}
+                  size={32}
+                  className="sidebar__avatar"
+                />
+                <span className="sidebar__org-text">
+                  <span className="sidebar__org-name">{orgName}</span>
+                  <span className="sidebar__org-role">{roleLabel}</span>
+                </span>
+              </div>
+            )
           )}
 
           <nav className="sidebar__nav" aria-label={tShell("workspaceLabel")}>

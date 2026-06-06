@@ -32,7 +32,16 @@
     "openMenu": "Menü öffnen",
     "userMenu": "Benutzermenü",
     "language": "Sprache",
-    "replayTour": "Tour erneut starten"
+    "replayTour": "Tour erneut starten",
+    "orgSwitcher": {
+      "trigger": "Organisation wechseln",
+      "heading": "Organisationen",
+      "current": "Aktuell",
+      "newOrg": "Neue Organisation",
+      "loading": "Wird geladen …",
+      "empty": "Keine Organisationen vorhanden",
+      "error": "Organisationen konnten nicht geladen werden"
+    }
   },
   "breadcrumb": {
     "home": "Start",
