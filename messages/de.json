@@ -9,11 +9,13 @@
     "knowledgeChat": "Wissens-Chat",
     "vaults": "Kontext-Vaults",
     "integrations": "Integrationen",
+    "mcp": "MCP",
     "twin": "Digital Twin",
     "admin": "Admin",
     "organizations": "Organisationen",
     "team": "Team",
     "more": "Mehr",
+    "comingSoon": "Bald",
     "needsAuditsHint": "Verfügbar, sobald die erste Kampagne angelegt ist."
   },
   "shell": {

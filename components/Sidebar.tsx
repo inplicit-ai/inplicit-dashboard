@@ -129,9 +129,16 @@ export function Sidebar({
                     key={item.id}
                     item={item}
                     label={tNav(item.id)}
-                    disabledHint={tNav("needsAuditsHint")}
+                    disabledHint={
+                      item.comingSoon
+                        ? tNav("comingSoon")
+                        : tNav("needsAuditsHint")
+                    }
+                    soonLabel={tNav("comingSoon")}
                     active={isActive(item.href)}
-                    disabled={Boolean(item.needsAudits && !hasAudits)}
+                    disabled={Boolean(
+                      item.comingSoon || (item.needsAudits && !hasAudits),
+                    )}
                     iconOnly={iconOnly}
                     onNavigate={onNavigate}
                   />
@@ -248,6 +255,7 @@ function SidebarRow({
   item,
   label,
   disabledHint,
+  soonLabel,
   active,
   disabled,
   iconOnly,
@@ -256,6 +264,7 @@ function SidebarRow({
   item: NavItem;
   label: string;
   disabledHint: string;
+  soonLabel: string;
   active: boolean;
   disabled: boolean;
   iconOnly: boolean;
@@ -272,7 +281,10 @@ function SidebarRow({
         <Icon size={16} />
       </span>
       {!iconOnly && <span className="sidebar__item-label">{label}</span>}
-      {!iconOnly && item.badge && (
+      {!iconOnly && item.comingSoon && (
+        <span className="sidebar__item-badge">{soonLabel}</span>
+      )}
+      {!iconOnly && !item.comingSoon && item.badge && (
         <span className="sidebar__item-badge">{item.badge}</span>
       )}
     </>
