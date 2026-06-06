@@ -11,6 +11,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { buildBreadcrumb, type CrumbContext } from "@/lib/shell/breadcrumb-map";
+import { useCrumbContext } from "@/lib/shell/crumb-context";
 import { matchFlow } from "@/lib/shell/flows";
 import type { SidebarState } from "@/lib/shell/sidebar-policy";
 import { Stepper } from "@/components/shell/Stepper";
@@ -39,7 +40,11 @@ export function Topbar({
   userSlot?: React.ReactNode;
 }) {
   const tBreadcrumb = useTranslations("breadcrumb");
-  const crumbs = buildBreadcrumb(pathname, crumbContext);
+  // Live dynamic labels registered by descendant pages (e.g. a campaign-detail
+  // page supplies its real name) take precedence over the static prop so a
+  // campaign id resolves to its name instead of the generic "Kampagne" crumb.
+  const liveCtx = useCrumbContext();
+  const crumbs = buildBreadcrumb(pathname, { ...crumbContext, ...liveCtx });
   const flow = matchFlow(pathname);
 
   const label = (key: string, isLiteral?: boolean) =>

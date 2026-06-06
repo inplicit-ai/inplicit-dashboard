@@ -57,6 +57,8 @@
     "map": "Knowledge Map",
     "ask": "Fragen",
     "campaign": "Kampagne",
+    "interview": "Interview",
+    "record": "Eintrag",
     "role": "Rolle"
   },
   "campaignChat": {
