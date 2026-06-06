@@ -109,6 +109,10 @@
 
   /* Layout */
   --container-max: 1280px;
+  /* Shared max-width for every prompt/composer box (Launchpad, SplitAuthor
+     chat, RAG). ONE source of truth — never re-state composer widths ad-hoc;
+     wrap the composer in `.composer-shell` instead (see WHY-93). */
+  --composer-max: 48rem;
   --header-h: 64px;
   --shell-topbar-h: 56px;   /* the app shell's sticky topbar (.shell-topbar) */
   --tabs-h: 48px;
@@ -495,6 +499,15 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* Composer shell: the single, shared width contract for every prompt/composer
+   box (Launchpad hero, SplitAuthor chat, RAG). Wrap the composer in this class
+   instead of hand-coding `max-w-*` so all surfaces stay identical (WHY-93). */
+.composer-shell {
+  width: 100%;
+  max-width: var(--composer-max);
+  margin-inline: auto;
 }
 
 /* Center the work-area content at a comfortable reading width, matching the

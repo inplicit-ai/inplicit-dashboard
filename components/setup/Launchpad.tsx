@@ -94,7 +94,9 @@ export function Launchpad({ suggestions }: { suggestions: string[] }) {
           {t("subtitle")}
         </p>
 
+        {/* composer-shell: shared prompt-box width (WHY-93). */}
         <Composer
+          className="composer-shell"
           value={value}
           onValueChange={setValue}
           onSubmit={() => create(value)}
