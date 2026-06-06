@@ -159,6 +159,11 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-card-hover: 0 6px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.06);
+  /* Single source of truth for the card frame border width. Every card surface
+     (.card, .card-link, .campaign-row, .rag__card, the React <Card> and
+     <MetricCard>) reads this token — never a per-component inline width.
+     Retune here to restyle every card frame at once. */
+  --border-card: 1px;
   --shadow-popover: 0 8px 28px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-elevation: 0 12px 32px rgba(0, 0, 0, 0.12);
   /* Tight 2px focus ring — the single legitimate accent signal on inputs. */
@@ -946,7 +951,7 @@
 .card {
   position: relative;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-card) solid var(--color-border);
   border-radius: var(--radius-card);
   padding: var(--space-6);
   box-shadow: var(--shadow-card);   /* white-modernist: soft elevation in both themes. */
@@ -954,6 +959,17 @@
     border-color 0.18s var(--ease-spring),
     box-shadow 0.18s var(--ease-spring),
     transform 0.18s var(--ease-spring);
+}
+/* Consistent white-modernist hover for interactive card surfaces — a gentle
+   spring lift + the shared --shadow-card-hover. Opt in with `.card--interactive`
+   (the React <Card interactive>) so static info panels don't jump on hover. */
+.card--interactive { cursor: pointer; }
+.card--interactive:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .card--interactive:hover { transform: none; }
 }
 
 .card--compact { padding: var(--space-4); }
@@ -996,7 +1012,7 @@
 .card-link {
   display: block;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-card) solid var(--color-border);
   border-radius: var(--radius-card);
   padding: var(--space-6);
   box-shadow: var(--shadow-card);
@@ -2616,7 +2632,7 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   gap: var(--space-4);
   padding: var(--space-5) var(--space-6);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-card) solid var(--color-border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   transition:
@@ -2727,14 +2743,16 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   align-items: stretch;
   padding: var(--space-4) var(--space-5);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-card) solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   transition: border-color 0.18s var(--ease-smooth), box-shadow 0.18s var(--ease-smooth);
 }
+/* Active state lifts to the shared card-hover elevation so the RAG card matches
+   the unified card surface standard (same --shadow-card-hover as .card / .card-link). */
 .rag__card:focus-within {
   border-color: var(--color-border-strong);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .rag__input {

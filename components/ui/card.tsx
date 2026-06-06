@@ -38,8 +38,10 @@ function Card({
       data-slot="card"
       data-variant={variant}
       className={cn(
-        // Soft elevation in both themes; spring-eased depth transition.
-        "flex flex-col rounded-card border border-line bg-card text-card-foreground shadow-card transition-[box-shadow,transform,border-color] duration-200 ease-[var(--ease-spring)]",
+        // Hairline frame whose width comes from the shared --border-card token
+        // (never a per-component inline width). Soft elevation in both themes;
+        // spring-eased depth transition.
+        "flex flex-col rounded-card border-[length:var(--border-card)] border-solid border-line bg-card text-card-foreground shadow-card transition-[box-shadow,transform,border-color] duration-200 ease-[var(--ease-spring)]",
         interactive &&
           "cursor-pointer hover:-translate-y-0.5 hover:shadow-card-hover",
         CARD_VARIANT[variant],
