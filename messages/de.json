@@ -462,5 +462,24 @@
         "body": "Das war die Tour. Du kannst sie jederzeit über die Seitenleiste erneut starten. Bereit für deine erste Kampagne?"
       }
     }
+  },
+  "login": {
+    "brandAlt": "Inplicit",
+    "title": "Willkommen zurück",
+    "subtitleMagic": "Wir schicken dir einen sicheren Einmal-Link.",
+    "subtitlePassword": "Melde dich mit deinem Passwort an.",
+    "modeMagic": "Magic Link",
+    "modePassword": "Passwort",
+    "modeSwitchLabel": "Anmeldemethode",
+    "emailLabel": "E-Mail-Adresse",
+    "emailPlaceholder": "du@firma.de",
+    "passwordLabel": "Passwort",
+    "passwordPlaceholder": "••••••••",
+    "showPassword": "Passwort anzeigen",
+    "hidePassword": "Passwort verbergen",
+    "submitMagic": "Magic Link senden",
+    "submitPassword": "Anmelden",
+    "devLinkLabel": "Dev-Link",
+    "footer": "Inplicit AI · Enterprise-Interviews"
   }
 }

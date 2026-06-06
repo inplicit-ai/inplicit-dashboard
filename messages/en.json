@@ -451,5 +451,24 @@
         "body": "That's the tour. You can replay it anytime from the sidebar. Ready to create your first campaign?"
       }
     }
+  },
+  "login": {
+    "brandAlt": "Inplicit",
+    "title": "Welcome back",
+    "subtitleMagic": "We'll send you a secure one-time link.",
+    "subtitlePassword": "Sign in with your password.",
+    "modeMagic": "Magic link",
+    "modePassword": "Password",
+    "modeSwitchLabel": "Sign-in method",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@company.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "submitMagic": "Send magic link",
+    "submitPassword": "Sign in",
+    "devLinkLabel": "Dev link",
+    "footer": "Inplicit AI · Enterprise interviews"
   }
 }
