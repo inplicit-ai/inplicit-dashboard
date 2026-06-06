@@ -1,16 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useState, useTransition, type ReactNode } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import {
-  Bell,
-  ChevronRight,
   Languages,
-  Mail,
   Monitor,
   Moon,
   Settings as SettingsIcon,
-  ShieldCheck,
   Sparkles,
   Sun,
   type LucideIcon,
@@ -26,8 +23,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { LOCALES, LOCALE_COOKIE, type Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 import type { Me } from "@/lib/api";
 
@@ -35,7 +32,6 @@ import type { Me } from "@/lib/api";
 
 type Theme = "light" | "dark" | "system";
 const THEME_KEY = "inplicit:theme";
-const PREFS_KEY = "inplicit:notif-prefs";
 
 function readTheme(): Theme {
   if (typeof window === "undefined") return "light";
@@ -56,26 +52,6 @@ function applyTheme(theme: Theme): void {
   html.dataset.theme = resolved;
 }
 
-interface NotifPrefs {
-  email: boolean;
-  inApp: boolean;
-  weekly: boolean;
-}
-
-const DEFAULT_PREFS: NotifPrefs = { email: true, inApp: true, weekly: false };
-
-function readPrefs(): NotifPrefs {
-  if (typeof window === "undefined") return DEFAULT_PREFS;
-  try {
-    const raw = window.localStorage.getItem(PREFS_KEY);
-    if (!raw) return DEFAULT_PREFS;
-    const parsed = JSON.parse(raw) as Partial<NotifPrefs>;
-    return { ...DEFAULT_PREFS, ...parsed };
-  } catch {
-    return DEFAULT_PREFS;
-  }
-}
-
 // ─── Dialog ───────────────────────────────────────────────────────────────────
 
 interface SettingsDialogProps {
@@ -84,11 +60,11 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
+  const t = useTranslations("settingsDialog");
   // Lazy initial state — read from localStorage on first render only. Doing
   // this in a useEffect+setState pair would cause an extra render on mount
   // and trip React 19's "set-state-in-effect" lint.
   const [theme, setTheme] = useState<Theme>(readTheme);
-  const [prefs, setPrefs] = useState<NotifPrefs>(readPrefs);
 
   function pickTheme(next: Theme): void {
     setTheme(next);
@@ -98,27 +74,19 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
     applyTheme(next);
   }
 
-  function togglePref(key: keyof NotifPrefs, next: boolean): void {
-    const updated = { ...prefs, [key]: next };
-    setPrefs(updated);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(PREFS_KEY, JSON.stringify(updated));
-    }
-  }
-
   return (
     <Dialog>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="flex max-h-[calc(100dvh-2.5rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[480px]">
+      <DialogContent className="flex max-h-[calc(100dvh-2.5rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[440px]">
         <DialogHeader className="shrink-0 border-b border-line-subtle px-6 pt-6 pb-5">
           <div className="flex items-center gap-3 pr-6">
             <span className="grid size-9 shrink-0 place-items-center rounded-ui border border-line bg-surface-2 text-fg">
               <SettingsIcon className="h-4 w-4" />
             </span>
             <div className="min-w-0 space-y-0.5">
-              <DialogTitle className="text-base">Quick Settings</DialogTitle>
+              <DialogTitle className="text-base">{t("title")}</DialogTitle>
               <DialogDescription className="text-xs leading-snug">
-                Appearance, notifications and quick account access.
+                {t("description")}
               </DialogDescription>
             </div>
           </div>
@@ -127,67 +95,37 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-5">
           {me && <IdentityCard me={me} />}
 
-          <Section title="Appearance" icon={Sparkles}>
-            <ThemePicker value={theme} onChange={pickTheme} />
+          <Section title={t("appearance")} icon={Sparkles}>
+            <ThemePicker
+              value={theme}
+              onChange={pickTheme}
+              labels={{
+                light: t("themeLight"),
+                dark: t("themeDark"),
+                system: t("themeSystem"),
+              }}
+            />
             <p className="px-1 text-xs leading-relaxed text-fg-subtle">
-              System follows your OS preference. Your choice is saved on this
-              device only.
+              {t("themeHint")}
             </p>
           </Section>
 
           <Separator />
 
-          <Section title="Notifications" icon={Bell}>
-            <ToggleRow
-              icon={Mail}
-              label="Email updates"
-              hint="Campaign completion and report delivery."
-              checked={prefs.email}
-              onChange={(v) => togglePref("email", v)}
-            />
-            <ToggleRow
-              icon={Bell}
-              label="In-app notifications"
-              hint="Real-time activity inside the dashboard."
-              checked={prefs.inApp}
-              onChange={(v) => togglePref("inApp", v)}
-            />
-            <ToggleRow
-              icon={Sparkles}
-              label="Weekly digest"
-              hint="Friday summary of insights across campaigns."
-              checked={prefs.weekly}
-              onChange={(v) => togglePref("weekly", v)}
-            />
-          </Section>
-
-          <Separator />
-
-          <Section title="Account" icon={ShieldCheck}>
-            <LinkRow
-              icon={ShieldCheck}
-              label="Security & sessions"
-              hint="Password, active devices."
-              href="/account"
-            />
-            <LinkRow
-              icon={Languages}
-              label="Language & locale"
-              hint={me?.org?.default_locale ?? "Workspace default"}
-              href="/account"
-            />
+          <Section title={t("language")} icon={Languages}>
+            <LanguagePicker />
+            <p className="px-1 text-xs leading-relaxed text-fg-subtle">
+              {t("languageHint")}
+            </p>
           </Section>
         </div>
 
         <DialogFooter className="shrink-0 border-t border-line-subtle px-6 py-4">
           <DialogClose asChild>
             <Button type="button" variant="ghost" size="sm">
-              Close
+              {t("close")}
             </Button>
           </DialogClose>
-          <Button asChild size="sm">
-            <Link href="/account">Open full settings</Link>
-          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -244,19 +182,21 @@ function Section({
 function ThemePicker({
   value,
   onChange,
+  labels,
 }: {
   value: Theme;
   onChange: (next: Theme) => void;
+  labels: Record<Theme, string>;
 }) {
-  const opts: { id: Theme; label: string; icon: LucideIcon }[] = [
-    { id: "light", label: "Light", icon: Sun },
-    { id: "dark", label: "Dark", icon: Moon },
-    { id: "system", label: "System", icon: Monitor },
+  const opts: { id: Theme; icon: LucideIcon }[] = [
+    { id: "light", icon: Sun },
+    { id: "dark", icon: Moon },
+    { id: "system", icon: Monitor },
   ];
   return (
     <div
       role="radiogroup"
-      aria-label="Theme"
+      aria-label={labels.system}
       className="grid grid-cols-3 gap-1 rounded-ui border border-line bg-surface-2 p-1"
     >
       {opts.map((o) => {
@@ -277,7 +217,7 @@ function ThemePicker({
             )}
           >
             <o.icon className="h-3.5 w-3.5" />
-            {o.label}
+            {labels[o.id]}
           </button>
         );
       })}
@@ -285,67 +225,54 @@ function ThemePicker({
   );
 }
 
-function ToggleRow({
-  icon: Icon,
-  label,
-  hint,
-  checked,
-  onChange,
-}: {
-  icon: LucideIcon;
-  label: string;
-  hint?: string;
-  checked: boolean;
-  onChange: (next: boolean) => void;
-}) {
-  return (
-    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-ui px-3 py-2.5 transition-colors hover:bg-surface-2">
-      <span className="flex min-w-0 items-start gap-3">
-        <Icon className="mt-0.5 h-4 w-4 shrink-0 text-fg-muted" />
-        <span className="min-w-0">
-          <span className="block text-sm font-medium text-fg">{label}</span>
-          {hint && (
-            <span className="mt-0.5 block text-xs leading-snug text-fg-muted">
-              {hint}
-            </span>
-          )}
-        </span>
-      </span>
-      <Switch checked={checked} onCheckedChange={onChange} className="mt-1" />
-    </label>
-  );
-}
+/**
+ * In-dialog language picker. Reuses the cookie + refresh strategy from
+ * `shell/LocaleSwitcher` (write `NEXT_LOCALE`, refresh so the server
+ * re-renders with the new catalog), but styled to match `ThemePicker`.
+ */
+function LanguagePicker() {
+  const current = useLocale() as Locale;
+  const tLocale = useTranslations("locale");
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
 
-function LinkRow({
-  icon: Icon,
-  label,
-  hint,
-  href,
-}: {
-  icon: LucideIcon;
-  label: string;
-  hint?: string;
-  href: string;
-}) {
+  function setLocale(next: Locale) {
+    if (next === current) return;
+    document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
+    startTransition(() => router.refresh());
+  }
+
   return (
-    <DialogClose asChild>
-      <Link
-        href={href}
-        className="group flex items-center justify-between gap-4 rounded-ui px-3 py-2.5 transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <span className="flex min-w-0 items-start gap-3">
-          <Icon className="mt-0.5 h-4 w-4 shrink-0 text-fg-muted" />
-          <span className="min-w-0">
-            <span className="block text-sm font-medium text-fg">{label}</span>
-            {hint && (
-              <span className="mt-0.5 block truncate text-xs text-fg-muted">
-                {hint}
-              </span>
+    <div
+      role="radiogroup"
+      aria-label={tLocale("label")}
+      className={cn(
+        "grid gap-1 rounded-ui border border-line bg-surface-2 p-1",
+        LOCALES.length === 2 ? "grid-cols-2" : "grid-cols-3",
+      )}
+    >
+      {LOCALES.map((loc) => {
+        const active = current === loc;
+        return (
+          <button
+            key={loc}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            disabled={pending}
+            onClick={() => setLocale(loc)}
+            className={cn(
+              "inline-flex items-center justify-center rounded-sm px-3 py-2 text-[13px] font-medium transition-colors disabled:opacity-60",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              active
+                ? "border border-line bg-canvas text-fg"
+                : "border border-transparent text-fg-muted hover:bg-surface hover:text-fg",
             )}
-          </span>
-        </span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-fg" />
-      </Link>
-    </DialogClose>
+          >
+            {tLocale(loc)}
+          </button>
+        );
+      })}
+    </div>
   );
 }
