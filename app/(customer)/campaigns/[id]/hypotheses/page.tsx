@@ -37,10 +37,8 @@ export default async function HypothesesPage({
 
   return (
     <div className="surface-bleed">
-      <PageHeader
-        title="Cross Validation"
-        subtitle="Hypothesen werden generiert, sobald genug Signale aus mehreren Abteilungen vorliegen, und gegen widersprechende Stimmen geprüft — ≥5 bestätigend, ≤1 widersprechend, ≥2 Abteilungen."
-      />
+      {/* WHY-95: subtitle removed to declutter the tab. */}
+      <PageHeader title="Cross Validation" />
 
       {!!error && (
         <div className="mb-6">

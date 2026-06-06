@@ -72,6 +72,10 @@
     "record": "Record",
     "role": "Role"
   },
+  "insights": {
+    "comingSoonToggle": "Advanced grouping",
+    "comingSoonBadge": "Coming soon"
+  },
   "campaignChat": {
     "newChat": "New chat",
     "threadsTitle": "Conversations",

@@ -21,10 +21,8 @@ export default async function ParticipantsPage({
 
   return (
     <div className="surface-bleed">
-      <PageHeader
-        title="Teilnehmer"
-        subtitle="Der Roster dieser Kampagne — Einladungs- und Interview-Status. Anonyme IDs sind GDPR-konform; E-Mails verlassen den Roster nicht."
-      />
+      {/* WHY-95: subtitle removed to declutter the tab. */}
+      <PageHeader title="Teilnehmer" />
 
       {error ? (
         <ErrorState error={error} />

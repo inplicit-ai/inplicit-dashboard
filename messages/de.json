@@ -72,6 +72,10 @@
     "record": "Eintrag",
     "role": "Rolle"
   },
+  "insights": {
+    "comingSoonToggle": "Erweiterte Gruppierung",
+    "comingSoonBadge": "Demnächst"
+  },
   "campaignChat": {
     "newChat": "Neuer Chat",
     "threadsTitle": "Gespräche",
