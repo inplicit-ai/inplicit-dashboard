@@ -141,7 +141,7 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
             <ToggleRow
               icon={Mail}
               label="Email updates"
-              hint="Audit completion and report delivery."
+              hint="Campaign completion and report delivery."
               checked={prefs.email}
               onChange={(v) => togglePref("email", v)}
             />
@@ -155,7 +155,7 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
             <ToggleRow
               icon={Sparkles}
               label="Weekly digest"
-              hint="Friday summary of insights across audits."
+              hint="Friday summary of insights across campaigns."
               checked={prefs.weekly}
               onChange={(v) => togglePref("weekly", v)}
             />
