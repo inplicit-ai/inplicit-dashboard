@@ -40,8 +40,8 @@ export default async function CampaignsPage() {
         }
       />
 
-      {/* RAG ask — full width matching the card grid below */}
-      <section className="mb-10">
+      {/* RAG ask — the org-wide evidence search. */}
+      <section className="mb-10 measure-column">
         <RagSearch />
       </section>
 
