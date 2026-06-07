@@ -907,6 +907,11 @@ export interface SetupSession {
   org_name?: string;
   company_context?: string;
 }
+/** Resolved draft for a launched campaign — powers the "refine campaign" re-entry. */
+export interface SetupSessionRef {
+  session_id: string;
+  draft_id: string;
+}
 export interface SetupPatchInput {
   patch: SetupToolCall;
   base_rev?: number;

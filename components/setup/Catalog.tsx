@@ -14,6 +14,7 @@ import { TopicGraph } from "./TopicGraph";
 import { PeopleSection } from "./PeopleSection";
 import { ScheduleSection } from "./ScheduleSection";
 import { EmailTemplateSection } from "./EmailTemplateSection";
+import { RoleContextUpload } from "./RoleContextUpload";
 
 /**
  * The catalog (right pane) — a stack of clean white section cards (claude.ai).
@@ -190,6 +191,10 @@ export function Catalog({
         touched={recentlyTouched?.has("set_context_vault")}
       >
         <ContextVaultPicker draft={draft} onPatch={onPatch} vaults={vaults} />
+        {/* WHY: role-specific context — upload files attached to a twin role,
+            landing in that role's ROLE-scoped vault (additive to the campaign's
+            single company-context vault selected above). */}
+        <RoleContextUpload />
       </SectionCard>
 
       {/* ── Research method (Forschungsweise) ──────────────────────────── */}

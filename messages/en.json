@@ -97,6 +97,8 @@
     "refineTitle": "Refine this campaign",
     "refineBody": "Re-open the setup assistant to reword context, adjust objectives, or add participants. Changes apply only to interviews that start after the change — completed interviews and their insights stay immutable.",
     "refineLocked": "Locked once interviews exist",
+    "refineOpening": "Opening the setup assistant …",
+    "refineError": "Could not open the draft.",
     "refineMode": {
       "editable": "Editable",
       "append_only": "Append only",
@@ -291,7 +293,23 @@
       "objective": "Objective",
       "objectivePlaceholder": "What exactly do we want to find out?",
       "participantPrompt": "Question for participants",
-      "previewSampleOrg": "your company"
+      "previewSampleOrg": "your company",
+      "roleContextTitle": "Upload role-specific context",
+      "roleContextHint": "Pick a role and upload files — they land in that role's vault and feed the interviews.",
+      "roleContextLoading": "Loading roles…",
+      "roleContextNoRoles": "No roles yet — create one under “Roles” first.",
+      "roleContextPickRole": "Choose a role",
+      "roleContextUpload": "Upload files",
+      "roleContextUntitled": "Untitled file",
+      "roleContextVaultName": "Context: {role}",
+      "roleContextIndexed": "Searchable",
+      "roleContextIndexing": "Indexing",
+      "roleContextLoadError": "Could not load role context.",
+      "roleContextUploadError": "Upload failed.",
+      "roleContextPhaseUploading": "Uploading…",
+      "roleContextPhaseExtracting": "Extracting text…",
+      "roleContextPhaseIndexing": "Indexing…",
+      "roleContextPhaseReady": "Done"
     },
     "review": {
       "eyebrow": "Review & launch",
