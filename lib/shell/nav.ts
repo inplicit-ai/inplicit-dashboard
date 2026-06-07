@@ -14,7 +14,6 @@ import {
   IconBoxes,
   IconBuilding,
   IconFolderKanban,
-  IconLayoutGrid,
   IconMessage,
   IconSparkles,
   IconUsers,
@@ -69,14 +68,6 @@ const CUSTOMER_SECTIONS: NavSection[] = [
   {
     id: "sectionOrg",
     items: [
-      {
-        id: "interviews",
-        href: "/interviews",
-        icon: IconLayoutGrid,
-        needsAudits: true,
-        tourId: "nav-interviews",
-        mobilePrimary: true,
-      },
       {
         id: "knowledgeChat",
         href: "/chat",
