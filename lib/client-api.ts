@@ -6,6 +6,7 @@ import {
   type CreateSetupSessionInput,
   type LaunchResult,
   type NewVaultInput,
+  type NewTwinRoleInput,
   type SetupDraftState,
   type SetupLaunchResult,
   type SetupPatchInput,
@@ -106,6 +107,11 @@ export const clientApi = {
   // ── Digital Twin roles (browser mirror of server `api.twin.*`) ──────────
   twin: {
     listRoles: () => clientRequest<TwinRole[]>("/api/orgs/me/roles"),
+    createRole: (body: NewTwinRoleInput) =>
+      clientRequest<TwinRole>("/api/orgs/me/roles", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
   },
   // ── Context Vaults (browser mirror of server `api.vaults.*`) ────────────
   // Only the methods needed for the setup role-context upload are mirrored;
