@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
+import { Avatar } from "@/components/ui/heroui-avatar";
 import { cn } from "@/lib/utils";
 
 interface EddaAvatarProps {
@@ -10,51 +9,40 @@ interface EddaAvatarProps {
 }
 
 /**
- * EDDA's identity glyph in the setup chat. Renders the avatar image from the
- * conventional public path `/edda-avatar.png`, falling back gracefully to the
- * "E" letter badge (the original hardcoded design) when the asset is missing or
- * fails to load. No dependency added: a plain <img> + onError mirrors
- * `OrgAvatar`'s pattern so it works the moment the asset is dropped in.
+ * EDDA's identity glyph — a self-contained vector mark (no image asset). A node
+ * with two concentric arcs opening to the right reads as a "voice / listening"
+ * mark, fitting for the interviewer AI. Drawn in `currentColor` so it inherits
+ * the avatar's `text-canvas` on the `bg-fg` field and adapts to light/dark.
+ */
+function EddaMark({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.7}
+      strokeLinecap="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <circle cx="10.5" cy="12" r="1.9" fill="currentColor" stroke="none" />
+      <path d="M13.4 8.6 A 4.5 4.5 0 0 1 13.4 15.4" />
+      <path d="M15.3 6.3 A 7.5 7.5 0 0 1 15.3 17.7" />
+    </svg>
+  );
+}
+
+/**
+ * EDDA's avatar in the setup chat: the vector mark on the brand field, using the
+ * heroui Radix avatar container for the rounded shape + ring.
  */
 export function EddaAvatar({ size = 36, className }: EddaAvatarProps) {
-  const [failed, setFailed] = useState(false);
-  const dim = { width: size, height: size };
-
-  if (failed) {
-    return (
-      <span
-        aria-label="EDDA"
-        role="img"
-        className={cn(
-          "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-fg text-[length:var(--text-body)] font-semibold text-canvas ring-1 ring-line",
-          className,
-        )}
-        style={dim}
-      >
-        E
-      </span>
-    );
-  }
-
   return (
-    <span
-      className={cn(
-        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-3xl ring-1 ring-line",
-        className,
-      )}
-      style={dim}
+    <Avatar
+      className={cn("bg-fg text-canvas ring-1 ring-line", className)}
+      style={{ width: size, height: size }}
     >
-      {/* Plain <img> on purpose: a static public asset, so next/image's loader
-          buys us nothing here and onError gives us the clean "E" fallback. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/edda-avatar.png"
-        alt="EDDA"
-        width={size}
-        height={size}
-        onError={() => setFailed(true)}
-        className="h-full w-full object-cover"
-      />
-    </span>
+      <EddaMark className="h-[55%] w-[55%]" />
+    </Avatar>
   );
 }
