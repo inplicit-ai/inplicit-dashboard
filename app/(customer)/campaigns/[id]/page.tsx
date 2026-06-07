@@ -25,6 +25,7 @@ import { Card } from "@/components/ui/card";
 import { StatusDisc } from "@/components/ui/status-disc";
 import { RefineButton } from "@/components/campaign-chat/RefineButton";
 import { ContextSection } from "@/components/campaign/ContextSection";
+import { CampaignActionsMenu } from "@/components/campaign/CampaignActionsMenu";
 import { cn } from "@/lib/utils";
 
 interface CampaignPageSearchParams {
@@ -115,10 +116,12 @@ export default async function CampaignOverview({
 
   const created = new Date(campaign.created_at).toLocaleDateString("de-DE");
 
+  const displayName = campaign.name || "Kampagne";
+
   return (
     <div>
       <PageHeader
-        title={campaign.org_name}
+        title={displayName}
         subtitle={`${campaign.language.toUpperCase()} · ${campaign.interview_length_min} min · erstellt ${created}`}
         actions={
           <div className="flex items-center gap-2">
@@ -130,6 +133,11 @@ export default async function CampaignOverview({
             )}
             <StatusBadge status={campaign.status} />
             <RefineButton campaignId={id} />
+            <CampaignActionsMenu
+              campaignId={id}
+              currentName={displayName}
+              afterDeleteHref="/campaigns"
+            />
           </div>
         }
       />

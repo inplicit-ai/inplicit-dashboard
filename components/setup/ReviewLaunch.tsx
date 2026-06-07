@@ -51,11 +51,10 @@ export function ReviewLaunch({
   const [selectedVaultId, setSelectedVaultId] = useState<string | undefined>(
     draft.contextVaultId,
   );
+  const peopleCount = people.length;
   const reasons = validateForLaunch(draft);
   // People are required to launch (can't send invites without recipients).
   const blocked = reasons.length > 0 || peopleCount === 0;
-
-  const peopleCount = people.length;
   const goals = draft.goals ?? [];
 
   async function launch() {
