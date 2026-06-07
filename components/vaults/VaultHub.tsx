@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Command, FolderOpen, Network, Plug } from "lucide-react";
+import { Command, FolderKanban, FolderOpen, Network, Plug } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Card } from "@/components/ui/card";
@@ -227,12 +227,33 @@ export function VaultHub({
             }
           />
         </Card>
-      ) : visibleItems.length === 0 ? (
-        <Card className="p-2">
-          <EmptyState icon={FolderOpen} title={t("itemsEmpty")} />
-        </Card>
       ) : (
         <div className="space-y-2">
+          {/* Pinned virtual "Kampagnen" entry — always visible, links to /campaigns */}
+          {collection !== "uploads" && (
+            <Link
+              href="/campaigns"
+              className="flex items-center gap-3 rounded-ui border border-line bg-surface p-3 text-[length:var(--text-body-sm)] text-fg transition-colors hover:bg-surface-2"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-ui bg-surface-2 text-fg-muted">
+                <FolderKanban size={15} aria-hidden />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-fg">Kampagnen</p>
+                <p className="truncate text-[length:var(--text-meta)] text-fg-muted">
+                  Alle laufenden und abgeschlossenen Kampagnen
+                </p>
+              </div>
+              <span className="shrink-0 rounded-full bg-surface-2 px-2 py-0.5 text-[length:var(--text-caption)] text-fg-subtle">
+                Intern
+              </span>
+            </Link>
+          )}
+          {visibleItems.length === 0 && collection === "uploads" && (
+            <Card className="p-2">
+              <EmptyState icon={FolderOpen} title={t("itemsEmpty")} />
+            </Card>
+          )}
           {visibleItems.map((item) => (
             <VaultItemCard
               key={item.id}

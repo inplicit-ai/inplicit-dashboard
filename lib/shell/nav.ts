@@ -49,18 +49,19 @@ const CUSTOMER_SECTIONS: NavSection[] = [
   {
     id: "sectionCreate",
     items: [
-      {
-        id: "create",
-        href: "/campaigns/new",
-        icon: IconSparkles,
-        tourId: "nav-create",
-        mobilePrimary: true,
-      },
+      // "Übersicht" (Kampagnen-Liste) comes first, then "Erstellen"
       {
         id: "campaigns",
         href: "/campaigns",
         icon: IconFolderKanban,
         tourId: "nav-campaigns",
+        mobilePrimary: true,
+      },
+      {
+        id: "create",
+        href: "/campaigns/new",
+        icon: IconSparkles,
+        tourId: "nav-create",
         mobilePrimary: true,
       },
     ],
