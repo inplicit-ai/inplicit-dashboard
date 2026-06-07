@@ -44,8 +44,9 @@ export const TOUR_STEPS: readonly TourStep[] = [
   { key: "stepper", anchor: "topbar-stepper", placement: "bottom" },
   { key: "interviews", anchor: "nav-interviews", placement: "right" },
   { key: "chat", anchor: "nav-chat", placement: "right" },
+  // WHY-115: Digital Twin is folded into the Kontext-Vault hub, so the vaults
+  // step now covers it; the standalone twin nav anchor no longer exists.
   { key: "vaults", anchor: "nav-vaults", placement: "right" },
-  { key: "twin", anchor: "nav-twin", placement: "right" },
   { key: "finish", anchor: null, placement: "center" },
 ] as const;
 

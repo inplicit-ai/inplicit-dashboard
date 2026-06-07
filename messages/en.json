@@ -7,7 +7,7 @@
     "campaigns": "Campaigns",
     "interviews": "Interviews",
     "knowledgeChat": "Knowledge Chat",
-    "vaults": "Context Vaults",
+    "vaults": "Context Vault",
     "integrations": "Integrations",
     "mcp": "MCP",
     "twin": "Digital Twin",
@@ -49,7 +49,7 @@
     "campaignsNew": "New campaign",
     "interviews": "Interviews",
     "chat": "Knowledge Chat",
-    "vaults": "Context Vaults",
+    "vaults": "Context Vault",
     "integrations": "Integrations",
     "twin": "Digital Twin",
     "admin": "Admin",
@@ -163,6 +163,8 @@
       "suggestionsLabel": "Suggestions",
       "firstHint": "This is your first campaign — type a learning goal to begin.",
       "creating": "Creating session…",
+      "prefilledRolesLabel": "Pre-selected roles",
+      "prefilledRolesHint": "These roles will seed the new campaign's audience.",
       "themes": {
         "prozesswissen": {
           "label": "Process knowledge",
@@ -188,7 +190,11 @@
       "thinking": "Drafting…",
       "you": "You",
       "assistant": "Assistant",
-      "refineExamplesLabel": "Try one of these"
+      "refineExamplesLabel": "Try one of these",
+      "ready": "Ready",
+      "drafting": "Drafting",
+      "voiceComingSoon": "Voice mode — coming soon",
+      "voiceComingSoonHint": "The spoken interview is coming soon. For now, just type here."
     },
     "toolCard": {
       "applied": "Updated catalog",
@@ -200,6 +206,7 @@
       "set_goals": "Drafted goals",
       "refine_goal": "Refined a goal",
       "set_background": "Captured background",
+      "set_context_vault": "Linked a context vault",
       "add_topic": "Added topic",
       "link_topics": "Connected topics",
       "set_success_criteria": "Set success criteria",
@@ -384,6 +391,24 @@
     "addEntry": "Add entry",
     "selectPrompt": "Select a vault to view its entries."
   },
+  "vaultHub": {
+    "title": "Context Vault",
+    "subtitle": "One home for all the context that grounds your interviews and synthesis.",
+    "backToHub": "Back to vault",
+    "comingSoon": "Soon",
+    "orgTitle": "General & Company",
+    "orgDesc": "Reusable company context that grounds every campaign.",
+    "rolesTitle": "Roles",
+    "rolesDesc": "The role hierarchy as a digital twin — open a role for its context.",
+    "rolesEmpty": "No roles yet. Roles are mapped to participants on upload.",
+    "integrationsTitle": "Integrations",
+    "integrationsDesc": "Outbound connectors for notifications and exports.",
+    "integrationsHubNote": "Integrations are moving into the Context Vault. Until then, the existing page stays available.",
+    "integrationsOpen": "Open integrations",
+    "uploadsTitle": "Uploads",
+    "uploadsDesc": "Uploaded documents and files from your vaults.",
+    "uploadsEmpty": "No uploads yet."
+  },
   "twin": {
     "eyebrow": "Organization",
     "title": "Digital Twin",
@@ -400,7 +425,14 @@
     "noValidated": "No validated pains yet — predicted only until real interviews land.",
     "divergence": "Divergence (predicted vs. validated surprise)",
     "coldMeta": "Predicted only. This role's twin has no validated data from real interviews yet.",
-    "refinedMeta": "Twin v{version} · {confidence}% confidence from real interviews."
+    "refinedMeta": "Twin v{version} · {confidence}% confidence from real interviews.",
+    "rolesTitle": "Roles",
+    "rolesMeta": "Select roles to start a campaign with them as the audience. Roles only — never per-person.",
+    "rolesSelectHint": "Select roles for a new campaign",
+    "rolesSelected": "{count} selected",
+    "rolesValidated": "Validated",
+    "rolesCreateCampaign": "Create campaign with these roles",
+    "rolesClearSelection": "Clear selection"
   },
   "integrations": {
     "eyebrow": "Organization",

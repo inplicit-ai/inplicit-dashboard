@@ -16,8 +16,6 @@ import {
   IconFolderKanban,
   IconLayoutGrid,
   IconMessage,
-  IconNetwork,
-  IconPlug,
   IconSparkles,
   IconUsers,
   IconVault,
@@ -88,16 +86,10 @@ const CUSTOMER_SECTIONS: NavSection[] = [
         tourId: "nav-chat",
         mobilePrimary: true,
       },
+      // WHY-115: /twin + /integrations are folded under the Kontext-Vault hub.
+      // Their routes are kept; only the separate top-level nav entries are gone.
       { id: "vaults", href: "/vaults", icon: IconVault, tourId: "nav-vaults" },
-      { id: "integrations", href: "/integrations", icon: IconPlug },
       { id: "mcp", href: "/mcp", icon: IconBoxes, comingSoon: true },
-      {
-        id: "twin",
-        href: "/twin",
-        icon: IconNetwork,
-        needsAudits: true,
-        tourId: "nav-twin",
-      },
       { id: "admin", href: "/admin", icon: IconBuilding },
     ],
   },

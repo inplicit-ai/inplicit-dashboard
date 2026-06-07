@@ -15,7 +15,9 @@ import {
   ChatShell,
   ChatComposerBar,
 } from "@/components/ui/chat-shell";
-import { Badge } from "@/components/ui/heroui-badge";
+import { StatusDisc } from "@/components/ui/status-disc";
+import { PromptInputAction } from "@/components/ui/prompt-input";
+import { StaticVoiceOrb } from "@/components/interview/StaticVoiceOrb";
 import { cn } from "@/lib/utils";
 import type { SetupToolCallCard } from "@/lib/api";
 import { ToolChecklist } from "./ToolChecklist";
@@ -63,25 +65,30 @@ export function SetupChat({
 
   return (
     <ChatShell height="fill">
-      {/* Honest-AI header — fixed, never scrolls. The live disc pulses amber
-          only while the agent is drafting. */}
+      {/* Honest-AI header — fixed, never scrolls. Borrows the interview-room
+          chrome vocabulary (StatusHud/TopBar): a calm identity glyph, EDDA's
+          name, and a live readout where the lone amber StatusDisc pulses only
+          while EDDA is drafting (idle/monochrome at rest). The disclaimer stays
+          as the quiet muted line beneath — the EU-AI-Act self-identification. */}
       <header className="flex shrink-0 items-center gap-3 border-b border-line bg-canvas px-5 py-4">
-        <Badge.Anchor>
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-fg text-[length:var(--text-body)] font-semibold text-canvas ring-1 ring-line">
-            E
-          </span>
-          {/* Live status dot — amber only while EDDA is drafting (one-accent rule). */}
-          <Badge
-            color={streaming ? "accent" : "success"}
-            placement="bottom-right"
-            size="sm"
-            aria-label={streaming ? "drafting" : "ready"}
-          />
-        </Badge.Anchor>
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-fg text-[length:var(--text-body)] font-semibold text-canvas ring-1 ring-line">
+          E
+        </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[length:var(--text-subtitle)] font-semibold tracking-[-0.01em] text-fg">
-            EDDA
-          </p>
+          <div className="flex items-center gap-2.5">
+            <p className="text-[length:var(--text-subtitle)] font-semibold tracking-[-0.01em] text-fg">
+              EDDA
+            </p>
+            {/* Live state readout — amber only while drafting (one-accent rule). */}
+            <span className="inline-flex items-center gap-1.5 text-[length:var(--text-meta)] font-medium text-fg-muted">
+              <StatusDisc
+                state={streaming ? "live" : "idle"}
+                size="sm"
+                pulse={streaming}
+              />
+              {streaming ? t("drafting") : t("ready")}
+            </span>
+          </div>
           <p className="truncate text-[length:var(--text-meta)] text-fg-muted">
             {tAi("disclaimer")}
           </p>
@@ -148,7 +155,31 @@ export function SetupChat({
               placeholder={t("placeholder")}
               disabled={streaming}
             />
-            <PromptInputActions className="justify-end pt-1.5">
+            <PromptInputActions className="justify-between pt-1.5">
+              {/* Voice affordance — DELIBERATELY DISABLED (coming-soon). Wears the
+                  interview-room voice-orb vocabulary (static amber disc + ring)
+                  so the room reads as voice-native, while the spoken interview
+                  is not yet wired. No STT/TTS. Tooltip carries the honest hint. */}
+              <PromptInputAction
+                tooltip={t("voiceComingSoonHint")}
+                side="top"
+              >
+                {/* aria-disabled (not the native `disabled` attr) keeps the
+                    control inert yet hover/focus-reachable, so the coming-soon
+                    tooltip still surfaces — a natively-disabled button emits no
+                    pointer events and would swallow the hint. */}
+                <button
+                  type="button"
+                  aria-disabled
+                  tabIndex={0}
+                  aria-label={t("voiceComingSoon")}
+                  className="inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-line bg-surface px-2.5 py-1 text-[length:var(--text-caption)] font-medium text-fg-subtle opacity-70 shadow-sm"
+                >
+                  <StaticVoiceOrb size={18} />
+                  <span className="hidden sm:inline">{t("voiceComingSoon")}</span>
+                </button>
+              </PromptInputAction>
+
               <Button
                 type="button"
                 size="icon-sm"
