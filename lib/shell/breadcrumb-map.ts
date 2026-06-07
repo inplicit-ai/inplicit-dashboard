@@ -49,6 +49,45 @@ function isUuidLike(seg: string): boolean {
 }
 
 /**
+ * What an opaque id "means" is determined by the collection segment that
+ * precedes it. Maps that preceding segment → the i18n key for the record kind.
+ * Anything not listed resolves to the neutral `record` key — NEVER reuse a key
+ * that already appears earlier in the trail (that is what created circular
+ * "Kampagne › … › Kampagne" breadcrumbs).
+ */
+const DYNAMIC_SEGMENT_KEY: Record<string, string> = {
+  campaigns: "campaign",
+  interviews: "interview",
+  twin: "role",
+};
+
+/**
+ * Resolve an opaque id segment to a breadcrumb key. A campaign id resolves to
+ * the supplied campaign name when present (so the trail reads the real name,
+ * not a generic fallback); all other ids resolve to a record-kind key.
+ */
+function resolveDynamicKey(prev: string | undefined, ctx: CrumbContext): string {
+  if (prev === "campaigns" && ctx.campaignName) return ctx.campaignName;
+  return (prev && DYNAMIC_SEGMENT_KEY[prev]) ?? "record";
+}
+
+/**
+ * Drop crumbs whose rendered label equals the one immediately before it. For
+ * literal crumbs that label is the resolved name; for keyed crumbs it is the
+ * key (keys map 1:1 to labels, so equal keys ⇒ equal labels). Keeps the first.
+ */
+function dedupeAdjacent(crumbs: Crumb[]): Crumb[] {
+  return crumbs.filter((crumb, i) => {
+    if (i === 0) return true;
+    const prev = crumbs[i - 1];
+    return !(
+      crumb.key === prev.key &&
+      Boolean(crumb.isLiteral) === Boolean(prev.isLiteral)
+    );
+  });
+}
+
+/**
  * Build the crumb trail for a pathname. The home crumb is always first.
  * Campaign ids resolve to the supplied name (or the generic `campaign` key).
  */
@@ -73,22 +112,18 @@ export function buildBreadcrumb(
     const isLast = i === segments.length - 1;
 
     if (isUuidLike(seg)) {
-      // Dynamic id — resolve to a name, never the raw id.
+      // Dynamic id — resolve to a name/label keyed on the *preceding* segment,
+      // never the raw id. The preceding collection segment is what tells us
+      // what kind of record this is (a campaign id follows `campaigns`, an
+      // interview id follows `interviews`, …). Falling back to a single
+      // generic key for *every* unknown id is what produced circular trails
+      // like "Kampagnen › Kampagne › Interviews › Kampagne".
       const prev = segments[i - 1];
-      if (prev === "campaigns") {
-        crumbs.push(
-          ctx.campaignName
-            ? { key: ctx.campaignName, isLiteral: true, href: isLast ? undefined : acc }
-            : { key: "campaign", href: isLast ? undefined : acc },
-        );
-      } else if (prev === "twin") {
-        // Twin drill-in: the id is a role id — resolve to a generic "Role"
-        // crumb, never the raw id (no PII, role-keyed).
-        crumbs.push({ key: "role", href: isLast ? undefined : acc });
-      } else {
-        // Unknown dynamic segment — fall back to a generic key.
-        crumbs.push({ key: "campaign", href: isLast ? undefined : acc });
-      }
+      crumbs.push({
+        key: resolveDynamicKey(prev, ctx),
+        isLiteral: prev === "campaigns" && Boolean(ctx.campaignName),
+        href: isLast ? undefined : acc,
+      });
       return;
     }
 
@@ -96,5 +131,8 @@ export function buildBreadcrumb(
     crumbs.push({ key, href: isLast ? undefined : acc });
   });
 
-  return crumbs;
+  // Collapse any accidental consecutive duplicates (same rendered label,
+  // adjacent) so a trail can never read "… › Kampagne › Kampagne". Keep the
+  // first occurrence (it owns the link); drop the immediate repeat.
+  return dedupeAdjacent(crumbs);
 }

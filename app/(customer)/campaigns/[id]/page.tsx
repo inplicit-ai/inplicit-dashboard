@@ -23,7 +23,6 @@ import { PageHeader } from "@/components/ui/page-header";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { MetricCard } from "@/components/ui/metric-card";
 import { Card } from "@/components/ui/card";
-import { EvidenceTree, type EvidenceNode } from "@/components/ui/agent-list";
 import { StatusDisc } from "@/components/ui/status-disc";
 import { RefineButton } from "@/components/campaign-chat/RefineButton";
 import { cn } from "@/lib/utils";
@@ -114,15 +113,6 @@ export default async function CampaignOverview({
     ? "Kampagne starten — alle einladen"
     : "Ausstehende Einladungen versenden";
 
-  // The synthesis pipeline as a vertical agent-plan ledger. The running stage
-  // carries the lone amber pulse; everything before it is done, after pending.
-  const pipeline = buildPipeline({
-    completed: stats?.interviews_completed ?? 0,
-    insights: stats?.insights ?? 0,
-    hypotheses: stats?.hypotheses ?? 0,
-    live: isLive,
-  });
-
   const created = new Date(campaign.created_at).toLocaleDateString("de-DE");
 
   return (
@@ -182,16 +172,7 @@ export default async function CampaignOverview({
           <MetricCard label="Abdeckung" value={`${completionRate}%`} icon={Gauge} />
         </div>
 
-        {/* Synthesis pipeline — agent-plan ledger. */}
-        <section>
-          <SectionHeading
-            title="Synthese-Pipeline"
-            count={pipeline.filter((p) => p.status === "done").length}
-          />
-          <Card variant="ledger" className="px-5 py-4">
-            <EvidenceTree nodes={pipeline} defaultExpandedDepth={0} />
-          </Card>
-        </section>
+        {/* WHY-95: "Synthese-Pipeline" section removed from the overview. */}
 
         {/* Activation — the one primary action. */}
         <Card className="p-6">
@@ -235,86 +216,6 @@ export default async function CampaignOverview({
       </div>
     </div>
   );
-}
-
-/**
- * Map the coarse campaign signals onto the four-stage synthesis pipeline,
- * carrying the lone amber pulse on the first stage that is still working.
- */
-function buildPipeline(input: {
-  completed: number;
-  insights: number;
-  hypotheses: number;
-  live: boolean;
-}): EvidenceNode[] {
-  const { completed, insights, hypotheses, live } = input;
-
-  const extractDone = insights > 0;
-  const clusterDone = insights > 0;
-  const hypoDone = hypotheses > 0;
-
-  const frontier = live
-    ? completed === 0
-      ? "ingest"
-      : !extractDone
-        ? "extract"
-        : !hypoDone
-          ? "hypothesis"
-          : "falsify"
-    : null;
-
-  function state(
-    key: string,
-    done: boolean,
-  ): { status: EvidenceNode["status"]; pulse?: boolean; active?: boolean } {
-    if (frontier === key) return { status: "live", pulse: true, active: true };
-    if (done) return { status: "done" };
-    return { status: "pending" };
-  }
-
-  const ingest = state("ingest", completed > 0);
-  const extract = state("extract", extractDone);
-  const cluster = state("cluster", clusterDone);
-  const hypothesis = state("hypothesis", hypoDone);
-
-  return [
-    {
-      id: "ingest",
-      kind: "step",
-      status: ingest.status,
-      pulse: ingest.pulse,
-      activeConnector: ingest.active,
-      label: "Interviews aufnehmen",
-      meta: <span className="tabular-nums">{completed} Interviews</span>,
-    },
-    {
-      id: "extract",
-      kind: "step",
-      status: extract.status,
-      pulse: extract.pulse,
-      activeConnector: extract.active,
-      label: "VSE-Extraktion · Mistral",
-      meta: <span className="tabular-nums">{insights} Insights</span>,
-    },
-    {
-      id: "cluster",
-      kind: "step",
-      status: cluster.status,
-      pulse: cluster.pulse,
-      activeConnector: cluster.active,
-      label: "Embedding · Clustering · Qdrant",
-      meta: <span className="tabular-nums">cos&gt;0.82</span>,
-    },
-    {
-      id: "hypothesis",
-      kind: "step",
-      status: hypothesis.status,
-      pulse: hypothesis.pulse,
-      activeConnector: hypothesis.active,
-      label: "Hypothesen · Falsifikation",
-      meta: <span className="tabular-nums">{hypotheses} Hypothesen</span>,
-    },
-  ];
 }
 
 function FlashBanner({

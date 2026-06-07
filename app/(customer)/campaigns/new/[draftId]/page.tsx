@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { makeApi } from "@/lib/api";
+import { makeApi, type Vault } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
 import { SplitAuthor } from "@/components/setup/SplitAuthor";
 
@@ -23,12 +23,24 @@ export default async function AuthorPage({
     notFound();
   }
 
+  // WHY-104: the catalog's company-context block is a Context Vault picker, so
+  // load the org's vaults for the selector. A failure here must never break the
+  // author screen — the picker just shows an empty state.
+  let vaults: Vault[] = [];
+  try {
+    vaults = await makeApi(cookie).vaults.list();
+  } catch {
+    vaults = [];
+  }
+
   return (
     <SplitAuthor
       sessionId={session.session_id}
       initialDraft={session.config}
       initialRevision={session.revision}
       initialMessages={session.messages}
+      orgName={session.org_name}
+      vaults={vaults}
     />
   );
 }

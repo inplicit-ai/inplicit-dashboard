@@ -124,12 +124,22 @@ const STATUS_LABEL: Record<string, string> = {
 export function StatusBadge({
   status,
   className,
+  withIcon,
 }: {
   status: string;
   className?: string;
+  /** Lead with the status-disc glyph (passed through to the shared pill). */
+  withIcon?: boolean;
 }) {
   const label = STATUS_LABEL[status] ?? status;
   // Tone is resolved internally by the shared pill from the raw status string,
   // keeping the status→tone mapping authoritative in exactly one place.
-  return <TonePill status={status} label={label} className={className} />;
+  return (
+    <TonePill
+      status={status}
+      label={label}
+      withIcon={withIcon}
+      className={className}
+    />
+  );
 }

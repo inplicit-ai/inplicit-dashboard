@@ -17,10 +17,12 @@ export function EmailTemplateSection({
   draft,
   onPatch,
   touched,
+  orgName,
 }: {
   draft: CampaignDraft;
   onPatch: (call: SetupToolCall) => void;
   touched?: boolean;
+  orgName?: string;
 }) {
   const t = useTranslations("setup.catalog");
   const tpl: EmailTemplate = draft.emailTemplate ?? {
@@ -36,7 +38,9 @@ export function EmailTemplateSection({
     participant: sampleName,
     slot: "Jun 3, 09:00",
     link: "https://app.inplicit.ai/i/…",
-    org: "Acme",
+    // The real company name (the {{org}} token is filled with it at send time);
+    // fall back to a neutral placeholder only if the org has no name yet.
+    org: orgName?.trim() || t("previewSampleOrg"),
   };
   const previewSubject = renderTokens(tpl.subject, sample);
   const previewBody = renderTokens(tpl.body, sample);

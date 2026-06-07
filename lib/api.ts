@@ -687,6 +687,12 @@ export interface CampaignDraft {
   prompt?: string;
   goals?: Goal[];
   background?: { notes: string; files: FileRef[] };
+  /** WHY-104: the org Context Vault selected as the campaign's company-context
+   *  source. Replaces the free-text background block in the catalog UI.
+   *  TODO(WHY-104): the backend setup draft must persist this (new
+   *  `set_context_vault` tool + `context_vault_id` column) and the launch path
+   *  must materialise it onto the campaign — currently frontend-local only. */
+  contextVaultId?: string;
   topics?: TopicGraph;
   successCriteria?: SuccessCriteria;
   inductiveFlag?: boolean;
@@ -696,6 +702,9 @@ export interface CampaignDraft {
   people?: Person[];
   schedule?: ScheduleConfig;
   emailTemplate?: EmailTemplate;
+  /** True once the user (or an explicit user-requested rewrite) edits the
+   *  invite — schedule-mode changes then leave the email untouched. */
+  emailCustomized?: boolean;
   [key: string]: unknown;
 }
 
@@ -856,6 +865,9 @@ export interface SetupSessionCreated {
   draft_id: string;
   revision: number;
   config: CampaignDraft;
+  /** The org's real name — fills the invite email's {{org}} preview. */
+  org_name?: string;
+  company_context?: string;
 }
 export interface SetupSession {
   session_id: string;
@@ -864,6 +876,9 @@ export interface SetupSession {
   status: string;
   config: CampaignDraft;
   messages: SetupMessage[];
+  /** The org's real name — fills the invite email's {{org}} preview. */
+  org_name?: string;
+  company_context?: string;
 }
 export interface SetupPatchInput {
   patch: SetupToolCall;

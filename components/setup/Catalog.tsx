@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +8,7 @@ import { Select, DURATION_OPTIONS } from "@/components/ui/select";
 import { EvidenceTree, type EvidenceNode } from "@/components/ui/agent-list";
 import { DataChip } from "@/components/ui/data-chip";
 import { cn } from "@/lib/utils";
-import type { CampaignDraft, Locale, SetupToolCall } from "@/lib/api";
+import type { CampaignDraft, Locale, SetupToolCall, Vault } from "@/lib/api";
 import { SectionCard } from "./SectionCard";
 import { TopicGraph } from "./TopicGraph";
 import { PeopleSection } from "./PeopleSection";
@@ -31,10 +32,14 @@ export function Catalog({
   draft,
   onPatch,
   recentlyTouched,
+  orgName,
+  vaults,
 }: {
   draft: CampaignDraft;
   onPatch: (call: SetupToolCall) => void;
   recentlyTouched?: Set<string>;
+  orgName?: string;
+  vaults?: Vault[];
 }) {
   const t = useTranslations("setup.catalog");
 
@@ -47,17 +52,18 @@ export function Catalog({
     kind: "insight",
     status: "done",
     label: (
-      <input
+      <GoalInput
         value={g.text}
-        onChange={(e) =>
-          onPatch({ tool: "refine_goal", args: { id: g.id, text: e.target.value } })
+        onChange={(text) =>
+          onPatch({ tool: "refine_goal", args: { id: g.id, text } })
         }
-        className="w-full bg-transparent text-fg outline-none placeholder:text-fg-subtle"
-        aria-label={`${t("goals")} ${i + 1}`}
+        ariaLabel={`${t("goals")} ${i + 1}`}
       />
     ),
     meta: (
-      <span className="tabular-nums text-fg-subtle">
+      // WHY-104: campaign-goal numbers right-aligned within their row — a
+      // fixed-width, end-justified tabular figure so 01..09 and 10+ line up.
+      <span className="block w-7 text-right tabular-nums text-fg-subtle">
         {String(i + 1).padStart(2, "0")}
       </span>
     ),
@@ -77,6 +83,9 @@ export function Catalog({
 
   return (
     <div className="flex flex-col gap-5">
+      {/* ── Objective — the sharpened research question (editable) ────────── */}
+      <ObjectiveSection draft={draft} onPatch={onPatch} touched={recentlyTouched?.has("set_objective")} />
+
       {/* ── Format — a roomy labeled control grid ───────────────────────── */}
       <SectionCard
         title={t("interviewType")}
@@ -159,11 +168,6 @@ export function Catalog({
         count={goals.length}
         touched={recentlyTouched?.has("set_goals")}
       >
-        {draft.prompt ? (
-          <p className="rounded-md border-l-2 border-accent-muted bg-surface-2 px-3 py-2 text-[length:var(--text-body)] leading-relaxed text-fg-muted">
-            {draft.prompt}
-          </p>
-        ) : null}
         {goals.length === 0 ? (
           <PlatePlaceholder>{t("goalsEmpty")}</PlatePlaceholder>
         ) : (
@@ -171,26 +175,27 @@ export function Catalog({
         )}
       </SectionCard>
 
-      {/* ── Background ─────────────────────────────────────────────────── */}
+      {/* ── Company context — Context Vault selection (WHY-104) ──────────── */}
+      {/* WHY-104: "Unternehmenskontext" is now ONLY a Context Vault selection
+          (a picker), not a free-text block. The agent + interviewer read the
+          selected vault's items as company context.
+          TODO(WHY-104): backend must persist `context_vault_id` on the setup
+          draft (new `set_context_vault` tool) and the launch path must attach
+          the chosen vault to the campaign — the patch is frontend-local today. */}
       <SectionCard
-        title={t("background")}
-        touched={recentlyTouched?.has("set_background")}
+        title={t("context")}
+        touched={recentlyTouched?.has("set_context_vault")}
       >
-        <Textarea
-          rows={3}
-          value={draft.background?.notes ?? ""}
-          placeholder={t("backgroundPlaceholder")}
-          onChange={(e) =>
-            onPatch({ tool: "set_background", args: { notes: e.target.value } })
-          }
-          className="min-h-[80px]"
-        />
+        <ContextVaultPicker draft={draft} onPatch={onPatch} vaults={vaults} />
       </SectionCard>
 
-      {/* ── Success criteria ───────────────────────────────────────────── */}
+      {/* ── Research method (Forschungsweise) ──────────────────────────── */}
+      {/* WHY-104: the inductive/deductive choice is a research METHOD, not a
+          success criterion — it lives in its own section, relabeled
+          "Forschungsweise", above the success-criteria questions. The
+          underlying `set_success_criteria.mode` contract is unchanged. */}
       <SectionCard
-        title={t("successCriteria")}
-        count={questions.length > 0 ? questions.length : undefined}
+        title={t("researchMethod")}
         touched={recentlyTouched?.has("set_success_criteria")}
       >
         <Segmented
@@ -210,9 +215,22 @@ export function Catalog({
             })
           }
         />
+        <p className="text-[length:var(--text-meta)] text-fg-subtle">
+          {t("researchMethodHint")}
+        </p>
+      </SectionCard>
+
+      {/* ── Success criteria ───────────────────────────────────────────── */}
+      <SectionCard
+        title={t("successCriteria")}
+        count={questions.length > 0 ? questions.length : undefined}
+        touched={recentlyTouched?.has("set_success_criteria")}
+      >
         {questions.length > 0 ? (
           <EvidenceTree nodes={questionNodes} defaultExpandedDepth={0} />
-        ) : null}
+        ) : (
+          <PlatePlaceholder>{t("successEmpty")}</PlatePlaceholder>
+        )}
       </SectionCard>
 
       {/* ── Topics ─────────────────────────────────────────────────────── */}
@@ -246,8 +264,116 @@ export function Catalog({
         draft={draft}
         onPatch={onPatch}
         touched={recentlyTouched?.has("set_email_template")}
+        orgName={orgName}
       />
     </div>
+  );
+}
+
+/* ─── Research brief ─────────────────────────────────────────────────────── */
+
+/**
+ * The sharpened research objective as a plain editable line at the top of the
+ * catalog. EDDA drafts it; the user owns the wording. No stance, no confirm, no
+ * gate — editing emits the same `set_objective` patch the agent uses (single
+ * reducer, two writers). It IS the research question, in one editable place.
+ */
+function ObjectiveSection({
+  draft,
+  onPatch,
+  touched,
+}: {
+  draft: CampaignDraft;
+  onPatch: (call: SetupToolCall) => void;
+  touched?: boolean;
+}) {
+  const t = useTranslations("setup.catalog");
+
+  return (
+    <SectionCard title={t("objective")} touched={touched}>
+      <Textarea
+        rows={2}
+        value={draft.prompt ?? ""}
+        placeholder={t("objectivePlaceholder")}
+        onChange={(e) => onPatch({ tool: "set_objective", args: { text: e.target.value } })}
+        className="min-h-[56px] text-[length:var(--text-body-lg)] font-medium leading-snug"
+        aria-label={t("objective")}
+      />
+    </SectionCard>
+  );
+}
+
+/**
+ * Company-context selector (WHY-104). A single picker that binds the campaign
+ * to one of the org's Context Vaults — replacing the old free-text background.
+ * When the org has no vaults yet, a quiet hint points to the Vaults surface.
+ */
+function ContextVaultPicker({
+  draft,
+  onPatch,
+  vaults,
+}: {
+  draft: CampaignDraft;
+  onPatch: (call: SetupToolCall) => void;
+  vaults?: Vault[];
+}) {
+  const t = useTranslations("setup.catalog");
+  const list = vaults ?? [];
+
+  if (list.length === 0) {
+    return <PlatePlaceholder>{t("contextEmpty")}</PlatePlaceholder>;
+  }
+
+  const options = [
+    { value: "", label: t("contextNone") },
+    ...list.map((v) => ({ value: v.id, label: v.name })),
+  ];
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Select
+        aria-label={t("context")}
+        value={draft.contextVaultId ?? ""}
+        onValueChange={(vaultId) =>
+          onPatch({ tool: "set_context_vault", args: { vaultId } })
+        }
+        options={options}
+        size="md"
+      />
+      <p className="text-[length:var(--text-meta)] text-fg-subtle">
+        {t("contextHint")}
+      </p>
+    </div>
+  );
+}
+
+/** An inline, auto-growing goal editor — wraps long goals instead of truncating
+ *  them (the old single-line input cut the text off). */
+function GoalInput({
+  value,
+  onChange,
+  ariaLabel,
+}: {
+  value: string;
+  onChange: (text: string) => void;
+  ariaLabel: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full resize-none overflow-hidden bg-transparent text-fg leading-snug outline-none placeholder:text-fg-subtle"
+      aria-label={ariaLabel}
+    />
   );
 }
 

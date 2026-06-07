@@ -423,7 +423,8 @@ export function ParticipantsTable({ campaignId, initial }: Props) {
                       <ParticipantStatus p={p} />
                     </TableCell>
                     <TableCell className="py-4 text-right">
-                      <div className="flex flex-wrap items-center justify-end gap-2">
+                      {/* WHY-95: action buttons laid out horizontally side-by-side. */}
+                      <div className="flex flex-nowrap items-center justify-end gap-2">
                         {isEditing ? (
                           <>
                             <Button

@@ -11,6 +11,7 @@
 import type { ComponentType, SVGProps } from "react";
 import type { Role } from "@/lib/api";
 import {
+  IconBoxes,
   IconBuilding,
   IconFolderKanban,
   IconLayoutGrid,
@@ -37,6 +38,8 @@ export interface NavItem {
   tourId?: string;
   /** Surface this item in the mobile bottom-nav (primary tabs). */
   mobilePrimary?: boolean;
+  /** When true, the item renders disabled with a "coming soon" treatment. */
+  comingSoon?: boolean;
 }
 
 export interface NavSection {
@@ -87,6 +90,7 @@ const CUSTOMER_SECTIONS: NavSection[] = [
       },
       { id: "vaults", href: "/vaults", icon: IconVault, tourId: "nav-vaults" },
       { id: "integrations", href: "/integrations", icon: IconPlug },
+      { id: "mcp", href: "/mcp", icon: IconBoxes, comingSoon: true },
       {
         id: "twin",
         href: "/twin",

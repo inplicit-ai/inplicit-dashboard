@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp } from "lucide-react";
@@ -16,10 +15,10 @@ import {
   ChatShell,
   ChatComposerBar,
 } from "@/components/ui/chat-shell";
-import { StatusDisc } from "@/components/ui/status-disc";
+import { Badge } from "@/components/ui/heroui-badge";
 import { cn } from "@/lib/utils";
 import type { SetupToolCallCard } from "@/lib/api";
-import { ToolCallCard } from "./ToolCallCard";
+import { ToolChecklist } from "./ToolChecklist";
 
 export type ChatTurn = {
   id: string;
@@ -67,25 +66,26 @@ export function SetupChat({
       {/* Honest-AI header — fixed, never scrolls. The live disc pulses amber
           only while the agent is drafting. */}
       <header className="flex shrink-0 items-center gap-3 border-b border-line bg-canvas px-5 py-4">
-        <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-2 ring-1 ring-line">
-          <Image
-            src="/logo_icon.svg"
-            alt="Inplicit"
-            width={22}
-            height={22}
-            className="size-[22px]"
-            priority
+        <Badge.Anchor>
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-fg text-[length:var(--text-body)] font-semibold text-canvas ring-1 ring-line">
+            E
+          </span>
+          {/* Live status dot — amber only while EDDA is drafting (one-accent rule). */}
+          <Badge
+            color={streaming ? "accent" : "success"}
+            placement="bottom-right"
+            size="sm"
+            aria-label={streaming ? "drafting" : "ready"}
           />
-        </span>
+        </Badge.Anchor>
         <div className="min-w-0 flex-1">
           <p className="text-[length:var(--text-subtitle)] font-semibold tracking-[-0.01em] text-fg">
-            {t("title")}
+            EDDA
           </p>
           <p className="truncate text-[length:var(--text-meta)] text-fg-muted">
             {tAi("disclaimer")}
           </p>
         </div>
-        <StatusDisc state={streaming ? "live" : "idle"} size="sm" />
       </header>
 
       {/* Conversation — the single scroll region, stick-to-bottom + floating pill. */}
@@ -97,51 +97,47 @@ export function SetupChat({
       >
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-7">
           <AnimatePresence initial={false}>
-            {turns.map((turn) => (
-              <motion.div
-                key={turn.id}
-                layout={!prefersReducedMotion}
-                initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={turnTransition}
-                className={cn(
-                  "flex w-full flex-col",
-                  turn.role === "user" && "items-end",
-                )}
-              >
-                {turn.role === "user" ? (
-                  <div className="max-w-[80%] rounded-lg rounded-br-sm bg-cta px-4 py-2.5 text-[length:var(--text-body-lg)] leading-[1.6] text-cta-fg">
-                    {turn.content}
-                  </div>
-                ) : (
-                  <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
-                    {turn.content && (
-                      <p className="whitespace-pre-wrap">{turn.content}</p>
-                    )}
-                    {turn.toolCalls.length > 0 && (
-                      <div className="mt-3.5 flex flex-col gap-2">
-                        {turn.toolCalls.map((c, i) => (
-                          <ToolCallCard
-                            key={i}
-                            card={c}
-                            onReply={streaming ? undefined : onSend}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </motion.div>
-            ))}
+            {turns.map((turn) => {
+              return (
+                <motion.div
+                  key={turn.id}
+                  layout={!prefersReducedMotion}
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={turnTransition}
+                  className={cn(
+                    "flex w-full flex-col",
+                    turn.role === "user" && "items-end",
+                  )}
+                >
+                  {turn.role === "user" ? (
+                    <div className="max-w-[80%] rounded-lg rounded-br-sm bg-cta px-4 py-2.5 text-[length:var(--text-body-lg)] leading-[1.6] text-cta-fg">
+                      {turn.content}
+                    </div>
+                  ) : (
+                    <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
+                      {turn.content && (
+                        <p className="whitespace-pre-wrap">{turn.content}</p>
+                      )}
+                      <ToolChecklist
+                        cards={turn.toolCalls}
+                        onReply={streaming ? undefined : onSend}
+                      />
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
 
-          {streaming && <ThinkingIndicator label={t("thinking")} />}
+          {streaming && <DraftingShimmer label={t("thinking")} />}
         </div>
       </ChatScrollAnchored>
 
       {/* Composer — pinned, never scrolls away. */}
       <ChatComposerBar className="px-4 py-3 sm:px-5 sm:py-4">
-        <div className="mx-auto w-full max-w-3xl">
+        {/* composer-shell: shared prompt-box width (WHY-93). */}
+        <div className="composer-shell">
           <PromptInput
             value={value}
             onValueChange={setValue}
@@ -171,12 +167,12 @@ export function SetupChat({
   );
 }
 
-/** Animated "drafting…" indicator — the live status disc + label. */
-function ThinkingIndicator({ label }: { label: string }) {
+/** "Still drafting…" trailer — a shimmering label sweeping while EDDA streams
+ * its next tool calls. Reduced-motion collapses the sweep to a static label. */
+function DraftingShimmer({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-2 text-[length:var(--text-meta)] text-fg-muted">
-      <StatusDisc state="live" size="sm" />
-      <span>{label}</span>
+    <div className="text-[length:var(--text-meta)]">
+      <span className="edda-shimmer">{label}</span>
     </div>
   );
 }

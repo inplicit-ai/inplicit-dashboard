@@ -9,11 +9,13 @@
     "knowledgeChat": "Knowledge Chat",
     "vaults": "Context Vaults",
     "integrations": "Integrations",
+    "mcp": "MCP",
     "twin": "Digital Twin",
     "admin": "Admin",
     "organizations": "Organizations",
     "team": "Team",
     "more": "More",
+    "comingSoon": "Soon",
     "needsAuditsHint": "Available once your first campaign exists."
   },
   "shell": {
@@ -30,7 +32,16 @@
     "openMenu": "Open menu",
     "userMenu": "User menu",
     "language": "Language",
-    "replayTour": "Replay tour"
+    "replayTour": "Replay tour",
+    "orgSwitcher": {
+      "trigger": "Switch organization",
+      "heading": "Organizations",
+      "current": "Current",
+      "newOrg": "New organization",
+      "loading": "Loading …",
+      "empty": "No organizations yet",
+      "error": "Could not load organizations"
+    }
   },
   "breadcrumb": {
     "home": "Home",
@@ -57,7 +68,13 @@
     "map": "Knowledge Map",
     "ask": "Ask",
     "campaign": "Campaign",
+    "interview": "Interview",
+    "record": "Record",
     "role": "Role"
+  },
+  "insights": {
+    "comingSoonToggle": "Advanced grouping",
+    "comingSoonBadge": "Coming soon"
   },
   "campaignChat": {
     "newChat": "New chat",
@@ -102,6 +119,18 @@
     "de": "Deutsch",
     "label": "Language"
   },
+  "settingsDialog": {
+    "title": "Settings",
+    "description": "Appearance and language.",
+    "appearance": "Appearance",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "themeHint": "System follows your OS preference. Saved on this device only.",
+    "language": "Language",
+    "languageHint": "Applies across the dashboard.",
+    "close": "Close"
+  },
   "placeholder": {
     "comingSoon": "Coming soon",
     "interviewsTitle": "Interviews",
@@ -131,8 +160,26 @@
       "placeholder": "e.g. Why are mid-market customers churning after onboarding?",
       "cta": "Create campaign",
       "examplesLabel": "Examples",
+      "suggestionsLabel": "Suggestions",
       "firstHint": "This is your first campaign — type a learning goal to begin.",
-      "creating": "Creating session…"
+      "creating": "Creating session…",
+      "themes": {
+        "prozesswissen": {
+          "label": "Process knowledge",
+          "description": "How work really gets done — including workarounds and friction.",
+          "prompt": "How do our core processes really run day to day — where do friction, workarounds and untapped knowledge appear?"
+        },
+        "operatives": {
+          "label": "Operational know-how",
+          "description": "Hands-on experience from daily work that's rarely written down.",
+          "prompt": "What operational, hands-on knowledge do our teams carry day to day that is documented nowhere?"
+        },
+        "innovationspotenziale": {
+          "label": "Innovation potential",
+          "description": "Untapped opportunities and ideas from the people involved.",
+          "prompt": "Where do our people see untapped opportunities, ideas and innovation potential?"
+        }
+      }
     },
     "chat": {
       "title": "Setup assistant",
@@ -190,7 +237,14 @@
       "parentQuestion": "Your question",
       "background": "Background",
       "backgroundPlaceholder": "Context the assistant and interviewer should know…",
+      "context": "Company context",
+      "contextHint": "The selected context vault supplies the assistant and interviewer with company knowledge.",
+      "contextNone": "No context vault",
+      "contextEmpty": "No context vaults yet — create one under “Vaults” first.",
+      "researchMethod": "Research method",
+      "researchMethodHint": "Inductive explores openly; deductive tests existing hypotheses.",
       "successCriteria": "Success criteria",
+      "successEmpty": "No success criteria yet — define what success means in the chat.",
       "inductive": "Inductive (open discovery)",
       "deductive": "Deductive (hypothesis-led)",
       "questions": "Questions to answer",
@@ -212,7 +266,7 @@
       "schedule": "Schedule",
       "scheduleMode": "Booking mode",
       "bookingSlots": "Booking slots",
-      "instantLink": "Instant link (legacy)",
+      "instantLink": "Direct link",
       "scheduleHint": "Participants book a slot and receive a calendar invite — not an open-anytime link.",
       "windowStart": "From",
       "windowEnd": "Until",
@@ -229,7 +283,8 @@
       "instantHint": "Each participant gets a direct, single-use link — no booking step. The invite uses {{link}} directly.",
       "objective": "Objective",
       "objectivePlaceholder": "What exactly do we want to find out?",
-      "participantPrompt": "Question for participants"
+      "participantPrompt": "Question for participants",
+      "previewSampleOrg": "your company"
     },
     "review": {
       "eyebrow": "Review & launch",
@@ -425,5 +480,32 @@
         "body": "That's the tour. You can replay it anytime from the sidebar. Ready to create your first campaign?"
       }
     }
+  },
+  "login": {
+    "brandAlt": "Inplicit",
+    "title": "Welcome back",
+    "subtitleMagic": "We'll send you a secure one-time link.",
+    "subtitlePassword": "Sign in with your password.",
+    "modeMagic": "Magic link",
+    "modePassword": "Password",
+    "modeSwitchLabel": "Sign-in method",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@company.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "submitMagic": "Send magic link",
+    "submitPassword": "Sign in",
+    "devLinkLabel": "Dev link",
+    "footer": "Inplicit AI · Enterprise interviews"
+  },
+  "feedback": {
+    "trigger": "Feedback",
+    "title": "Give feedback",
+    "description": "Tell us what works well on this page or what could be better.",
+    "placeholder": "Your feedback …",
+    "cancel": "Cancel",
+    "submit": "Send"
   }
 }

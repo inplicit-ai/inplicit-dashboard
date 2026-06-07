@@ -45,13 +45,7 @@ export default async function InterviewsPage({
       mono: true,
       cell: (i) => <span className="font-medium text-fg">{i.anon_id}</span>,
     },
-    {
-      key: "department",
-      header: "Abteilung",
-      cell: (i) => (
-        <span className="text-fg-muted">{i.department ?? "—"}</span>
-      ),
-    },
+    // WHY-95: Abteilung & Rolle hidden in the Interviews tab for anonymity.
     {
       key: "mode",
       header: "Modus",
@@ -88,10 +82,8 @@ export default async function InterviewsPage({
 
   return (
     <div className="surface-bleed">
-      <PageHeader
-        title="Interviews"
-        subtitle={`${interviews.length} ${interviews.length === 1 ? "Gespräch" : "Gespräche"} in dieser Kampagne.`}
-      />
+      {/* WHY-95: subtitle removed to declutter the tab. */}
+      <PageHeader title="Interviews" />
 
       {error ? (
         <div className="mb-6">
