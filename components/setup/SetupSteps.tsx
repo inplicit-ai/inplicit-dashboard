@@ -113,30 +113,30 @@ export function SetupSteps() {
       </nav>
       </div>
 
-      {/* Abbrechen — opens discard-or-save dialog */}
+      {/* Abbrechen — same style as topbar locale/feedback buttons */}
       <button
         type="button"
         onClick={() => setCancelOpen(true)}
-        className="shrink-0 text-[length:var(--text-caption)] font-medium text-fg-muted transition-colors hover:text-fg"
+        className="shell-locale shrink-0"
       >
-        Abbrechen
+        <span className="text-[length:var(--text-caption)] font-medium">Abbrechen</span>
       </button>
     </div>
 
     {/* Discard / save-draft dialog */}
     <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
-      <DialogContent>
+      <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Kampagne beenden</DialogTitle>
+          <DialogTitle>Kampagne abbrechen?</DialogTitle>
           <DialogDescription>
-            Du kannst den Entwurf jederzeit im Dashboard weitermachen oder die
-            Kampagne jetzt verwerfen.
+            Speichere den Entwurf, um später weiterzumachen, oder verwirf die
+            Kampagne vollständig.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex-col gap-2 sm:flex-col">
+        <DialogFooter className="flex-row gap-2 sm:flex-row">
           <Button
             variant="outline"
-            className="w-full"
+            className="flex-1"
             onClick={() => {
               setCancelOpen(false);
               router.push(
@@ -145,20 +145,17 @@ export function SetupSteps() {
               );
             }}
           >
-            Als Entwurf speichern
+            Entwurf speichern
           </Button>
           <Button
             variant="ghost"
-            className="w-full text-danger hover:text-danger"
+            className="flex-1 text-danger hover:text-danger"
             onClick={() => {
               setCancelOpen(false);
               router.push("/campaigns");
             }}
           >
-            Kampagne verwerfen
-          </Button>
-          <Button variant="ghost" className="w-full" onClick={() => setCancelOpen(false)}>
-            Weiter bearbeiten
+            Ja, abbrechen
           </Button>
         </DialogFooter>
       </DialogContent>
