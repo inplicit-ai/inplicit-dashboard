@@ -160,8 +160,26 @@
       "placeholder": "e.g. Why are mid-market customers churning after onboarding?",
       "cta": "Create campaign",
       "examplesLabel": "Examples",
+      "suggestionsLabel": "Suggestions",
       "firstHint": "This is your first campaign — type a learning goal to begin.",
-      "creating": "Creating session…"
+      "creating": "Creating session…",
+      "themes": {
+        "prozesswissen": {
+          "label": "Process knowledge",
+          "description": "How work really gets done — including workarounds and friction.",
+          "prompt": "How do our core processes really run day to day — where do friction, workarounds and untapped knowledge appear?"
+        },
+        "operatives": {
+          "label": "Operational know-how",
+          "description": "Hands-on experience from daily work that's rarely written down.",
+          "prompt": "What operational, hands-on knowledge do our teams carry day to day that is documented nowhere?"
+        },
+        "innovationspotenziale": {
+          "label": "Innovation potential",
+          "description": "Untapped opportunities and ideas from the people involved.",
+          "prompt": "Where do our people see untapped opportunities, ideas and innovation potential?"
+        }
+      }
     },
     "chat": {
       "title": "Setup assistant",
@@ -219,7 +237,14 @@
       "parentQuestion": "Your question",
       "background": "Background",
       "backgroundPlaceholder": "Context the assistant and interviewer should know…",
+      "context": "Company context",
+      "contextHint": "The selected context vault supplies the assistant and interviewer with company knowledge.",
+      "contextNone": "No context vault",
+      "contextEmpty": "No context vaults yet — create one under “Vaults” first.",
+      "researchMethod": "Research method",
+      "researchMethodHint": "Inductive explores openly; deductive tests existing hypotheses.",
       "successCriteria": "Success criteria",
+      "successEmpty": "No success criteria yet — define what success means in the chat.",
       "inductive": "Inductive (open discovery)",
       "deductive": "Deductive (hypothesis-led)",
       "questions": "Questions to answer",

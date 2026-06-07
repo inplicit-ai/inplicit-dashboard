@@ -56,6 +56,10 @@ export function Topbar({
         {sidebarState !== "expanded" && (
           <SidebarTrigger state={sidebarState} onToggle={onToggleSidebar} />
         )}
+        {/* WHY-104: suppress the breadcrumb inside a multi-step flow (e.g. the
+            create-campaign flow) — the flow's own step bar is the single
+            "where am I?" there, so the top row stays uncluttered. */}
+        {!flow && (
         <Breadcrumb
           data-tour="topbar-breadcrumb"
           className="min-w-0 overflow-hidden"
@@ -89,9 +93,14 @@ export function Topbar({
             })}
           </BreadcrumbList>
         </Breadcrumb>
+        )}
       </div>
 
-      {flow && (
+      {/* WHY-104: the create-campaign ("setup") flow renders its own
+          CampaignTabs-style step bar in the work area (SetupSteps), so the
+          topbar stepper is suppressed there to avoid a duplicated indicator.
+          Any other declared flow still uses the centered topbar stepper. */}
+      {flow && flow.id !== "setup" && (
         <div className="shell-topbar__center">
           <Stepper flow={flow} pathname={pathname} />
         </div>

@@ -160,8 +160,26 @@
       "placeholder": "z. B. Warum kündigen Mid-Market-Kunden nach dem Onboarding?",
       "cta": "Kampagne erstellen",
       "examplesLabel": "Beispiele",
+      "suggestionsLabel": "Vorschläge",
       "firstHint": "Das ist deine erste Kampagne — gib ein Lernziel ein, um zu starten.",
-      "creating": "Sitzung wird erstellt…"
+      "creating": "Sitzung wird erstellt…",
+      "themes": {
+        "prozesswissen": {
+          "label": "Prozesswissen",
+          "description": "Wie Abläufe wirklich funktionieren — inklusive Workarounds und Reibungspunkte.",
+          "prompt": "Wie laufen unsere Kernprozesse im Alltag wirklich ab — wo entstehen Reibung, Workarounds und ungenutztes Wissen?"
+        },
+        "operatives": {
+          "label": "Operatives Know-how",
+          "description": "Erfahrungswissen aus dem Tagesgeschäft, das selten dokumentiert ist.",
+          "prompt": "Welches operative Erfahrungswissen tragen unsere Teams im Tagesgeschäft, das nirgends dokumentiert ist?"
+        },
+        "innovationspotenziale": {
+          "label": "Innovationspotenziale",
+          "description": "Ungenutzte Chancen und Ideen aus Sicht der Beteiligten.",
+          "prompt": "Wo sehen unsere Mitarbeitenden ungenutzte Chancen, Ideen und Innovationspotenziale?"
+        }
+      }
     },
     "chat": {
       "title": "Setup-Assistent",
@@ -219,7 +237,14 @@
       "parentQuestion": "Deine Frage",
       "background": "Hintergrund",
       "backgroundPlaceholder": "Kontext, den Assistent und Interviewer kennen sollten…",
+      "context": "Unternehmenskontext",
+      "contextHint": "Der gewählte Kontext-Vault liefert Assistent und Interviewer das Firmenwissen.",
+      "contextNone": "Kein Kontext-Vault",
+      "contextEmpty": "Noch keine Kontext-Vaults — lege zunächst einen unter „Vaults“ an.",
+      "researchMethod": "Forschungsweise",
+      "researchMethodHint": "Induktiv geht offen auf Entdeckung; deduktiv prüft vorhandene Hypothesen.",
       "successCriteria": "Erfolgskriterien",
+      "successEmpty": "Noch keine Erfolgskriterien — lege im Chat fest, was Erfolg bedeutet.",
       "inductive": "Induktiv (offene Entdeckung)",
       "deductive": "Deduktiv (hypothesengeführt)",
       "questions": "Zu beantwortende Fragen",
