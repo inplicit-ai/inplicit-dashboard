@@ -17,11 +17,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CheckCircle2 as CheckIcon, Building2 } from "lucide-react";
 import { DataChip } from "@/components/ui/data-chip";
-import { type CampaignDraft } from "@/lib/api";
+import { type CampaignDraft, type Vault } from "@/lib/api";
 import { clientApi } from "@/lib/client-api";
 import { validateForLaunch } from "@/lib/setup/draftReducer";
-import { TopicGraph } from "./TopicGraph";
 
 /**
  * Review + launch (doc 03 §8) — a crisp white-modernist confirmation screen.
@@ -40,9 +40,11 @@ import { TopicGraph } from "./TopicGraph";
 export function ReviewLaunch({
   draftId,
   draft,
+  vaults = [],
 }: {
   draftId: string;
   draft: CampaignDraft;
+  vaults?: Vault[];
 }) {
   const t = useTranslations("setup.review");
   const tc = useTranslations("setup.catalog");
@@ -153,12 +155,33 @@ export function ReviewLaunch({
         <StatBand cells={specCells} />
       </motion.section>
 
+      {/* Context vault cards — abgehakt wenn verknüpft */}
+      {draft.contextVaultId && (() => {
+        const vault = vaults.find((v) => v.id === draft.contextVaultId);
+        return (
+          <motion.section {...reveal(0.08)} className="flex flex-col gap-4">
+            <SectionHeading title="Kontext" className="mb-0" />
+            <div className="flex flex-wrap gap-3">
+              <div className="flex items-center gap-2.5 rounded-card border border-success/30 bg-success-soft px-4 py-3">
+                <CheckIcon size={16} className="shrink-0 text-success" aria-hidden />
+                <span className="flex items-center gap-2">
+                  <Building2 size={14} className="shrink-0 text-fg-muted" aria-hidden />
+                  <span className="text-[length:var(--text-body-sm)] font-medium text-fg">
+                    {vault?.name ?? "Kontext verknüpft"}
+                  </span>
+                </span>
+              </div>
+            </div>
+          </motion.section>
+        );
+      })()}
+
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Left — goals + delivery */}
+        {/* Left — goals + delivery, same height as launch card */}
         <div className="flex flex-col gap-8 lg:col-span-2">
           {/* Goals */}
           {goals.length > 0 ? (
-            <motion.section {...reveal(0.08)} className="flex flex-col gap-4">
+            <motion.section {...reveal(0.1)} className="flex flex-col gap-4">
               <SectionHeading
                 title={tc("goals")}
                 count={goals.length}
@@ -172,23 +195,11 @@ export function ReviewLaunch({
             </motion.section>
           ) : null}
 
-          {/* Delivery */}
-          <motion.section {...reveal(0.12)} className="flex flex-col gap-4">
+          {/* Zielgruppe — Themen entfernt, nur Zielgruppe + Teilnehmer + Hintergrund */}
+          <motion.section {...reveal(0.14)} className="flex flex-col gap-4">
             <SectionHeading title={t("delivery")} className="mb-0" />
             <Card>
-              <CardContent className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-                <div className="flex flex-col gap-2">
-                  <p className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
-                    {tc("topics")}
-                  </p>
-                  {draft.topics?.nodes?.length ? (
-                    <TopicGraph data={draft.topics} />
-                  ) : (
-                    <p className="text-[length:var(--text-body)] text-fg-subtle">
-                      {tc("topicsEmpty")}
-                    </p>
-                  )}
-                </div>
+              <CardContent>
                 <dl className="flex flex-col divide-y divide-line-subtle">
                   <SpecRow label={tc("audience")}>
                     {draft.audience?.segments?.length
@@ -213,12 +224,12 @@ export function ReviewLaunch({
           </motion.section>
         </div>
 
-        {/* Right — launch card (sticky) */}
+        {/* Right — launch card, stretches to match left column height */}
         <motion.aside
           {...reveal(0.16)}
-          className="lg:sticky lg:top-6 lg:self-start"
+          className="lg:self-stretch"
         >
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
                 {t("launchpad")}
