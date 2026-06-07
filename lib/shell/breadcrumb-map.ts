@@ -20,6 +20,8 @@ export interface Crumb {
 /** Optional resolved labels for dynamic segments (id → display name). */
 export interface CrumbContext {
   campaignName?: string;
+  /** When set, appended as a sub-crumb to the /vaults breadcrumb. */
+  vaultFolder?: string;
 }
 
 const SEGMENT_KEY: Record<string, string> = {
@@ -130,6 +132,16 @@ export function buildBreadcrumb(
     const key = SEGMENT_KEY[seg] ?? seg;
     crumbs.push({ key, href: isLast ? undefined : acc });
   });
+
+  // When on /vaults and a folder is active, append the folder label as a
+  // sub-crumb so the trail reads "Kontext-Tresor > Rollen" etc.
+  if (pathname === "/vaults" && ctx.vaultFolder) {
+    // The last crumb (/vaults) becomes a link back to the hub.
+    if (crumbs.length > 0 && !crumbs[crumbs.length - 1].href) {
+      crumbs[crumbs.length - 1] = { ...crumbs[crumbs.length - 1], href: "/vaults" };
+    }
+    crumbs.push({ key: ctx.vaultFolder, isLiteral: true });
+  }
 
   // Collapse any accidental consecutive duplicates (same rendered label,
   // adjacent) so a trail can never read "… › Kampagne › Kampagne". Keep the

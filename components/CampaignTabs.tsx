@@ -66,7 +66,7 @@ export function CampaignTabs({ campaignId }: { campaignId: string }) {
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className="-mt-1 mb-6 overflow-x-auto scrollbar-none">
+    <div className="sticky top-0 z-10 -mt-1 mb-6 overflow-x-auto bg-background pb-px scrollbar-none">
       <nav
         aria-label={t("campaign")}
         className="inline-flex items-center gap-1 rounded-ui border border-line-subtle bg-surface-2 p-1"

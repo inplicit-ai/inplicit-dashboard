@@ -130,7 +130,7 @@ export function ReviewLaunch({
     status: "done",
     label: <span className="text-fg">{g.text}</span>,
     meta: (
-      <span className="tabular-nums text-fg-subtle">
+      <span className="ml-auto shrink-0 tabular-nums text-fg-subtle">
         {String(i + 1).padStart(2, "0")}
       </span>
     ),

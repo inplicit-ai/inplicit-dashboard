@@ -85,8 +85,9 @@ export function TopicGraph({ data }: { data: TopicGraphData | undefined }) {
         const orphan = !connected.has(n.id);
         const muted = n.weight === "muted";
         const primary = n.weight === "primary";
-        const methodLabel = n.method ? METHOD_LABEL[n.method] ?? n.method : null;
-        const pillW = methodLabel ? methodLabel.length * 5.6 + 16 : 0;
+        // Method pills are suppressed — the visual is cleaner without them.
+        const methodLabel: string | null = null;
+        const pillW = 0;
         return (
           <g
             key={n.id}

@@ -124,6 +124,22 @@ export function CampaignChat({ campaignId }: { campaignId: string }) {
     }
   }
 
+  async function onRename(threadId: string, title: string) {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    try {
+      await dapi<void>(`campaigns/${campaignId}/chat/threads/${threadId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ title: trimmed }),
+      });
+      setThreads((prev) =>
+        prev.map((th) => (th.id === threadId ? { ...th, title: trimmed } : th)),
+      );
+    } catch {
+      // silently ignore — old title stays
+    }
+  }
+
   async function onSend(content: string) {
     setError(null);
     const threadId = await ensureActiveThread();
@@ -173,6 +189,7 @@ export function CampaignChat({ campaignId }: { campaignId: string }) {
           onSelect={loadThread}
           onNew={onNew}
           onDelete={onDelete}
+          onRename={onRename}
           busy={busy}
         />
       </aside>

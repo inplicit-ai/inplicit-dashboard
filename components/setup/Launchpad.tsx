@@ -93,7 +93,7 @@ export function Launchpad({
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.2, 0.65, 0.3, 0.9] }}
-      className="mx-auto flex w-full max-w-[720px] flex-col py-12 lg:py-16"
+      className="flex w-full max-w-[720px] flex-col py-12 lg:py-16"
     >
       <h1 className="mb-3 text-[length:var(--text-display)] font-semibold leading-[1.08] tracking-[-0.022em] text-fg sm:text-4xl">
         {t("title")}

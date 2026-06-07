@@ -7,7 +7,7 @@
     "campaigns": "Kampagnen",
     "interviews": "Interviews",
     "knowledgeChat": "Wissens-Chat",
-    "vaults": "Kontext-Vault",
+    "vaults": "Kontext-Tresore",
     "integrations": "Integrationen",
     "mcp": "MCP",
     "twin": "Digital Twin",
@@ -49,7 +49,7 @@
     "campaignsNew": "Neue Kampagne",
     "interviews": "Interviews",
     "chat": "Wissens-Chat",
-    "vaults": "Kontext-Vault",
+    "vaults": "Kontext-Tresore",
     "integrations": "Integrationen",
     "twin": "Digital Twin",
     "admin": "Admin",
@@ -137,7 +137,7 @@
     "interviewsBody": "Eine kampagnenübergreifende Ansicht aller Interviews deiner Organisation. Kommt mit dem Org-Dashboard.",
     "chatTitle": "Knowledge Chat",
     "chatBody": "Stelle freie Fragen über all deine Kampagnen hinweg. Antworten belegen ihre Quellen oder lehnen ab.",
-    "vaultsTitle": "Context Vaults",
+    "vaultsTitle": "Kontext-Tresore",
     "vaultsBody": "Speichere und kuratiere den Unternehmenskontext, der jedes Interview und jede Synthese fundiert.",
     "integrationsTitle": "Integrationen",
     "integrationsBody": "Verbinde Inplicit mit den Tools, die dein Team bereits nutzt.",
@@ -366,7 +366,7 @@
   },
   "knowledgeChat": {
     "eyebrow": "Organisation",
-    "title": "Knowledge Chat",
+    "title": "Wissens-Chat",
     "scope": "Durchsucht {count} Kampagnen",
     "newChat": "Neuer Chat",
     "threadsTitle": "Unterhaltungen",
@@ -385,22 +385,22 @@
   },
   "vaults": {
     "eyebrow": "Organisation",
-    "title": "Kontext-Vaults",
-    "count": "{count} Vaults",
-    "newVault": "Neuer Vault",
+    "title": "Kontext-Tresore",
+    "count": "{count} Tresore",
+    "newVault": "Neuer Tresor",
     "namePlaceholder": "z. B. Unternehmenshintergrund",
     "descPlaceholder": "Kurze Beschreibung (optional)",
-    "createVault": "Vault erstellen",
-    "empty": "Noch keine Vaults. Erstelle einen, um Kontext über Kampagnen hinweg wiederzuverwenden.",
+    "createVault": "Tresor erstellen",
+    "empty": "Noch keine Tresore. Erstelle einen, um Kontext über Kampagnen hinweg wiederzuverwenden.",
     "entriesCount": "{count} Einträge",
-    "delete": "Vault löschen",
+    "delete": "Tresor löschen",
     "noEntries": "Noch keine Einträge.",
     "kindText": "Text",
     "kindUrl": "URL",
     "titlePlaceholder": "Titel (optional)",
     "contentPlaceholder": "Kontext, Notizen oder eine URL einfügen…",
     "addEntry": "Eintrag hinzufügen",
-    "selectPrompt": "Wähle einen Vault, um seine Einträge zu sehen."
+    "selectPrompt": "Wähle einen Tresor, um seine Einträge zu sehen."
   },
   "vaultHub": {
     "title": "Kontext-Vault",
@@ -465,7 +465,7 @@
     "roleOwner": "Owner",
     "membersTitle": "Mitglieder & Rollen",
     "membersBody": "Lade Teammitglieder ein und verwalte ihren Zugriff.",
-    "vaultsTitle": "Kontext-Vaults",
+    "vaultsTitle": "Kontext-Tresore",
     "vaultsBody": "Pflege wiederverwendbaren Unternehmenskontext für neue Kampagnen.",
     "integrationsTitle": "Integrationen",
     "integrationsBody": "Verbinde Benachrichtigungen und Datenexporte."
@@ -511,7 +511,7 @@
         "body": "Stelle Fragen über alle Interviews hinweg. Antworten nennen immer ihre Quellen oder verweigern die Aussage."
       },
       "vaults": {
-        "title": "Kontext-Vaults",
+        "title": "Kontext-Tresore",
         "body": "Pflege wiederverwendbaren Unternehmenskontext, damit jede neue Kampagne mit dem nötigen Wissen startet."
       },
       "twin": {

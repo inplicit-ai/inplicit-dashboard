@@ -20,11 +20,11 @@ import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ErrorState";
 import { StatusBadge } from "@/components/PageChrome";
 import { PageHeader } from "@/components/ui/page-header";
-import { SectionHeading } from "@/components/ui/section-heading";
 import { MetricCard } from "@/components/ui/metric-card";
 import { Card } from "@/components/ui/card";
 import { StatusDisc } from "@/components/ui/status-disc";
 import { RefineButton } from "@/components/campaign-chat/RefineButton";
+import { ContextSection } from "@/components/campaign/ContextSection";
 import { cn } from "@/lib/utils";
 
 interface CampaignPageSearchParams {
@@ -204,15 +204,8 @@ export default async function CampaignOverview({
           </div>
         </Card>
 
-        {/* Company context — reading register. */}
-        <section>
-          <SectionHeading title="Unternehmenskontext" />
-          <Card variant="reading" className="px-6">
-            <p className="whitespace-pre-wrap text-[length:var(--text-body-lg)] leading-relaxed text-fg-muted">
-              {campaign.company_context}
-            </p>
-          </Card>
-        </section>
+        {/* Company context — full-width card grid with "Mehr lesen" collapse. */}
+        <ContextSection companyContext={campaign.company_context} />
       </div>
     </div>
   );

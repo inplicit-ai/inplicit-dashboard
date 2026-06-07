@@ -32,6 +32,8 @@ interface CrumbStore {
   ctx: CrumbContext;
   /** Replace the campaign name (or clear it with `undefined`). */
   setCampaignName: (name: string | undefined) => void;
+  /** Replace the vault folder label (or clear it with `undefined`). */
+  setVaultFolder: (label: string | undefined) => void;
 }
 
 const CrumbStoreContext = createContext<CrumbStore | null>(null);
@@ -44,15 +46,20 @@ export function CrumbContextProvider({
   const [ctx, setCtx] = useState<CrumbContext>({});
 
   const setCampaignName = useCallback((name: string | undefined) => {
-    // Immutable update: build a fresh context object every time.
     setCtx((prev) =>
       prev.campaignName === name ? prev : { ...prev, campaignName: name },
     );
   }, []);
 
+  const setVaultFolder = useCallback((label: string | undefined) => {
+    setCtx((prev) =>
+      prev.vaultFolder === label ? prev : { ...prev, vaultFolder: label },
+    );
+  }, []);
+
   const store = useMemo<CrumbStore>(
-    () => ({ ctx, setCampaignName }),
-    [ctx, setCampaignName],
+    () => ({ ctx, setCampaignName, setVaultFolder }),
+    [ctx, setCampaignName, setVaultFolder],
   );
 
   return (
@@ -81,4 +88,19 @@ export function useRegisterCampaignName(name: string | undefined): void {
     setCampaignName(name);
     return () => setCampaignName(undefined);
   }, [setCampaignName, name]);
+}
+
+/**
+ * Register the vault folder label for the breadcrumb trail while the calling
+ * component is mounted (e.g. "Rollen", "Organisation"). Clears on unmount.
+ */
+export function useRegisterVaultFolder(label: string | undefined): void {
+  const store = useContext(CrumbStoreContext);
+  const setVaultFolder = store?.setVaultFolder;
+
+  useEffect(() => {
+    if (!setVaultFolder) return;
+    setVaultFolder(label);
+    return () => setVaultFolder(undefined);
+  }, [setVaultFolder, label]);
 }
