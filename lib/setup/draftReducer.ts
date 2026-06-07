@@ -29,6 +29,7 @@ export const KNOWN_TOOLS = [
   "set_goals",
   "refine_goal",
   "set_background",
+  "set_context_vault",
   "add_topic",
   "link_topics",
   "set_success_criteria",
@@ -144,6 +145,14 @@ export function applyPatch(
       const notes = arg<string>(args, "notes") ?? "";
       const prev = draft.background ?? { notes: "", files: [] };
       return { ...draft, background: { ...prev, notes } };
+    }
+    // WHY-104: company context is selected from an org Context Vault (not free
+    // text). `vaultId === ""` clears the selection. TODO(WHY-104): the server
+    // `apply_patch` in backend/src/api/setup/tools.rs must mirror this case and
+    // persist a `context_vault_id` — until then this patch is frontend-local.
+    case "set_context_vault": {
+      const vaultId = arg<string>(args, "vaultId") ?? "";
+      return { ...draft, contextVaultId: vaultId || undefined };
     }
     case "add_topic": {
       const title = arg<string>(args, "title");

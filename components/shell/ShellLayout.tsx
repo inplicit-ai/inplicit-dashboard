@@ -12,6 +12,7 @@ import {
   sidebarReducer,
 } from "@/lib/shell/sidebar-policy";
 import type { CrumbContext } from "@/lib/shell/breadcrumb-map";
+import { CrumbContextProvider } from "@/lib/shell/crumb-context";
 import { Sidebar } from "@/components/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
 import { MobileTabBar } from "@/components/shell/MobileTabBar";
@@ -96,6 +97,7 @@ export function ShellLayout({
     dispatch({ type: "USER_TOGGLED", next: nextToggleState(sidebarState) });
 
   return (
+    <CrumbContextProvider>
     <div className="shell shell--app" data-sidebar={sidebarState}>
       {/* Desktop rail — hidden on phone via CSS. */}
       <div className="shell__rail">
@@ -148,5 +150,6 @@ export function ShellLayout({
         <GuidedTour open={tour.open} onClose={tour.close} />
       )}
     </div>
+    </CrumbContextProvider>
   );
 }

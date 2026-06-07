@@ -45,12 +45,7 @@ const TABS: Tab[] = [
     href: (id) => `/campaigns/${id}/hypotheses`,
     match: (p, id) => p.startsWith(`/campaigns/${id}/hypotheses`),
   },
-  {
-    id: "map",
-    labelKey: "map",
-    href: (id) => `/campaigns/${id}/map`,
-    match: (p, id) => p.startsWith(`/campaigns/${id}/map`),
-  },
+  // WHY-95: "Knowledge Map" removed from the tab bar (coming soon).
   {
     id: "chat",
     labelKey: "ask",
@@ -71,10 +66,10 @@ export function CampaignTabs({ campaignId }: { campaignId: string }) {
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className="mb-8 overflow-x-auto scrollbar-none">
+    <div className="-mt-1 mb-6 overflow-x-auto scrollbar-none">
       <nav
         aria-label={t("campaign")}
-        className="inline-flex items-center gap-1 rounded-full border border-line-subtle bg-surface-2 p-1"
+        className="inline-flex items-center gap-1 rounded-ui border border-line-subtle bg-surface-2 p-1"
       >
         {TABS.map((tab) => {
           const active = tab.match(pathname, campaignId);
@@ -84,7 +79,7 @@ export function CampaignTabs({ campaignId }: { campaignId: string }) {
               href={tab.href(campaignId)}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative flex h-8 items-center whitespace-nowrap rounded-full px-3.5 text-[length:var(--text-meta)] font-medium transition-colors",
+                "relative flex h-8 items-center whitespace-nowrap rounded-ui px-3.5 text-[length:var(--text-meta)] font-medium transition-colors",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 active ? "text-fg" : "text-fg-muted hover:text-fg",
               )}
@@ -93,7 +88,7 @@ export function CampaignTabs({ campaignId }: { campaignId: string }) {
                 <motion.span
                   layoutId={reduceMotion ? undefined : "campaign-tab-pill"}
                   aria-hidden
-                  className="absolute inset-0 rounded-full bg-surface shadow-sm"
+                  className="absolute inset-0 rounded-ui bg-surface shadow-sm"
                   transition={{ type: "spring", stiffness: 380, damping: 32 }}
                 />
               )}

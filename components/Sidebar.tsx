@@ -27,6 +27,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { OrgAvatar } from "@/components/OrgAvatar";
+import { OrgSwitcher } from "@/components/OrgSwitcher";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import type { SidebarState } from "@/lib/shell/sidebar-policy";
 
@@ -70,6 +71,11 @@ export function Sidebar({
   const roleLabel =
     mode === "staff" ? tShell("backOffice") : tShell("workspace");
 
+  // Staff/internal users get an org-switcher anchored on the avatar (demo aid).
+  const isStaffUser =
+    me?.role === "INPLICIT_ADMIN" || me?.role === "INPLICIT_STAFF";
+  const showOrgSwitcher = isStaffUser && !iconOnly;
+
   const allHrefs = sections.flatMap((s) => s.items.map((i) => i.href));
   const isActive = (href: string) =>
     isNavItemActive(pathname, href, allHrefs);
@@ -101,19 +107,29 @@ export function Sidebar({
             </Link>
           </div>
 
-          {!iconOnly && (
-            <div className="sidebar__org">
-              <OrgAvatar
-                name={mode === "staff" ? "Inplicit" : orgName}
-                logoUrl={mode === "staff" ? null : orgLogoUrl}
-                size={32}
-                className="sidebar__avatar"
-              />
-              <span className="sidebar__org-text">
-                <span className="sidebar__org-name">{orgName}</span>
-                <span className="sidebar__org-role">{roleLabel}</span>
-              </span>
-            </div>
+          {showOrgSwitcher ? (
+            <OrgSwitcher
+              orgName={orgName}
+              roleLabel={roleLabel}
+              orgLogoUrl={mode === "staff" ? null : orgLogoUrl}
+              currentOrgId={me?.org_id ?? null}
+              onNavigate={onNavigate}
+            />
+          ) : (
+            !iconOnly && (
+              <div className="sidebar__org">
+                <OrgAvatar
+                  name={mode === "staff" ? "Inplicit" : orgName}
+                  logoUrl={mode === "staff" ? null : orgLogoUrl}
+                  size={32}
+                  className="sidebar__avatar"
+                />
+                <span className="sidebar__org-text">
+                  <span className="sidebar__org-name">{orgName}</span>
+                  <span className="sidebar__org-role">{roleLabel}</span>
+                </span>
+              </div>
+            )
           )}
 
           <nav className="sidebar__nav" aria-label={tShell("workspaceLabel")}>
@@ -129,9 +145,16 @@ export function Sidebar({
                     key={item.id}
                     item={item}
                     label={tNav(item.id)}
-                    disabledHint={tNav("needsAuditsHint")}
+                    disabledHint={
+                      item.comingSoon
+                        ? tNav("comingSoon")
+                        : tNav("needsAuditsHint")
+                    }
+                    soonLabel={tNav("comingSoon")}
                     active={isActive(item.href)}
-                    disabled={Boolean(item.needsAudits && !hasAudits)}
+                    disabled={Boolean(
+                      item.comingSoon || (item.needsAudits && !hasAudits),
+                    )}
                     iconOnly={iconOnly}
                     onNavigate={onNavigate}
                   />
@@ -248,6 +271,7 @@ function SidebarRow({
   item,
   label,
   disabledHint,
+  soonLabel,
   active,
   disabled,
   iconOnly,
@@ -256,6 +280,7 @@ function SidebarRow({
   item: NavItem;
   label: string;
   disabledHint: string;
+  soonLabel: string;
   active: boolean;
   disabled: boolean;
   iconOnly: boolean;
@@ -272,7 +297,10 @@ function SidebarRow({
         <Icon size={16} />
       </span>
       {!iconOnly && <span className="sidebar__item-label">{label}</span>}
-      {!iconOnly && item.badge && (
+      {!iconOnly && item.comingSoon && (
+        <span className="sidebar__item-badge">{soonLabel}</span>
+      )}
+      {!iconOnly && !item.comingSoon && item.badge && (
         <span className="sidebar__item-badge">{item.badge}</span>
       )}
     </>

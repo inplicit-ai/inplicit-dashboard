@@ -109,6 +109,10 @@
 
   /* Layout */
   --container-max: 1280px;
+  /* Shared max-width for every prompt/composer box (Launchpad, SplitAuthor
+     chat, RAG). ONE source of truth — never re-state composer widths ad-hoc;
+     wrap the composer in `.composer-shell` instead (see WHY-93). */
+  --composer-max: 48rem;
   --header-h: 64px;
   --shell-topbar-h: 56px;   /* the app shell's sticky topbar (.shell-topbar) */
   --tabs-h: 48px;
@@ -155,6 +159,11 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-card-hover: 0 6px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.06);
+  /* Single source of truth for the card frame border width. Every card surface
+     (.card, .card-link, .campaign-row, .rag__card, the React <Card> and
+     <MetricCard>) reads this token — never a per-component inline width.
+     Retune here to restyle every card frame at once. */
+  --border-card: 1px;
   --shadow-popover: 0 8px 28px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-elevation: 0 12px 32px rgba(0, 0, 0, 0.12);
   /* Tight 2px focus ring — the single legitimate accent signal on inputs. */
@@ -495,6 +504,15 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* Composer shell: the single, shared width contract for every prompt/composer
+   box (Launchpad hero, SplitAuthor chat, RAG). Wrap the composer in this class
+   instead of hand-coding `max-w-*` so all surfaces stay identical (WHY-93). */
+.composer-shell {
+  width: 100%;
+  max-width: var(--composer-max);
+  margin-inline: auto;
 }
 
 /* Center the work-area content at a comfortable reading width, matching the
@@ -933,7 +951,7 @@
 .card {
   position: relative;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-card) solid var(--color-border);
   border-radius: var(--radius-card);
   padding: var(--space-6);
   box-shadow: var(--shadow-card);   /* white-modernist: soft elevation in both themes. */
@@ -941,6 +959,17 @@
     border-color 0.18s var(--ease-spring),
     box-shadow 0.18s var(--ease-spring),
     transform 0.18s var(--ease-spring);
+}
+/* Consistent white-modernist hover for interactive card surfaces — a gentle
+   spring lift + the shared --shadow-card-hover. Opt in with `.card--interactive`
+   (the React <Card interactive>) so static info panels don't jump on hover. */
+.card--interactive { cursor: pointer; }
+.card--interactive:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .card--interactive:hover { transform: none; }
 }
 
 .card--compact { padding: var(--space-4); }
@@ -983,7 +1012,7 @@
 .card-link {
   display: block;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-card) solid var(--color-border);
   border-radius: var(--radius-card);
   padding: var(--space-6);
   box-shadow: var(--shadow-card);
@@ -2278,6 +2307,122 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   border-radius: var(--radius-sm);
 }
 
+/* ── Staff org switcher ──────────────────────────────────────────────────── */
+.sidebar__org-switch {
+  position: relative;
+  margin: 0 var(--space-3);
+  flex-shrink: 0;
+}
+/* Reuse the org block styling but as an interactive button. */
+.sidebar__org--switch {
+  width: 100%;
+  margin: 0;
+  cursor: pointer;
+  text-align: left;
+  appearance: none;
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+.sidebar__org--switch:hover {
+  background: var(--color-surface-3);
+}
+.sidebar__org--switch:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+.sidebar__org-switch-caret {
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+}
+
+.sidebar__org-menu {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-pop, var(--shadow-card));
+  max-height: 320px;
+  overflow-y: auto;
+}
+.sidebar__org-menu-heading {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+.sidebar__org-menu-note {
+  padding: var(--space-2);
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+}
+.sidebar__org-menu-note--error {
+  color: var(--color-danger, var(--color-text-secondary));
+}
+.sidebar__org-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sidebar__org-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-ui);
+  font-size: var(--text-caption);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+.sidebar__org-menu-item:hover {
+  background: var(--color-surface-2);
+}
+.sidebar__org-menu-item.is-current {
+  background: var(--color-surface-2);
+}
+.sidebar__org-menu-item-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar__org-menu-check {
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+.sidebar__org-menu-item--new {
+  margin-top: 2px;
+  border-top: 1px solid var(--color-border-subtle);
+  border-radius: 0 0 var(--radius-ui) var(--radius-ui);
+  padding-top: var(--space-2);
+  color: var(--color-text-secondary);
+}
+.sidebar__org-menu-new-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border: 1px dashed var(--color-border-subtle);
+  border-radius: var(--radius-ui);
+  color: var(--color-text-tertiary);
+}
+
 .sidebar__nav {
   flex: 1;
   overflow-y: auto;
@@ -2603,7 +2748,7 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   gap: var(--space-4);
   padding: var(--space-5) var(--space-6);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-card) solid var(--color-border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   transition:
@@ -2714,14 +2859,16 @@ a.spec-cell:hover { background: var(--color-surface-2); }
   align-items: stretch;
   padding: var(--space-4) var(--space-5);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-card) solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   transition: border-color 0.18s var(--ease-smooth), box-shadow 0.18s var(--ease-smooth);
 }
+/* Active state lifts to the shared card-hover elevation so the RAG card matches
+   the unified card surface standard (same --shadow-card-hover as .card / .card-link). */
 .rag__card:focus-within {
   border-color: var(--color-border-strong);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .rag__input {

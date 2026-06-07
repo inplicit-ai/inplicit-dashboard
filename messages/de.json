@@ -9,11 +9,13 @@
     "knowledgeChat": "Wissens-Chat",
     "vaults": "Kontext-Vaults",
     "integrations": "Integrationen",
+    "mcp": "MCP",
     "twin": "Digital Twin",
     "admin": "Admin",
     "organizations": "Organisationen",
     "team": "Team",
     "more": "Mehr",
+    "comingSoon": "Bald",
     "needsAuditsHint": "Verfügbar, sobald die erste Kampagne angelegt ist."
   },
   "shell": {
@@ -30,7 +32,16 @@
     "openMenu": "Menü öffnen",
     "userMenu": "Benutzermenü",
     "language": "Sprache",
-    "replayTour": "Tour erneut starten"
+    "replayTour": "Tour erneut starten",
+    "orgSwitcher": {
+      "trigger": "Organisation wechseln",
+      "heading": "Organisationen",
+      "current": "Aktuell",
+      "newOrg": "Neue Organisation",
+      "loading": "Wird geladen …",
+      "empty": "Keine Organisationen vorhanden",
+      "error": "Organisationen konnten nicht geladen werden"
+    }
   },
   "breadcrumb": {
     "home": "Start",
@@ -57,7 +68,13 @@
     "map": "Knowledge Map",
     "ask": "Fragen",
     "campaign": "Kampagne",
+    "interview": "Interview",
+    "record": "Eintrag",
     "role": "Rolle"
+  },
+  "insights": {
+    "comingSoonToggle": "Erweiterte Gruppierung",
+    "comingSoonBadge": "Demnächst"
   },
   "campaignChat": {
     "newChat": "Neuer Chat",
@@ -102,6 +119,18 @@
     "de": "Deutsch",
     "label": "Sprache"
   },
+  "settingsDialog": {
+    "title": "Einstellungen",
+    "description": "Darstellung und Sprache.",
+    "appearance": "Darstellung",
+    "themeLight": "Hell",
+    "themeDark": "Dunkel",
+    "themeSystem": "System",
+    "themeHint": "System folgt deiner Betriebssystem-Einstellung. Wird nur auf diesem Gerät gespeichert.",
+    "language": "Sprache",
+    "languageHint": "Gilt im gesamten Dashboard.",
+    "close": "Schließen"
+  },
   "placeholder": {
     "comingSoon": "Demnächst",
     "interviewsTitle": "Interviews",
@@ -131,8 +160,26 @@
       "placeholder": "z. B. Warum kündigen Mid-Market-Kunden nach dem Onboarding?",
       "cta": "Kampagne erstellen",
       "examplesLabel": "Beispiele",
+      "suggestionsLabel": "Vorschläge",
       "firstHint": "Das ist deine erste Kampagne — gib ein Lernziel ein, um zu starten.",
-      "creating": "Sitzung wird erstellt…"
+      "creating": "Sitzung wird erstellt…",
+      "themes": {
+        "prozesswissen": {
+          "label": "Prozesswissen",
+          "description": "Wie Abläufe wirklich funktionieren — inklusive Workarounds und Reibungspunkte.",
+          "prompt": "Wie laufen unsere Kernprozesse im Alltag wirklich ab — wo entstehen Reibung, Workarounds und ungenutztes Wissen?"
+        },
+        "operatives": {
+          "label": "Operatives Know-how",
+          "description": "Erfahrungswissen aus dem Tagesgeschäft, das selten dokumentiert ist.",
+          "prompt": "Welches operative Erfahrungswissen tragen unsere Teams im Tagesgeschäft, das nirgends dokumentiert ist?"
+        },
+        "innovationspotenziale": {
+          "label": "Innovationspotenziale",
+          "description": "Ungenutzte Chancen und Ideen aus Sicht der Beteiligten.",
+          "prompt": "Wo sehen unsere Mitarbeitenden ungenutzte Chancen, Ideen und Innovationspotenziale?"
+        }
+      }
     },
     "chat": {
       "title": "Setup-Assistent",
@@ -190,7 +237,14 @@
       "parentQuestion": "Deine Frage",
       "background": "Hintergrund",
       "backgroundPlaceholder": "Kontext, den Assistent und Interviewer kennen sollten…",
+      "context": "Unternehmenskontext",
+      "contextHint": "Der gewählte Kontext-Vault liefert Assistent und Interviewer das Firmenwissen.",
+      "contextNone": "Kein Kontext-Vault",
+      "contextEmpty": "Noch keine Kontext-Vaults — lege zunächst einen unter „Vaults“ an.",
+      "researchMethod": "Forschungsweise",
+      "researchMethodHint": "Induktiv geht offen auf Entdeckung; deduktiv prüft vorhandene Hypothesen.",
       "successCriteria": "Erfolgskriterien",
+      "successEmpty": "Noch keine Erfolgskriterien — lege im Chat fest, was Erfolg bedeutet.",
       "inductive": "Induktiv (offene Entdeckung)",
       "deductive": "Deduktiv (hypothesengeführt)",
       "questions": "Zu beantwortende Fragen",
@@ -437,5 +491,32 @@
         "body": "Das war die Tour. Du kannst sie jederzeit über die Seitenleiste erneut starten. Bereit für deine erste Kampagne?"
       }
     }
+  },
+  "login": {
+    "brandAlt": "Inplicit",
+    "title": "Willkommen zurück",
+    "subtitleMagic": "Wir schicken dir einen sicheren Einmal-Link.",
+    "subtitlePassword": "Melde dich mit deinem Passwort an.",
+    "modeMagic": "Magic Link",
+    "modePassword": "Passwort",
+    "modeSwitchLabel": "Anmeldemethode",
+    "emailLabel": "E-Mail-Adresse",
+    "emailPlaceholder": "du@firma.de",
+    "passwordLabel": "Passwort",
+    "passwordPlaceholder": "••••••••",
+    "showPassword": "Passwort anzeigen",
+    "hidePassword": "Passwort verbergen",
+    "submitMagic": "Magic Link senden",
+    "submitPassword": "Anmelden",
+    "devLinkLabel": "Dev-Link",
+    "footer": "Inplicit AI · Enterprise-Interviews"
+  },
+  "feedback": {
+    "trigger": "Feedback",
+    "title": "Feedback geben",
+    "description": "Sag uns, was auf dieser Seite gut funktioniert oder besser sein könnte.",
+    "placeholder": "Dein Feedback …",
+    "cancel": "Abbrechen",
+    "submit": "Senden"
   }
 }

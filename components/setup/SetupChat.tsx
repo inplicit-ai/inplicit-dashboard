@@ -136,7 +136,8 @@ export function SetupChat({
 
       {/* Composer — pinned, never scrolls away. */}
       <ChatComposerBar className="px-4 py-3 sm:px-5 sm:py-4">
-        <div className="mx-auto w-full max-w-3xl">
+        {/* composer-shell: shared prompt-box width (WHY-93). */}
+        <div className="composer-shell">
           <PromptInput
             value={value}
             onValueChange={setValue}

@@ -8,6 +8,7 @@ import { StatBand } from "@/components/ui/stat-band";
 import { CardGrid } from "@/components/ui/card-grid";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { InsightsComingSoonToggle } from "@/components/InsightsComingSoonToggle";
 
 export default async function InsightsPage({
   params,
@@ -24,6 +25,10 @@ export default async function InsightsPage({
     error = e;
   }
 
+  // WHY-95: rank the most important insights first. A complete triad
+  // (problem + idea + chance) and higher extraction confidence rank higher.
+  const ranked = [...insights].sort((a, b) => rankScore(b) - rankScore(a));
+
   const counts = {
     total: insights.length,
     withSolution: insights.filter((i) => i.human_solution).length,
@@ -32,10 +37,8 @@ export default async function InsightsPage({
 
   return (
     <div className="surface-bleed">
-      <PageHeader
-        title="Insights"
-        subtitle="VSE-Triaden — Problem · Lösungsidee · Business-Chance — extrahiert aus den abgeschlossenen Interviews."
-      />
+      {/* WHY-95: subtitle removed to declutter the tab. */}
+      <PageHeader title="Insights" />
 
       {!!error && (
         <div className="mb-6">
@@ -60,9 +63,13 @@ export default async function InsightsPage({
         />
       ) : (
         <>
-          <SectionHeading title="Insights" count={counts.total} />
+          <SectionHeading
+            title="Insights"
+            count={counts.total}
+            action={<InsightsComingSoonToggle />}
+          />
           <CardGrid>
-            {insights.map((i, idx) => (
+            {ranked.map((i, idx) => (
               <InsightCard key={i.id} insight={i} index={idx} />
             ))}
           </CardGrid>
@@ -72,6 +79,21 @@ export default async function InsightsPage({
   );
 }
 
+/** Human-readable label for a VSE phase tag. "open" → "open discovery". */
+function phaseLabel(phase: string): string {
+  return phase === "open" ? "open discovery" : phase;
+}
+
+/**
+ * Rank score for ordering insights — a complete Problem · Idea · Chance triad
+ * weighs most, then extraction confidence. WHY-95.
+ */
+function rankScore(i: VseInsight): number {
+  const triad = (i.human_solution ? 1 : 0) + (i.business_opportunity ? 1 : 0);
+  const confidence = typeof i.confidence === "number" ? i.confidence : 0;
+  return triad * 10 + confidence;
+}
+
 function InsightCard({
   insight,
   index,
@@ -79,10 +101,6 @@ function InsightCard({
   insight: VseInsight;
   index: number;
 }) {
-  const conf =
-    typeof insight.confidence === "number"
-      ? `${Math.round(insight.confidence * 100)}%`
-      : null;
   const ideaLabel = insight.origin_solution === "AI" ? "Idee (AI)" : "Idee";
 
   return (
@@ -93,15 +111,17 @@ function InsightCard({
             <span className="badge badge--knowledge">{insight.department}</span>
           )}
           {insight.phase && (
-            <span className="badge">{insight.phase}</span>
+            <span className="badge">{phaseLabel(insight.phase)}</span>
           )}
         </div>
+        {/* WHY-95: percentage removed; keep only the rank index. */}
         <span className="text-[length:var(--text-meta)] tabular-nums text-fg-subtle">
-          {conf ? `${conf} · ` : ""}#{index + 1}
+          #{index + 1}
         </span>
       </div>
 
-      <div className="flex flex-col gap-4">
+      {/* WHY-95: Problem / Idea / Chance separated by hairline dividers. */}
+      <div className="flex flex-col divide-y divide-line-subtle">
         <TriadCell tone="pain" label="Problem" body={insight.problem_statement} />
         <TriadCell tone="gap" label={ideaLabel} body={insight.human_solution} />
         <TriadCell
@@ -129,8 +149,10 @@ function TriadCell({
   body?: string | null;
   tone: "pain" | "gap" | "opportunity";
 }) {
+  // WHY-95: clearer section heading + padding so the hairline divider reads
+  // as a real separator between Problem / Idea / Chance.
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0">
       <span className={`badge ${CELL_TONE[tone]} w-fit`}>{label}</span>
       <p
         className={

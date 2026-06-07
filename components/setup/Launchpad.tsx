@@ -5,24 +5,31 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { motion, useReducedMotion } from "framer-motion";
 import { Composer } from "@/components/ui/composer";
-import { StatusDisc } from "@/components/ui/status-disc";
 import { type Locale } from "@/lib/api";
 import { clientApi } from "@/lib/client-api";
+
+/**
+ * The fixed research-goal themes surfaced as suggestion cards (WHY-104). Each
+ * theme seeds the composer with a starter prompt the user can refine. i18n
+ * lives under `setup.launchpad.themes.<id>` (label + prompt).
+ */
+const SUGGESTION_THEMES = [
+  "prozesswissen",
+  "operatives",
+  "innovationspotenziale",
+] as const;
 
 /**
  * Prompt launchpad (doc 03 §1.1) — a calm claude.ai-style entry screen.
  *
  * Centered hero: a big confident greeting + one muted subtitle, then the
- * signature {@link Composer} prompt box (rounded box, send control, org-grounded
- * suggestion chips below). A quiet vertical stage list (context → catalog →
- * review → launch) sits on the left from lg up as gentle progress chrome — the
- * first stage carries the lone live disc. On send: create a draft, route to the
- * split author. Empty org → neutral i18n hint instead of chips.
+ * signature {@link Composer} prompt box. Below it, "Vorschläge" render as clean
+ * theme cards (Prozesswissen · operatives Know-how · Innovationspotenziale) —
+ * picking one seeds the composer (WHY-104). On send: create a draft, route to
+ * the split author. The create-flow step bar (SetupSteps) lives in the layout.
  */
-export function Launchpad({ suggestions }: { suggestions: string[] }) {
+export function Launchpad() {
   const t = useTranslations("setup.launchpad");
-  const tc = useTranslations("setup.catalog");
-  const tr = useTranslations("setup.review");
   const router = useRouter();
   const locale = useLocale();
   const reduceMotion = useReducedMotion();
@@ -47,87 +54,63 @@ export function Launchpad({ suggestions }: { suggestions: string[] }) {
     }
   }
 
-  // The setup journey as calm stages — the first is the lone live pulse.
-  const stages: { label: string; live?: boolean }[] = [
-    { label: t("eyebrow"), live: true },
-    { label: tc("title") },
-    { label: tr("eyebrow") },
-    { label: tr("launch") },
-  ];
-
   return (
     <motion.div
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.2, 0.65, 0.3, 0.9] }}
-      className="mx-auto grid w-full max-w-[920px] grid-cols-1 gap-10 py-16 lg:grid-cols-[200px_1fr] lg:gap-14 lg:py-24"
+      className="mx-auto flex w-full max-w-[720px] flex-col py-12 lg:py-16"
     >
-      {/* ── Left rail — quiet setup stages ──────────────────────────────── */}
-      <aside className="hidden lg:block lg:pt-2">
-        <p className="mb-5 text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
-          {t("eyebrow")}
+      <h1 className="mb-3 text-[length:var(--text-display)] font-semibold leading-[1.08] tracking-[-0.022em] text-fg sm:text-4xl">
+        {t("title")}
+      </h1>
+      <p className="mb-8 max-w-[60ch] text-[length:var(--text-body-lg)] text-fg-muted">
+        {t("subtitle")}
+      </p>
+
+      {/* composer-shell: shared prompt-box width (WHY-93). Org-grounded chips
+          are replaced by the theme suggestion cards below (WHY-104). */}
+      <Composer
+        className="composer-shell"
+        value={value}
+        onValueChange={setValue}
+        onSubmit={() => create(value)}
+        isLoading={creating}
+        disabled={creating}
+        placeholder={t("placeholder")}
+      />
+
+      {error ? (
+        <p className="mt-3 text-[length:var(--text-body)] text-danger" role="alert">
+          {error}
         </p>
-        <ol className="flex flex-col gap-4">
-          {stages.map((s, i) => (
-            <li key={s.label} className="flex items-center gap-3">
-              <StatusDisc state={s.live ? "live" : "idle"} />
-              <span className={stageClass(s.live)}>
-                <span className="tabular-nums text-fg-subtle">
-                  {String(i + 1).padStart(2, "0")}
-                </span>{" "}
-                {s.label}
+      ) : null}
+
+      {/* ── Vorschläge — clean theme cards (WHY-104) ─────────────────────── */}
+      <p className="mb-3 mt-8 text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
+        {t("suggestionsLabel")}
+      </p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {SUGGESTION_THEMES.map((id) => {
+          const prompt = t(`themes.${id}.prompt`);
+          return (
+            <button
+              key={id}
+              type="button"
+              disabled={creating}
+              onClick={() => setValue(prompt)}
+              className="flex flex-col gap-1.5 rounded-card border border-line bg-surface p-4 text-left shadow-card transition-colors hover:border-line-strong hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+            >
+              <span className="text-[length:var(--text-body)] font-semibold text-fg">
+                {t(`themes.${id}.label`)}
               </span>
-            </li>
-          ))}
-        </ol>
-      </aside>
-
-      {/* ── Right track — hero + composer ───────────────────────────────── */}
-      <div className="flex flex-col">
-        <p className="mb-4 text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle lg:hidden">
-          {t("eyebrow")}
-        </p>
-        <h1 className="mb-3 text-[length:var(--text-display)] font-semibold leading-[1.08] tracking-[-0.022em] text-fg sm:text-4xl">
-          {t("title")}
-        </h1>
-        <p className="mb-8 max-w-[60ch] text-[length:var(--text-body-lg)] text-fg-muted">
-          {t("subtitle")}
-        </p>
-
-        <Composer
-          value={value}
-          onValueChange={setValue}
-          onSubmit={() => create(value)}
-          isLoading={creating}
-          disabled={creating}
-          placeholder={t("placeholder")}
-          suggestions={
-            suggestions.length > 0
-              ? suggestions.map((s) => ({ label: s, value: s }))
-              : undefined
-          }
-          onSuggestionSelect={(s) => create(s.value ?? s.label)}
-        />
-
-        {error ? (
-          <p className="mt-3 text-[length:var(--text-body)] text-danger" role="alert">
-            {error}
-          </p>
-        ) : null}
-
-        {suggestions.length === 0 ? (
-          <p className="mt-4 text-[length:var(--text-body)] text-fg-subtle">
-            {t("firstHint")}
-          </p>
-        ) : null}
+              <span className="text-[length:var(--text-meta)] leading-snug text-fg-muted">
+                {t(`themes.${id}.description`)}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </motion.div>
   );
-}
-
-/** Stage label class — weight + ink for the live stage only. */
-function stageClass(live?: boolean): string {
-  return live
-    ? "text-[13px] font-semibold text-fg"
-    : "text-[13px] font-normal text-fg-muted";
 }

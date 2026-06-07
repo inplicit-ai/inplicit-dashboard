@@ -10,6 +10,7 @@ import type {
   CampaignDraft,
   SetupMessage,
   SetupToolCall,
+  Vault,
 } from "@/lib/api";
 import { applyPatch, validateForLaunch } from "@/lib/setup/draftReducer";
 import { useSetupStream } from "@/lib/setup/useSetupStream";
@@ -23,6 +24,11 @@ import { Catalog } from "./Catalog";
  *   - user:  catalog field edits → applyPatch (optimistic) + PATCH /setup-drafts
  *
  * A simple drag handle resizes the panes; stacks on mobile.
+ *
+ * WHY-104 scope note: this ticket reworks the create-flow CHROME (step bar,
+ * suggestion cards, catalog framing) only. The "smart configure chatbot" — the
+ * EDDA brain that drives this left pane — is explicitly OUT OF SCOPE here and is
+ * owned by the separate EDDA epic; the existing chat is left untouched.
  */
 export function SplitAuthor({
   sessionId,
@@ -30,12 +36,14 @@ export function SplitAuthor({
   initialRevision,
   initialMessages,
   orgName,
+  vaults,
 }: {
   sessionId: string;
   initialDraft: CampaignDraft;
   initialRevision: number;
   initialMessages: SetupMessage[];
   orgName?: string;
+  vaults?: Vault[];
 }) {
   const router = useRouter();
   const tReview = useTranslations("setup.review");
@@ -226,7 +234,7 @@ export function SplitAuthor({
         {/* Right — campaign catalog + launch bar (50% on md+) */}
         <div className="flex min-h-0 flex-1 flex-col gap-3 md:basis-1/2">
           <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto pr-0.5">
-            <Catalog draft={draft} onPatch={onPatch} recentlyTouched={touched} orgName={orgName} />
+            <Catalog draft={draft} onPatch={onPatch} recentlyTouched={touched} orgName={orgName} vaults={vaults} />
           </div>
           {/* Launch bar — the readiness checklist + the near-black primary CTA. */}
           <div className="flex shrink-0 flex-col gap-3 rounded-card border border-line bg-surface px-4 py-3 shadow-card sm:flex-row sm:items-center sm:justify-between">

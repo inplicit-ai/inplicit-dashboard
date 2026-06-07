@@ -81,10 +81,13 @@ export function MetricCard({
   )
 
   const baseClass = cn(
-    "flex flex-col rounded-card border border-line bg-card p-6 text-card-foreground shadow-card transition-[transform,box-shadow,border-color] duration-200 ease-[var(--ease-spring)]",
-    // CSS hover lift — equivalent to the old framer spring, honors reduced motion.
+    // Hairline frame whose width comes from the shared --border-card token (same
+    // as the React <Card>) — never a bare/hardcoded width. Soft elevation + the
+    // unified card-hover lift so every card surface behaves identically.
+    "flex flex-col rounded-card border-[length:var(--border-card)] border-solid border-line bg-card p-6 text-card-foreground shadow-card transition-[transform,box-shadow,border-color] duration-200 ease-[var(--ease-spring)]",
+    // CSS hover lift — matches <Card>'s -translate-y-0.5, honors reduced motion.
     interactive &&
-      "cursor-pointer hover:-translate-y-1 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0",
+      "cursor-pointer hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0",
     className,
   )
 

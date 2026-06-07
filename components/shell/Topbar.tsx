@@ -11,11 +11,13 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { buildBreadcrumb, type CrumbContext } from "@/lib/shell/breadcrumb-map";
+import { useCrumbContext } from "@/lib/shell/crumb-context";
 import { matchFlow } from "@/lib/shell/flows";
 import type { SidebarState } from "@/lib/shell/sidebar-policy";
 import { Stepper } from "@/components/shell/Stepper";
 import { SidebarTrigger } from "@/components/shell/SidebarTrigger";
 import { LocaleSwitcher } from "@/components/shell/LocaleSwitcher";
+import { FeedbackButton } from "@/components/shell/FeedbackButton";
 
 /**
  * Sticky, step-aware topbar (02 §4 / design-contract §9). Always answers
@@ -39,7 +41,11 @@ export function Topbar({
   userSlot?: React.ReactNode;
 }) {
   const tBreadcrumb = useTranslations("breadcrumb");
-  const crumbs = buildBreadcrumb(pathname, crumbContext);
+  // Live dynamic labels registered by descendant pages (e.g. a campaign-detail
+  // page supplies its real name) take precedence over the static prop so a
+  // campaign id resolves to its name instead of the generic "Kampagne" crumb.
+  const liveCtx = useCrumbContext();
+  const crumbs = buildBreadcrumb(pathname, { ...crumbContext, ...liveCtx });
   const flow = matchFlow(pathname);
 
   const label = (key: string, isLiteral?: boolean) =>
@@ -51,6 +57,10 @@ export function Topbar({
         {sidebarState !== "expanded" && (
           <SidebarTrigger state={sidebarState} onToggle={onToggleSidebar} />
         )}
+        {/* WHY-104: suppress the breadcrumb inside a multi-step flow (e.g. the
+            create-campaign flow) — the flow's own step bar is the single
+            "where am I?" there, so the top row stays uncluttered. */}
+        {!flow && (
         <Breadcrumb
           data-tour="topbar-breadcrumb"
           className="min-w-0 overflow-hidden"
@@ -84,15 +94,21 @@ export function Topbar({
             })}
           </BreadcrumbList>
         </Breadcrumb>
+        )}
       </div>
 
-      {flow && (
+      {/* WHY-104: the create-campaign ("setup") flow renders its own
+          CampaignTabs-style step bar in the work area (SetupSteps), so the
+          topbar stepper is suppressed there to avoid a duplicated indicator.
+          Any other declared flow still uses the centered topbar stepper. */}
+      {flow && flow.id !== "setup" && (
         <div className="shell-topbar__center">
           <Stepper flow={flow} pathname={pathname} />
         </div>
       )}
 
       <div className="shell-topbar__end">
+        <FeedbackButton />
         <LocaleSwitcher />
         {userSlot}
       </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { CheckCircle2, Eye, EyeOff, Lock, Mail, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,11 +19,18 @@ interface LoginCardProps {
   devLink?: string;
 }
 
+type Mode = "magic" | "password";
+
 /**
  * White-modernist auth — a single calm centered card on the off-white canvas
  * with a faint accent wash behind it. Big confident sans greeting, one muted
- * supporting line, a clean form, and a near-black primary button. Amber is
- * reserved for the input focus ring; status banners use semantic soft tints.
+ * supporting line, a clean segmented toggle between Magic-Link (default) and
+ * Password, then the form and a near-black primary button. Amber is reserved
+ * for the active toggle segment + the input focus ring; status banners use
+ * semantic soft tints.
+ *
+ * Presentation only — the `signIn` server action and the magic-link / password
+ * POST flow are unchanged (email + optional password fields keep their names).
  */
 export function LoginCard({
   signIn,
@@ -31,8 +39,9 @@ export function LoginCard({
   message,
   devLink,
 }: LoginCardProps) {
+  const t = useTranslations("login");
   const [showPassword, setShowPassword] = useState(false);
-  const [mode, setMode] = useState<"magic" | "password">("magic");
+  const [mode, setMode] = useState<Mode>("magic");
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-12">
@@ -49,12 +58,12 @@ export function LoginCard({
       <div className="relative flex w-full max-w-[420px] flex-col items-center gap-10">
         <Link
           href="/campaigns"
-          aria-label="Inplicit"
+          aria-label={t("brandAlt")}
           className="opacity-90 transition-opacity hover:opacity-100"
         >
           <Image
             src="/logo.svg"
-            alt="Inplicit"
+            alt={t("brandAlt")}
             width={110}
             height={22}
             priority
@@ -62,29 +71,37 @@ export function LoginCard({
           />
         </Link>
 
-        <Card className="w-full p-8 sm:p-9">
+        <Card className="w-full gap-0 p-8 sm:p-9">
           <h1 className="text-[length:var(--text-display)] font-semibold leading-[1.15] tracking-[-0.02em] text-fg">
-            Willkommen zurück
+            {t("title")}
           </h1>
           <p className="mt-2 text-[length:var(--text-body-lg)] text-fg-muted">
-            {mode === "magic"
-              ? "Wir schicken dir einen sicheren Einmal-Link."
-              : "Melde dich mit deinem Passwort an."}
+            {mode === "magic" ? t("subtitleMagic") : t("subtitlePassword")}
           </p>
 
+          {/* Segmented mode toggle — the clear, explicit switch between the two
+              sign-in methods. Active segment carries the single amber signal. */}
+          <ModeToggle
+            mode={mode}
+            onChange={setMode}
+            label={t("modeSwitchLabel")}
+            magicLabel={t("modeMagic")}
+            passwordLabel={t("modePassword")}
+          />
+
           {error && (
-            <div className="mt-6">
+            <div className="mt-5">
               <StatusBanner type="err" message={error} />
             </div>
           )}
           {message && (
-            <div className="mt-6">
+            <div className="mt-5">
               <StatusBanner type="ok">
                 <p className="text-fg">{message}</p>
                 {devLink && (
                   <div className="mt-3 border-t border-line-subtle pt-3">
                     <p className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
-                      Dev-Link
+                      {t("devLinkLabel")}
                     </p>
                     <a
                       href={devLink}
@@ -98,9 +115,9 @@ export function LoginCard({
             </div>
           )}
 
-          <form action={signIn} className="mt-7 space-y-4">
+          <form action={signIn} className="mt-6 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">E-Mail-Adresse</Label>
+              <Label htmlFor="email">{t("emailLabel")}</Label>
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
                 <Input
@@ -109,7 +126,7 @@ export function LoginCard({
                   type="email"
                   required
                   defaultValue={defaultEmail ?? ""}
-                  placeholder="du@firma.de"
+                  placeholder={t("emailPlaceholder")}
                   autoComplete="email"
                   className="pl-9"
                 />
@@ -118,21 +135,21 @@ export function LoginCard({
 
             {mode === "password" && (
               <div className="space-y-1.5">
-                <Label htmlFor="password">Passwort</Label>
+                <Label htmlFor="password">{t("passwordLabel")}</Label>
                 <div className="relative">
                   <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
                   <Input
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder={t("passwordPlaceholder")}
                     autoComplete="current-password"
                     className="pl-9 pr-10"
                   />
                   <button
                     type="button"
                     aria-label={
-                      showPassword ? "Passwort verbergen" : "Passwort anzeigen"
+                      showPassword ? t("hidePassword") : t("showPassword")
                     }
                     onClick={() => setShowPassword((v) => !v)}
                     className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-sm p-1.5 text-fg-subtle transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -148,30 +165,67 @@ export function LoginCard({
             )}
 
             <Button type="submit" size="lg" className="mt-1 w-full">
-              {mode === "magic" ? "Magic Link senden" : "Anmelden"}
+              {mode === "magic" ? t("submitMagic") : t("submitPassword")}
             </Button>
           </form>
-
-          {/* Mode switch as a quiet text link, not a second button. */}
-          <div className="mt-6 border-t border-line-subtle pt-4">
-            <button
-              type="button"
-              onClick={() =>
-                setMode((m) => (m === "magic" ? "password" : "magic"))
-              }
-              className="text-[length:var(--text-meta)] text-fg-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {mode === "magic"
-                ? "Stattdessen mit Passwort anmelden →"
-                : "Stattdessen Magic Link senden →"}
-            </button>
-          </div>
         </Card>
 
         <p className="text-center text-[length:var(--text-caption)] text-fg-subtle">
-          Inplicit AI · Enterprise-Interviews
+          {t("footer")}
         </p>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Segmented control toggling the two sign-in methods. A single rounded track on
+ * surface-2; the active segment lifts to a white pill with the amber sign.
+ * `radiogroup` semantics keep it keyboard- and screen-reader-friendly.
+ */
+function ModeToggle({
+  mode,
+  onChange,
+  label,
+  magicLabel,
+  passwordLabel,
+}: {
+  mode: Mode;
+  onChange: (mode: Mode) => void;
+  label: string;
+  magicLabel: string;
+  passwordLabel: string;
+}) {
+  const options: { value: Mode; label: string }[] = [
+    { value: "magic", label: magicLabel },
+    { value: "password", label: passwordLabel },
+  ];
+  return (
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className="mt-6 grid grid-cols-2 gap-1 rounded-ui border border-line-subtle bg-surface-2 p-1"
+    >
+      {options.map((opt) => {
+        const active = mode === opt.value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => onChange(opt.value)}
+            className={cn(
+              "rounded-sm px-3 py-1.5 text-[length:var(--text-meta)] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              active
+                ? "bg-surface text-accent shadow-sm"
+                : "text-fg-muted hover:text-fg",
+            )}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
