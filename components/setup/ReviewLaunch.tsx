@@ -1,71 +1,92 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, UserPlus, X as XIcon, Building2, Pencil } from "lucide-react";
+import { ArrowLeft, CheckCircle2 as CheckIcon, AlertCircle, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StatBand, type StatBandCell } from "@/components/ui/stat-band";
-import { EvidenceTree, type EvidenceNode } from "@/components/ui/agent-list";
 import { PageHeader } from "@/components/ui/page-header";
-import { SectionHeading } from "@/components/ui/section-heading";
+import { DataChip } from "@/components/ui/data-chip";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle2 as CheckIcon, AlertCircle } from "lucide-react";
-import { DataChip } from "@/components/ui/data-chip";
-import { type CampaignDraft, type Vault, type Person } from "@/lib/api";
+import { type CampaignDraft, type Vault, type SetupToolCall } from "@/lib/api";
 import { clientApi } from "@/lib/client-api";
-import { validateForLaunch } from "@/lib/setup/draftReducer";
+import { applyPatch, validateForLaunch } from "@/lib/setup/draftReducer";
+import { Catalog } from "./Catalog";
+
+/** Anchor id for the People section, so the launch hint can scroll to it. */
+const PEOPLE_ANCHOR = "review-people";
 
 /**
- * Review + launch (doc 03 §8) — a crisp white-modernist confirmation screen.
+ * Review + launch (doc 03 §8) — the Prüfen step.
  *
- *   1. PageHeader     — the calm review title + muted subtitle
- *   2. StatBand       — type · duration · language · mode
- *   3. Two-column grid:
- *        Left  — Goals card + Delivery card (with inline people editor)
- *        Right — Launch card (gates + CTA); top edge aligns with Goals card
- *   4. Context vault selector (always visible — select or confirm)
+ * The whole catalog that the user configured is shown here as the full, EDITABLE
+ * surface ({@link Catalog}): every field stays writable, persisting through the
+ * exact same path the author screen uses (optimistic `applyPatch` + a
+ * revision-tracked `PATCH /setup-drafts`, with conflict re-fetch). Alongside it
+ * sits a sticky launch panel — the validation gates + the terminal launch CTA.
+ *
+ * Layout: editable catalog as the main column, a sticky launch aside on the
+ * right (validation gates → "Kampagne starten"). Participants are part of the
+ * catalog (People section); when none are added the launch panel surfaces a
+ * gentle hint that scrolls the participant editor into view.
  */
 export function ReviewLaunch({
   draftId,
-  draft,
+  draft: initialDraft,
+  initialRevision,
+  orgName,
   vaults = [],
 }: {
   draftId: string;
   draft: CampaignDraft;
+  initialRevision?: number;
+  orgName?: string;
   vaults?: Vault[];
 }) {
   const t = useTranslations("setup.review");
-  const tc = useTranslations("setup.catalog");
   const router = useRouter();
   const reduceMotion = useReducedMotion();
+
+  const [draft, setDraft] = useState<CampaignDraft>(initialDraft);
+  const revRef = useRef<number>(initialRevision ?? 0);
   const [launching, setLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [people, setPeople] = useState<Person[]>(draft.people ?? []);
-  // Default: pre-select the first available vault if none was explicitly chosen.
-  const defaultVaultId = draft.contextVaultId ?? vaults[0]?.id;
-  const [selectedVaultId, setSelectedVaultId] = useState<string | undefined>(defaultVaultId);
 
-  // Auto-save the default vault to the draft on first render (if not already set).
-  useEffect(() => {
-    if (!draft.contextVaultId && vaults[0]?.id) {
-      clientApi.setup.patchDraft(draftId, {
-        patch: { tool: "set_context_vault", args: { vaultId: vaults[0].id } },
-      }).catch(() => {/* ignore — UI still shows it selected */});
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const peopleCount = people.length;
+  // User-originated catalog edit: optimistic local apply + revision-tracked
+  // persist. Mirrors SplitAuthor.onPatch exactly — only the revision is updated
+  // from the response (never the full draft, which would race fast typing); a
+  // conflict/failure re-fetches authoritative state.
+  const onPatch = useCallback(
+    (call: SetupToolCall) => {
+      setDraft((d) => applyPatch(d, call));
+      clientApi.setup
+        .patchDraft(draftId, { patch: call, base_rev: revRef.current })
+        .then((res) => {
+          revRef.current = res.revision;
+        })
+        .catch(() => {
+          clientApi.setup
+            .getSession(draftId)
+            .then((s) => {
+              revRef.current = s.revision;
+              setDraft(s.config);
+            })
+            .catch(() => {});
+        });
+    },
+    [draftId],
+  );
+
   const reasons = validateForLaunch(draft);
+  const peopleCount = draft.people?.length ?? 0;
   // People are required to launch (can't send invites without recipients).
   const blocked = reasons.length > 0 || peopleCount === 0;
-  const goals = draft.goals ?? [];
 
   async function launch() {
     if (blocked) return;
@@ -95,11 +116,9 @@ export function ReviewLaunch({
     }
   }
 
-  async function saveVault(vaultId: string) {
-    setSelectedVaultId(vaultId || undefined);
-    await clientApi.setup.patchDraft(draftId, {
-      patch: { tool: "set_context_vault", args: { vaultId: vaultId || null } },
-    });
+  function scrollToPeople() {
+    const el = document.getElementById(PEOPLE_ANCHOR);
+    el?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
   }
 
   const reveal = (delay: number) =>
@@ -111,249 +130,111 @@ export function ReviewLaunch({
           transition: { duration: 0.3, delay, ease: [0.2, 0.65, 0.3, 0.9] as const },
         };
 
-  const specCells: StatBandCell[] = [
-    {
-      label: tc("interviewType"),
-      value: draft.interviewType === "chat" ? tc("chatType") : tc("voice"),
-    },
-    { label: tc("duration"), value: `${draft.durationMin ?? 25} ${tc("minutes")}` },
-    {
-      label: tc("language"),
-      value: `${(draft.language?.default ?? "de").toUpperCase()}${
-        draft.language?.allowSwitch ? " ⇄" : ""
-      }`,
-    },
-    {
-      label: tc("successCriteria"),
-      value:
-        draft.successCriteria?.mode === "deductive"
-          ? tc("deductive").split(" ")[0]
-          : tc("inductive").split(" ")[0],
-    },
-  ];
-
-  const goalNodes: EvidenceNode[] = goals.map((g, i) => ({
-    id: g.id,
-    kind: "insight",
-    status: "done",
-    label: <span className="text-fg">{g.text}</span>,
-    meta: (
-      <span className="ml-auto shrink-0 tabular-nums text-fg-subtle">
-        {String(i + 1).padStart(2, "0")}
-      </span>
-    ),
-  }));
-
-  const selectedVault = vaults.find((v) => v.id === selectedVaultId);
-
   return (
-    <div className="mx-auto flex max-w-[1040px] flex-col gap-8">
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-8">
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <motion.div {...reveal(0)}>
         <PageHeader title={t("title")} subtitle={t("subtitle")} className="mb-0" />
       </motion.div>
 
-      {/* ── Essentials readout band ──────────────────────────────────────── */}
-      <motion.section {...reveal(0.04)} className="flex flex-col gap-4">
-        <SectionHeading title={t("essentials")} className="mb-0" />
-        <StatBand cells={specCells} />
-      </motion.section>
+      {/* ── Catalog (editable) + sticky launch aside ─────────────────────── */}
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+        {/* Main — the full editable catalog (same surface as the author step) */}
+        <motion.div {...reveal(0.05)} className="min-w-0">
+          <Catalog
+            draft={draft}
+            onPatch={onPatch}
+            orgName={orgName}
+            vaults={vaults}
+            peopleAnchorId={PEOPLE_ANCHOR}
+          />
+        </motion.div>
 
-      {/* ── Main two-column grid ─────────────────────────────────────────── */}
-      {/* Left: Goals + Delivery. Right: Kontext + Launch (stacked). */}
-      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
+        {/* Aside — sticky launch panel (gates + CTA) */}
+        <motion.aside {...reveal(0.1)} className="lg:sticky lg:top-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
+                {t("launchpad")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-5">
+              {/* Empty-participants hint — gentle, links to the People editor */}
+              {peopleCount === 0 && (
+                <button
+                  type="button"
+                  onClick={scrollToPeople}
+                  className="flex items-start gap-2.5 rounded-card border border-warning/40 bg-warning/5 px-3 py-2.5 text-left transition-colors hover:border-warning/60"
+                >
+                  <Users size={15} className="mt-0.5 shrink-0 text-warning" aria-hidden />
+                  <span className="text-[length:var(--text-body-sm)] text-fg">
+                    {t("advisoryNoPeople")}
+                  </span>
+                </button>
+              )}
 
-        {/* Left — goals + delivery (Zielgruppe & Teilnehmer) */}
-        <div className="flex flex-col gap-6 lg:col-span-2">
-          {/* Goals card — always shown; empty state if no goals defined */}
-          <motion.div {...reveal(0.07)}>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-baseline gap-2 text-[length:var(--text-title)] tracking-[-0.015em]">
-                  {tc("goals")}
-                  {goals.length > 0 && (
-                    <span className="text-[length:var(--text-meta)] font-normal tabular-nums text-fg-subtle">
-                      {goals.length}
-                    </span>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {goals.length > 0 ? (
-                  <EvidenceTree nodes={goalNodes} defaultExpandedDepth={0} />
-                ) : (
-                  <p className="flex items-center gap-2 text-[13px] text-danger">
-                    <AlertCircle size={14} className="shrink-0" aria-hidden />
-                    Keine Kampagnenziele definiert
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
+              <div className="flex flex-col gap-3">
+                <p className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
+                  {t("checklist")}
+                </p>
+                <ul className="flex flex-col gap-2.5">
+                  <Gate
+                    ok={!reasons.includes("no_goals")}
+                    label={t("gates.no_goals")}
+                    okLabel={t("gatesOk.no_goals")}
+                  />
+                  <Gate
+                    ok={!reasons.includes("no_success_criteria")}
+                    label={t("gates.no_success_criteria")}
+                    okLabel={t("gatesOk.no_success_criteria")}
+                  />
+                  <Gate
+                    ok={!reasons.includes("bad_duration")}
+                    label={t("gates.bad_duration")}
+                    okLabel={t("gatesOk.bad_duration")}
+                  />
+                  <Gate
+                    ok={!reasons.includes("no_interview_type")}
+                    label={t("gates.no_interview_type")}
+                    okLabel={t("gatesOk.no_interview_type")}
+                  />
+                  {/* Blocking: launch requires recipients */}
+                  <Gate
+                    ok={peopleCount > 0}
+                    label={t("gatePeople")}
+                    okLabel={t("gatePeopleOk", { count: peopleCount })}
+                    blocking
+                    onClick={peopleCount === 0 ? scrollToPeople : undefined}
+                  />
+                </ul>
+              </div>
 
-          {/* Delivery card — audience + people editor */}
-          <motion.div {...reveal(0.1)}>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
-                  {t("delivery")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <dl className="flex flex-col divide-y divide-line-subtle">
-                  <SpecRow label={tc("audience")}>
-                    {draft.audience?.segments?.length
-                      ? draft.audience.segments.join(", ")
-                      : "—"}
-                  </SpecRow>
-                  <SpecRow label={t("peopleLabel")}>
-                    <PeopleEditor
-                      draftId={draftId}
-                      people={people}
-                      onUpdate={setPeople}
-                    />
-                  </SpecRow>
-                </dl>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
+              {error ? (
+                <p className="text-[length:var(--text-body)] text-danger" role="alert">
+                  {error}
+                </p>
+              ) : null}
 
-        {/* Right — Kontext + Launch stacked */}
-        <div className="flex flex-col gap-6">
-          {/* Kontext card — always shown, defaults to first vault */}
-          {vaults.length > 0 && (
-            <motion.div {...reveal(0.07)}>
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
-                      Kontext
-                    </CardTitle>
-                    {/* Pencil icon — top-right; only when a vault is active */}
-                    {selectedVaultId && (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedVaultId(undefined)}
-                        aria-label="Kontext ändern"
-                        className="flex h-7 w-7 items-center justify-center rounded-ui text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
-                      >
-                        <Pencil size={13} aria-hidden />
-                      </button>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {selectedVaultId && selectedVault ? (
-                    /* Read-only chip — vault is locked in, greyed-out style */
-                    <div className="flex items-center gap-2.5 rounded-card border border-line bg-surface-2 px-3 py-2.5 opacity-80">
-                      <CheckIcon size={15} className="shrink-0 text-success" aria-hidden />
-                      <Building2 size={13} className="shrink-0 text-fg-muted" aria-hidden />
-                      <span className="text-[length:var(--text-body-sm)] font-medium text-fg truncate">
-                        {selectedVault.name}
-                      </span>
-                    </div>
-                  ) : (
-                    /* Selector shown when user clicks Ändern or no vault set */
-                    <select
-                      className="w-full rounded-ui border border-line bg-surface px-3 py-2 text-[13px] text-fg outline-none transition-colors focus:border-line-strong"
-                      value=""
-                      onChange={(e) => saveVault(e.target.value)}
-                    >
-                      <option value="">— Kontext auswählen —</option>
-                      {vaults.map((v) => (
-                        <option key={v.id} value={v.id}>{v.name}</option>
-                      ))}
-                    </select>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-
-          {/* Launch / Start card */}
-          <motion.aside {...reveal(0.14)}>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
-                  {t("launchpad")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-5">
-                <div className="flex flex-col gap-3">
-                  <p className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
-                    {t("checklist")}
-                  </p>
-                  <ul className="flex flex-col gap-2.5">
-                    <Gate
-                      ok={!reasons.includes("no_goals")}
-                      label={t("gates.no_goals")}
-                      okLabel={t("gatesOk.no_goals")}
-                    />
-                    <Gate
-                      ok={!reasons.includes("no_success_criteria")}
-                      label={t("gates.no_success_criteria")}
-                      okLabel={t("gatesOk.no_success_criteria")}
-                    />
-                    <Gate
-                      ok={!reasons.includes("bad_duration")}
-                      label={t("gates.bad_duration")}
-                      okLabel={t("gatesOk.bad_duration")}
-                    />
-                    <Gate
-                      ok={!reasons.includes("no_interview_type")}
-                      label={t("gates.no_interview_type")}
-                      okLabel={t("gatesOk.no_interview_type")}
-                    />
-                    {/* Blocking: launch requires recipients */}
-                    <Gate
-                      ok={peopleCount > 0}
-                      label="Teilnehmer hinzufügen"
-                      okLabel={`${peopleCount} Teilnehmer hinzugefügt`}
-                      blocking
-                    />
-                  </ul>
-                </div>
-
-                {error ? (
-                  <p className="text-[length:var(--text-body)] text-danger" role="alert">
-                    {error}
-                  </p>
-                ) : null}
-
-                <div className="flex flex-col gap-3 border-t border-line-subtle pt-4">
-                  <Button
-                    onClick={launch}
-                    disabled={blocked || launching}
-                    size="lg"
-                    className="w-full"
-                  >
-                    {launching ? t("launching") : t("launch")}
-                  </Button>
-                  <Button asChild variant="ghost" size="sm" className="w-full text-fg-muted">
-                    <a href={`/campaigns/new/${draftId}`}>
-                      <ArrowLeft className="h-3.5 w-3.5" />
-                      {t("back")}
-                    </a>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.aside>
-        </div>
+              <div className="flex flex-col gap-3 border-t border-line-subtle pt-4">
+                <Button
+                  onClick={launch}
+                  disabled={blocked || launching}
+                  size="lg"
+                  className="w-full"
+                >
+                  {launching ? t("launching") : t("launch")}
+                </Button>
+                <Button asChild variant="ghost" size="sm" className="w-full text-fg-muted">
+                  <a href={`/campaigns/new/${draftId}`}>
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    {t("back")}
+                  </a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.aside>
       </div>
-    </div>
-  );
-}
-
-/* ─── A hairline-separated spec label:value pair ─────────────────────────── */
-function SpecRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1 py-2.5 first:pt-0">
-      <dt className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
-        {label}
-      </dt>
-      <dd className="text-[length:var(--text-body)] text-fg">{children}</dd>
     </div>
   );
 }
@@ -364,15 +245,18 @@ function Gate({
   label,
   okLabel,
   blocking = true,
+  onClick,
 }: {
   ok: boolean;
   label: string;
   okLabel: string;
   /** false = advisory only; doesn't block launch, icon is ⚠ not ✗ when unmet */
   blocking?: boolean;
+  /** Optional click affordance for an unmet gate (e.g. scroll to its editor). */
+  onClick?: () => void;
 }) {
-  return (
-    <li className="flex items-center gap-2.5">
+  const content = (
+    <>
       {ok ? (
         <CheckIcon size={14} className="shrink-0 text-success" aria-hidden />
       ) : blocking ? (
@@ -383,256 +267,24 @@ function Gate({
       <span className={ok ? "text-[13px] text-fg-muted" : "text-[13px] text-fg"}>
         {ok ? okLabel : label}
       </span>
-    </li>
+    </>
   );
-}
 
-/* ─── People editor with three selection modes ────────────────────────────── */
-type PeopleMode = "all" | "team" | "individual";
-type PersonDraft = { email: string; name: string; department: string; role: string };
-const EMPTY_PERSON: PersonDraft = { email: "", name: "", department: "", role: "" };
-
-function PeopleEditor({
-  draftId,
-  people,
-  onUpdate,
-}: {
-  draftId: string;
-  people: Person[];
-  onUpdate: (p: Person[]) => void;
-}) {
-  const [mode, setMode] = useState<PeopleMode>("individual");
-  const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState<PersonDraft>(EMPTY_PERSON);
-  const [saving, setSaving] = useState(false);
-  const [loadingAll, setLoadingAll] = useState(false);
-  const [allError, setAllError] = useState<string | null>(null);
-
-  function field(key: keyof PersonDraft) {
-    return (e: React.ChangeEvent<HTMLInputElement>) =>
-      setForm((f) => ({ ...f, [key]: e.target.value }));
+  if (!ok && onClick) {
+    return (
+      <li>
+        <button
+          type="button"
+          onClick={onClick}
+          className="flex w-full items-center gap-2.5 text-left underline-offset-2 hover:underline"
+        >
+          {content}
+        </button>
+      </li>
+    );
   }
 
-  async function patch(next: Person[]) {
-    await clientApi.setup.patchDraft(draftId, {
-      patch: { tool: "set_people", args: { people: next } },
-    });
-    onUpdate(next);
-  }
-
-  async function addIndividual() {
-    if (!form.email.includes("@")) return;
-    const merged: Person[] = [
-      ...people,
-      { email: form.email.trim(), name: form.name.trim() || undefined },
-    ];
-    setSaving(true);
-    try {
-      await patch(merged);
-      setForm(EMPTY_PERSON);
-      setAdding(false);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function addAllOrgMembers() {
-    setLoadingAll(true);
-    setAllError(null);
-    try {
-      const res = await fetch("/dapi/orgs/me/members");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const members = (await res.json()) as Array<{ email: string; name?: string }>;
-      if (members.length === 0) {
-        setAllError("Keine Mitglieder gefunden.");
-        return;
-      }
-      const existing = new Set(people.map((p) => p.email));
-      const newPeople: Person[] = members
-        .filter((m) => !existing.has(m.email))
-        .map((m) => ({ email: m.email, name: m.name }));
-      await patch([...people, ...newPeople]);
-    } catch {
-      setAllError("Mitglieder konnten nicht geladen werden. Bitte versuche es erneut.");
-    } finally {
-      setLoadingAll(false);
-    }
-  }
-
-  async function remove(email: string) {
-    const next = people.filter((p) => p.email !== email);
-    await patch(next);
-  }
-
-  const MODES: { id: PeopleMode; label: string }[] = [
-    { id: "all",        label: "Gesamtes Unternehmen" },
-    { id: "team",       label: "Team / Abteilung" },
-    { id: "individual", label: "Einzelpersonen" },
-  ];
-
-  return (
-    <div className="flex flex-col gap-4">
-      {/* Mode selector — pill tabs */}
-      <div className="flex gap-1 rounded-ui border border-line-subtle bg-surface-2 p-1 self-start">
-        {MODES.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            onClick={() => { setMode(m.id); setAdding(false); }}
-            className={`flex h-8 items-center whitespace-nowrap rounded-ui px-3.5 text-[length:var(--text-meta)] font-medium transition-colors ${
-              mode === m.id
-                ? "bg-surface text-fg shadow-sm"
-                : "text-fg-muted hover:text-fg"
-            }`}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Gesamtes Unternehmen ──────────────────────────────── */}
-      {mode === "all" && (
-        <div className="flex flex-col gap-3">
-          <p className="text-[12px] leading-snug text-fg-muted">
-            Fügt alle aktiven Mitglieder deiner Organisation als Teilnehmer hinzu.
-          </p>
-          <Button
-            size="sm"
-            variant="outline"
-            className="self-start"
-            onClick={addAllOrgMembers}
-            disabled={loadingAll}
-          >
-            <UserPlus className="h-3.5 w-3.5" />
-            {loadingAll ? "Wird geladen…" : "Alle Mitglieder hinzufügen"}
-          </Button>
-          {allError && (
-            <p className="text-[12px] text-danger" role="alert">{allError}</p>
-          )}
-        </div>
-      )}
-
-      {/* ── Team / Abteilung ──────────────────────────────────── */}
-      {mode === "team" && (
-        <div className="flex flex-col gap-3">
-          <p className="text-[12px] leading-snug text-fg-muted">
-            Gib den Abteilungsnamen ein und füge die Personen aus diesem Team einzeln hinzu.
-          </p>
-          <FormField
-            label="Abteilung / Team"
-            placeholder="z. B. Engineering, Sales…"
-            value={form.department}
-            onChange={field("department")}
-          />
-          {adding ? (
-            <div className="rounded-card border border-line bg-surface-2 p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-[13px] font-semibold text-fg">Teammitglied hinzufügen</p>
-                <button type="button" onClick={() => { setAdding(false); setForm(EMPTY_PERSON); }} className="text-fg-faint hover:text-fg">
-                  <XIcon size={14} />
-                </button>
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <FormField label="E-Mail *" type="email" placeholder="name@firma.de" value={form.email} onChange={field("email")} />
-                <FormField label="Name" placeholder="Max Mustermann" value={form.name} onChange={field("name")} />
-                <FormField label="Rolle" placeholder="Team Lead" value={form.role} onChange={field("role")} />
-              </div>
-              <div className="mt-4 flex justify-end gap-2">
-                <Button variant="ghost" size="sm" onClick={() => { setAdding(false); setForm(EMPTY_PERSON); }} disabled={saving}>Abbrechen</Button>
-                <Button size="sm" onClick={addIndividual} disabled={saving || !form.email.includes("@")}>
-                  <UserPlus className="h-3.5 w-3.5" />
-                  {saving ? "…" : "Speichern"}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <Button size="sm" variant="outline" className="self-start" onClick={() => setAdding(true)}>
-              <UserPlus className="h-3.5 w-3.5" />
-              Teammitglied hinzufügen
-            </Button>
-          )}
-        </div>
-      )}
-
-      {/* ── Einzelpersonen ────────────────────────────────────── */}
-      {mode === "individual" && (
-        adding ? (
-          <div className="rounded-card border border-line bg-surface-2 p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-[13px] font-semibold text-fg">Neuer Teilnehmer</p>
-              <button type="button" onClick={() => { setAdding(false); setForm(EMPTY_PERSON); }} className="text-fg-faint hover:text-fg">
-                <XIcon size={14} />
-              </button>
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <FormField label="E-Mail *" type="email" placeholder="name@firma.de" value={form.email} onChange={field("email")} />
-              <FormField label="Name" placeholder="Max Mustermann" value={form.name} onChange={field("name")} />
-              <FormField label="Abteilung" placeholder="Engineering" value={form.department} onChange={field("department")} />
-              <FormField label="Rolle" placeholder="CTO" value={form.role} onChange={field("role")} />
-            </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={() => { setAdding(false); setForm(EMPTY_PERSON); }} disabled={saving}>Abbrechen</Button>
-              <Button size="sm" onClick={addIndividual} disabled={saving || !form.email.includes("@")}>
-                <UserPlus className="h-3.5 w-3.5" />
-                {saving ? "…" : "Speichern"}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Button size="sm" variant="outline" className="self-start" onClick={() => setAdding(true)}>
-            <UserPlus className="h-3.5 w-3.5" />
-            Teilnehmer hinzufügen
-          </Button>
-        )
-      )}
-
-      {/* ── Existing people list (all modes) ─────────────────── */}
-      {people.length > 0 && (
-        <div className="flex flex-col overflow-hidden rounded-ui border border-line divide-y divide-line-subtle">
-          {people.map((p) => (
-            <div key={p.email} className="flex items-center justify-between gap-3 px-3 py-2 hover:bg-surface-2">
-              <div className="min-w-0 flex flex-col">
-                {p.name && <span className="text-[13px] font-medium text-fg truncate">{p.name}</span>}
-                <span className="text-[12px] text-fg-muted truncate">{p.email}</span>
-              </div>
-              <button type="button" onClick={() => remove(p.email)} className="shrink-0 rounded p-0.5 text-fg-faint hover:text-fg" aria-label={`${p.email} entfernen`}>
-                <XIcon size={12} />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function FormField({
-  label,
-  placeholder,
-  value,
-  onChange,
-  type = "text",
-}: {
-  label: string;
-  placeholder?: string;
-  value: string;
-  onChange: React.ChangeEventHandler<HTMLInputElement>;
-  type?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-fg-subtle">
-        {label}
-      </label>
-      <input
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        className="rounded-ui border border-line bg-surface px-2.5 py-1.5 text-[13px] text-fg outline-none transition-colors focus:border-line-strong"
-      />
-    </div>
-  );
+  return <li className="flex items-center gap-2.5">{content}</li>;
 }
 
 export { DataChip };

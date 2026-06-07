@@ -5,11 +5,16 @@ import {
   BackendDownError,
   type CreateSetupSessionInput,
   type LaunchResult,
+  type NewVaultInput,
   type SetupDraftState,
   type SetupLaunchResult,
   type SetupPatchInput,
   type SetupSession,
   type SetupSessionCreated,
+  type SetupSessionRef,
+  type TwinRole,
+  type Vault,
+  type VaultItem,
 } from "./api";
 
 /**
@@ -76,6 +81,11 @@ export const clientApi = {
       }),
     getSession: (id: string) =>
       clientRequest<SetupSession>(`/api/orgs/me/setup-sessions/${id}`),
+    /** Resolve a launched campaign back to its EDDA draft (refine re-entry). */
+    resolveDraft: (campaignId: string) =>
+      clientRequest<SetupSessionRef>(
+        `/api/orgs/me/campaigns/${campaignId}/setup-session`,
+      ),
     patchDraft: (id: string, body: SetupPatchInput) =>
       clientRequest<SetupDraftState>(`/api/orgs/me/setup-drafts/${id}`, {
         method: "PATCH",
@@ -92,5 +102,25 @@ export const clientApi = {
       clientRequest<LaunchResult>(`/api/campaigns/${id}/launch`, {
         method: "POST",
       }),
+  },
+  // ── Digital Twin roles (browser mirror of server `api.twin.*`) ──────────
+  twin: {
+    listRoles: () => clientRequest<TwinRole[]>("/api/orgs/me/roles"),
+  },
+  // ── Context Vaults (browser mirror of server `api.vaults.*`) ────────────
+  // Only the methods needed for the setup role-context upload are mirrored;
+  // the heavy presigned upload state machine lives in `lib/vaults/upload.ts`
+  // (shared with the Kontext page) and is NOT duplicated here.
+  vaults: {
+    list: () => clientRequest<Vault[]>("/api/orgs/me/vaults"),
+    create: (body: NewVaultInput) =>
+      clientRequest<Vault>("/api/orgs/me/vaults", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    listForRole: (roleId: string) =>
+      clientRequest<Vault[]>(`/api/orgs/me/roles/${roleId}/vaults`),
+    listItems: (id: string) =>
+      clientRequest<VaultItem[]>(`/api/orgs/me/vaults/${id}/items`),
   },
 };

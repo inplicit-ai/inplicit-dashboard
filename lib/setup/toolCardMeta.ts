@@ -4,20 +4,52 @@ import type { SetupToolCallCard } from "@/lib/api";
  * Shared presentation metadata for setup-agent (EDDA) tool calls.
  *
  * One source of truth for "what does this patch mean to a human" so the
- * compact checklist rows (`ToolChecklist`) and the rich interactive card
+ * compact confirmation rows (`ToolChecklist`) and the rich interactive card
  * (`ToolCallCard`) never drift apart.
  *
- * Two render lanes:
- *   - FIELD patches (set_goals, add_topic, …) → quiet checklist rows.
- *   - INTERACTIVE calls (request_input, …)    → a card with buttons/chips
- *     because they wait on the human.
+ * Three render lanes:
+ *   - INTERACTIVE calls (request_input) → a card with reply chips, because
+ *     they wait on the human.
+ *   - CATALOG-COMMIT patches (set_goals, set_objective, …) → a compact, calm
+ *     confirmation card (check + label + one-line summary) so the user can SEE
+ *     each piece EDDA commits to the catalog, inline in the chat (WHY-120 was
+ *     reversed: the catalog renders inline, but the chat now narrates too).
+ *   - INTERNAL markers (set_setup_state) → never rendered; pure state-machine
+ *     signalling from the backend.
  */
 
-/** Tools that wait on the human — rendered as an inline prompt, not a log row.
+/** Tools that wait on the human — rendered as an inline prompt, not a row.
  *  Only a rare design question (request_input) qualifies. */
 const INTERACTIVE_TOOLS = ["request_input"] as const;
 
-/** Known field tools — kept in sync with the server reducer (`tools.rs`). */
+/** Internal state-machine markers the backend emits — never shown in the chat. */
+const HIDDEN_TOOLS = ["set_setup_state"] as const;
+
+/** Catalog-commit patches — each one renders as a compact confirmation card so
+ *  the user can follow what EDDA writes to the catalog, piece by piece. */
+const COMMIT_TOOLS = [
+  "set_objective",
+  "set_goals",
+  "set_exploration_map",
+  "set_success_criteria",
+  "set_language",
+  "set_context_vault",
+  "set_audience",
+  "set_interview_type",
+  "set_duration",
+  "refine_goal",
+  "set_topic_method",
+  "reweight_topic",
+  "add_topic",
+  "remove_topic",
+  "set_people",
+  "set_success_question",
+  "set_email_template",
+] as const;
+
+/** Every tool with a human label (kept in sync with the server reducer,
+ *  `tools.rs`). Superset of the commit + interactive lanes plus a few patches
+ *  that have a label but no dedicated card lane. */
 const KNOWN_TOOLS = [
   "set_interview_type",
   "set_duration",
@@ -48,6 +80,16 @@ const KNOWN_TOOLS = [
 
 export function isInteractive(tool: string): boolean {
   return (INTERACTIVE_TOOLS as readonly string[]).includes(tool);
+}
+
+/** Internal-only tools that must never produce a chat card. */
+export function isHidden(tool: string): boolean {
+  return (HIDDEN_TOOLS as readonly string[]).includes(tool);
+}
+
+/** Catalog-commit patches shown as a compact confirmation card. */
+export function isCommit(tool: string): boolean {
+  return (COMMIT_TOOLS as readonly string[]).includes(tool);
 }
 
 /** Human label for a tool — translated, falling back to the raw tool name. */
@@ -86,7 +128,7 @@ export function summarize(card: SetupToolCallCard): string {
     case "set_topic_method":
       return a.method ? `${a.id ?? "?"} → ${a.method}` : String(a.id ?? "");
     case "remove_topic":
-      return String(a.id ?? "");
+      return String(a.title ?? a.id ?? "");
     case "reweight_topic":
       return `${a.id ?? "?"} → ${a.weight ?? "normal"}`;
     case "unlink_topics":
@@ -97,10 +139,15 @@ export function summarize(card: SetupToolCallCard): string {
       return String(a.text ?? "");
     case "remove_success_question":
       return a.index !== undefined ? `#${a.index}` : "";
-    case "set_success_criteria":
+    case "set_success_criteria": {
+      const n = Array.isArray(a.questions) ? a.questions.length : 0;
+      if (n) return `${n}`;
       return String(a.mode ?? "");
+    }
     case "set_email_template":
       return String(a.subject ?? "");
+    case "set_audience":
+      return String(a.audience ?? a.description ?? "");
     case "set_people": {
       const n = Array.isArray(a.people) ? a.people.length : 0;
       return n ? `${n} people` : "";
