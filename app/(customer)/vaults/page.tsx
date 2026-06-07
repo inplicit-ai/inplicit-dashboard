@@ -32,6 +32,7 @@ import { DataChip } from "@/components/ui/data-chip";
 import { Badge } from "@/components/ui/badge";
 import { TwinGraph } from "@/components/ctsim/TwinGraph";
 import { VaultFolderCard } from "@/components/vault/VaultFolderCard";
+import { VaultFolderBreadcrumb } from "@/components/vaults/VaultFolderBreadcrumb";
 import { cn } from "@/lib/utils";
 
 type Folder = "org" | "roles" | "integrations" | "uploads";
@@ -228,6 +229,8 @@ export default async function KontextVaultPage({
 
   return (
     <>
+      {/* Register the folder label in the topbar breadcrumb ("Kontext-Tresor > Rollen") */}
+      <VaultFolderBreadcrumb label={folderTitle ?? ""} />
       <PageHeader
         title={folderTitle}
         subtitle={folderSubtitle}
