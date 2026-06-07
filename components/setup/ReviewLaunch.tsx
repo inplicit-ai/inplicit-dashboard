@@ -57,7 +57,6 @@ export function ReviewLaunch({
   const revRef = useRef<number>(initialRevision ?? 0);
   const [launching, setLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [campaignName, setCampaignName] = useState("");
 
   // User-originated catalog edit: optimistic local apply + revision-tracked
   // persist. Mirrors SplitAuthor.onPatch exactly — only the revision is updated
@@ -96,10 +95,6 @@ export function ReviewLaunch({
     try {
       const materialized = await clientApi.setup.launchDraft(draftId);
       const campaignId = materialized.campaign_id;
-      // Save campaign name if provided before launching
-      if (campaignName.trim()) {
-        await clientApi.campaigns.update(campaignId, { name: campaignName.trim() }).catch(() => {});
-      }
       try {
         await clientApi.campaigns.launch(campaignId);
       } catch {
@@ -164,25 +159,6 @@ export function ReviewLaunch({
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-5">
-              {/* Campaign name — optional, falls back to "Kampagne N" in overview */}
-              <div className="flex flex-col gap-1.5">
-                <label
-                  htmlFor="campaign-name"
-                  className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle"
-                >
-                  Kampagnenname{" "}
-                  <span className="font-normal text-fg-faint">(optional)</span>
-                </label>
-                <input
-                  id="campaign-name"
-                  type="text"
-                  placeholder="z. B. Onboarding Q3 2026"
-                  value={campaignName}
-                  onChange={(e) => setCampaignName(e.target.value)}
-                  className="rounded-ui border border-line bg-surface px-3 py-2 text-[13px] text-fg outline-none transition-colors focus:border-line-strong"
-                />
-              </div>
-
               {/* Empty-participants hint — gentle, links to the People editor */}
               {peopleCount === 0 && (
                 <button
