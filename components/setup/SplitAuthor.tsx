@@ -62,6 +62,9 @@ export function SplitAuthor({
   );
   const [touched, setTouched] = useState<Set<string>>(new Set());
   const [launching, setLaunching] = useState(false);
+  // Drives edda's avatar status node (red dot) — set on an agent error, cleared
+  // the moment the next turn starts producing.
+  const [agentError, setAgentError] = useState(false);
 
   // Mutable refs for the streaming assistant turn so SSE callbacks accumulate
   // into the latest turn without stale closures.
@@ -69,6 +72,7 @@ export function SplitAuthor({
 
   const stream = useSetupStream(sessionId, {
     onToken: (text) => {
+      setAgentError(false);
       setTurns((prev) =>
         prev.map((t) =>
           t.id === streamTurnId.current
@@ -102,6 +106,7 @@ export function SplitAuthor({
       );
     },
     onError: (e) => {
+      setAgentError(true);
       setTurns((prev) =>
         prev.map((t) =>
           t.id === streamTurnId.current
@@ -138,6 +143,7 @@ export function SplitAuthor({
         toolCalls: [],
       };
       streamTurnId.current = assistantTurn.id;
+      setAgentError(false);
       setTurns((prev) => [...prev, userTurn, assistantTurn]);
       void stream.send(message);
     },
@@ -223,7 +229,12 @@ export function SplitAuthor({
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         {/* Full-width EDDA setup chat — catalog is only shown at the Prüfen step */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card">
-          <SetupChat turns={turns} streaming={stream.streaming} onSend={onSend} />
+          <SetupChat
+            turns={turns}
+            streaming={stream.streaming}
+            error={agentError}
+            onSend={onSend}
+          />
         </div>
 
         {/* Advance bar — simple "Weiter zu Prüfen" when the draft has enough data */}
