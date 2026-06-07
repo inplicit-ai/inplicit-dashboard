@@ -97,6 +97,8 @@
     "refineTitle": "Diese Kampagne verfeinern",
     "refineBody": "Öffne den Setup-Assistenten erneut, um Kontext umzuformulieren, Ziele anzupassen oder Teilnehmende zu ergänzen. Änderungen gelten nur für Interviews, die nach der Änderung starten – abgeschlossene Interviews und ihre Insights bleiben unverändert.",
     "refineLocked": "Gesperrt, sobald Interviews existieren",
+    "refineOpening": "Setup-Assistent wird geöffnet …",
+    "refineError": "Entwurf konnte nicht geöffnet werden.",
     "refineMode": {
       "editable": "Bearbeitbar",
       "append_only": "Nur hinzufügen",
@@ -291,7 +293,23 @@
       "objective": "Forschungsziel",
       "objectivePlaceholder": "Was genau wollen wir herausfinden?",
       "participantPrompt": "Frage an Teilnehmer:innen",
-      "previewSampleOrg": "deinem Unternehmen"
+      "previewSampleOrg": "deinem Unternehmen",
+      "roleContextTitle": "Rollenspezifischen Kontext hochladen",
+      "roleContextHint": "Wähle eine Rolle und lade Dateien hoch — sie landen im Vault dieser Rolle und stehen den Interviews zur Verfügung.",
+      "roleContextLoading": "Rollen werden geladen…",
+      "roleContextNoRoles": "Noch keine Rollen — lege zunächst eine unter „Rollen“ an.",
+      "roleContextPickRole": "Rolle wählen",
+      "roleContextUpload": "Dateien hochladen",
+      "roleContextUntitled": "Unbenannte Datei",
+      "roleContextVaultName": "Kontext: {role}",
+      "roleContextIndexed": "Durchsuchbar",
+      "roleContextIndexing": "Wird indexiert",
+      "roleContextLoadError": "Rollen-Kontext konnte nicht geladen werden.",
+      "roleContextUploadError": "Upload fehlgeschlagen.",
+      "roleContextPhaseUploading": "Wird hochgeladen…",
+      "roleContextPhaseExtracting": "Text wird extrahiert…",
+      "roleContextPhaseIndexing": "Wird indexiert…",
+      "roleContextPhaseReady": "Fertig"
     },
     "review": {
       "eyebrow": "Prüfen & starten",
@@ -312,6 +330,8 @@
       "peopleLabel": "Teilnehmer",
       "peopleCount": "{count} Teilnehmer",
       "advisoryNoPeople": "Noch keine Teilnehmer — füge Personen hinzu, bevor du einlädst.",
+      "gatePeople": "Teilnehmer hinzufügen",
+      "gatePeopleOk": "{count} Teilnehmer hinzugefügt",
       "gates": {
         "no_goals": "Füge mindestens ein Ziel hinzu.",
         "no_success_criteria": "Füge mindestens eine Erfolgsfrage oder Hypothese hinzu.",

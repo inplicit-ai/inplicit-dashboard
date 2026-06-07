@@ -14,6 +14,7 @@ import { TopicGraph } from "./TopicGraph";
 import { PeopleSection } from "./PeopleSection";
 import { ScheduleSection } from "./ScheduleSection";
 import { EmailTemplateSection } from "./EmailTemplateSection";
+import { RoleContextUpload } from "./RoleContextUpload";
 
 /**
  * The catalog (right pane) — a stack of clean white section cards (claude.ai).
@@ -34,12 +35,16 @@ export function Catalog({
   recentlyTouched,
   orgName,
   vaults,
+  peopleAnchorId,
 }: {
   draft: CampaignDraft;
   onPatch: (call: SetupToolCall) => void;
   recentlyTouched?: Set<string>;
   orgName?: string;
   vaults?: Vault[];
+  /** Optional anchor id placed on the People section wrapper — lets the review
+   *  screen scroll the participant editor into view from its launch hint. */
+  peopleAnchorId?: string;
 }) {
   const t = useTranslations("setup.catalog");
 
@@ -186,6 +191,10 @@ export function Catalog({
         touched={recentlyTouched?.has("set_context_vault")}
       >
         <ContextVaultPicker draft={draft} onPatch={onPatch} vaults={vaults} />
+        {/* WHY: role-specific context — upload files attached to a twin role,
+            landing in that role's ROLE-scoped vault (additive to the campaign's
+            single company-context vault selected above). */}
+        <RoleContextUpload />
       </SectionCard>
 
       {/* ── Research method (Forschungsweise) ──────────────────────────── */}
@@ -245,11 +254,13 @@ export function Catalog({
       </SectionCard>
 
       {/* ── People ─────────────────────────────────────────────────────── */}
-      <PeopleSection
-        draft={draft}
-        onPatch={onPatch}
-        touched={recentlyTouched?.has("set_people")}
-      />
+      <div id={peopleAnchorId} className="scroll-mt-6">
+        <PeopleSection
+          draft={draft}
+          onPatch={onPatch}
+          touched={recentlyTouched?.has("set_people")}
+        />
+      </div>
 
       {/* ── Schedule ───────────────────────────────────────────────────── */}
       <ScheduleSection

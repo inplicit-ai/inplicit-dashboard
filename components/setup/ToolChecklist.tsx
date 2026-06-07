@@ -1,15 +1,19 @@
 "use client";
 
 import type { SetupToolCallCard } from "@/lib/api";
-import { isInteractive } from "@/lib/setup/toolCardMeta";
+import { isCommit, isHidden, isInteractive } from "@/lib/setup/toolCardMeta";
 import { ToolCallCard } from "./ToolCallCard";
+import { ToolCommitCard } from "./ToolCommitCard";
 
 /**
- * WHY-120 polish: catalog patches (set_goals / set_exploration_map / …) render
- * LIVE in the catalog panel, so we no longer echo them as opaque "to-do" cards in
- * the chat ("Ziele entworfen — 5 goals"). The chat keeps only the agent's prose
- * (rendered by the parent) plus rare interactive follow-ups (request_input) with
- * their reply chips.
+ * The chat's tool-call lane. Two visible kinds, in arrival order:
+ *   - request_input → an interactive prompt with reply chips (ToolCallCard).
+ *   - catalog-commit patches (set_goals, set_objective, …) → a compact, calm
+ *     confirmation row so the user SEES each piece EDDA writes to the catalog
+ *     ("ich möchte durch Tool Calls im Chat mitbekommen, was passiert").
+ *
+ * Internal state-machine markers (set_setup_state) and any unrecognised tool
+ * are skipped entirely.
  */
 export function ToolChecklist({
   cards,
@@ -18,14 +22,20 @@ export function ToolChecklist({
   cards: SetupToolCallCard[];
   onReply?: (message: string) => void;
 }) {
-  const interactive = cards.filter((c) => isInteractive(c.tool));
-  if (interactive.length === 0) return null;
+  const visible = cards.filter(
+    (c) => !isHidden(c.tool) && (isInteractive(c.tool) || isCommit(c.tool)),
+  );
+  if (visible.length === 0) return null;
 
   return (
-    <div className="mt-3 flex flex-col gap-3">
-      {interactive.map((card, i) => (
-        <ToolCallCard key={`x${i}`} card={card} onReply={onReply} />
-      ))}
+    <div className="mt-3 flex flex-col gap-2.5">
+      {visible.map((card, i) =>
+        isInteractive(card.tool) ? (
+          <ToolCallCard key={`t${i}`} card={card} onReply={onReply} />
+        ) : (
+          <ToolCommitCard key={`t${i}`} card={card} />
+        ),
+      )}
     </div>
   );
 }
