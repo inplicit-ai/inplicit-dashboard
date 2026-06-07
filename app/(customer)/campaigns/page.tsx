@@ -28,7 +28,7 @@ export default async function CampaignsPage() {
   return (
     <div className="surface-bleed">
       <PageHeader
-        title="Kampagnen"
+        title="Deine Kampagnen"
         subtitle="Stichproben deiner Organisation. Jede Kampagne bündelt eine Runde anonymer Interviews mit ausgewerteten Insights."
         actions={
           <Button asChild>
@@ -70,8 +70,8 @@ export default async function CampaignsPage() {
           <>
             <SectionHeading title="Kampagnen" count={campaigns.length} />
             <CardGrid>
-              {campaigns.map((c) => (
-                <CampaignCard key={c.id} c={c} />
+              {campaigns.map((c, i) => (
+                <CampaignCard key={c.id} c={c} index={i} />
               ))}
             </CardGrid>
           </>
@@ -81,9 +81,9 @@ export default async function CampaignsPage() {
   );
 }
 
-function CampaignCard({ c }: { c: Campaign }) {
+function CampaignCard({ c, index }: { c: Campaign; index: number }) {
   const state = toStatusState(c.status);
-  const displayName = c.name || "Kampagne";
+  const displayName = c.name || `Kampagne ${index + 1}`;
   return (
     <Card interactive className="group relative p-5">
       {/* 3-dot menu — top-right, above the link layer */}
