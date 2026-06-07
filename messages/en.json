@@ -312,6 +312,8 @@
       "peopleLabel": "Participants",
       "peopleCount": "{count} participants",
       "advisoryNoPeople": "No participants yet — add people before inviting.",
+      "gatePeople": "Add participants",
+      "gatePeopleOk": "{count} participants added",
       "gates": {
         "no_goals": "Add at least one goal.",
         "no_success_criteria": "Add at least one success question or hypothesis.",

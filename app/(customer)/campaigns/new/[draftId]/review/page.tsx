@@ -28,6 +28,12 @@ export default async function ReviewPage({
   }
 
   return (
-    <ReviewLaunch draftId={session.draft_id} draft={session.config} vaults={vaults} />
+    <ReviewLaunch
+      draftId={session.draft_id}
+      draft={session.config}
+      initialRevision={session.revision}
+      orgName={session.org_name}
+      vaults={vaults}
+    />
   );
 }
