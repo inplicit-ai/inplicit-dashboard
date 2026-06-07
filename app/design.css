@@ -548,6 +548,20 @@
   width: 100%;
 }
 
+/* ── Chat-mode positional fix ─────────────────────────────────────────────────
+   When .app-work:has(.chat-fill) fires, .app-work becomes a flex column with
+   padding:0. Any direct child that is NOT .surface-bleed (e.g. CampaignTabs,
+   SetupSteps) becomes a flex item; `margin-inline:auto` from the `.app-work > *`
+   rule then CENTERS those elements horizontally — causing the "jumps to center"
+   bug. We override here so they stay left-aligned and keep the same horizontal
+   inset as the normal padded mode (var(--space-8) = 32 px on each side). */
+.app-work:has(.chat-fill) > *:not(.surface-bleed) {
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: var(--space-8);
+  padding-block-start: var(--space-10);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .shell__rail { transition: none; }
 }
