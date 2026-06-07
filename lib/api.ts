@@ -990,16 +990,20 @@ export interface Vault {
   id: string;
   name: string;
   description?: string;
-  scope: "ORG" | "CAMPAIGN";
+  scope: "ORG" | "CAMPAIGN" | "ROLE";
   campaign_id?: string;
+  /** Set when `scope === "ROLE"` — the twin role this vault is attached to. */
+  role_id?: string;
   created_at: string;
   updated_at: string;
 }
 export interface NewVaultInput {
   name: string;
   description?: string;
-  scope?: "ORG" | "CAMPAIGN";
+  scope?: "ORG" | "CAMPAIGN" | "ROLE";
   campaign_id?: string;
+  /** Required when `scope === "ROLE"`. */
+  role_id?: string;
 }
 export interface VaultItem {
   id: string;
