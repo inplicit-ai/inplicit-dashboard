@@ -44,7 +44,7 @@ export function FeedbackButton() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5">
+        <Button variant="outline" size="sm" className="h-[36px] gap-1.5 bg-surface px-3 text-[length:var(--text-caption)] font-medium text-fg-muted hover:border-line-strong hover:text-fg">
           <IconMessage size={15} aria-hidden="true" />
           <span>{t("trigger")}</span>
         </Button>
