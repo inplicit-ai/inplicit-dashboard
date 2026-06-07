@@ -163,8 +163,8 @@ export function Sidebar({
             ))}
           </nav>
 
-          {mode === "customer" && (
-            <div className="sidebar__live" data-idle={liveCount === 0}>
+          {mode === "customer" && liveCount > 0 && (
+            <div className="sidebar__live" data-idle={false}>
               <StatusDisc
                 state={liveCount > 0 ? "live" : "idle"}
                 size="sm"

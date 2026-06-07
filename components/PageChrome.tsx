@@ -119,6 +119,7 @@ const STATUS_LABEL: Record<string, string> = {
   EXTRACTING: "Extraktion",
   CLUSTERING: "Clustering",
   FALSIFYING: "Validierung",
+  RESUMABLE: "Fortsetzbar",
 };
 
 export function StatusBadge({

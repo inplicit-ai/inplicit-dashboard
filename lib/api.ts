@@ -59,6 +59,13 @@ export function makeApi(cookie?: string) {
         }),
       launch: (id: string) =>
         request<LaunchResult>(`/api/campaigns/${id}/launch`, { method: "POST" }),
+      update: (id: string, body: { name: string }) =>
+        request<Campaign>(`/api/campaigns/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        }),
+      remove: (id: string) =>
+        request<void>(`/api/campaigns/${id}`, { method: "DELETE" }),
     },
     insights: {
       list: (campaignId: string, params?: InsightParams) => {
@@ -420,6 +427,8 @@ export async function verifyMagicLinkToken(token: string): Promise<string | null
 
 export interface Campaign {
   id: string;
+  /** User-editable campaign name. Falls back to org_name if not set. */
+  name?: string;
   org_name: string;
   company_context: string;
   language: string;

@@ -9,9 +9,11 @@ import { StatusBadge } from "@/components/PageChrome";
 import { RagSearch } from "@/components/RagSearch";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { CardGrid, EntityCard } from "@/components/ui/card-grid";
+import { CardGrid } from "@/components/ui/card-grid";
+import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusDisc, toStatusState } from "@/components/ui/status-disc";
+import { CampaignActionsMenu } from "@/components/campaign/CampaignActionsMenu";
 
 export default async function CampaignsPage() {
   const api = makeApi(await requestCookie());
@@ -81,18 +83,29 @@ export default async function CampaignsPage() {
 
 function CampaignCard({ c }: { c: Campaign }) {
   const state = toStatusState(c.status);
+  const displayName = c.name || "Kampagne";
   return (
-    <EntityCard
-      href={`/campaigns/${c.id}`}
-      title={c.org_name}
-      status={<StatusDisc state={state} pulse={state === "live"} size="sm" />}
-      meta={
-        <>
+    <Card interactive className="group relative p-5">
+      {/* 3-dot menu — floated top-right, stops click from reaching the link */}
+      <div className="absolute right-3 top-3 z-10 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+        <CampaignActionsMenu campaignId={c.id} currentName={displayName} />
+      </div>
+
+      <Link href={`/campaigns/${c.id}`} className="block">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="line-clamp-2 font-semibold tracking-[-0.01em] text-fg pr-7">
+            {displayName}
+          </h3>
+          <StatusDisc state={state} pulse={state === "live"} size="sm" className="shrink-0" />
+        </div>
+        <div className="mt-2 text-[length:var(--text-meta)] tabular-nums text-fg-subtle">
           {c.language.toUpperCase()} · {c.interview_length_min} min ·{" "}
           {new Date(c.created_at).toLocaleDateString("de-DE")}
-        </>
-      }
-      footer={<StatusBadge status={c.status} />}
-    />
+        </div>
+        <div className="mt-4 flex items-center border-t border-line-subtle pt-3 text-[length:var(--text-meta)] text-fg-muted">
+          <StatusBadge status={c.status} />
+        </div>
+      </Link>
+    </Card>
   );
 }
