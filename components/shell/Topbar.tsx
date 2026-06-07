@@ -17,6 +17,7 @@ import type { SidebarState } from "@/lib/shell/sidebar-policy";
 import { Stepper } from "@/components/shell/Stepper";
 import { SidebarTrigger } from "@/components/shell/SidebarTrigger";
 import { LocaleSwitcher } from "@/components/shell/LocaleSwitcher";
+import { FeedbackButton } from "@/components/shell/FeedbackButton";
 
 /**
  * Sticky, step-aware topbar (02 §4 / design-contract §9). Always answers
@@ -107,6 +108,7 @@ export function Topbar({
       )}
 
       <div className="shell-topbar__end">
+        <FeedbackButton />
         <LocaleSwitcher />
         {userSlot}
       </div>

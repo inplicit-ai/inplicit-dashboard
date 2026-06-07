@@ -499,5 +499,13 @@
     "submitPassword": "Sign in",
     "devLinkLabel": "Dev link",
     "footer": "Inplicit AI · Enterprise interviews"
+  },
+  "feedback": {
+    "trigger": "Feedback",
+    "title": "Give feedback",
+    "description": "Tell us what works well on this page or what could be better.",
+    "placeholder": "Your feedback …",
+    "cancel": "Cancel",
+    "submit": "Send"
   }
 }
