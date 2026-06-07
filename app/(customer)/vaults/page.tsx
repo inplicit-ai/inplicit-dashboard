@@ -287,167 +287,101 @@ export default async function KontextVaultPage({
       )}
 
       {folder === "org" && (
-        <div className="grid gap-6 lg:grid-cols-[20rem_1fr]">
-          {/* Vault list + create */}
-          <div className="space-y-4">
-            {canWrite && (
-              <Card className="gap-3 p-5">
-                <form action={createVault} className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="vault-name">{tv("newVault")}</Label>
-                    <Input
-                      id="vault-name"
-                      name="name"
-                      placeholder={tv("namePlaceholder")}
-                      required
-                    />
-                  </div>
-                  <Input name="description" placeholder={tv("descPlaceholder")} />
-                  <Button type="submit" className="w-full">
-                    {tv("createVault")}
-                  </Button>
-                </form>
-              </Card>
-            )}
-
-            {orgVaults.length === 0 ? (
-              <Card className="p-2">
-                <EmptyState icon={FolderOpen} title={tv("title")} hint={tv("empty")} />
-              </Card>
-            ) : (
-              <nav className="flex flex-col gap-2">
-                {orgVaults.map((v) => {
-                  const isActive = v.id === activeId;
-                  return (
-                    <a
-                      key={v.id}
-                      href={`/vaults?folder=org&vault=${v.id}`}
-                      aria-current={isActive ? "true" : undefined}
-                      className={cn(
-                        "block rounded-card border px-4 py-3 transition-all",
-                        isActive
-                          ? "border-line-strong bg-surface shadow-card"
-                          : "border-line bg-surface hover:-translate-y-0.5 hover:shadow-card-hover",
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "block truncate text-[length:var(--text-body-sm)] text-fg",
-                          isActive ? "font-semibold" : "font-medium",
-                        )}
-                      >
-                        {v.name}
-                      </span>
-                      {v.description && (
-                        <span className="mt-0.5 block truncate text-[length:var(--text-caption)] text-fg-muted">
-                          {v.description}
-                        </span>
-                      )}
-                    </a>
-                  );
-                })}
-              </nav>
-            )}
-          </div>
-
-          {/* Vault detail */}
-          <div>
-            {activeId && activeVault ? (
-              <Card variant="ledger" className="overflow-hidden">
-                <div className="flex items-center justify-between gap-3 border-b border-line-subtle px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <DataChip tone="neutral">{activeVault.scope ?? "ORG"}</DataChip>
-                    <span className="text-[length:var(--text-body-sm)] font-medium text-fg">
-                      {tv("entriesCount", { count: docItems.length })}
-                    </span>
-                  </div>
-                  {canWrite && (
-                    <form action={deleteVault}>
-                      <input type="hidden" name="id" value={activeId} />
-                      <button
-                        type="submit"
-                        className="text-[length:var(--text-meta)] text-fg-subtle transition-colors hover:text-danger"
-                      >
-                        {tv("delete")}
-                      </button>
-                    </form>
-                  )}
-                </div>
-
-                <ul className="divide-y divide-line-subtle">
-                  {docItems.length === 0 ? (
-                    <li className="px-6 py-6 text-[length:var(--text-body-sm)] text-fg-muted">
-                      {tv("noEntries")}
-                    </li>
-                  ) : (
-                    docItems.map((it) => (
-                      <li key={it.id} className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <DataChip tone="neutral" mono>
-                            {it.kind}
-                          </DataChip>
-                          {it.title && (
-                            <span className="text-[length:var(--text-body-sm)] font-medium text-fg">
-                              {it.title}
-                            </span>
-                          )}
-                        </div>
-                        {it.content && (
-                          <p className="mt-1.5 line-clamp-3 whitespace-pre-wrap text-[length:var(--text-body-sm)] leading-relaxed text-fg-muted">
-                            {it.content}
+        <div className="flex flex-col gap-6">
+          {/* Full-width vault overview — each vault is its own card */}
+          {orgVaults.length === 0 ? (
+            <Card className="p-8">
+              <EmptyState icon={Building2} title={tv("title")} hint={tv("empty")} />
+            </Card>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {orgVaults.map((v) => {
+                const vaultItems = v.id === activeId ? docItems : [];
+                return (
+                  <Card key={v.id} className="flex flex-col gap-3 p-5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-fg">{v.name}</p>
+                        {v.description && (
+                          <p className="mt-0.5 text-[length:var(--text-caption)] text-fg-muted">
+                            {v.description}
                           </p>
                         )}
-                      </li>
-                    ))
-                  )}
-                </ul>
-
-                {canWrite && (
-                  <form
-                    action={addItem}
-                    className="space-y-2 border-t border-line-subtle px-6 py-4"
-                  >
-                    <input type="hidden" name="vault_id" value={activeId} />
-                    <div className="flex gap-2">
-                      <div className="w-32 shrink-0">
-                        <Select
-                          name="kind"
-                          defaultValue="TEXT"
-                          size="sm"
-                          aria-label={tv("kindText")}
-                        >
-                          <option value="TEXT">{tv("kindText")}</option>
-                          <option value="URL">{tv("kindUrl")}</option>
-                        </Select>
                       </div>
-                      <Input
-                        name="title"
-                        placeholder={tv("titlePlaceholder")}
-                        className="flex-1"
-                      />
+                      {canWrite && (
+                        <form action={deleteVault}>
+                          <input type="hidden" name="id" value={v.id} />
+                          <button
+                            type="submit"
+                            className="shrink-0 text-[length:var(--text-meta)] text-fg-subtle transition-colors hover:text-danger"
+                          >
+                            {tv("delete")}
+                          </button>
+                        </form>
+                      )}
                     </div>
-                    <Textarea
-                      name="content"
-                      placeholder={tv("contentPlaceholder")}
-                      rows={3}
-                      required
-                    />
-                    <Button type="submit" className="self-start">
-                      {tv("addEntry")}
+                    {v.id === activeId && docItems.length > 0 && (
+                      <ul className="divide-y divide-line-subtle rounded-ui border border-line">
+                        {docItems.slice(0, 3).map((it) => (
+                          <li key={it.id} className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <DataChip tone="neutral" mono>{it.kind}</DataChip>
+                              {it.title && (
+                                <span className="text-[length:var(--text-body-sm)] font-medium text-fg">
+                                  {it.title}
+                                </span>
+                              )}
+                            </div>
+                            {it.content && (
+                              <p className="mt-1 line-clamp-2 text-[length:var(--text-body-sm)] leading-relaxed text-fg-muted">
+                                {it.content}
+                              </p>
+                            )}
+                          </li>
+                        ))}
+                        {docItems.length > 3 && (
+                          <li className="px-4 py-2 text-[length:var(--text-caption)] text-fg-muted">
+                            + {docItems.length - 3} weitere Einträge
+                          </li>
+                        )}
+                      </ul>
+                    )}
+                    <Button asChild variant="ghost" size="sm" className="self-start text-fg-muted">
+                      <a href={`/vaults?folder=org&vault=${v.id}`}>Einträge ansehen</a>
                     </Button>
-                  </form>
-                )}
-              </Card>
-            ) : (
-              <Card className="p-2">
-                <EmptyState
-                  icon={FolderOpen}
-                  title={tv("title")}
-                  hint={tv("selectPrompt")}
-                />
-              </Card>
-            )}
-          </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Add new content — inline form, no separate create-vault panel */}
+          {canWrite && activeId && activeVault && (
+            <Card variant="ledger" className="overflow-hidden">
+              <div className="flex items-center justify-between gap-3 border-b border-line-subtle px-6 py-4">
+                <span className="text-[length:var(--text-body-sm)] font-medium text-fg">
+                  {activeVault.name} — {tv("entriesCount", { count: docItems.length })}
+                </span>
+              </div>
+              <form
+                action={addItem}
+                className="space-y-2 px-6 py-4"
+              >
+                <input type="hidden" name="vault_id" value={activeId} />
+                <div className="flex gap-2">
+                  <div className="w-32 shrink-0">
+                    <Select name="kind" defaultValue="TEXT" size="sm" aria-label={tv("kindText")}>
+                      <option value="TEXT">{tv("kindText")}</option>
+                      <option value="URL">{tv("kindUrl")}</option>
+                    </Select>
+                  </div>
+                  <Input name="title" placeholder={tv("titlePlaceholder")} className="flex-1" />
+                </div>
+                <Textarea name="content" placeholder={tv("contentPlaceholder")} rows={3} required />
+                <Button type="submit" className="self-start">{tv("addEntry")}</Button>
+              </form>
+            </Card>
+          )}
         </div>
       )}
     </>

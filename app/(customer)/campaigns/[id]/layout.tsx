@@ -13,9 +13,6 @@ export default async function CampaignLayout({
 }) {
   const { id } = await params;
 
-  // Resolve the campaign name for the breadcrumb (WHY-105) so the dynamic id
-  // segment renders the real name, not the generic "Kampagne" fallback. A
-  // failure here must never break the layout — the breadcrumb just falls back.
   let campaignName: string | undefined;
   try {
     const campaign = await makeApi(await requestCookie()).campaigns.get(id);
@@ -23,19 +20,22 @@ export default async function CampaignLayout({
   } catch {
     campaignName = undefined;
   }
-  // Campaign detail routes (dashboard, tables, insights, map, chat) are dense
-  // work surfaces → full available width via the `.surface-bleed` opt-out of
-  // the `.app-work > *` 1280px cap. See design-contract §7.
-  // When the active tab is the chat ("Ask"), a descendant carries .chat-fill —
-  // then this wrapper must fill the work row and stack as a column so the chat
-  // gets the remaining height under the tabs (the chat-fill contract requires
-  // every wrapper between .app-work and .chat-fill to fill+column). For all
-  // other tabs the wrapper is a normal block that scrolls in .app-work.
+
+  // The tab bar lives OUTSIDE the surface-bleed content wrapper so it always
+  // obeys the `.app-work > *` max-width / centering rule, regardless of whether
+  // the active tab is the full-width chat. This prevents the visual "jump"
+  // (width change + position shift) when switching between normal tabs and
+  // "Fragen". The surface-bleed div below handles both the full-width opt-in
+  // and the chat-fill flex contract.
   return (
-    <div className="surface-bleed [&:has(.chat-fill)]:flex [&:has(.chat-fill)]:min-h-0 [&:has(.chat-fill)]:flex-1 [&:has(.chat-fill)]:flex-col">
+    <>
       <RegisterCampaignCrumb name={campaignName} />
+      {/* Tabs: direct .app-work child → always max-width centered, consistent position */}
       <CampaignTabs campaignId={id} />
-      {children}
-    </div>
+      {/* Content: surface-bleed for full-width + chat-fill aware height filling */}
+      <div className="surface-bleed [&:has(.chat-fill)]:flex [&:has(.chat-fill)]:min-h-0 [&:has(.chat-fill)]:flex-1 [&:has(.chat-fill)]:flex-col">
+        {children}
+      </div>
+    </>
   );
 }
