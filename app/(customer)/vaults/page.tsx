@@ -7,6 +7,7 @@ import {
   FolderOpen,
   Network,
   Plug,
+  Search,
   TriangleAlert,
   Upload,
 } from "lucide-react";
@@ -19,20 +20,14 @@ import {
 } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select } from "@/components/ui/select";
 import { ErrorState } from "@/components/ErrorState";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Card } from "@/components/ui/card";
-import { CardGrid } from "@/components/ui/card-grid";
-import { DataChip } from "@/components/ui/data-chip";
 import { Badge } from "@/components/ui/badge";
 import { TwinGraph } from "@/components/ctsim/TwinGraph";
-import { VaultFolderCard } from "@/components/vault/VaultFolderCard";
 import { VaultFolderBreadcrumb } from "@/components/vaults/VaultFolderBreadcrumb";
+import { VaultAddButton } from "@/components/vaults/VaultAddButton";
 import { cn } from "@/lib/utils";
 
 type Folder = "org" | "roles" | "integrations" | "uploads";
@@ -45,11 +40,7 @@ interface SearchParams {
   flashType?: "ok" | "err";
 }
 
-// WHY-115: Kontext-Vault hub. ONE surface that consolidates Allgemein/
-// Unternehmen (org vault items), Rollen (the digital-twin graph), Integrationen
-// (folded in, coming-soon here), and Uploads (FILE items). The standalone
-// /twin and /integrations routes are kept as deep links. Read = ORG_MEMBER;
-// writes = ORG_OWNER (enforced server-side).
+// WHY-115: Kontext-Vault hub. Single tabbed page — tabs at TOP.
 export default async function KontextVaultPage({
   searchParams,
 }: {
@@ -61,9 +52,11 @@ export default async function KontextVaultPage({
   const tv = await getTranslations("vaults");
   const api = makeApi(await requestCookie());
   const canWrite = me.role === "ORG_OWNER";
-  const folder = (FOLDERS as string[]).includes(sp.folder ?? "")
+
+  // Default to "org" tab when no folder param given.
+  const folder: Folder = (FOLDERS as string[]).includes(sp.folder ?? "")
     ? (sp.folder as Folder)
-    : null;
+    : "org";
 
   let vaults: Vault[] = [];
   let error: unknown = null;
@@ -89,7 +82,7 @@ export default async function KontextVaultPage({
   const docItems = items.filter((it) => it.kind !== "FILE");
 
   let graph: TwinGraphData = { nodes: [], edges: [] };
-  if (folder === null || folder === "roles") {
+  if (folder === "roles") {
     try {
       graph = await api.twin.graph();
     } catch {
@@ -97,57 +90,7 @@ export default async function KontextVaultPage({
     }
   }
 
-  async function createVault(formData: FormData) {
-    "use server";
-    const name = String(formData.get("name") ?? "").trim();
-    if (!name) {
-      redirect(
-        `/vaults?folder=org&flashType=err&flash=${encodeURIComponent("Name required")}`,
-      );
-    }
-    const description = String(formData.get("description") ?? "").trim();
-    const api = makeApi(await requestCookie());
-    try {
-      const v = await api.vaults.create({
-        name,
-        description: description || undefined,
-      });
-      revalidatePath("/vaults");
-      redirect(`/vaults?folder=org&vault=${v.id}`);
-    } catch (e) {
-      const msg = e instanceof ApiError ? e.message : (e as Error).message;
-      redirect(`/vaults?folder=org&flashType=err&flash=${encodeURIComponent(msg)}`);
-    }
-  }
-
-  async function addItem(formData: FormData) {
-    "use server";
-    const vaultId = String(formData.get("vault_id") ?? "");
-    const kind = String(formData.get("kind") ?? "TEXT") as VaultItem["kind"];
-    const content = String(formData.get("content") ?? "").trim();
-    const title = String(formData.get("title") ?? "").trim();
-    if (!vaultId || !content) {
-      redirect(
-        `/vaults?folder=org&vault=${vaultId}&flashType=err&flash=${encodeURIComponent("Content required")}`,
-      );
-    }
-    const api = makeApi(await requestCookie());
-    try {
-      await api.vaults.addItem(vaultId, {
-        kind,
-        content,
-        title: title || undefined,
-      });
-      revalidatePath("/vaults");
-      redirect(`/vaults?folder=org&vault=${vaultId}`);
-    } catch (e) {
-      const msg = e instanceof ApiError ? e.message : (e as Error).message;
-      redirect(
-        `/vaults?folder=org&vault=${vaultId}&flashType=err&flash=${encodeURIComponent(msg)}`,
-      );
-    }
-  }
-
+  // ── Server actions ──────────────────────────────────────────────────────────
   async function deleteVault(formData: FormData) {
     "use server";
     const id = String(formData.get("id") ?? "");
@@ -156,88 +99,43 @@ export default async function KontextVaultPage({
     try {
       await api.vaults.remove(id);
       revalidatePath("/vaults");
-      redirect(
-        "/vaults?folder=org&flashType=ok&flash=" +
-          encodeURIComponent("Vault deleted"),
-      );
+      redirect("/vaults?folder=org&flashType=ok&flash=" + encodeURIComponent("Vault gelöscht"));
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : (e as Error).message;
       redirect(`/vaults?folder=org&flashType=err&flash=${encodeURIComponent(msg)}`);
     }
   }
 
-  // ── Hub landing — the folder grid ──────────────────────────────────────────
-  if (folder === null) {
-    const orgItemTotal = orgVaults.length;
-    const roleCount = graph.nodes.length;
-    return (
-      <>
-        <PageHeader title={t("title")} subtitle={t("subtitle")} />
-        {error && (
-          <div className="mb-6">
-            <ErrorState error={error} />
-          </div>
-        )}
-        {sp.flash && <Flash type={sp.flashType ?? "ok"} message={sp.flash} />}
-        <CardGrid>
-          <VaultFolderCard
-            href="/vaults?folder=org"
-            icon={Building2}
-            title={t("orgTitle")}
-            description={t("orgDesc")}
-            count={orgItemTotal}
-          />
-          <VaultFolderCard
-            href="/vaults?folder=roles"
-            icon={Network}
-            title={t("rolesTitle")}
-            description={t("rolesDesc")}
-            count={roleCount}
-          />
-          <VaultFolderCard
-            href="/vaults?folder=integrations"
-            icon={Plug}
-            title={t("integrationsTitle")}
-            description={t("integrationsDesc")}
-            comingSoon
-            comingSoonLabel={t("comingSoon")}
-          />
-          <VaultFolderCard
-            href="/vaults?folder=uploads"
-            icon={Upload}
-            title={t("uploadsTitle")}
-            description={t("uploadsDesc")}
-          />
-        </CardGrid>
-      </>
-    );
-  }
+  // ── Tab labels + counts ─────────────────────────────────────────────────────
+  const tabs: { id: Folder; label: string; count?: number; comingSoon?: boolean }[] = [
+    { id: "org",          label: t("orgTitle"),           count: orgVaults.length },
+    { id: "uploads",      label: t("uploadsTitle"),       count: fileItems.length },
+    { id: "roles",        label: t("rolesTitle"),         count: graph.nodes.length },
+    { id: "integrations", label: t("integrationsTitle"),  comingSoon: true },
+  ];
 
-  // ── Folder views ───────────────────────────────────────────────────────────
-  const folderTitle = {
-    org: t("orgTitle"),
-    roles: t("rolesTitle"),
-    integrations: t("integrationsTitle"),
-    uploads: t("uploadsTitle"),
-  }[folder];
-  const folderSubtitle = {
-    org: t("orgDesc"),
-    roles: t("rolesDesc"),
-    integrations: t("integrationsDesc"),
-    uploads: t("uploadsDesc"),
-  }[folder];
-
+  // ── Layout ──────────────────────────────────────────────────────────────────
   return (
     <>
-      {/* Register the folder label in the topbar breadcrumb ("Kontext-Tresor > Rollen") */}
-      <VaultFolderBreadcrumb label={folderTitle ?? ""} />
+      {/* Breadcrumb for subfolder display in topbar */}
+      <VaultFolderBreadcrumb label={tabs.find((tb) => tb.id === folder)?.label ?? ""} />
+
+      {/* Header: title + action buttons */}
       <PageHeader
-        title={folderTitle}
-        subtitle={folderSubtitle}
+        title={t("title")}
+        subtitle={t("subtitle")}
         actions={
-          <Button asChild variant="ghost" size="sm">
-            <a href="/vaults">{t("backToHub")}</a>
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Kontext durchsuchen → Wissens-Chat */}
+            <Button asChild variant="outline" size="sm" className="h-[36px] gap-1.5">
+              <a href="/chat">
+                <Search size={14} aria-hidden />
+                Durchsuchen
+              </a>
+            </Button>
+            {/* Kontext hinzufügen (⌘K) — needs an active vaultId */}
+            {activeId && <VaultAddButton vaultId={activeId} />}
+          </div>
         }
       />
 
@@ -247,6 +145,46 @@ export default async function KontextVaultPage({
         </div>
       )}
       {sp.flash && <Flash type={sp.flashType ?? "ok"} message={sp.flash} />}
+
+      {/* ── Tab bar — TOP, pill style ───────────────────────────────────────── */}
+      <div className="-mt-4 mb-8 overflow-x-auto scrollbar-none">
+        <nav
+          aria-label="Kontext-Kategorien"
+          className="inline-flex items-center gap-1 rounded-ui border border-line-subtle bg-surface-2 p-1"
+        >
+          {tabs.map((tab) => {
+            const active = tab.id === folder;
+            return (
+              <a
+                key={tab.id}
+                href={tab.comingSoon ? undefined : `/vaults?folder=${tab.id}`}
+                aria-current={active ? "page" : undefined}
+                aria-disabled={tab.comingSoon}
+                className={cn(
+                  "relative flex h-8 items-center whitespace-nowrap rounded-ui px-3.5 text-[length:var(--text-meta)] font-medium transition-colors",
+                  active
+                    ? "bg-surface text-fg shadow-sm"
+                    : tab.comingSoon
+                      ? "cursor-default text-fg-faint"
+                      : "text-fg-muted hover:text-fg",
+                )}
+              >
+                {tab.label}
+                {tab.count !== undefined && (
+                  <span className="ml-1.5 tabular-nums text-fg-subtle">{tab.count}</span>
+                )}
+                {tab.comingSoon && (
+                  <Badge variant="secondary" className="ml-1.5 text-[10px]">
+                    Bald
+                  </Badge>
+                )}
+              </a>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* ── Tab content ──────────────────────────────────────────────────────── */}
 
       {folder === "roles" && (
         <div className="flex flex-col gap-4">
@@ -287,115 +225,142 @@ export default async function KontextVaultPage({
       )}
 
       {folder === "org" && (
-        <div className="flex flex-col gap-6">
-          {/* Full-width vault overview — each vault is its own card */}
-          {orgVaults.length === 0 ? (
-            <Card className="p-8">
-              <EmptyState icon={Building2} title={tv("title")} hint={tv("empty")} />
-            </Card>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {orgVaults.map((v) => {
-                const vaultItems = v.id === activeId ? docItems : [];
-                return (
-                  <Card key={v.id} className="flex flex-col gap-3 p-5">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-semibold text-fg">{v.name}</p>
-                        {v.description && (
-                          <p className="mt-0.5 text-[length:var(--text-caption)] text-fg-muted">
-                            {v.description}
-                          </p>
-                        )}
-                      </div>
-                      {canWrite && (
-                        <form action={deleteVault}>
-                          <input type="hidden" name="id" value={v.id} />
-                          <button
-                            type="submit"
-                            className="shrink-0 text-[length:var(--text-meta)] text-fg-subtle transition-colors hover:text-danger"
-                          >
-                            {tv("delete")}
-                          </button>
-                        </form>
-                      )}
-                    </div>
-                    {v.id === activeId && docItems.length > 0 && (
-                      <ul className="divide-y divide-line-subtle rounded-ui border border-line">
-                        {docItems.slice(0, 3).map((it) => (
-                          <li key={it.id} className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <DataChip tone="neutral" mono>{it.kind}</DataChip>
-                              {it.title && (
-                                <span className="text-[length:var(--text-body-sm)] font-medium text-fg">
-                                  {it.title}
-                                </span>
-                              )}
-                            </div>
-                            {it.content && (
-                              <p className="mt-1 line-clamp-2 text-[length:var(--text-body-sm)] leading-relaxed text-fg-muted">
-                                {it.content}
-                              </p>
-                            )}
-                          </li>
-                        ))}
-                        {docItems.length > 3 && (
-                          <li className="px-4 py-2 text-[length:var(--text-caption)] text-fg-muted">
-                            + {docItems.length - 3} weitere Einträge
-                          </li>
-                        )}
-                      </ul>
-                    )}
-                    <Button asChild variant="ghost" size="sm" className="self-start text-fg-muted">
-                      <a href={`/vaults?folder=org&vault=${v.id}`}>Einträge ansehen</a>
-                    </Button>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Add new content — inline form, no separate create-vault panel */}
-          {canWrite && activeId && activeVault && (
-            <Card variant="ledger" className="overflow-hidden">
-              <div className="flex items-center justify-between gap-3 border-b border-line-subtle px-6 py-4">
-                <span className="text-[length:var(--text-body-sm)] font-medium text-fg">
-                  {activeVault.name} — {tv("entriesCount", { count: docItems.length })}
-                </span>
-              </div>
-              <form
-                action={addItem}
-                className="space-y-2 px-6 py-4"
-              >
-                <input type="hidden" name="vault_id" value={activeId} />
-                <div className="flex gap-2">
-                  <div className="w-32 shrink-0">
-                    <Select name="kind" defaultValue="TEXT" size="sm" aria-label={tv("kindText")}>
-                      <option value="TEXT">{tv("kindText")}</option>
-                      <option value="URL">{tv("kindUrl")}</option>
-                    </Select>
-                  </div>
-                  <Input name="title" placeholder={tv("titlePlaceholder")} className="flex-1" />
-                </div>
-                <Textarea name="content" placeholder={tv("contentPlaceholder")} rows={3} required />
-                <Button type="submit" className="self-start">{tv("addEntry")}</Button>
-              </form>
-            </Card>
-          )}
-        </div>
+        <OrgView
+          orgVaults={orgVaults}
+          activeId={activeId}
+          docItems={docItems}
+          canWrite={canWrite}
+          deleteVault={deleteVault}
+          tv={tv}
+        />
       )}
     </>
   );
 }
 
-/** Read-only list of FILE-kind vault items (uploaded documents). */
-function UploadsView({
-  items,
-  emptyLabel,
+// ── Org vault grid ────────────────────────────────────────────────────────────
+async function OrgView({
+  orgVaults,
+  activeId,
+  docItems,
+  canWrite,
+  deleteVault,
+  tv,
 }: {
-  items: VaultItem[];
-  emptyLabel: string;
+  orgVaults: Vault[];
+  activeId: string | null;
+  docItems: VaultItem[];
+  canWrite: boolean;
+  deleteVault: (fd: FormData) => Promise<void>;
+  tv: Awaited<ReturnType<typeof getTranslations<"vaults">>>;
 }) {
+  if (orgVaults.length === 0) {
+    return (
+      <Card className="p-8">
+        <EmptyState
+          icon={Building2}
+          title={tv("title")}
+          hint={tv("empty")}
+        />
+      </Card>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {orgVaults.map((v) => {
+        const vaultItems = v.id === activeId ? docItems : [];
+        return (
+          <Card key={v.id} className="flex flex-col gap-3 p-5">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-semibold text-fg">{v.name}</p>
+                {v.description && (
+                  <p className="mt-0.5 text-[length:var(--text-caption)] text-fg-muted">
+                    {v.description}
+                  </p>
+                )}
+              </div>
+              {canWrite && (
+                <form action={deleteVault}>
+                  <input type="hidden" name="id" value={v.id} />
+                  <button
+                    type="submit"
+                    className="shrink-0 text-[length:var(--text-meta)] text-fg-subtle transition-colors hover:text-danger"
+                  >
+                    {tv("delete")}
+                  </button>
+                </form>
+              )}
+            </div>
+
+            {/* Item list — max 5, human-readable labels */}
+            {vaultItems.length > 0 && (
+              <ul className="divide-y divide-line-subtle rounded-ui border border-line">
+                {vaultItems.slice(0, 5).map((it) => (
+                  <li key={it.id} className="flex items-start gap-2.5 px-3 py-2.5">
+                    <span className="mt-0.5 shrink-0 rounded border border-line bg-surface-2 px-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.05em] text-fg-subtle">
+                      {it.kind}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-medium text-fg">
+                        {itemLabel(it)}
+                      </p>
+                      {it.kind === "URL" && it.content && (
+                        <p className="truncate text-[11px] text-fg-faint">
+                          {it.content}
+                        </p>
+                      )}
+                    </div>
+                    {!it.embedded && (
+                      <span className="shrink-0 text-[10px] text-fg-faint">
+                        indexiert…
+                      </span>
+                    )}
+                  </li>
+                ))}
+                {vaultItems.length > 5 && (
+                  <li className="px-3 py-2 text-[length:var(--text-caption)] text-fg-muted">
+                    + {vaultItems.length - 5} weitere
+                  </li>
+                )}
+              </ul>
+            )}
+
+            <Button asChild variant="ghost" size="sm" className="self-start text-fg-muted">
+              <a href={`/vaults?folder=org&vault=${v.id}`}>
+                {vaultItems.length === 0 ? "Einträge ansehen" : tv("entriesCount", { count: vaultItems.length })}
+              </a>
+            </Button>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Human-readable label for a VaultItem — never shows raw UUIDs. */
+function itemLabel(it: VaultItem): string {
+  if (it.title) return it.title;
+  if (it.kind === "URL" && it.content) {
+    try {
+      const u = new URL(it.content);
+      // Show hostname + path, trimmed to 60 chars
+      const readable = (u.hostname + u.pathname).replace(/\/$/, "");
+      return readable.length > 60 ? readable.slice(0, 57) + "…" : readable;
+    } catch {
+      return it.content.slice(0, 60);
+    }
+  }
+  if (it.kind === "TEXT" && it.content) {
+    const snippet = it.content.trim().replace(/\s+/g, " ").slice(0, 60);
+    return snippet.length < it.content.trim().length ? snippet + "…" : snippet;
+  }
+  return it.kind === "FILE" ? "Datei" : "Eintrag";
+}
+
+// ── Uploads view ──────────────────────────────────────────────────────────────
+function UploadsView({ items, emptyLabel }: { items: VaultItem[]; emptyLabel: string }) {
   if (items.length === 0) {
     return (
       <Card className="p-2">
@@ -413,7 +378,7 @@ function UploadsView({
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[length:var(--text-body-sm)] font-medium text-fg">
-                {it.title ?? it.id}
+                {it.title ?? itemLabel(it)}
               </p>
               {it.mime && (
                 <p className="truncate text-[length:var(--text-caption)] text-fg-subtle">
@@ -439,13 +404,13 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/** Map known English backend errors to German. */
 function translateFlash(msg: string): string {
   const map: Record<string, string> = {
-    "content must be a valid URL for URL items": "Der Inhalt muss eine gültige URL sein (z. B. https://example.com).",
+    "content must be a valid URL for URL items": "Der Inhalt muss eine gültige URL sein.",
     "Name required": "Name ist erforderlich.",
     "Content required": "Inhalt ist erforderlich.",
-    "Vault deleted": "Tresor wurde gelöscht.",
+    "Vault deleted": "Vault gelöscht.",
+    "Vault gelöscht": "Vault gelöscht.",
   };
   return map[msg] ?? msg;
 }
