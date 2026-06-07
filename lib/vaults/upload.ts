@@ -186,6 +186,23 @@ export async function searchVault(
   return jsonOrThrow<VaultSearchHit[]>(res);
 }
 
+/**
+ * Re-run ingestion for a FILE item by re-calling its finalize endpoint. The
+ * server re-reads the already-uploaded S3 object, re-extracts text and re-runs
+ * embedding — used by the peek panel's "re-index" action. Returns the fresh
+ * ItemView so the caller can update the index-status pill.
+ */
+export async function reindexFileItem(
+  vaultId: string,
+  itemId: string,
+): Promise<VaultItem> {
+  const res = await fetch(
+    dapi(`orgs/me/vaults/${vaultId}/items/${itemId}/finalize`),
+    { method: "POST" },
+  );
+  return jsonOrThrow<VaultItem>(res);
+}
+
 /** Add a TEXT or URL item via the existing items endpoint. */
 export async function addVaultItem(
   vaultId: string,

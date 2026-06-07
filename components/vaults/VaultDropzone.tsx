@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useImperativeHandle, useRef, useState, type Ref } from "react";
 import {
   CheckCircle2,
   FileText,
@@ -33,12 +33,20 @@ import {
 
 type QuickMode = "none" | "url" | "text";
 
+/** Imperative handle so the Cmd+K palette can drive the upload surface. */
+export interface VaultDropzoneHandle {
+  openFilePicker: () => void;
+  openQuickAdd: (mode: "url" | "text") => void;
+}
+
 export function VaultDropzone({
   vaultId,
   onChanged,
+  ref,
 }: {
   vaultId: string | null;
   onChanged: () => void;
+  ref?: Ref<VaultDropzoneHandle>;
 }) {
   const t = useTranslations("vaultHub");
   const { tasks, uploadMany, dismiss } = useVaultUpload(vaultId, onChanged);
@@ -47,6 +55,15 @@ export function VaultDropzone({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const disabled = !vaultId;
+
+  useImperativeHandle(ref, () => ({
+    openFilePicker: () => {
+      if (!disabled) inputRef.current?.click();
+    },
+    openQuickAdd: (mode) => {
+      if (!disabled) setQuick(mode);
+    },
+  }));
 
   function onDrop(e: React.DragEvent) {
     e.preventDefault();

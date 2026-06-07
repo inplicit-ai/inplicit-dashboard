@@ -1032,6 +1032,10 @@ export interface VaultItem {
   mime?: string;
   byte_size?: number;
   embedded: boolean;
+  /** Vault scope this item belongs to (mirrors the parent vault). */
+  scope?: "ORG" | "CAMPAIGN" | "ROLE";
+  /** Set when the owning vault is role-scoped. */
+  role_id?: string;
   created_at: string;
 }
 export interface NewVaultItemInput {

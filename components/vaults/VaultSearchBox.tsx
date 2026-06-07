@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useImperativeHandle, useState, type Ref } from "react";
 import { Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Composer } from "@/components/ui/composer";
@@ -16,7 +16,18 @@ import type { VaultSearchHit } from "@/lib/api";
  * rows above the composer (RagSearch register). No generation — pure retrieval.
  * ────────────────────────────────────────────────────────────────────────── */
 
-export function VaultSearchBox({ vaultId }: { vaultId: string | null }) {
+/** Imperative handle so the Cmd+K palette can seed a search. */
+export interface VaultSearchHandle {
+  runSearch: (query: string) => void;
+}
+
+export function VaultSearchBox({
+  vaultId,
+  ref,
+}: {
+  vaultId: string | null;
+  ref?: Ref<VaultSearchHandle>;
+}) {
   const t = useTranslations("vaultHub");
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,6 +41,7 @@ export function VaultSearchBox({ vaultId }: { vaultId: string | null }) {
     setLoading(true);
     setError(null);
     setLastQuery(q);
+    setQuery(q);
     try {
       setHits(await searchVault(vaultId, q));
     } catch (e) {
@@ -39,6 +51,8 @@ export function VaultSearchBox({ vaultId }: { vaultId: string | null }) {
       setLoading(false);
     }
   }
+
+  useImperativeHandle(ref, () => ({ runSearch: (q: string) => void run(q) }));
 
   return (
     <div className="space-y-3">

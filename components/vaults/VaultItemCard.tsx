@@ -1,3 +1,4 @@
+import type * as React from "react";
 import { FileText, Link2, Upload, type LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { DataChip } from "@/components/ui/data-chip";
@@ -28,15 +29,41 @@ export function VaultItemCard({
   kindLabel,
   indexedLabel,
   indexingLabel,
+  onOpen,
+  openLabel,
 }: {
   item: VaultItem;
   kindLabel: string;
   indexedLabel: string;
   indexingLabel: string;
+  /** Open the calm peek panel for this item. */
+  onOpen?: () => void;
+  /** Accessible label for the open affordance. */
+  openLabel?: string;
 }) {
   const Icon = KIND_ICON[item.kind];
   return (
-    <Card className="gap-2 px-5 py-4">
+    <Card
+      className={
+        onOpen
+          ? "gap-2 cursor-pointer px-5 py-4 transition-colors hover:border-line-strong hover:bg-surface-2 focus-visible:border-accent focus-visible:shadow-[var(--shadow-focus)] outline-none"
+          : "gap-2 px-5 py-4"
+      }
+      {...(onOpen
+        ? {
+            role: "button" as const,
+            tabIndex: 0,
+            "aria-label": openLabel,
+            onClick: onOpen,
+            onKeyDown: (e: React.KeyboardEvent) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onOpen();
+              }
+            },
+          }
+        : {})}
+    >
       <div className="flex items-start gap-3">
         <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-ui border border-line bg-surface-2 text-fg-muted">
           <Icon size={16} aria-hidden />
