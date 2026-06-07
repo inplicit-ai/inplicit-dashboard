@@ -135,15 +135,29 @@ export function VaultAddButton({
             ))}
           </div>
 
-          {/* Fields */}
+          {/* Fields — title first, then content */}
           <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-fg-subtle">
+                Titel
+              </label>
+              <input
+                ref={firstInputRef as React.RefObject<HTMLInputElement>}
+                type="text"
+                placeholder={mode === "url" ? "z. B. Unternehmens-Website" : "z. B. Produktstrategie Q3"}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && save()}
+                className="rounded-ui border border-line bg-surface px-3 py-2 text-[13px] text-fg outline-none transition-colors focus:border-line-strong"
+              />
+            </div>
+
             {mode === "url" ? (
               <div className="flex flex-col gap-1">
                 <label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-fg-subtle">
                   URL *
                 </label>
                 <input
-                  ref={firstInputRef as React.RefObject<HTMLInputElement>}
                   type="url"
                   placeholder="https://example.com"
                   value={content}
@@ -155,10 +169,9 @@ export function VaultAddButton({
             ) : (
               <div className="flex flex-col gap-1">
                 <label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-fg-subtle">
-                  Text *
+                  Inhalt *
                 </label>
                 <textarea
-                  ref={firstInputRef as React.RefObject<HTMLTextAreaElement>}
                   placeholder="Füge hier deinen Text ein…"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
@@ -167,19 +180,6 @@ export function VaultAddButton({
                 />
               </div>
             )}
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-fg-subtle">
-                Titel (optional)
-              </label>
-              <input
-                type="text"
-                placeholder={mode === "url" ? "z. B. Unternehmens-Website" : "z. B. Produktstrategie Q3"}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="rounded-ui border border-line bg-surface px-3 py-2 text-[13px] text-fg outline-none transition-colors focus:border-line-strong"
-              />
-            </div>
           </div>
 
           {error && (

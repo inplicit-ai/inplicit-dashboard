@@ -121,7 +121,7 @@ export function SetupChat({
                       {turn.content}
                     </div>
                   ) : (
-                    <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
+                    <div className="w-full max-w-[72ch] rounded-lg rounded-tl-sm border border-line bg-surface-2 px-4 py-3 text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
                       {turn.content && (
                         <p className="whitespace-pre-wrap">{turn.content}</p>
                       )}
