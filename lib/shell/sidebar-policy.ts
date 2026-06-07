@@ -23,7 +23,9 @@ export interface SidebarPolicyState {
  */
 export function routeFamily(pathname: string): string {
   if (pathname.startsWith("/interview/")) return "interview-room";
-  if (pathname === "/campaigns/new") return "campaign-new";
+  // All create-flow steps (launchpad, configure, review) share one family so
+  // user overrides survive navigation between steps.
+  if (pathname.startsWith("/campaigns/new")) return "campaign-new";
 
   const campaignMatch = pathname.match(/^\/campaigns\/([^/]+)/);
   if (campaignMatch && campaignMatch[1] !== "new" && campaignMatch[1] !== "team") {
@@ -43,15 +45,8 @@ export function resolveSidebarState(pathname: string): SidebarState {
   // Immersive interview room — orb owns the viewport.
   if (pathname.startsWith("/interview/")) return "hidden";
 
-  // Setup-agent split view needs full width.
-  if (pathname === "/campaigns/new") return "hidden";
-
-  // Stepper-driven campaign sub-screens reclaim space but keep an escape hatch.
-  if (/^\/campaigns\/[^/]+\/(review|launch|configure)/.test(pathname)) {
-    return "icon";
-  }
-
-  // Everything else (lists, campaign tabs, org surfaces, staff) keeps the rail.
+  // All other routes (including the entire campaign setup flow) keep the rail
+  // expanded so the layout stays stable while the user navigates steps.
   return "expanded";
 }
 

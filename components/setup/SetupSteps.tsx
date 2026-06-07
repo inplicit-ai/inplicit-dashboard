@@ -18,15 +18,21 @@ function extractDraftId(pathname: string): string | null {
 
 /**
  * Resolve the href for a given step index, given the current pathname.
- * Completed steps (i < active) are navigable links; the active and upcoming
- * steps are not (upcoming steps can't be reached before the previous is done).
+ * All steps (including upcoming ones) are navigable links once a draftId
+ * exists, so users can jump ahead to Prüfen/Starten at any time and see the
+ * current state of the draft (orange gates for missing fields). The active step
+ * itself is a link too so the pill is still rendered but the step is not
+ * disabled.
+ *
+ * Step 3 (Starten) has no dedicated route — it fires from the review screen —
+ * so it never returns a link.
  */
-function hrefForStep(i: number, active: number, pathname: string): string | null {
-  if (i >= active) return null; // active or upcoming: not a link
+function hrefForStep(i: number, _active: number, pathname: string): string | null {
   const draftId = extractDraftId(pathname);
-  if (i === 0) return "/campaigns/new"; // Aufbauen
+  if (i === 0) return "/campaigns/new"; // Aufbauen — always reachable
   if (i === 1 && draftId) return `/campaigns/new/${draftId}`; // Konfigurieren
   if (i === 2 && draftId) return `/campaigns/new/${draftId}/review`; // Prüfen
+  // Step 3 (Starten) fires from the review screen, no route.
   return null;
 }
 
@@ -69,7 +75,11 @@ export function SetupSteps() {
 
           const baseClass = cn(
             "relative flex h-8 items-center whitespace-nowrap rounded-ui px-3.5 text-[length:var(--text-meta)] font-medium transition-colors",
-            isActive ? "text-fg" : href ? "text-fg-muted hover:text-fg" : "text-fg-faint cursor-default",
+            isActive
+              ? "text-fg"
+              : href
+                ? "text-fg-muted hover:text-fg"
+                : "text-fg-faint cursor-default",
           );
 
           if (href) {
