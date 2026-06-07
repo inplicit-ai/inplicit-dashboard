@@ -190,7 +190,11 @@
       "thinking": "Drafting…",
       "you": "You",
       "assistant": "Assistant",
-      "refineExamplesLabel": "Try one of these"
+      "refineExamplesLabel": "Try one of these",
+      "ready": "Ready",
+      "drafting": "Drafting",
+      "voiceComingSoon": "Voice mode — coming soon",
+      "voiceComingSoonHint": "The spoken interview is coming soon. For now, just type here."
     },
     "toolCard": {
       "applied": "Updated catalog",

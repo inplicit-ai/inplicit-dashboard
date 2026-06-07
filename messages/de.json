@@ -190,7 +190,11 @@
       "thinking": "Entwerfe…",
       "you": "Du",
       "assistant": "Assistent",
-      "refineExamplesLabel": "Probiere eines davon"
+      "refineExamplesLabel": "Probiere eines davon",
+      "ready": "Bereit",
+      "drafting": "Entwirft",
+      "voiceComingSoon": "Sprachmodus — bald verfügbar",
+      "voiceComingSoonHint": "Das Sprach-Interview kommt bald. Für jetzt einfach hier tippen."
     },
     "toolCard": {
       "applied": "Katalog aktualisiert",
