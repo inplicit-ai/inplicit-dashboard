@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, UserPlus, X as XIcon, Building2 } from "lucide-react";
+import { ArrowLeft, UserPlus, X as XIcon, Building2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatBand, type StatBandCell } from "@/components/ui/stat-band";
 import { EvidenceTree, type EvidenceNode } from "@/components/ui/agent-list";
@@ -225,20 +225,23 @@ export function ReviewLaunch({
           {vaults.length > 0 && (
             <motion.div {...reveal(0.07)}>
               <Card>
-                <CardHeader className="flex-row items-center justify-between pb-3">
-                  <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
-                    Kontext
-                  </CardTitle>
-                  {/* Ändern — top-right; only shown when a vault is active */}
-                  {selectedVaultId && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedVaultId(undefined)}
-                      className="text-[12px] text-fg-faint underline-offset-2 hover:text-fg hover:underline"
-                    >
-                      Ändern
-                    </button>
-                  )}
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
+                      Kontext
+                    </CardTitle>
+                    {/* Pencil icon — top-right; only when a vault is active */}
+                    {selectedVaultId && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedVaultId(undefined)}
+                        aria-label="Kontext ändern"
+                        className="flex h-7 w-7 items-center justify-center rounded-ui text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
+                      >
+                        <Pencil size={13} aria-hidden />
+                      </button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {selectedVaultId && selectedVault ? (
@@ -403,6 +406,7 @@ function PeopleEditor({
   const [form, setForm] = useState<PersonDraft>(EMPTY_PERSON);
   const [saving, setSaving] = useState(false);
   const [loadingAll, setLoadingAll] = useState(false);
+  const [allError, setAllError] = useState<string | null>(null);
 
   function field(key: keyof PersonDraft) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -434,17 +438,22 @@ function PeopleEditor({
 
   async function addAllOrgMembers() {
     setLoadingAll(true);
+    setAllError(null);
     try {
       const res = await fetch("/dapi/orgs/me/members");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const members = (await res.json()) as Array<{ email: string; name?: string }>;
+      if (members.length === 0) {
+        setAllError("Keine Mitglieder gefunden.");
+        return;
+      }
       const existing = new Set(people.map((p) => p.email));
       const newPeople: Person[] = members
         .filter((m) => !existing.has(m.email))
         .map((m) => ({ email: m.email, name: m.name }));
       await patch([...people, ...newPeople]);
     } catch {
-      // silently ignore — user can retry
+      setAllError("Mitglieder konnten nicht geladen werden. Bitte versuche es erneut.");
     } finally {
       setLoadingAll(false);
     }
@@ -497,6 +506,9 @@ function PeopleEditor({
             <UserPlus className="h-3.5 w-3.5" />
             {loadingAll ? "Wird geladen…" : "Alle Mitglieder hinzufügen"}
           </Button>
+          {allError && (
+            <p className="text-[12px] text-danger" role="alert">{allError}</p>
+          )}
         </div>
       )}
 
