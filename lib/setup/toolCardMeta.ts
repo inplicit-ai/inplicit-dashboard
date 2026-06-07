@@ -25,6 +25,7 @@ const KNOWN_TOOLS = [
   "set_goals",
   "refine_goal",
   "set_background",
+  "set_context_vault",
   "add_topic",
   "link_topics",
   "set_success_criteria",
@@ -72,6 +73,8 @@ export function summarize(card: SetupToolCallCard): string {
     }
     case "refine_goal":
       return String(a.text ?? "");
+    case "set_context_vault":
+      return a.vaultId ? String(a.vaultId) : "";
     case "add_topic":
       return String(a.title ?? "");
     case "link_topics":

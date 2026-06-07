@@ -175,13 +175,12 @@ export function Catalog({
         )}
       </SectionCard>
 
-      {/* ── Company context — Context Vault selection (WHY-104) ──────────── */}
-      {/* WHY-104: "Unternehmenskontext" is now ONLY a Context Vault selection
-          (a picker), not a free-text block. The agent + interviewer read the
-          selected vault's items as company context.
-          TODO(WHY-104): backend must persist `context_vault_id` on the setup
-          draft (new `set_context_vault` tool) and the launch path must attach
-          the chosen vault to the campaign — the patch is frontend-local today. */}
+      {/* ── Company context — Context Vault selection (WHY-116) ──────────── */}
+      {/* WHY-116: "Unternehmenskontext" is ONLY a Context Vault selection (a
+          picker), not a free-text block. The agent + interviewer read the
+          selected vault's items as company context. The picker dispatches the
+          `set_context_vault` tool (arg `vaultId`), which the server persists as
+          `context_vault_id` and the launch path attaches to the campaign. */}
       <SectionCard
         title={t("context")}
         touched={recentlyTouched?.has("set_context_vault")}

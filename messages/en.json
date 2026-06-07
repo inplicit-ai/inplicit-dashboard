@@ -200,6 +200,7 @@
       "set_goals": "Drafted goals",
       "refine_goal": "Refined a goal",
       "set_background": "Captured background",
+      "set_context_vault": "Linked a context vault",
       "add_topic": "Added topic",
       "link_topics": "Connected topics",
       "set_success_criteria": "Set success criteria",

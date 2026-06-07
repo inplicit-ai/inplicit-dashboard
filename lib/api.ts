@@ -687,11 +687,10 @@ export interface CampaignDraft {
   prompt?: string;
   goals?: Goal[];
   background?: { notes: string; files: FileRef[] };
-  /** WHY-104: the org Context Vault selected as the campaign's company-context
-   *  source. Replaces the free-text background block in the catalog UI.
-   *  TODO(WHY-104): the backend setup draft must persist this (new
-   *  `set_context_vault` tool + `context_vault_id` column) and the launch path
-   *  must materialise it onto the campaign — currently frontend-local only. */
+  /** WHY-116: the org Context Vault selected as the campaign's company-context
+   *  source. Replaces the free-text background block in the catalog UI. Persisted
+   *  server-side via the `set_context_vault` tool (`context_vault_id` column);
+   *  the launch path materialises it onto the campaign. */
   contextVaultId?: string;
   topics?: TopicGraph;
   successCriteria?: SuccessCriteria;

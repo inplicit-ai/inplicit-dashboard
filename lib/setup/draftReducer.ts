@@ -146,12 +146,12 @@ export function applyPatch(
       const prev = draft.background ?? { notes: "", files: [] };
       return { ...draft, background: { ...prev, notes } };
     }
-    // WHY-104: company context is selected from an org Context Vault (not free
-    // text). `vaultId === ""` clears the selection. TODO(WHY-104): the server
-    // `apply_patch` in backend/src/api/setup/tools.rs must mirror this case and
-    // persist a `context_vault_id` — until then this patch is frontend-local.
+    // WHY-116: company context is selected from an org Context Vault (not free
+    // text). Mirrors the server `set_context_vault` in backend/src/api/setup/
+    // tools.rs (persists `context_vault_id`). `vaultId` is `string | null`;
+    // `null` or `""` clears the selection.
     case "set_context_vault": {
-      const vaultId = arg<string>(args, "vaultId") ?? "";
+      const vaultId = arg<string | null>(args, "vaultId") ?? "";
       return { ...draft, contextVaultId: vaultId || undefined };
     }
     case "add_topic": {
