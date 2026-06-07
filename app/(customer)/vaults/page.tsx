@@ -159,7 +159,8 @@ function translateFlash(msg: string): string {
       "Der Inhalt muss eine gültige URL sein (z. B. https://example.com).",
     "Name required": "Name ist erforderlich.",
     "Content required": "Inhalt ist erforderlich.",
-    "Vault deleted": "Tresor wurde gelöscht.",
+    "Vault deleted": "Vault gelöscht.",
+    "Vault gelöscht": "Vault gelöscht.",
   };
   return map[msg] ?? msg;
 }

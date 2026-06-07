@@ -52,7 +52,8 @@ export function ReviewLaunch({
     draft.contextVaultId,
   );
   const reasons = validateForLaunch(draft);
-  const blocked = reasons.length > 0;
+  // People are required to launch (can't send invites without recipients).
+  const blocked = reasons.length > 0 || peopleCount === 0;
 
   const peopleCount = people.length;
   const goals = draft.goals ?? [];
@@ -149,45 +150,53 @@ export function ReviewLaunch({
         <StatBand cells={specCells} />
       </motion.section>
 
-      {/* ── Context vault ────────────────────────────────────────────────── */}
+      {/* ── Context vault — card style matching Goals + Delivery ────────── */}
       {vaults.length > 0 && (
-        <motion.section {...reveal(0.07)} className="flex flex-col gap-4">
-          <SectionHeading title="Kontext" className="mb-0" />
-          {selectedVaultId && selectedVault ? (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2.5 rounded-card border border-success/30 bg-success-soft px-4 py-3">
-                <CheckIcon size={16} className="shrink-0 text-success" aria-hidden />
-                <Building2 size={14} className="shrink-0 text-fg-muted" aria-hidden />
-                <span className="text-[length:var(--text-body-sm)] font-medium text-fg">
-                  {selectedVault.name}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => saveVault("")}
-                className="text-[12px] text-fg-faint underline-offset-2 hover:text-fg hover:underline"
-              >
-                Ändern
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <select
-                className="rounded-ui border border-line bg-surface px-3 py-2 text-[13px] text-fg outline-none transition-colors focus:border-line-strong"
-                value=""
-                onChange={(e) => saveVault(e.target.value)}
-              >
-                <option value="">— Kontext-Vault auswählen —</option>
-                {vaults.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.name}
-                  </option>
-                ))}
-              </select>
-              <span className="text-[12px] text-fg-faint">Optional</span>
-            </div>
-          )}
-        </motion.section>
+        <motion.div {...reveal(0.07)}>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
+                Kontext
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {selectedVaultId && selectedVault ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5 rounded-card border border-success/30 bg-success-soft px-4 py-3">
+                    <CheckIcon size={16} className="shrink-0 text-success" aria-hidden />
+                    <Building2 size={14} className="shrink-0 text-fg-muted" aria-hidden />
+                    <span className="text-[length:var(--text-body-sm)] font-medium text-fg">
+                      {selectedVault.name}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => saveVault("")}
+                    className="text-[12px] text-fg-faint underline-offset-2 hover:text-fg hover:underline"
+                  >
+                    Ändern
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <select
+                    className="rounded-ui border border-line bg-surface px-3 py-2 text-[13px] text-fg outline-none transition-colors focus:border-line-strong"
+                    value=""
+                    onChange={(e) => saveVault(e.target.value)}
+                  >
+                    <option value="">— Kontext auswählen —</option>
+                    {vaults.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.name}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-[12px] text-fg-faint">Optional</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
       {/* ── Main two-column grid ─────────────────────────────────────────── */}
@@ -237,13 +246,6 @@ export function ReviewLaunch({
                       onUpdate={setPeople}
                     />
                   </SpecRow>
-                  {draft.background?.notes?.trim() ? (
-                    <SpecRow label={tc("background")}>
-                      <span className="line-clamp-3 text-fg-muted">
-                        {draft.background.notes}
-                      </span>
-                    </SpecRow>
-                  ) : null}
                 </dl>
               </CardContent>
             </Card>
@@ -284,12 +286,12 @@ export function ReviewLaunch({
                     label={t("gates.no_interview_type")}
                     okLabel={t("gatesOk.no_interview_type")}
                   />
-                  {/* Non-blocking advisory: no red X, just orange warning */}
+                  {/* Blocking: launch is impossible without recipients */}
                   <Gate
                     ok={peopleCount > 0}
                     label="Teilnehmer hinzufügen"
-                    okLabel={`${peopleCount} Teilnehmer`}
-                    blocking={false}
+                    okLabel={`${peopleCount} Teilnehmer hinzugefügt`}
+                    blocking
                   />
                 </ul>
               </div>
@@ -365,9 +367,10 @@ function Gate({
   );
 }
 
-/* ─── Inline people editor (Email · Name · Abteilung · Rolle) ─────────────── */
+/* ─── People editor with three selection modes ────────────────────────────── */
+type PeopleMode = "all" | "team" | "individual";
 type PersonDraft = { email: string; name: string; department: string; role: string };
-const EMPTY: PersonDraft = { email: "", name: "", department: "", role: "" };
+const EMPTY_PERSON: PersonDraft = { email: "", name: "", department: "", role: "" };
 
 function PeopleEditor({
   draftId,
@@ -378,145 +381,197 @@ function PeopleEditor({
   people: Person[];
   onUpdate: (p: Person[]) => void;
 }) {
+  const [mode, setMode] = useState<PeopleMode>("individual");
   const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState<PersonDraft>(EMPTY);
+  const [form, setForm] = useState<PersonDraft>(EMPTY_PERSON);
   const [saving, setSaving] = useState(false);
+  const [loadingAll, setLoadingAll] = useState(false);
 
   function field(key: keyof PersonDraft) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((f) => ({ ...f, [key]: e.target.value }));
   }
 
-  async function save() {
-    if (!form.email.includes("@")) return;
-    const merged: Person[] = [
-      ...people,
-      {
-        email: form.email.trim(),
-        name: form.name.trim() || undefined,
-        // Person type has only email+name; department/role stored in name field for now
-        // TODO: extend Person type with department/role if backend supports it
-      },
-    ];
-    setSaving(true);
-    try {
-      await clientApi.setup.patchDraft(draftId, {
-        patch: { tool: "set_people", args: { people: merged } },
-      });
-      onUpdate(merged);
-      setForm(EMPTY);
-      setAdding(false);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function remove(email: string) {
-    const next = people.filter((p) => p.email !== email);
+  async function patch(next: Person[]) {
     await clientApi.setup.patchDraft(draftId, {
       patch: { tool: "set_people", args: { people: next } },
     });
     onUpdate(next);
   }
 
+  async function addIndividual() {
+    if (!form.email.includes("@")) return;
+    const merged: Person[] = [
+      ...people,
+      { email: form.email.trim(), name: form.name.trim() || undefined },
+    ];
+    setSaving(true);
+    try {
+      await patch(merged);
+      setForm(EMPTY_PERSON);
+      setAdding(false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function addAllOrgMembers() {
+    setLoadingAll(true);
+    try {
+      const res = await fetch("/dapi/orgs/me/members");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const members = (await res.json()) as Array<{ email: string; name?: string }>;
+      const existing = new Set(people.map((p) => p.email));
+      const newPeople: Person[] = members
+        .filter((m) => !existing.has(m.email))
+        .map((m) => ({ email: m.email, name: m.name }));
+      await patch([...people, ...newPeople]);
+    } catch {
+      // silently ignore — user can retry
+    } finally {
+      setLoadingAll(false);
+    }
+  }
+
+  async function remove(email: string) {
+    const next = people.filter((p) => p.email !== email);
+    await patch(next);
+  }
+
+  const MODES: { id: PeopleMode; label: string }[] = [
+    { id: "all",        label: "Gesamtes Unternehmen" },
+    { id: "team",       label: "Team / Abteilung" },
+    { id: "individual", label: "Einzelpersonen" },
+  ];
+
   return (
-    <div className="flex flex-col gap-3">
-      {/* Existing people list */}
+    <div className="flex flex-col gap-4">
+      {/* Mode selector — pill tabs */}
+      <div className="flex gap-1 rounded-ui border border-line-subtle bg-surface-2 p-1 self-start">
+        {MODES.map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            onClick={() => { setMode(m.id); setAdding(false); }}
+            className={`flex h-7 items-center whitespace-nowrap rounded-ui px-3 text-[11px] font-medium transition-colors ${
+              mode === m.id
+                ? "bg-surface text-fg shadow-sm"
+                : "text-fg-muted hover:text-fg"
+            }`}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Gesamtes Unternehmen ──────────────────────────────── */}
+      {mode === "all" && (
+        <div className="flex flex-col gap-3">
+          <p className="text-[12px] leading-snug text-fg-muted">
+            Fügt alle aktiven Mitglieder deiner Organisation als Teilnehmer hinzu.
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            className="self-start"
+            onClick={addAllOrgMembers}
+            disabled={loadingAll}
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            {loadingAll ? "Wird geladen…" : "Alle Mitglieder hinzufügen"}
+          </Button>
+        </div>
+      )}
+
+      {/* ── Team / Abteilung ──────────────────────────────────── */}
+      {mode === "team" && (
+        <div className="flex flex-col gap-3">
+          <p className="text-[12px] leading-snug text-fg-muted">
+            Gib den Abteilungsnamen ein und füge die Personen aus diesem Team einzeln hinzu.
+          </p>
+          <FormField
+            label="Abteilung / Team"
+            placeholder="z. B. Engineering, Sales…"
+            value={form.department}
+            onChange={field("department")}
+          />
+          {adding ? (
+            <div className="rounded-card border border-line bg-surface-2 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-[13px] font-semibold text-fg">Teammitglied hinzufügen</p>
+                <button type="button" onClick={() => { setAdding(false); setForm(EMPTY_PERSON); }} className="text-fg-faint hover:text-fg">
+                  <XIcon size={14} />
+                </button>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <FormField label="E-Mail *" type="email" placeholder="name@firma.de" value={form.email} onChange={field("email")} />
+                <FormField label="Name" placeholder="Max Mustermann" value={form.name} onChange={field("name")} />
+                <FormField label="Rolle" placeholder="Team Lead" value={form.role} onChange={field("role")} />
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button variant="ghost" size="sm" onClick={() => { setAdding(false); setForm(EMPTY_PERSON); }} disabled={saving}>Abbrechen</Button>
+                <Button size="sm" onClick={addIndividual} disabled={saving || !form.email.includes("@")}>
+                  <UserPlus className="h-3.5 w-3.5" />
+                  {saving ? "…" : "Speichern"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button size="sm" variant="outline" className="self-start" onClick={() => setAdding(true)}>
+              <UserPlus className="h-3.5 w-3.5" />
+              Teammitglied hinzufügen
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* ── Einzelpersonen ────────────────────────────────────── */}
+      {mode === "individual" && (
+        adding ? (
+          <div className="rounded-card border border-line bg-surface-2 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-[13px] font-semibold text-fg">Neuer Teilnehmer</p>
+              <button type="button" onClick={() => { setAdding(false); setForm(EMPTY_PERSON); }} className="text-fg-faint hover:text-fg">
+                <XIcon size={14} />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <FormField label="E-Mail *" type="email" placeholder="name@firma.de" value={form.email} onChange={field("email")} />
+              <FormField label="Name" placeholder="Max Mustermann" value={form.name} onChange={field("name")} />
+              <FormField label="Abteilung" placeholder="Engineering" value={form.department} onChange={field("department")} />
+              <FormField label="Rolle" placeholder="CTO" value={form.role} onChange={field("role")} />
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => { setAdding(false); setForm(EMPTY_PERSON); }} disabled={saving}>Abbrechen</Button>
+              <Button size="sm" onClick={addIndividual} disabled={saving || !form.email.includes("@")}>
+                <UserPlus className="h-3.5 w-3.5" />
+                {saving ? "…" : "Speichern"}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button size="sm" variant="outline" className="self-start" onClick={() => setAdding(true)}>
+            <UserPlus className="h-3.5 w-3.5" />
+            Teilnehmer hinzufügen
+          </Button>
+        )
+      )}
+
+      {/* ── Existing people list (all modes) ─────────────────── */}
       {people.length > 0 && (
-        <div className="flex flex-col divide-y divide-line-subtle rounded-ui border border-line overflow-hidden">
+        <div className="flex flex-col overflow-hidden rounded-ui border border-line divide-y divide-line-subtle">
           {people.map((p) => (
-            <div
-              key={p.email}
-              className="flex items-center justify-between gap-3 px-3 py-2 hover:bg-surface-2"
-            >
+            <div key={p.email} className="flex items-center justify-between gap-3 px-3 py-2 hover:bg-surface-2">
               <div className="min-w-0 flex flex-col">
-                {p.name && (
-                  <span className="text-[13px] font-medium text-fg truncate">{p.name}</span>
-                )}
+                {p.name && <span className="text-[13px] font-medium text-fg truncate">{p.name}</span>}
                 <span className="text-[12px] text-fg-muted truncate">{p.email}</span>
               </div>
-              <button
-                type="button"
-                onClick={() => remove(p.email)}
-                className="shrink-0 rounded p-0.5 text-fg-faint hover:text-fg"
-                aria-label={`${p.email} entfernen`}
-              >
+              <button type="button" onClick={() => remove(p.email)} className="shrink-0 rounded p-0.5 text-fg-faint hover:text-fg" aria-label={`${p.email} entfernen`}>
                 <XIcon size={12} />
               </button>
             </div>
           ))}
         </div>
-      )}
-
-      {/* Add form */}
-      {adding ? (
-        <div className="rounded-card border border-line bg-surface-2 p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-[13px] font-semibold text-fg">Neuer Teilnehmer</p>
-            <button
-              type="button"
-              onClick={() => { setAdding(false); setForm(EMPTY); }}
-              className="text-fg-faint hover:text-fg"
-            >
-              <XIcon size={14} />
-            </button>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <FormField
-              label="E-Mail *"
-              type="email"
-              placeholder="name@firma.de"
-              value={form.email}
-              onChange={field("email")}
-            />
-            <FormField
-              label="Name"
-              placeholder="Max Mustermann"
-              value={form.name}
-              onChange={field("name")}
-            />
-            <FormField
-              label="Abteilung"
-              placeholder="Engineering"
-              value={form.department}
-              onChange={field("department")}
-            />
-            <FormField
-              label="Rolle"
-              placeholder="CTO"
-              value={form.role}
-              onChange={field("role")}
-            />
-          </div>
-          <div className="mt-4 flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => { setAdding(false); setForm(EMPTY); }}
-              disabled={saving}
-            >
-              Abbrechen
-            </Button>
-            <Button
-              size="sm"
-              onClick={save}
-              disabled={saving || !form.email.includes("@")}
-            >
-              <UserPlus className="h-3.5 w-3.5" />
-              {saving ? "…" : "Speichern"}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <Button
-          size="sm"
-          variant="outline"
-          className="self-start"
-          onClick={() => setAdding(true)}
-        >
-          <UserPlus className="h-3.5 w-3.5" />
-          Teilnehmer hinzufügen
-        </Button>
       )}
     </div>
   );
