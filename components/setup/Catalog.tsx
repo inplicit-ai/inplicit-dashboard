@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,10 +32,12 @@ export function Catalog({
   draft,
   onPatch,
   recentlyTouched,
+  orgName,
 }: {
   draft: CampaignDraft;
   onPatch: (call: SetupToolCall) => void;
   recentlyTouched?: Set<string>;
+  orgName?: string;
 }) {
   const t = useTranslations("setup.catalog");
 
@@ -47,13 +50,12 @@ export function Catalog({
     kind: "insight",
     status: "done",
     label: (
-      <input
+      <GoalInput
         value={g.text}
-        onChange={(e) =>
-          onPatch({ tool: "refine_goal", args: { id: g.id, text: e.target.value } })
+        onChange={(text) =>
+          onPatch({ tool: "refine_goal", args: { id: g.id, text } })
         }
-        className="w-full bg-transparent text-fg outline-none placeholder:text-fg-subtle"
-        aria-label={`${t("goals")} ${i + 1}`}
+        ariaLabel={`${t("goals")} ${i + 1}`}
       />
     ),
     meta: (
@@ -77,6 +79,9 @@ export function Catalog({
 
   return (
     <div className="flex flex-col gap-5">
+      {/* ── Objective — the sharpened research question (editable) ────────── */}
+      <ObjectiveSection draft={draft} onPatch={onPatch} touched={recentlyTouched?.has("set_objective")} />
+
       {/* ── Format — a roomy labeled control grid ───────────────────────── */}
       <SectionCard
         title={t("interviewType")}
@@ -159,11 +164,6 @@ export function Catalog({
         count={goals.length}
         touched={recentlyTouched?.has("set_goals")}
       >
-        {draft.prompt ? (
-          <p className="rounded-md border-l-2 border-accent-muted bg-surface-2 px-3 py-2 text-[length:var(--text-body)] leading-relaxed text-fg-muted">
-            {draft.prompt}
-          </p>
-        ) : null}
         {goals.length === 0 ? (
           <PlatePlaceholder>{t("goalsEmpty")}</PlatePlaceholder>
         ) : (
@@ -246,8 +246,72 @@ export function Catalog({
         draft={draft}
         onPatch={onPatch}
         touched={recentlyTouched?.has("set_email_template")}
+        orgName={orgName}
       />
     </div>
+  );
+}
+
+/* ─── Research brief ─────────────────────────────────────────────────────── */
+
+/**
+ * The sharpened research objective as a plain editable line at the top of the
+ * catalog. EDDA drafts it; the user owns the wording. No stance, no confirm, no
+ * gate — editing emits the same `set_objective` patch the agent uses (single
+ * reducer, two writers). It IS the research question, in one editable place.
+ */
+function ObjectiveSection({
+  draft,
+  onPatch,
+  touched,
+}: {
+  draft: CampaignDraft;
+  onPatch: (call: SetupToolCall) => void;
+  touched?: boolean;
+}) {
+  const t = useTranslations("setup.catalog");
+
+  return (
+    <SectionCard title={t("objective")} touched={touched}>
+      <Textarea
+        rows={2}
+        value={draft.prompt ?? ""}
+        placeholder={t("objectivePlaceholder")}
+        onChange={(e) => onPatch({ tool: "set_objective", args: { text: e.target.value } })}
+        className="min-h-[56px] text-[length:var(--text-body-lg)] font-medium leading-snug"
+        aria-label={t("objective")}
+      />
+    </SectionCard>
+  );
+}
+
+/** An inline, auto-growing goal editor — wraps long goals instead of truncating
+ *  them (the old single-line input cut the text off). */
+function GoalInput({
+  value,
+  onChange,
+  ariaLabel,
+}: {
+  value: string;
+  onChange: (text: string) => void;
+  ariaLabel: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full resize-none overflow-hidden bg-transparent text-fg leading-snug outline-none placeholder:text-fg-subtle"
+      aria-label={ariaLabel}
+    />
   );
 }
 

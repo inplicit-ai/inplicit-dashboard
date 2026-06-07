@@ -1,9 +1,6 @@
-"use client"
-
 import * as React from "react"
 import Link from "next/link"
 import { ArrowDown, ArrowUp, Minus, type LucideIcon } from "lucide-react"
-import { motion, useReducedMotion } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 
@@ -13,8 +10,13 @@ import { cn } from "@/lib/utils"
  *
  * White card: muted label + lucide icon on top, a BIG sans tabular-nums value
  * (NEVER mono), and a small trend row (ArrowUp green / ArrowDown red / Minus
- * muted) with the % / delta string. Framer-motion hover lift (y:-4 + shadow),
- * gated behind prefers-reduced-motion. Becomes a link when `href` is set.
+ * muted) with the % / delta string. Becomes a link when `href` is set.
+ *
+ * This is a SERVER component on purpose: the hover lift is pure CSS (so no
+ * framer-motion / "use client"), which lets Server Component pages pass a lucide
+ * icon TYPE via `icon={Users}` without tripping the RSC boundary error
+ * ("Functions cannot be passed directly to Client Components"). The lift is
+ * disabled under prefers-reduced-motion via the `motion-reduce:` variants.
  * ────────────────────────────────────────────────────────────────────────── */
 
 export type TrendDir = "up" | "down" | "flat"
@@ -48,8 +50,8 @@ export function MetricCard({
   href,
   className,
 }: MetricCardProps) {
-  const reduceMotion = useReducedMotion()
   const interactive = Boolean(href)
+  const TrendIcon = trend ? TREND[trend.dir].Icon : null
 
   const body = (
     <>
@@ -64,17 +66,14 @@ export function MetricCard({
         {value}
       </div>
 
-      {trend && (
+      {trend && TrendIcon && (
         <div
           className={cn(
             "mt-2 flex items-center gap-1 text-[length:var(--text-caption)] tabular-nums",
-            TREND[trend.dir].tone
+            TREND[trend.dir].tone,
           )}
         >
-          {React.createElement(TREND[trend.dir].Icon, {
-            "aria-label": TREND[trend.dir].label,
-            className: "h-3.5 w-3.5",
-          })}
+          <TrendIcon aria-label={TREND[trend.dir].label} className="h-3.5 w-3.5" />
           <span>{trend.value}</span>
         </div>
       )}
@@ -82,32 +81,18 @@ export function MetricCard({
   )
 
   const baseClass = cn(
-    "flex flex-col rounded-card border border-line bg-card p-6 text-card-foreground shadow-card transition-[box-shadow,border-color] duration-200 ease-[var(--ease-spring)]",
-    interactive && "cursor-pointer hover:shadow-card-hover",
-    className
+    "flex flex-col rounded-card border border-line bg-card p-6 text-card-foreground shadow-card transition-[transform,box-shadow,border-color] duration-200 ease-[var(--ease-spring)]",
+    // CSS hover lift — equivalent to the old framer spring, honors reduced motion.
+    interactive &&
+      "cursor-pointer hover:-translate-y-1 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0",
+    className,
   )
 
-  // Reduced motion → drop the lift entirely (CSS shadow transition still runs).
-  const hoverProps = reduceMotion
-    ? {}
-    : {
-        whileHover: { y: -4 },
-        transition: { type: "spring" as const, stiffness: 380, damping: 30 },
-      }
-
-  if (href) {
-    return (
-      <motion.div {...hoverProps}>
-        <Link href={href} className={baseClass}>
-          {body}
-        </Link>
-      </motion.div>
-    )
-  }
-
-  return (
-    <motion.div {...hoverProps} className={baseClass}>
+  return href ? (
+    <Link href={href} className={baseClass}>
       {body}
-    </motion.div>
+    </Link>
+  ) : (
+    <div className={baseClass}>{body}</div>
   )
 }

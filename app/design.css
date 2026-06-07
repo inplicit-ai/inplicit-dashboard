@@ -1381,10 +1381,42 @@ button.chip:hover,
   100% { transform: scale(1); }
 }
 
+/* Shimmer — the "agent is still drafting" label. A light→fg→light sweep runs
+   across the text via a clipped gradient. Tokenized (no raw greys) so it
+   tracks the theme; reduced-motion collapses it to a static muted label. */
+@keyframes edda-shimmer {
+  from { background-position: 100% center; }
+  to   { background-position: 0% center; }
+}
+.edda-shimmer {
+  display: inline-flex;
+  align-items: center;
+  background-image: linear-gradient(
+    90deg,
+    var(--color-fg-faint) 0%,
+    var(--color-fg-faint) 40%,
+    var(--color-fg) 50%,
+    var(--color-fg-faint) 60%,
+    var(--color-fg-faint) 100%
+  );
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: edda-shimmer 1.2s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* Reduced = instant state change; pulse collapses to a static amber ring. */
   .status-disc--pulse { animation: none; box-shadow: 0 0 0 2px var(--color-accent-muted); }
   .status-disc--flip { animation: none; }
+  /* Shimmer collapses to a plain muted label. */
+  .edda-shimmer {
+    animation: none;
+    background-image: none;
+    color: var(--color-fg-muted);
+  }
 }
 
 /* Connector — the global brand spine. One repeated dashed line at a fixed

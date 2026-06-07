@@ -211,8 +211,8 @@
       "peopleCount": "{count} Teilnehmer:innen",
       "schedule": "Terminplanung",
       "scheduleMode": "Buchungsmodus",
-      "bookingSlots": "Buchbare Zeitfenster",
-      "instantLink": "Sofort-Link (Legacy)",
+      "bookingSlots": "Buchbares Zeitfenster",
+      "instantLink": "Direkter Link",
       "scheduleHint": "Teilnehmer:innen buchen ein Zeitfenster und erhalten eine Kalendereinladung — kein offener Link.",
       "windowStart": "Von",
       "windowEnd": "Bis",
@@ -229,7 +229,8 @@
       "instantHint": "Jede:r Teilnehmer:in erhält einen direkten, einmaligen Link — keine Terminbuchung. Die Einladung nutzt {{link}} direkt.",
       "objective": "Forschungsziel",
       "objectivePlaceholder": "Was genau wollen wir herausfinden?",
-      "participantPrompt": "Frage an Teilnehmer:innen"
+      "participantPrompt": "Frage an Teilnehmer:innen",
+      "previewSampleOrg": "deinem Unternehmen"
     },
     "review": {
       "eyebrow": "Prüfen & starten",

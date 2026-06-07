@@ -696,6 +696,9 @@ export interface CampaignDraft {
   people?: Person[];
   schedule?: ScheduleConfig;
   emailTemplate?: EmailTemplate;
+  /** True once the user (or an explicit user-requested rewrite) edits the
+   *  invite — schedule-mode changes then leave the email untouched. */
+  emailCustomized?: boolean;
   [key: string]: unknown;
 }
 
@@ -856,6 +859,9 @@ export interface SetupSessionCreated {
   draft_id: string;
   revision: number;
   config: CampaignDraft;
+  /** The org's real name — fills the invite email's {{org}} preview. */
+  org_name?: string;
+  company_context?: string;
 }
 export interface SetupSession {
   session_id: string;
@@ -864,6 +870,9 @@ export interface SetupSession {
   status: string;
   config: CampaignDraft;
   messages: SetupMessage[];
+  /** The org's real name — fills the invite email's {{org}} preview. */
+  org_name?: string;
+  company_context?: string;
 }
 export interface SetupPatchInput {
   patch: SetupToolCall;

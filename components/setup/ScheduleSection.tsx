@@ -38,7 +38,7 @@ export function ScheduleSection({
 }) {
   const t = useTranslations("setup.catalog");
   const schedule: ScheduleConfig = draft.schedule ?? {
-    mode: "slots",
+    mode: "instant",
     slotLengthMin: 30,
     timezone: "Europe/Berlin",
     slots: [],
@@ -171,7 +171,17 @@ export function ScheduleSection({
               </div>
             )}
           </>
-        ) : null}
+        ) : (
+          // Instant/link mode — each participant gets a direct single-use link;
+          // no booking step. The invite email uses {{link}} directly (the
+          // catalog swaps the default copy to match this mode).
+          <div className="flex items-start gap-2.5 rounded-md border border-line bg-surface-2 px-3 py-2.5">
+            <StatusDisc state="done" size="sm" />
+            <p className="text-[13px] leading-snug text-fg-muted">
+              {t("instantHint")}
+            </p>
+          </div>
+        )}
       </div>
     </SectionCard>
   );
