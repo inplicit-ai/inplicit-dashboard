@@ -163,6 +163,8 @@
       "suggestionsLabel": "Vorschläge",
       "firstHint": "Das ist deine erste Kampagne — gib ein Lernziel ein, um zu starten.",
       "creating": "Sitzung wird erstellt…",
+      "prefilledRolesLabel": "Vorausgewählte Rollen",
+      "prefilledRolesHint": "Diese Rollen werden als Zielgruppe der neuen Kampagne übernommen.",
       "themes": {
         "prozesswissen": {
           "label": "Prozesswissen",
@@ -430,7 +432,14 @@
     "noValidated": "Noch keine validierten Pains — nur vorhergesagt, bis echte Interviews vorliegen.",
     "divergence": "Divergenz (Überraschung: vorhergesagt vs. validiert)",
     "coldMeta": "Nur vorhergesagt. Der Twin dieser Rolle hat noch keine validierten Daten aus echten Interviews.",
-    "refinedMeta": "Twin v{version} · {confidence}% Konfidenz aus echten Interviews."
+    "refinedMeta": "Twin v{version} · {confidence}% Konfidenz aus echten Interviews.",
+    "rolesTitle": "Rollen",
+    "rolesMeta": "Wähle Rollen aus, um direkt eine Kampagne mit ihnen als Zielgruppe zu starten. Nur Rollen — nie personenbezogen.",
+    "rolesSelectHint": "Rollen für eine neue Kampagne auswählen",
+    "rolesSelected": "{count} ausgewählt",
+    "rolesValidated": "Validiert",
+    "rolesCreateCampaign": "Kampagne mit diesen Rollen",
+    "rolesClearSelection": "Auswahl aufheben"
   },
   "integrations": {
     "eyebrow": "Organisation",

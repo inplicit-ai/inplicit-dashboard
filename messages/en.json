@@ -163,6 +163,8 @@
       "suggestionsLabel": "Suggestions",
       "firstHint": "This is your first campaign — type a learning goal to begin.",
       "creating": "Creating session…",
+      "prefilledRolesLabel": "Pre-selected roles",
+      "prefilledRolesHint": "These roles will seed the new campaign's audience.",
       "themes": {
         "prozesswissen": {
           "label": "Process knowledge",
@@ -419,7 +421,14 @@
     "noValidated": "No validated pains yet — predicted only until real interviews land.",
     "divergence": "Divergence (predicted vs. validated surprise)",
     "coldMeta": "Predicted only. This role's twin has no validated data from real interviews yet.",
-    "refinedMeta": "Twin v{version} · {confidence}% confidence from real interviews."
+    "refinedMeta": "Twin v{version} · {confidence}% confidence from real interviews.",
+    "rolesTitle": "Roles",
+    "rolesMeta": "Select roles to start a campaign with them as the audience. Roles only — never per-person.",
+    "rolesSelectHint": "Select roles for a new campaign",
+    "rolesSelected": "{count} selected",
+    "rolesValidated": "Validated",
+    "rolesCreateCampaign": "Create campaign with these roles",
+    "rolesClearSelection": "Clear selection"
   },
   "integrations": {
     "eyebrow": "Organization",
