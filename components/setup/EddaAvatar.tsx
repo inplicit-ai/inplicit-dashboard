@@ -1,48 +1,67 @@
 "use client";
 
-import { Avatar } from "@/components/ui/heroui-avatar";
 import { cn } from "@/lib/utils";
+
+export type EddaStatus = "ready" | "writing" | "error";
 
 interface EddaAvatarProps {
   size?: number;
+  status?: EddaStatus;
   className?: string;
 }
 
 /**
- * EDDA's identity glyph — a self-contained vector mark (no image asset). A node
- * with two concentric arcs opening to the right reads as a "voice / listening"
- * mark, fitting for the interviewer AI. Drawn in `currentColor` so it inherits
- * the avatar's `text-canvas` on the `bg-fg` field and adapts to light/dark.
+ * edda's identity — a glowing orb in the inplicit brand (accent/orange), drawn
+ * purely in CSS (no image asset). A status node sits in the bottom-right corner:
+ *   • ready   → a green dot ("edda is here")
+ *   • writing → a small pill with three bobbing dots
+ *   • error   → a red dot
  */
-function EddaMark({ className }: { className?: string }) {
+export function EddaAvatar({ size = 36, status = "ready", className }: EddaAvatarProps) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.7}
-      strokeLinecap="round"
-      aria-hidden="true"
-      className={className}
+    <span
+      role="img"
+      aria-label={`edda — ${status}`}
+      className={cn("relative inline-flex shrink-0", className)}
+      style={{ width: size, height: size }}
     >
-      <circle cx="10.5" cy="12" r="1.9" fill="currentColor" stroke="none" />
-      <path d="M13.4 8.6 A 4.5 4.5 0 0 1 13.4 15.4" />
-      <path d="M15.3 6.3 A 7.5 7.5 0 0 1 15.3 17.7" />
-    </svg>
+      <span
+        aria-hidden
+        className="size-full rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle at 32% 28%, color-mix(in oklab, var(--color-accent) 8%, #ffffff) 0%, var(--color-accent-strong) 32%, var(--color-accent) 64%, color-mix(in oklab, var(--color-accent) 60%, #000000) 100%)",
+          boxShadow:
+            "inset 0 0 6px -1px color-mix(in oklab, #ffffff 55%, transparent), 0 1px 12px -2px color-mix(in oklab, var(--color-accent) 60%, transparent)",
+        }}
+      />
+      <StatusNode status={status} />
+    </span>
   );
 }
 
-/**
- * EDDA's avatar in the setup chat: the vector mark on the brand field, using the
- * heroui Radix avatar container for the rounded shape + ring.
- */
-export function EddaAvatar({ size = 36, className }: EddaAvatarProps) {
+function StatusNode({ status }: { status: EddaStatus }) {
+  if (status === "writing") {
+    return (
+      <span className="absolute -bottom-1 -right-1.5 inline-flex items-center gap-[3px] rounded-full bg-surface px-1.5 py-1 shadow-sm ring-2 ring-canvas">
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className="edda-typing-dot size-1 rounded-full bg-fg-muted"
+            style={{ animationDelay: `${i * 0.16}s` }}
+          />
+        ))}
+      </span>
+    );
+  }
+
   return (
-    <Avatar
-      className={cn("bg-fg text-canvas ring-1 ring-line", className)}
-      style={{ width: size, height: size }}
-    >
-      <EddaMark className="h-[55%] w-[55%]" />
-    </Avatar>
+    <span
+      aria-hidden
+      className={cn(
+        "absolute bottom-0 right-0 size-3 rounded-full ring-2 ring-canvas",
+        status === "error" ? "bg-danger" : "bg-success",
+      )}
+    />
   );
 }

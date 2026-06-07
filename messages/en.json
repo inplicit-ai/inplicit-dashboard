@@ -189,7 +189,7 @@
       "title": "Setup assistant",
       "placeholder": "Reply or ask the assistant to adjust the catalog…",
       "send": "Send",
-      "thinking": "Drafting…",
+      "thinking": "Thinking…",
       "you": "You",
       "assistant": "Assistant",
       "refineExamplesLabel": "Try one of these",
