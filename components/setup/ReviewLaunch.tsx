@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { motion, useReducedMotion } from "framer-motion";
@@ -48,9 +48,19 @@ export function ReviewLaunch({
   const [launching, setLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [people, setPeople] = useState<Person[]>(draft.people ?? []);
-  const [selectedVaultId, setSelectedVaultId] = useState<string | undefined>(
-    draft.contextVaultId,
-  );
+  // Default: pre-select the first available vault if none was explicitly chosen.
+  const defaultVaultId = draft.contextVaultId ?? vaults[0]?.id;
+  const [selectedVaultId, setSelectedVaultId] = useState<string | undefined>(defaultVaultId);
+
+  // Auto-save the default vault to the draft on first render (if not already set).
+  useEffect(() => {
+    if (!draft.contextVaultId && vaults[0]?.id) {
+      clientApi.setup.patchDraft(draftId, {
+        patch: { tool: "set_context_vault", args: { vaultId: vaults[0].id } },
+      }).catch(() => {/* ignore — UI still shows it selected */});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const peopleCount = people.length;
   const reasons = validateForLaunch(draft);
   // People are required to launch (can't send invites without recipients).
@@ -149,64 +159,15 @@ export function ReviewLaunch({
         <StatBand cells={specCells} />
       </motion.section>
 
-      {/* ── Context vault — card style matching Goals + Delivery ────────── */}
-      {vaults.length > 0 && (
-        <motion.div {...reveal(0.07)}>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
-                Kontext
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {selectedVaultId && selectedVault ? (
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2.5 rounded-card border border-success/30 bg-success-soft px-4 py-3">
-                    <CheckIcon size={16} className="shrink-0 text-success" aria-hidden />
-                    <Building2 size={14} className="shrink-0 text-fg-muted" aria-hidden />
-                    <span className="text-[length:var(--text-body-sm)] font-medium text-fg">
-                      {selectedVault.name}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => saveVault("")}
-                    className="text-[12px] text-fg-faint underline-offset-2 hover:text-fg hover:underline"
-                  >
-                    Ändern
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <select
-                    className="rounded-ui border border-line bg-surface px-3 py-2 text-[13px] text-fg outline-none transition-colors focus:border-line-strong"
-                    value=""
-                    onChange={(e) => saveVault(e.target.value)}
-                  >
-                    <option value="">— Kontext auswählen —</option>
-                    {vaults.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.name}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="text-[12px] text-fg-faint">Optional</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
       {/* ── Main two-column grid ─────────────────────────────────────────── */}
-      {/* items-start: both columns start at the same top edge (not stretched).
-          Goals card and Launch card tops are therefore visually aligned. */}
+      {/* Left: Goals + Delivery. Right: Kontext + Launch (stacked). */}
       <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
-        {/* Left — goals + delivery */}
+
+        {/* Left — goals + delivery (Zielgruppe & Teilnehmer) */}
         <div className="flex flex-col gap-6 lg:col-span-2">
-          {/* Goals card — heading lives inside CardHeader so tops align */}
+          {/* Goals card */}
           {goals.length > 0 ? (
-            <motion.div {...reveal(0.1)}>
+            <motion.div {...reveal(0.07)}>
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-baseline gap-2 text-[length:var(--text-title)] tracking-[-0.015em]">
@@ -223,8 +184,8 @@ export function ReviewLaunch({
             </motion.div>
           ) : null}
 
-          {/* Delivery card — heading inside CardHeader */}
-          <motion.div {...reveal(0.14)}>
+          {/* Delivery card — audience + people editor */}
+          <motion.div {...reveal(0.1)}>
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
@@ -251,75 +212,122 @@ export function ReviewLaunch({
           </motion.div>
         </div>
 
-        {/* Right — launch card */}
-        <motion.aside {...reveal(0.16)}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
-                {t("launchpad")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-5">
-              <div className="flex flex-col gap-3">
-                <p className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
-                  {t("checklist")}
-                </p>
-                <ul className="flex flex-col gap-2.5">
-                  <Gate
-                    ok={!reasons.includes("no_goals")}
-                    label={t("gates.no_goals")}
-                    okLabel={t("gatesOk.no_goals")}
-                  />
-                  <Gate
-                    ok={!reasons.includes("no_success_criteria")}
-                    label={t("gates.no_success_criteria")}
-                    okLabel={t("gatesOk.no_success_criteria")}
-                  />
-                  <Gate
-                    ok={!reasons.includes("bad_duration")}
-                    label={t("gates.bad_duration")}
-                    okLabel={t("gatesOk.bad_duration")}
-                  />
-                  <Gate
-                    ok={!reasons.includes("no_interview_type")}
-                    label={t("gates.no_interview_type")}
-                    okLabel={t("gatesOk.no_interview_type")}
-                  />
-                  {/* Blocking: launch is impossible without recipients */}
-                  <Gate
-                    ok={peopleCount > 0}
-                    label="Teilnehmer hinzufügen"
-                    okLabel={`${peopleCount} Teilnehmer hinzugefügt`}
-                    blocking
-                  />
-                </ul>
-              </div>
+        {/* Right — Kontext + Launch stacked */}
+        <div className="flex flex-col gap-6">
+          {/* Kontext card — always shown, defaults to first vault */}
+          {vaults.length > 0 && (
+            <motion.div {...reveal(0.07)}>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
+                    Kontext
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {selectedVaultId && selectedVault ? (
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-1 items-center gap-2.5 rounded-card border border-success/30 bg-success-soft px-3 py-2.5">
+                        <CheckIcon size={15} className="shrink-0 text-success" aria-hidden />
+                        <Building2 size={13} className="shrink-0 text-fg-muted" aria-hidden />
+                        <span className="text-[length:var(--text-body-sm)] font-medium text-fg truncate">
+                          {selectedVault.name}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => saveVault("")}
+                        className="shrink-0 text-[12px] text-fg-faint underline-offset-2 hover:text-fg hover:underline"
+                      >
+                        Ändern
+                      </button>
+                    </div>
+                  ) : (
+                    <select
+                      className="w-full rounded-ui border border-line bg-surface px-3 py-2 text-[13px] text-fg outline-none transition-colors focus:border-line-strong"
+                      value=""
+                      onChange={(e) => saveVault(e.target.value)}
+                    >
+                      <option value="">— Kontext auswählen —</option>
+                      {vaults.map((v) => (
+                        <option key={v.id} value={v.id}>{v.name}</option>
+                      ))}
+                    </select>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
-              {error ? (
-                <p className="text-[length:var(--text-body)] text-danger" role="alert">
-                  {error}
-                </p>
-              ) : null}
+          {/* Launch / Start card */}
+          <motion.aside {...reveal(0.14)}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
+                  {t("launchpad")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-5">
+                <div className="flex flex-col gap-3">
+                  <p className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
+                    {t("checklist")}
+                  </p>
+                  <ul className="flex flex-col gap-2.5">
+                    <Gate
+                      ok={!reasons.includes("no_goals")}
+                      label={t("gates.no_goals")}
+                      okLabel={t("gatesOk.no_goals")}
+                    />
+                    <Gate
+                      ok={!reasons.includes("no_success_criteria")}
+                      label={t("gates.no_success_criteria")}
+                      okLabel={t("gatesOk.no_success_criteria")}
+                    />
+                    <Gate
+                      ok={!reasons.includes("bad_duration")}
+                      label={t("gates.bad_duration")}
+                      okLabel={t("gatesOk.bad_duration")}
+                    />
+                    <Gate
+                      ok={!reasons.includes("no_interview_type")}
+                      label={t("gates.no_interview_type")}
+                      okLabel={t("gatesOk.no_interview_type")}
+                    />
+                    {/* Blocking: launch requires recipients */}
+                    <Gate
+                      ok={peopleCount > 0}
+                      label="Teilnehmer hinzufügen"
+                      okLabel={`${peopleCount} Teilnehmer hinzugefügt`}
+                      blocking
+                    />
+                  </ul>
+                </div>
 
-              <div className="flex flex-col gap-3 border-t border-line-subtle pt-4">
-                <Button
-                  onClick={launch}
-                  disabled={blocked || launching}
-                  size="lg"
-                  className="w-full"
-                >
-                  {launching ? t("launching") : t("launch")}
-                </Button>
-                <Button asChild variant="ghost" size="sm" className="w-full text-fg-muted">
-                  <a href={`/campaigns/new/${draftId}`}>
-                    <ArrowLeft className="h-3.5 w-3.5" />
-                    {t("back")}
-                  </a>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.aside>
+                {error ? (
+                  <p className="text-[length:var(--text-body)] text-danger" role="alert">
+                    {error}
+                  </p>
+                ) : null}
+
+                <div className="flex flex-col gap-3 border-t border-line-subtle pt-4">
+                  <Button
+                    onClick={launch}
+                    disabled={blocked || launching}
+                    size="lg"
+                    className="w-full"
+                  >
+                    {launching ? t("launching") : t("launch")}
+                  </Button>
+                  <Button asChild variant="ghost" size="sm" className="w-full text-fg-muted">
+                    <a href={`/campaigns/new/${draftId}`}>
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                      {t("back")}
+                    </a>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.aside>
+        </div>
       </div>
     </div>
   );
