@@ -4,9 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, AlertTriangle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StatusDisc } from "@/components/ui/status-disc";
 import { StatBand, type StatBandCell } from "@/components/ui/stat-band";
 import { EvidenceTree, type EvidenceNode } from "@/components/ui/agent-list";
 import { PageHeader } from "@/components/ui/page-header";
@@ -17,9 +16,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle2 as CheckIcon, Building2 } from "lucide-react";
+import { CheckCircle2 as CheckIcon, Building2, AlertCircle, X } from "lucide-react";
 import { DataChip } from "@/components/ui/data-chip";
-import { type CampaignDraft, type Vault } from "@/lib/api";
+import { type CampaignDraft, type Vault, type Person } from "@/lib/api";
 import { clientApi } from "@/lib/client-api";
 import { validateForLaunch } from "@/lib/setup/draftReducer";
 
@@ -52,10 +51,11 @@ export function ReviewLaunch({
   const reduceMotion = useReducedMotion();
   const [launching, setLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [people, setPeople] = useState<Person[]>(draft.people ?? []);
   const reasons = validateForLaunch(draft);
   const blocked = reasons.length > 0;
 
-  const peopleCount = Array.isArray(draft.people) ? draft.people.length : 0;
+  const peopleCount = people.length;
   const goals = draft.goals ?? [];
 
   async function launch() {
@@ -176,7 +176,7 @@ export function ReviewLaunch({
         );
       })()}
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+      <div className="grid grid-cols-1 items-stretch gap-8 lg:grid-cols-3">
         {/* Left — goals + delivery, same height as launch card */}
         <div className="flex flex-col gap-8 lg:col-span-2">
           {/* Goals */}
@@ -207,9 +207,11 @@ export function ReviewLaunch({
                       : "—"}
                   </SpecRow>
                   <SpecRow label={t("peopleLabel")}>
-                    <span className="tabular-nums">
-                      {t("peopleCount", { count: peopleCount })}
-                    </span>
+                    <PeopleEditor
+                      draftId={draftId}
+                      people={people}
+                      onUpdate={setPeople}
+                    />
                   </SpecRow>
                   {draft.background?.notes?.trim() ? (
                     <SpecRow label={tc("background")}>
@@ -227,9 +229,9 @@ export function ReviewLaunch({
         {/* Right — launch card, stretches to match left column height */}
         <motion.aside
           {...reveal(0.16)}
-          className="lg:self-stretch"
+          className="flex flex-col"
         >
-          <Card className="h-full">
+          <Card className="flex-1">
             <CardHeader>
               <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
                 {t("launchpad")}
@@ -264,7 +266,7 @@ export function ReviewLaunch({
                 </ul>
                 {peopleCount === 0 ? (
                   <p className="mt-1 flex items-start gap-2 rounded-md border border-line bg-warning-soft px-3 py-2 text-[13px] leading-snug text-fg-muted">
-                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" />
+                    <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" aria-hidden />
                     <span>{t("advisoryNoPeople")}</span>
                   </p>
                 ) : null}
@@ -323,7 +325,7 @@ function SpecRow({
   );
 }
 
-/* ─── A launch gate as a calm status row ─────────────────────────────────── */
+/* ─── A launch gate: green check when met, orange warning when not ───────── */
 function Gate({
   ok,
   label,
@@ -335,11 +337,107 @@ function Gate({
 }) {
   return (
     <li className="flex items-center gap-2.5">
-      <StatusDisc state={ok ? "done" : "error"} size="sm" />
+      {ok ? (
+        <CheckIcon size={14} className="shrink-0 text-success" aria-hidden />
+      ) : (
+        <AlertCircle size={14} className="shrink-0 text-warning" aria-hidden />
+      )}
       <span className={ok ? "text-[13px] text-fg-muted" : "text-[13px] text-fg"}>
         {ok ? okLabel : label}
       </span>
     </li>
+  );
+}
+
+/* ─── Inline people editor ────────────────────────────────────────────────── */
+function PeopleEditor({
+  draftId,
+  people,
+  onUpdate,
+}: {
+  draftId: string;
+  people: Person[];
+  onUpdate: (p: Person[]) => void;
+}) {
+  const [input, setInput] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    const emails = input
+      .split(/[\n,;]+/)
+      .map((e) => e.trim())
+      .filter((e) => e.includes("@"));
+    if (!emails.length) return;
+    const merged = [...people, ...emails.map((email) => ({ email }))];
+    setSaving(true);
+    try {
+      await clientApi.setup.patchDraft(draftId, {
+        patch: { tool: "set_people", args: { people: merged } },
+      });
+      onUpdate(merged);
+      setInput("");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function remove(email: string) {
+    const next = people.filter((p) => p.email !== email);
+    await clientApi.setup.patchDraft(draftId, {
+      patch: { tool: "set_people", args: { people: next } },
+    });
+    onUpdate(next);
+  }
+
+  return (
+    <div className="flex flex-col gap-2.5">
+      {/* existing people chips */}
+      {people.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {people.map((p) => (
+            <span
+              key={p.email}
+              className="inline-flex items-center gap-1 rounded-ui border border-line bg-surface px-2 py-0.5 text-[12px] text-fg-muted"
+            >
+              {p.name ? `${p.name} <${p.email}>` : p.email}
+              <button
+                type="button"
+                onClick={() => remove(p.email)}
+                className="ml-0.5 rounded text-fg-faint hover:text-fg"
+                aria-label={`${p.email} entfernen`}
+              >
+                <X size={10} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      {/* add-email row */}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && save()}
+          placeholder="name@firma.de, weitere..."
+          className="min-w-0 flex-1 rounded-ui border border-line bg-surface px-2.5 py-1 text-[12px] text-fg outline-none transition-colors focus:border-line-strong"
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={save}
+          disabled={saving || !input.trim()}
+          className="shrink-0"
+        >
+          {saving ? "…" : "Hinzufügen"}
+        </Button>
+      </div>
+      {people.length === 0 && (
+        <p className="text-[12px] leading-snug text-fg-faint">
+          Noch keine Teilnehmer hinzugefügt.
+        </p>
+      )}
+    </div>
   );
 }
 
