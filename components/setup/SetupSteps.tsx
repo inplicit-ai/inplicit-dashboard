@@ -1,11 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { motion, useReducedMotion } from "framer-motion";
 import { matchFlow, activeStepIndex } from "@/lib/shell/flows";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 /**
  * Extract the draftId from a pathname like /campaigns/new/<draftId>[/review].
@@ -45,13 +55,17 @@ export function SetupSteps() {
   const pathname = usePathname() ?? "";
   const t = useTranslations("flows.setup");
   const reduceMotion = useReducedMotion();
+  const router = useRouter();
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   const flow = matchFlow(pathname);
   if (!flow) return null;
   const active = activeStepIndex(flow, pathname);
 
   return (
-    <div className="-mt-1 mb-6 overflow-x-auto scrollbar-none">
+    <>
+    <div className="-mt-1 mb-6 flex items-center justify-between gap-4">
+      <div className="overflow-x-auto scrollbar-none">
       <nav
         aria-label={t("name")}
         className="inline-flex items-center gap-1 rounded-ui border border-line-subtle bg-surface-2 p-1"
@@ -97,6 +111,58 @@ export function SetupSteps() {
           );
         })}
       </nav>
+      </div>
+
+      {/* Abbrechen — opens discard-or-save dialog */}
+      <button
+        type="button"
+        onClick={() => setCancelOpen(true)}
+        className="shrink-0 text-[length:var(--text-caption)] font-medium text-fg-muted transition-colors hover:text-fg"
+      >
+        Abbrechen
+      </button>
     </div>
+
+    {/* Discard / save-draft dialog */}
+    <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Kampagne beenden</DialogTitle>
+          <DialogDescription>
+            Du kannst den Entwurf jederzeit im Dashboard weitermachen oder die
+            Kampagne jetzt verwerfen.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex-col gap-2 sm:flex-col">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              setCancelOpen(false);
+              router.push(
+                "/campaigns?flashType=success&flash=" +
+                  encodeURIComponent("Entwurf gespeichert — du kannst später weitermachen."),
+              );
+            }}
+          >
+            Als Entwurf speichern
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full text-danger hover:text-danger"
+            onClick={() => {
+              setCancelOpen(false);
+              router.push("/campaigns");
+            }}
+          >
+            Kampagne verwerfen
+          </Button>
+          <Button variant="ghost" className="w-full" onClick={() => setCancelOpen(false)}>
+            Weiter bearbeiten
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
