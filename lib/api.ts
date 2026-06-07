@@ -347,6 +347,25 @@ export function makeApi(cookie?: string) {
           method: "POST",
           body: JSON.stringify(body),
         }),
+      // F1 — presigned upload flow (2-step): request a presigned S3 PUT URL,
+      // upload bytes directly, then finalize so the server extracts text + runs
+      // ingestion and returns the embeddable ItemView.
+      uploadUrl: (id: string, body: VaultUploadUrlInput) =>
+        request<VaultUploadUrl>(`/api/orgs/me/vaults/${id}/items/upload-url`, {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      finalize: (id: string, itemId: string) =>
+        request<VaultItem>(
+          `/api/orgs/me/vaults/${id}/items/${itemId}/finalize`,
+          { method: "POST" },
+        ),
+      getItem: (id: string, itemId: string) =>
+        request<VaultItem>(`/api/orgs/me/vaults/${id}/items/${itemId}`),
+      search: (id: string, q: string) =>
+        request<VaultSearchHit[]>(
+          `/api/orgs/me/vaults/${id}/search?q=${encodeURIComponent(q)}`,
+        ),
     },
     // ── Integrations registry (O-8) ─────────────────────────────────────
     integrations: {
@@ -1013,6 +1032,10 @@ export interface VaultItem {
   mime?: string;
   byte_size?: number;
   embedded: boolean;
+  /** Vault scope this item belongs to (mirrors the parent vault). */
+  scope?: "ORG" | "CAMPAIGN" | "ROLE";
+  /** Set when the owning vault is role-scoped. */
+  role_id?: string;
   created_at: string;
 }
 export interface NewVaultItemInput {
@@ -1022,6 +1045,22 @@ export interface NewVaultItemInput {
   s3_key?: string;
   mime?: string;
   byte_size?: number;
+}
+// F1 — presigned upload contract (mirrors backend/src/api/vaults.rs).
+export interface VaultUploadUrlInput {
+  filename: string;
+  mime: string;
+  byteSize: number;
+}
+export interface VaultUploadUrl {
+  itemId: string;
+  uploadUrl: string;
+}
+export interface VaultSearchHit {
+  item_id: string;
+  title: string;
+  snippet: string;
+  score: number;
 }
 
 // ── Integration DTOs (mirror backend/src/api/integrations.rs) ──────────────
