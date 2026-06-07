@@ -165,24 +165,31 @@ export function ReviewLaunch({
 
         {/* Left — goals + delivery (Zielgruppe & Teilnehmer) */}
         <div className="flex flex-col gap-6 lg:col-span-2">
-          {/* Goals card */}
-          {goals.length > 0 ? (
-            <motion.div {...reveal(0.07)}>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-baseline gap-2 text-[length:var(--text-title)] tracking-[-0.015em]">
-                    {tc("goals")}
+          {/* Goals card — always shown; empty state if no goals defined */}
+          <motion.div {...reveal(0.07)}>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-baseline gap-2 text-[length:var(--text-title)] tracking-[-0.015em]">
+                  {tc("goals")}
+                  {goals.length > 0 && (
                     <span className="text-[length:var(--text-meta)] font-normal tabular-nums text-fg-subtle">
                       {goals.length}
                     </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {goals.length > 0 ? (
                   <EvidenceTree nodes={goalNodes} defaultExpandedDepth={0} />
-                </CardContent>
-              </Card>
-            </motion.div>
-          ) : null}
+                ) : (
+                  <p className="flex items-center gap-2 text-[13px] text-danger">
+                    <AlertCircle size={14} className="shrink-0" aria-hidden />
+                    Keine Kampagnenziele definiert
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
 
           {/* Delivery card — audience + people editor */}
           <motion.div {...reveal(0.1)}>
@@ -218,30 +225,33 @@ export function ReviewLaunch({
           {vaults.length > 0 && (
             <motion.div {...reveal(0.07)}>
               <Card>
-                <CardHeader className="pb-3">
+                <CardHeader className="flex-row items-center justify-between pb-3">
                   <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
                     Kontext
                   </CardTitle>
+                  {/* Ändern — top-right; only shown when a vault is active */}
+                  {selectedVaultId && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedVaultId(undefined)}
+                      className="text-[12px] text-fg-faint underline-offset-2 hover:text-fg hover:underline"
+                    >
+                      Ändern
+                    </button>
+                  )}
                 </CardHeader>
                 <CardContent>
                   {selectedVaultId && selectedVault ? (
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-1 items-center gap-2.5 rounded-card border border-success/30 bg-success-soft px-3 py-2.5">
-                        <CheckIcon size={15} className="shrink-0 text-success" aria-hidden />
-                        <Building2 size={13} className="shrink-0 text-fg-muted" aria-hidden />
-                        <span className="text-[length:var(--text-body-sm)] font-medium text-fg truncate">
-                          {selectedVault.name}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => saveVault("")}
-                        className="shrink-0 text-[12px] text-fg-faint underline-offset-2 hover:text-fg hover:underline"
-                      >
-                        Ändern
-                      </button>
+                    /* Read-only chip — vault is locked in, greyed-out style */
+                    <div className="flex items-center gap-2.5 rounded-card border border-line bg-surface-2 px-3 py-2.5 opacity-80">
+                      <CheckIcon size={15} className="shrink-0 text-success" aria-hidden />
+                      <Building2 size={13} className="shrink-0 text-fg-muted" aria-hidden />
+                      <span className="text-[length:var(--text-body-sm)] font-medium text-fg truncate">
+                        {selectedVault.name}
+                      </span>
                     </div>
                   ) : (
+                    /* Selector shown when user clicks Ändern or no vault set */
                     <select
                       className="w-full rounded-ui border border-line bg-surface px-3 py-2 text-[13px] text-fg outline-none transition-colors focus:border-line-strong"
                       value=""
@@ -460,7 +470,7 @@ function PeopleEditor({
             key={m.id}
             type="button"
             onClick={() => { setMode(m.id); setAdding(false); }}
-            className={`flex h-7 items-center whitespace-nowrap rounded-ui px-3 text-[11px] font-medium transition-colors ${
+            className={`flex h-8 items-center whitespace-nowrap rounded-ui px-3.5 text-[length:var(--text-meta)] font-medium transition-colors ${
               mode === m.id
                 ? "bg-surface text-fg shadow-sm"
                 : "text-fg-muted hover:text-fg"

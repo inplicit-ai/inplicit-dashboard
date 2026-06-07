@@ -15,7 +15,6 @@ import {
 import {
   IconHelp,
   IconLogOut,
-  IconSearch,
   IconSettings,
 } from "@/components/icons";
 import { StatusDisc } from "@/components/ui/status-disc";
@@ -182,28 +181,6 @@ export function Sidebar({
           )}
 
           <div className="sidebar__bottom">
-            {hasAudits && (
-              <Link
-                href="/chat"
-                className="sidebar__command"
-                onClick={onNavigate}
-                aria-label={tNav("knowledgeChat")}
-              >
-                <span className="sidebar__item-icon" aria-hidden="true">
-                  <IconSearch size={15} />
-                </span>
-                {!iconOnly && (
-                  <>
-                    <span className="sidebar__command-label">
-                      {tNav("knowledgeChat")}
-                    </span>
-                    <kbd className="sidebar__command-kbd" aria-hidden="true">
-                      ⌘K
-                    </kbd>
-                  </>
-                )}
-              </Link>
-            )}
             {mode === "customer" && (
               <button
                 type="button"
