@@ -1,12 +1,8 @@
 import { notFound } from "next/navigation";
-import { makeApi } from "@/lib/api";
+import { makeApi, type Vault } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
 import { ReviewLaunch } from "@/components/setup/ReviewLaunch";
 
-/**
- * Review + launch (O-3, doc 03 §8). Condensed 3-row confirmation of the draft
- * catalog, then the launch pad. Launch → campaign dashboard.
- */
 export default async function ReviewPage({
   params,
 }: {
@@ -14,13 +10,24 @@ export default async function ReviewPage({
 }) {
   const { draftId } = await params;
   const cookie = await requestCookie();
+  const api = makeApi(cookie);
 
   let session;
   try {
-    session = await makeApi(cookie).setup.getSession(draftId);
+    session = await api.setup.getSession(draftId);
   } catch {
     notFound();
   }
 
-  return <ReviewLaunch draftId={session.draft_id} draft={session.config} />;
+  // Fetch vaults so the review screen can show the selected context vault by name.
+  let vaults: Vault[] = [];
+  try {
+    vaults = await api.vaults.list();
+  } catch {
+    vaults = [];
+  }
+
+  return (
+    <ReviewLaunch draftId={session.draft_id} draft={session.config} vaults={vaults} />
+  );
 }

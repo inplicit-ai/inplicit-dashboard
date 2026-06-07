@@ -44,10 +44,12 @@ export function FeedbackButton() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5">
-          <IconMessage size={15} aria-hidden="true" />
-          <span>{t("trigger")}</span>
-        </Button>
+        {/* shell-locale gives identical height / border / bg / hover as the
+            LocaleSwitcher — both live in the same topbar slot (WHY-100). */}
+        <button type="button" className="shell-locale">
+          <IconMessage size={15} className="shell-locale__icon" aria-hidden="true" />
+          <span className="text-[length:var(--text-caption)] font-medium">{t("trigger")}</span>
+        </button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
