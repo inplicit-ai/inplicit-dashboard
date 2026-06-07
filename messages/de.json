@@ -1,10 +1,10 @@
 {
   "nav": {
-    "sectionCreate": "Erstellen",
+    "sectionCreate": "Kampagnen",
     "sectionOrg": "Organisation",
     "sectionBackOffice": "Back-Office",
     "create": "Erstellen",
-    "campaigns": "Kampagnen",
+    "campaigns": "Übersicht",
     "interviews": "Interviews",
     "knowledgeChat": "Wissens-Chat",
     "vaults": "Kontext",
