@@ -5,7 +5,6 @@ import {
   Building2,
   CheckCircle2,
   ChevronRight,
-  Plug,
   Search,
   TriangleAlert,
   Users,
@@ -27,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { VaultFolderBreadcrumb } from "@/components/vaults/VaultFolderBreadcrumb";
 import { VaultAddButton } from "@/components/vaults/VaultAddButton";
 import { VaultItemRow } from "@/components/vaults/VaultItemRow";
+import { VaultIntegrationsTab } from "@/components/vaults/VaultIntegrationsTab";
 import { cn } from "@/lib/utils";
 
 type Folder = "org" | "roles" | "integrations";
@@ -196,22 +196,7 @@ export default async function KontextVaultPage({
       )}
 
       {folder === "integrations" && (
-        <Card className="items-start gap-4 p-8">
-          <span className="flex h-11 w-11 items-center justify-center rounded-ui border border-line bg-surface-2 text-fg-muted">
-            <Plug size={20} aria-hidden />
-          </span>
-          <div>
-            <h3 className="font-semibold tracking-[-0.01em] text-fg">
-              {t("integrationsTitle")}
-            </h3>
-            <p className="mt-1 max-w-prose text-[length:var(--text-body-sm)] leading-relaxed text-fg-muted">
-              {t("integrationsHubNote")}
-            </p>
-          </div>
-          <Button asChild size="sm" className="mt-2">
-            <a href="/integrations">{t("integrationsOpen")}</a>
-          </Button>
-        </Card>
+        <VaultIntegrationsTab vaultId={activeId} />
       )}
 
       {folder === "org" && (
