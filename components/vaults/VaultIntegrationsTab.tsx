@@ -46,10 +46,24 @@ export function VaultIntegrationsTab({ vaultId }: { vaultId: string | null }) {
     try {
       const res = await fetch(
         `/dapi/orgs/me/integrations/granola/connect?vault_id=${vaultId}`,
+        { headers: { accept: "application/json" } },
       );
-      const data = (await res.json()) as { authorize_url?: string; error?: string };
+      // The response may not be JSON (e.g. an HTML 502/504 from the proxy if the
+      // backend is slow/unreachable) — read text and parse defensively so the
+      // user sees a real status instead of a cryptic "Unexpected token '<'".
+      const body = await res.text();
+      let data: { authorize_url?: string; error?: string } = {};
+      try {
+        data = JSON.parse(body) as { authorize_url?: string; error?: string };
+      } catch {
+        throw new Error(
+          res.status === 401
+            ? "Sitzung abgelaufen — bitte Seite neu laden und erneut anmelden."
+            : `Verbindung zu Granola fehlgeschlagen (HTTP ${res.status}). Bitte erneut versuchen.`,
+        );
+      }
       if (!res.ok || !data.authorize_url) {
-        throw new Error(data.error ?? `HTTP ${res.status}`);
+        throw new Error(data.error ?? `Verbindung fehlgeschlagen (HTTP ${res.status}).`);
       }
       window.location.href = data.authorize_url;
     } catch (e) {

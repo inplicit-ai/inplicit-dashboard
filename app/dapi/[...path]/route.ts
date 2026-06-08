@@ -2,6 +2,12 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const API_BASE = process.env.API_URL ?? "http://localhost:8080";
 
+// Some proxied endpoints make their own outbound calls (e.g. the Granola OAuth
+// `connect` registers a client) and can take a few seconds. Give the function
+// room so a slow backend yields a real status, not an HTML 504 the client then
+// fails to JSON-parse.
+export const maxDuration = 30;
+
 /**
  * Pass-through proxy: browser → Next.js (same origin) → backend.
  * Forwards method, body, and the session cookie. Lets client components talk
@@ -25,6 +31,9 @@ async function forward(req: NextRequest, segments: string[]): Promise<Response> 
     method: req.method,
     headers,
     cache: "no-store",
+    // Backend API calls return JSON, never redirects to follow. `manual` keeps
+    // an accidental 3xx from being chased into an HTML body the client can't parse.
+    redirect: "manual",
   };
   if (req.method !== "GET" && req.method !== "HEAD") {
     init.body = await req.arrayBuffer();
