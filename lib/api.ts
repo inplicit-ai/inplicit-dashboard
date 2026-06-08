@@ -282,6 +282,24 @@ export function makeApi(cookie?: string) {
           method: "DELETE",
         }),
     },
+    // ── Workforce directory — the people who get interviewed ────────────
+    employees: {
+      list: () => request<Employee[]>("/api/orgs/me/employees"),
+      create: (body: EmployeeInput) =>
+        request<Employee>("/api/orgs/me/employees", {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      update: (id: string, body: EmployeeInput) =>
+        request<Employee>(`/api/orgs/me/employees/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        }),
+      remove: (id: string) =>
+        request<{ ok: boolean }>(`/api/orgs/me/employees/${id}`, {
+          method: "DELETE",
+        }),
+    },
     // ── Per-campaign RAG chat (O-7) ─────────────────────────────────────
     campaignChat: {
       listThreads: (campaignId: string) =>
@@ -625,6 +643,38 @@ export interface OrgMemberInvite {
   invite_id: string;
   email: string;
   magic_link?: string;
+}
+
+/**
+ * A workforce-directory entry — one of the people who get interviewed. Distinct
+ * from {@link OrgMember} (admin collaborators with dashboard access). Tailored
+ * interview context is NOT stored here; it lives on the person's ROLE. `role_*`
+ * fields are null until a role is assigned (mirror of backend `Employee`).
+ */
+export interface Employee {
+  id: string;
+  org_id: string;
+  email: string;
+  name: string | null;
+  department: string | null;
+  role_id: string | null;
+  role_name: string | null;
+  role_department: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Create/update input for a directory entry. A role is supplied either by
+ * `role_id` (an existing role) or `role_name` (free text — the backend
+ * find-or-creates a MANUAL role). An empty `role_name` on update clears the role.
+ */
+export interface EmployeeInput {
+  email: string;
+  name?: string;
+  department?: string;
+  role_id?: string;
+  role_name?: string;
 }
 
 export interface StaffUserSummary {
