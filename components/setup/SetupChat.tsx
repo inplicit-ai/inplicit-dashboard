@@ -37,6 +37,12 @@ export type ChatTurn = {
  * SUGGESTIONS edda offers are lifted out of the message flow and shown directly
  * above the composer; proposed points render as hairline-separated boxes so a
  * proposal reads distinctly from edda's prose.
+ *
+ * While a turn streams, edda's opening lines (her confirmation of the user's
+ * last input + what she's about to do) are revealed the instant they land, and
+ * the longer body that follows is masked by a pulsing skeleton until generation
+ * completes — so the turn reads as "understood, here's the plan" immediately
+ * rather than crawling out word by word.
  */
 export function SetupChat({
   turns,
@@ -66,12 +72,18 @@ export function SetupChat({
     ? { duration: 0.15 }
     : { type: "spring" as const, stiffness: 500, damping: 30 };
 
-  // The actively-streaming turn is always the last one while `streaming` holds.
-  const lastTurn = turns[turns.length - 1];
-  const lastId = lastTurn?.id;
-  // True once that turn has begun emitting prose: we reveal EDDA's opening lines
-  // and mask the still-generating body with a pulsing skeleton.
-  const leadStreaming = streaming && !!lastTurn?.content;
+  const lastId = turns[turns.length - 1]?.id;
+
+  // The reply suggestions edda is currently offering (the latest request_input),
+  // surfaced above the composer instead of inline in the message.
+  const lastAssistant = [...turns].reverse().find((tn) => tn.role === "assistant");
+  const replyCard =
+    !streaming && lastAssistant
+      ? lastAssistant.toolCalls.find((c) => c.tool === "request_input")
+      : undefined;
+  const replyExamples = Array.isArray(replyCard?.args?.examples)
+    ? (replyCard!.args!.examples as unknown[]).map(String).filter(Boolean)
+    : [];
 
   return (
     <ChatShell height="fill">
@@ -99,6 +111,13 @@ export function SetupChat({
                 streaming &&
                 !turn.content &&
                 turn.toolCalls.length === 0;
+              // The turn that's actively streaming AND has begun emitting prose:
+              // we reveal edda's opening lines and mask the rest with a skeleton.
+              const streamingLead =
+                turn.role === "assistant" &&
+                turn.id === lastId &&
+                streaming &&
+                !!turn.content;
               return (
                 <motion.div
                   key={turn.id}
@@ -115,8 +134,10 @@ export function SetupChat({
                     <div className="max-w-[80%] rounded-lg rounded-br-sm bg-cta px-4 py-2.5 text-[length:var(--text-body-lg)] leading-[1.6] text-cta-fg">
                       {turn.content}
                     </div>
-                  ) : leadStreaming && turn.id === lastId ? (
-                    <div className="w-full max-w-[72ch] rounded-lg rounded-tl-sm border border-line bg-surface-2 px-4 py-3 text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
+                  ) : thinking ? (
+                    <ThinkingBubble label={t("thinking")} />
+                  ) : streamingLead ? (
+                    <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
                       <StreamingLead content={turn.content} />
                     </div>
                   ) : (
@@ -131,10 +152,6 @@ export function SetupChat({
               );
             })}
           </AnimatePresence>
-
-          {/* The trailing "drafting…" label only covers the pre-prose THINKING
-              window; once EDDA's lead lands, the in-turn skeleton takes over. */}
-          {streaming && !leadStreaming && <DraftingShimmer label={t("thinking")} />}
         </div>
       </ChatScrollAnchored>
 
@@ -215,10 +232,10 @@ function ThinkingBubble({ label }: { label: string }) {
 // Widths of the three masked body lines (last one short, like a closing clause).
 const SKELETON_WIDTHS = ["92%", "84%", "60%"];
 
-/** The pulsing body mask shown beneath EDDA's revealed opening lines. */
+/** The pulsing body mask shown beneath edda's revealed opening lines. */
 function SkeletonBody() {
   return (
-    <div className="mt-3 flex flex-col gap-2.5" aria-hidden>
+    <div className="flex flex-col gap-2.5 pt-1.5" aria-hidden>
       {SKELETON_WIDTHS.map((width, i) => (
         <div
           key={i}
@@ -231,7 +248,7 @@ function SkeletonBody() {
 }
 
 /**
- * The actively-streaming turn: EDDA's first two sentences — her confirmation of
+ * The actively-streaming turn: edda's first two sentences — her confirmation of
  * the user's last input and what she's about to do — are shown the moment they
  * land, while the longer body that follows is masked by a pulsing skeleton until
  * generation completes (then the full message replaces this entirely).
@@ -239,9 +256,78 @@ function SkeletonBody() {
 function StreamingLead({ content }: { content: string }) {
   const { lead } = leadSentences(content, 2);
   return (
-    <>
+    <div className="flex flex-col gap-3">
       {lead && <p className="whitespace-pre-wrap">{lead}</p>}
       <SkeletonBody />
-    </>
+    </div>
+  );
+}
+
+type Block = { type: "prose"; text: string } | { type: "list"; items: string[] };
+
+const LIST_RE = /^\s*(?:\d+[.)]|[•\-–])\s+(.*\S)\s*$/;
+
+/** Split edda's message into prose paragraphs + contiguous list blocks. */
+function parseBlocks(content: string): Block[] {
+  const blocks: Block[] = [];
+  let prose: string[] = [];
+  let list: string[] = [];
+  const flushProse = () => {
+    const text = prose.join("\n").trim();
+    if (text) blocks.push({ type: "prose", text });
+    prose = [];
+  };
+  const flushList = () => {
+    if (list.length) blocks.push({ type: "list", items: list });
+    list = [];
+  };
+  for (const line of content.split("\n")) {
+    const m = line.match(LIST_RE);
+    if (m) {
+      flushProse();
+      list.push(m[1]);
+    } else {
+      flushList();
+      prose.push(line);
+    }
+  }
+  flushProse();
+  flushList();
+  return blocks;
+}
+
+/**
+ * Renders edda's message with proposed points (1–4 goals, angles, …) as a
+ * hairline-separated box, visually distinct from the surrounding prose.
+ */
+function AssistantMessage({ content }: { content: string }) {
+  const blocks = parseBlocks(content);
+  return (
+    <div className="flex flex-col gap-3">
+      {blocks.map((b, i) =>
+        b.type === "list" ? (
+          <ul
+            key={i}
+            className="overflow-hidden rounded-md border border-line-subtle bg-surface-2/50"
+          >
+            {b.items.map((item, j) => (
+              <li
+                key={j}
+                className={cn(
+                  "px-3.5 py-2.5 text-[length:var(--text-body)] leading-[1.55] text-fg",
+                  j > 0 && "border-t border-line-subtle",
+                )}
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p key={i} className="whitespace-pre-wrap">
+            {b.text}
+          </p>
+        ),
+      )}
+    </div>
   );
 }
