@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ErrorState";
 import { VaultItemRow } from "@/components/vaults/VaultItemRow";
 import { RoleContextManager } from "@/components/vaults/RoleContextManager";
+import { RoleCrumbRegistrar } from "@/components/vaults/RoleCrumbRegistrar";
 
 /**
  * Per-role context page (WHY-115 hub sub-page). Lets an org owner give a single
@@ -67,6 +68,7 @@ export default async function RoleContextPage({
 
   return (
     <>
+      <RoleCrumbRegistrar name={role.name} />
       <BackLink />
 
       <PageHeader

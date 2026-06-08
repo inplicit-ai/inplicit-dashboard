@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { Composer, type ComposerSuggestion } from "@/components/ui/composer";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -31,7 +31,7 @@ interface SearchResponse {
 
 const SUGGESTIONS: ComposerSuggestion[] = [
   {
-    label: "Onboarding-Pain",
+    label: "Onboarding-Schmerzen",
     value: "Welche Onboarding-Probleme erwähnen neue Mitarbeitende?",
   },
   {
@@ -44,15 +44,92 @@ const SUGGESTIONS: ComposerSuggestion[] = [
   },
   {
     label: "Top-Schmerzen",
-    value: "Was sind die meistgenannten Pain-Points über alle Kampagnes hinweg?",
+    value: "Was sind die meistgenannten Schmerzpunkte über alle Kampagnen hinweg?",
   },
 ];
 
+// ── Animated placeholder ───────────────────────────────────────────────────
+const PLACEHOLDER_PHRASES = [
+  "Welche Insights stecken in all meinen Kampagnen?",
+  "Fasse das Wissen meiner Organisation zusammen.",
+  "Wo entstehen Reibungspunkte zwischen Teams?",
+  "Was sind die häufigsten Schmerzpunkte?",
+  "Welche Prozesse kosten am meisten Energie?",
+  "Was wollen Mitarbeitende wirklich verändern?",
+];
+
+const TYPE_SPEED = 38;   // ms per character while typing
+const DELETE_SPEED = 18; // ms per character while deleting
+const PAUSE_AFTER_TYPE = 2200; // ms to display full phrase
+const PAUSE_BEFORE_TYPE = 400; // ms pause between phrases
+
+function useAnimatedPlaceholder(active: boolean): string {
+  const [displayed, setDisplayed] = useState("");
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
+  const [phase, setPhase] = useState<"typing" | "pausing" | "deleting" | "waiting">("typing");
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!active) {
+      setDisplayed("");
+      return;
+    }
+
+    function tick() {
+      const phrase = PLACEHOLDER_PHRASES[phraseIdx];
+
+      if (phase === "typing") {
+        if (charIdx < phrase.length) {
+          setDisplayed(phrase.slice(0, charIdx + 1));
+          setCharIdx((c) => c + 1);
+          timeoutRef.current = setTimeout(tick, TYPE_SPEED);
+        } else {
+          setPhase("pausing");
+          timeoutRef.current = setTimeout(tick, PAUSE_AFTER_TYPE);
+        }
+      } else if (phase === "pausing") {
+        setPhase("deleting");
+        timeoutRef.current = setTimeout(tick, DELETE_SPEED);
+      } else if (phase === "deleting") {
+        if (charIdx > 0) {
+          setCharIdx((c) => c - 1);
+          setDisplayed(phrase.slice(0, charIdx - 1));
+          timeoutRef.current = setTimeout(tick, DELETE_SPEED);
+        } else {
+          setDisplayed("");
+          setPhase("waiting");
+          timeoutRef.current = setTimeout(tick, PAUSE_BEFORE_TYPE);
+        }
+      } else {
+        // waiting → advance to next phrase
+        setPhraseIdx((i) => (i + 1) % PLACEHOLDER_PHRASES.length);
+        setCharIdx(0);
+        setPhase("typing");
+        timeoutRef.current = setTimeout(tick, TYPE_SPEED);
+      }
+    }
+
+    timeoutRef.current = setTimeout(tick, TYPE_SPEED);
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, phase, charIdx, phraseIdx]);
+
+  return displayed;
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 export function RagSearch() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [response, setResponse] = useState<SearchResponse | null>(null);
+
+  // Animate placeholder only when input is empty and not loading
+  const animatePlaceholder = query === "" && !loading;
+  const animatedPlaceholder = useAnimatedPlaceholder(animatePlaceholder);
 
   async function runSearch(q: string) {
     const trimmed = q.trim();
@@ -89,7 +166,7 @@ export function RagSearch() {
   const isEmpty = response && response.results.length === 0;
 
   return (
-    <div className="space-y-4">
+    <div className="w-full space-y-4">
       {/* Cited evidence — rendered ABOVE the composer. */}
       {(error || response) && (
         <ResultsArea
@@ -100,15 +177,16 @@ export function RagSearch() {
         />
       )}
 
-      {/* Composer — the one elevated input; amber lives only on its focus ring. */}
+      {/* Full-width composer */}
       <Composer
         value={query}
         onValueChange={setQuery}
         onSubmit={(v) => void runSearch(v)}
-        placeholder="Finde Insights aus deinen Kampagnes…"
+        placeholder={animatedPlaceholder}
         isLoading={loading}
         suggestions={SUGGESTIONS}
         onSuggestionSelect={onSuggestion}
+        className="w-full"
       />
     </div>
   );
@@ -151,7 +229,7 @@ function ResultsArea({
             <p className="text-sm font-medium text-fg">Keine Belege gefunden</p>
             <p className="text-xs text-fg-muted">
               Für „{response.query}&rdquo; konnten wir nichts in deinen
-              Kampagnes finden.
+              Kampagnen finden.
             </p>
           </div>
         </div>
@@ -170,7 +248,7 @@ function ResultsArea({
         count={count}
         action={
           <span className="text-[length:var(--text-meta)] tabular-nums text-fg-subtle">
-            {response.searched_campaigns} Kampagnes
+            {response.searched_campaigns} Kampagnen
           </span>
         }
       />

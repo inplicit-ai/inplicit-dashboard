@@ -22,6 +22,8 @@ export interface CrumbContext {
   campaignName?: string;
   /** When set, appended as a sub-crumb to the /vaults breadcrumb. */
   vaultFolder?: string;
+  /** When set, the role name replaces the raw roleId in the trail. */
+  roleName?: string;
 }
 
 const SEGMENT_KEY: Record<string, string> = {
@@ -29,6 +31,7 @@ const SEGMENT_KEY: Record<string, string> = {
   interviews: "interviews",
   chat: "chat",
   vaults: "vaults",
+  roles: "roles",
   integrations: "integrations",
   twin: "twin",
   admin: "admin",
@@ -61,6 +64,7 @@ const DYNAMIC_SEGMENT_KEY: Record<string, string> = {
   campaigns: "campaign",
   interviews: "interview",
   twin: "role",
+  roles: "role",
 };
 
 /**
@@ -70,6 +74,7 @@ const DYNAMIC_SEGMENT_KEY: Record<string, string> = {
  */
 function resolveDynamicKey(prev: string | undefined, ctx: CrumbContext): string {
   if (prev === "campaigns" && ctx.campaignName) return ctx.campaignName;
+  if (prev === "roles" && ctx.roleName) return ctx.roleName;
   return (prev && DYNAMIC_SEGMENT_KEY[prev]) ?? "record";
 }
 
