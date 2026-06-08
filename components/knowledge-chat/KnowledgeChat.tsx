@@ -188,79 +188,36 @@ export function KnowledgeChat() {
   }
 
   // Full-height chat-container. No fixed header bar — just the chat area with a
-  // floating burger icon (top-left) that opens a side drawer for thread switching.
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  // floating burger icon (top-left). Clicking it opens a Card popover (not a
+  // full-height drawer): the card hugs its content and only scrolls inside
+  // itself once the thread list would outgrow the page.
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Dismiss the popover on Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
   return (
     <div className="relative flex h-full min-h-0 overflow-hidden border-t border-line bg-canvas">
-      {/* Side drawer overlay */}
-      <AnimatePresence>
-        {drawerOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              key="backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
-              className="absolute inset-0 z-30 bg-black/20"
-              onClick={() => setDrawerOpen(false)}
-            />
-            {/* Drawer panel */}
-            <motion.aside
-              key="drawer"
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ duration: 0.22, ease: [0.2, 0.65, 0.3, 0.9] }}
-              className="absolute inset-y-0 left-0 z-40 flex w-72 flex-col bg-surface shadow-xl"
-            >
-              {/* Drawer header: black "Neuer Chat" button + close */}
-              <div className="flex shrink-0 items-center gap-2 border-b border-line p-3">
-                <button
-                  type="button"
-                  onClick={() => { void onNew(); setDrawerOpen(false); }}
-                  disabled={busy}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-ui bg-fg px-3 py-2 text-[length:var(--text-meta)] font-semibold text-canvas transition-opacity hover:opacity-80 disabled:opacity-50"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  {t("newChat")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDrawerOpen(false)}
-                  aria-label="Schließen"
-                  className="flex h-8 w-8 items-center justify-center rounded-ui text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Thread list */}
-              <ThreadList
-                threads={threads}
-                activeId={activeId}
-                onSelect={(id) => { loadThread(id); setDrawerOpen(false); }}
-                onDelete={onDelete}
-                onRename={onRename}
-              />
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-
       {/* Chat column */}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        {/* Floating burger icon + scope chip */}
+        {/* Floating burger toggle + scope chip */}
         <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-3 py-2.5">
           <button
             type="button"
-            onClick={() => setDrawerOpen(true)}
-            aria-label="Chats öffnen"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label={t("threadsTitle")}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
             className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-ui border border-line bg-surface text-fg-muted shadow-sm transition-colors hover:bg-surface-2 hover:text-fg"
           >
-            <Menu className="h-4 w-4" />
+            {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
           <div className="pointer-events-auto flex items-center gap-2">
             {scope !== null && (
@@ -279,11 +236,62 @@ export function KnowledgeChat() {
           onSend={onSend}
         />
       </div>
+
+      {/* Conversation Card — opens from the burger, floats over the chat so
+          nothing below it moves. Hugs its content (3 threads → 3 rows) and only
+          scrolls inside itself once it would outgrow ~60vh. */}
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+            {/* Transparent click-catcher to dismiss on an outside click. */}
+            <div
+              className="absolute inset-0 z-30"
+              onClick={() => setMenuOpen(false)}
+            />
+            <motion.div
+              role="menu"
+              initial={{ opacity: 0, y: -6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.98 }}
+              transition={{ duration: 0.16, ease: [0.2, 0.65, 0.3, 0.9] }}
+              style={{ transformOrigin: "top left" }}
+              className="absolute left-3 top-[3.25rem] z-40 flex max-h-[min(60vh,32rem)] w-72 flex-col overflow-hidden rounded-card border-[length:var(--border-card)] border-solid border-line bg-card shadow-card-hover"
+            >
+              {/* Card header: black "Neuer Chat" button. */}
+              <div className="shrink-0 border-b border-line p-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void onNew();
+                    setMenuOpen(false);
+                  }}
+                  disabled={busy}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-ui bg-fg px-3 py-2 text-[length:var(--text-meta)] font-semibold text-canvas transition-opacity hover:opacity-80 disabled:opacity-50"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {t("newChat")}
+                </button>
+              </div>
+
+              <ThreadList
+                threads={threads}
+                activeId={activeId}
+                onSelect={(id) => {
+                  loadThread(id);
+                  setMenuOpen(false);
+                }}
+                onDelete={onDelete}
+                onRename={onRename}
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-/** Slim thread list used inside the drawer. */
+/** Slim thread list used inside the popover card. */
 function ThreadList({
   threads,
   activeId,
