@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp } from "lucide-react";
@@ -19,7 +19,7 @@ import { PromptInputAction } from "@/components/ui/prompt-input";
 import { StaticVoiceOrb } from "@/components/interview/StaticVoiceOrb";
 import { cn } from "@/lib/utils";
 import type { SetupToolCallCard } from "@/lib/api";
-import { leadSentences } from "@/lib/setup/leadSentences";
+import type { LayoutHint } from "@/lib/setup/useSetupStream";
 import { ToolChecklist } from "./ToolChecklist";
 import { EddaAvatar, type EddaStatus } from "./EddaAvatar";
 
@@ -28,6 +28,8 @@ export type ChatTurn = {
   role: "user" | "assistant";
   content: string;
   toolCalls: SetupToolCallCard[];
+  /** Shape EDDA announced for this turn (skeleton while it's still generating). */
+  layout?: LayoutHint;
 };
 
 /**
@@ -38,11 +40,13 @@ export type ChatTurn = {
  * above the composer; proposed points render as hairline-separated boxes so a
  * proposal reads distinctly from edda's prose.
  *
- * While a turn streams, edda's opening lines (her confirmation of the user's
- * last input + what she's about to do) are revealed the instant they land, and
- * the longer body that follows is masked by a pulsing skeleton until generation
- * completes — so the turn reads as "understood, here's the plan" immediately
- * rather than crawling out word by word.
+ * BRIDGING THE WAIT: EDDA computes a whole turn server-side before streaming it,
+ * so the real latency is the model call, during which nothing has landed yet.
+ * Each turn opens with a `layout` hint announcing the answer's shape; while the
+ * turn is still generating we paint that shape — a LAYOUT-TRUE skeleton (the
+ * real bordered proposal box with the exact row count) for list turns, or just a
+ * minimal "thinking" shimmer for one-liners (sharpen questions, handoffs). The
+ * placeholder is replaced by the real answer the moment the turn settles.
  */
 export function SetupChat({
   turns,
@@ -125,6 +129,7 @@ export function SetupChat({
                     <AssistantTurn
                       content={turn.content}
                       toolCalls={turn.toolCalls}
+                      layout={turn.layout}
                       isLast={turn.id === lastId}
                       streaming={streaming}
                     />
@@ -201,63 +206,49 @@ export function SetupChat({
   );
 }
 
-// How long edda's opening lines stay alone above the pulsing skeleton before the
-// full message is revealed. EDDA's deterministic turns deliver their whole text
-// in one shot (no real token stream), so this deliberate beat is what makes the
-// "confirmation + intent first, body loading" reading actually perceptible. For
-// genuinely streamed turns the stream itself already outlasts this, so it's a
-// floor, never an added wait.
-const MIN_LEAD_MS = 700;
-
 /**
- * One assistant turn. Owns its own reveal: while it's the live turn it shows
- * edda's first two sentences (her confirmation of the user's last input + what
- * she's about to do) above a pulsing skeleton that masks the still-loading body,
- * then reveals the full message once the turn has settled AND the lead has been
- * visible for at least MIN_LEAD_MS. Restored history renders in full immediately.
+ * One assistant turn. While it is the live, still-generating turn it shows a
+ * placeholder shaped like the answer EDDA announced (`layout`): a layout-true
+ * skeleton for list turns, a minimal thinking shimmer for one-liners. Once the
+ * turn settles (or for restored history) it renders the real message. List
+ * placeholders are held until the turn settles so the full answer lands at once
+ * rather than flashing a half-built list; genuinely streamed prose (the refine
+ * turn) is revealed token-by-token as it arrives.
  */
 function AssistantTurn({
   content,
   toolCalls,
+  layout,
   isLast,
   streaming,
 }: {
   content: string;
   toolCalls: SetupToolCallCard[];
+  layout?: LayoutHint;
   isLast: boolean;
   streaming: boolean;
 }) {
   const t = useTranslations("setup.chat");
-  // A turn that mounted WITH content is restored history — never stage it.
-  const startedEmpty = useRef(content.length === 0);
-  // When prose first lands, so we can hold the lead a minimum beat.
-  const leadShownAt = useRef<number | null>(null);
-  if (content && leadShownAt.current === null) leadShownAt.current = Date.now();
+  // The live turn: when a turn streams, a fresh empty assistant turn is always
+  // appended as the last one, so "last + streaming" uniquely marks the one still
+  // generating. Restored history (streaming === false) renders in full at once.
+  const generating = isLast && streaming;
 
-  const [revealed, setRevealed] = useState(!startedEmpty.current);
-
-  useEffect(() => {
-    if (revealed || !startedEmpty.current || !content) return;
-    // Keep the body masked while this turn is still the streaming one.
-    if (isLast && streaming) return;
-    const elapsed = leadShownAt.current ? Date.now() - leadShownAt.current : 0;
-    const wait = Math.max(0, MIN_LEAD_MS - elapsed);
-    const id = window.setTimeout(() => setRevealed(true), wait);
-    return () => window.clearTimeout(id);
-  }, [revealed, content, isLast, streaming]);
-
-  // Pre-prose wait — the LLM is working and nothing has landed yet.
-  if (!content && isLast && streaming && toolCalls.length === 0) {
-    return <ThinkingBubble label={t("thinking")} />;
-  }
-
-  // Lead revealed, body still masked by the pulsing skeleton.
-  if (!revealed && content) {
-    return (
-      <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
-        <StreamingLead content={content} />
-      </div>
-    );
+  if (generating) {
+    // A list answer can't render half-built — hold the layout-true skeleton for
+    // the whole wait, then swap to the real box when the turn settles.
+    if (layout?.kind === "list") {
+      return (
+        <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
+          <ListSkeleton variant={layout.variant} count={layout.count} />
+        </div>
+      );
+    }
+    // One-liner / prose: no skeleton. Show the thinking shimmer until the first
+    // token lands, then let prose reveal as it streams (refine turns).
+    if (!content) {
+      return <ThinkingBubble label={t("thinking")} />;
+    }
   }
 
   return (
@@ -279,36 +270,55 @@ function ThinkingBubble({ label }: { label: string }) {
   );
 }
 
-// Widths of the three masked body lines (last one short, like a closing clause).
-const SKELETON_WIDTHS = ["92%", "84%", "60%"];
-
-/** The pulsing body mask shown beneath edda's revealed opening lines. */
-function SkeletonBody() {
-  return (
-    <div className="flex flex-col gap-2.5 pt-1.5" aria-hidden>
-      {SKELETON_WIDTHS.map((width, i) => (
-        <div
-          key={i}
-          className="edda-skeleton-bar"
-          style={{ width, animationDelay: `${i * 0.15}s` }}
-        />
-      ))}
-    </div>
-  );
-}
+// Row widths cycled through so the skeleton rows read like varied list items
+// rather than a uniform block.
+const SKELETON_ROW_WIDTHS = ["88%", "94%", "72%", "90%", "82%", "68%", "86%", "76%"];
 
 /**
- * The actively-streaming turn: edda's first two sentences — her confirmation of
- * the user's last input and what she's about to do — are shown the moment they
- * land, while the longer body that follows is masked by a pulsing skeleton until
- * generation completes (then the full message replaces this entirely).
+ * The layout-true wait placeholder: a short intro bar followed by the SAME
+ * bordered, hairline-separated box `AssistantMessage` renders a real proposal
+ * into, with exactly `count` pulsing rows. Topics carry a second, shorter line
+ * per row to mirror their "title — summary" shape. This makes the wait read as
+ * "the goals/angles/questions are landing" instead of a generic spinner.
  */
-function StreamingLead({ content }: { content: string }) {
-  const { lead } = leadSentences(content, 2);
+function ListSkeleton({
+  variant,
+  count,
+}: {
+  variant: "goals" | "topics" | "success";
+  count: number;
+}) {
+  const rows = Math.max(1, Math.min(count, 8));
   return (
-    <div className="flex flex-col gap-3">
-      {lead && <p className="whitespace-pre-wrap">{lead}</p>}
-      <SkeletonBody />
+    <div className="flex flex-col gap-3" aria-hidden>
+      {/* The one-sentence intro that precedes every proposal. */}
+      <div className="edda-skeleton-bar" style={{ width: "62%" }} />
+      <ul className="overflow-hidden rounded-md border border-line-subtle bg-surface-2/50">
+        {Array.from({ length: rows }).map((_, j) => (
+          <li
+            key={j}
+            className={cn("px-3.5 py-3", j > 0 && "border-t border-line-subtle")}
+          >
+            <div
+              className="edda-skeleton-bar"
+              style={{
+                width: SKELETON_ROW_WIDTHS[j % SKELETON_ROW_WIDTHS.length],
+                animationDelay: `${j * 0.12}s`,
+              }}
+            />
+            {variant === "topics" && (
+              <div
+                className="edda-skeleton-bar mt-1.5"
+                style={{
+                  width: "48%",
+                  height: "0.5rem",
+                  animationDelay: `${j * 0.12 + 0.06}s`,
+                }}
+              />
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

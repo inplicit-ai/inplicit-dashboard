@@ -2,14 +2,25 @@
 
 import { useCallback, useRef, useState } from "react";
 
+/**
+ * The shape EDDA is about to produce, sent first on every turn (before the slow
+ * model call) so the chat can paint a layout-true skeleton that bridges the wait.
+ * `list` carries the exact row count; `prose` means a one-liner → no skeleton.
+ */
+export type LayoutHint =
+  | { kind: "prose" }
+  | { kind: "list"; variant: "goals" | "topics" | "success"; count: number };
+
 /** Events emitted by the setup-agent SSE stream (mirrors backend setup/mod.rs). */
 export type StreamEvent =
+  | { type: "hint"; layout: LayoutHint }
   | { type: "token"; text: string }
   | { type: "tool_call"; tool: string; args: Record<string, unknown>; revision?: number; applied?: boolean }
   | { type: "error"; code: string; tool?: string }
   | { type: "done"; revision?: number; config?: unknown };
 
 type Handlers = {
+  onHint?: (e: Extract<StreamEvent, { type: "hint" }>) => void;
   onToken?: (text: string) => void;
   onToolCall?: (e: Extract<StreamEvent, { type: "tool_call" }>) => void;
   onError?: (e: Extract<StreamEvent, { type: "error" }>) => void;
@@ -101,6 +112,9 @@ function dispatchFrame(frame: string, h: Handlers) {
   }
 
   switch (event) {
+    case "hint":
+      h.onHint?.({ type: "hint", layout: parseLayout(payload) });
+      break;
     case "token":
       h.onToken?.(String(payload.text ?? ""));
       break;
@@ -128,4 +142,25 @@ function dispatchFrame(frame: string, h: Handlers) {
       });
       break;
   }
+}
+
+type ListVariant = Extract<LayoutHint, { kind: "list" }>["variant"];
+const LIST_VARIANTS: readonly ListVariant[] = ["goals", "topics", "success"];
+
+/** Validate an untrusted hint frame into a `LayoutHint`; anything off → prose. */
+function parseLayout(payload: Record<string, unknown>): LayoutHint {
+  const variant = payload.variant;
+  if (
+    payload.kind === "list" &&
+    typeof variant === "string" &&
+    (LIST_VARIANTS as readonly string[]).includes(variant)
+  ) {
+    const count = Number(payload.count);
+    return {
+      kind: "list",
+      variant: variant as ListVariant,
+      count: Number.isFinite(count) ? Math.max(1, Math.min(8, Math.trunc(count))) : 4,
+    };
+  }
+  return { kind: "prose" };
 }
