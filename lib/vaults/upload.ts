@@ -203,6 +203,46 @@ export async function reindexFileItem(
   return jsonOrThrow<VaultItem>(res);
 }
 
+/**
+ * Upload a single FILE to a vault via the presigned flow (upload-url → PUT →
+ * finalize), returning the finalized item. Unlike {@link useVaultUpload} this is
+ * a one-shot async call with no progress state or polling — the index-status
+ * pill resolves on the next list refresh. Used where the caller drives its own
+ * refresh (e.g. the per-role context page that creates the vault on demand).
+ */
+export async function uploadFileToVault(
+  vaultId: string,
+  file: File,
+): Promise<VaultItem> {
+  const { itemId, uploadUrl } = await jsonOrThrow<{
+    itemId: string;
+    uploadUrl: string;
+  }>(
+    await fetch(dapi(`orgs/me/vaults/${vaultId}/items/upload-url`), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filename: file.name,
+        mime: file.type || "application/octet-stream",
+        byteSize: file.size,
+      }),
+    }),
+  );
+
+  const put = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.type || "application/octet-stream" },
+    body: file,
+  });
+  if (!put.ok) throw new Error(`S3 ${put.status}`);
+
+  return jsonOrThrow<VaultItem>(
+    await fetch(dapi(`orgs/me/vaults/${vaultId}/items/${itemId}/finalize`), {
+      method: "POST",
+    }),
+  );
+}
+
 /** Add a TEXT or URL item via the existing items endpoint. */
 export async function addVaultItem(
   vaultId: string,
