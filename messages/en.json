@@ -381,7 +381,6 @@
     "scope": "Searching {count} campaigns",
     "newChat": "New chat",
     "threadsTitle": "Conversations",
-    "moreConversations": "More conversations",
     "emptyThreads": "No conversations yet.",
     "emptyTitle": "Ask across every campaign",
     "emptyBody": "Ask a free-form question spanning all of your campaigns. Answers cite the campaign, anonymized participant and utterance, or decline when there's no evidence.",
