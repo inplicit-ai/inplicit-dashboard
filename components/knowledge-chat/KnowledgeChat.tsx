@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowUp, MessageSquareText, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowUp, MessageSquareText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +27,7 @@ import type {
   SendOrgChatResponse,
 } from "@/lib/api";
 import { OrgCitationChip } from "./OrgCitationChip";
+import { ConversationSwitcher } from "./ConversationSwitcher";
 
 // Client → backend via the same-origin /dapi proxy (forwards the session cookie).
 async function dapi<T>(path: string, init?: RequestInit): Promise<T> {
@@ -188,12 +189,13 @@ export function KnowledgeChat() {
   }
 
   // Full-height chat-container (design-contract §6): the page supplies the
-  // height envelope; this fills it as a `flex min-h-0` row with a bound-spine
-  // thread rail and a conversation column whose folio header never scrolls.
+  // height envelope; this fills it as a `flex min-h-0` column. The thread rail
+  // is gone — conversation switching now rides in the header as a compact Card
+  // whose expanded panel floats over the chat (nothing below it moves).
   return (
-    <div className="flex h-full min-h-0 overflow-hidden border-t border-line bg-canvas">
-      <aside className="hidden w-72 shrink-0 border-r border-line bg-surface sm:flex sm:min-h-0 sm:flex-col">
-        <ThreadList
+    <div className="flex h-full min-h-0 flex-col overflow-hidden border-t border-line bg-canvas">
+      <header className="relative z-20 flex shrink-0 items-center justify-between gap-3 border-b border-line bg-canvas px-4 py-3 sm:px-8">
+        <ConversationSwitcher
           threads={threads}
           activeId={activeId}
           onSelect={loadThread}
@@ -202,160 +204,22 @@ export function KnowledgeChat() {
           onRename={onRename}
           busy={busy}
         />
-      </aside>
+        <div className="flex shrink-0 items-center gap-2.5">
+          {scope !== null && (
+            <DataChip tone="neutral" mono>
+              {t("scope", { count: scope })}
+            </DataChip>
+          )}
+          <StatusDisc state={pending ? "live" : "idle"} size="sm" />
+        </div>
+      </header>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <ScopeHeader count={scope} live={pending} />
         <Conversation
           messages={messages}
           pending={pending}
           error={error}
           onSend={onSend}
         />
-      </div>
-    </div>
-  );
-}
-
-/** Clean header — title + org eyebrow, scope chip, live disc while searching. */
-function ScopeHeader({ count, live }: { count: number | null; live: boolean }) {
-  const t = useTranslations("knowledgeChat");
-  return (
-    <header className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-canvas px-4 py-4 sm:px-8">
-      <div className="min-w-0">
-        <p className="text-[length:var(--text-caption)] font-medium text-fg-subtle">
-          {t("eyebrow")}
-        </p>
-        <p className="truncate text-[length:var(--text-subtitle)] font-semibold tracking-[-0.01em] text-fg">
-          {t("title")}
-        </p>
-      </div>
-      <div className="flex shrink-0 items-center gap-2.5">
-        {count !== null && (
-          <DataChip tone="neutral" mono>
-            {t("scope", { count })}
-          </DataChip>
-        )}
-        <StatusDisc state={live ? "live" : "idle"} size="sm" />
-      </div>
-    </header>
-  );
-}
-
-/** Calm conversation rail — same clean language as the per-campaign list. */
-function ThreadList({
-  threads,
-  activeId,
-  onSelect,
-  onNew,
-  onDelete,
-  onRename,
-  busy,
-}: {
-  threads: ChatThreadSummary[];
-  activeId: string | null;
-  onSelect: (id: string) => void;
-  onNew: () => void;
-  onDelete: (id: string) => void;
-  onRename: (id: string, title: string) => void;
-  busy: boolean;
-}) {
-  const t = useTranslations("knowledgeChat");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  function startEdit(thread: ChatThreadSummary) {
-    setEditingId(thread.id);
-    setEditValue(thread.title);
-    setTimeout(() => inputRef.current?.select(), 0);
-  }
-
-  function commitEdit(id: string) {
-    onRename(id, editValue);
-    setEditingId(null);
-  }
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-center justify-between border-b border-line px-4 py-4">
-        <span className="text-[length:var(--text-meta)] font-semibold text-fg-subtle">
-          {t("threadsTitle")}
-        </span>
-        <button
-          type="button"
-          onClick={onNew}
-          disabled={busy}
-          aria-label={t("newChat")}
-          className="inline-flex items-center gap-1.5 rounded-ui border border-line bg-surface px-2.5 py-1.5 text-[length:var(--text-meta)] font-medium text-fg-muted shadow-sm transition-colors hover:border-line-strong hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          {t("newChat")}
-        </button>
-      </div>
-      <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto p-2">
-        {threads.length === 0 ? (
-          <p className="px-2 py-3 text-[length:var(--text-meta)] text-fg-subtle">
-            {t("emptyThreads")}
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-0.5">
-            {threads.map((thread) => {
-              const active = thread.id === activeId;
-              const isEditing = editingId === thread.id;
-              return (
-                <li key={thread.id} className="group relative">
-                  {isEditing ? (
-                    <input
-                      ref={inputRef}
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={() => commitEdit(thread.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") commitEdit(thread.id);
-                        if (e.key === "Escape") setEditingId(null);
-                      }}
-                      className="w-full rounded-ui bg-surface-2 px-3 py-2 text-[length:var(--text-meta)] text-fg outline-none ring-2 ring-inset ring-accent"
-                    />
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => onSelect(thread.id)}
-                      aria-current={active ? "true" : undefined}
-                      className={cn(
-                        "flex w-full items-center gap-2 rounded-ui px-3 py-2.5 pr-16 text-left text-[length:var(--text-meta)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-                        active
-                          ? "bg-surface-2 font-medium text-fg shadow-[inset_2px_0_0_var(--color-accent)]"
-                          : "text-fg-muted hover:bg-surface-2 hover:text-fg",
-                      )}
-                    >
-                      <span className="min-w-0 flex-1 truncate">{thread.title}</span>
-                    </button>
-                  )}
-                  {!isEditing && (
-                    <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                      <button
-                        type="button"
-                        onClick={() => startEdit(thread)}
-                        aria-label="Umbenennen"
-                        className="rounded-ui p-1 text-fg-subtle transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onDelete(thread.id)}
-                        aria-label={t("deleteThread")}
-                        className="rounded-ui p-1 text-fg-subtle transition-colors hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
       </div>
     </div>
   );
