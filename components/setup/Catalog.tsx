@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { CheckCircle2, Pencil, Building2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, DURATION_OPTIONS } from "@/components/ui/select";
@@ -228,31 +229,6 @@ export function Catalog({
         </p>
       </SectionCard>
 
-      {/* ── Success criteria ───────────────────────────────────────────── */}
-      <SectionCard
-        title={t("successCriteria")}
-        count={questions.length > 0 ? questions.length : undefined}
-        touched={recentlyTouched?.has("set_success_criteria")}
-      >
-        {questions.length > 0 ? (
-          <EvidenceTree nodes={questionNodes} defaultExpandedDepth={0} />
-        ) : (
-          <PlatePlaceholder>{t("successEmpty")}</PlatePlaceholder>
-        )}
-      </SectionCard>
-
-      {/* ── Topics ─────────────────────────────────────────────────────── */}
-      <SectionCard
-        title={t("topics")}
-        count={draft.topics?.nodes?.length || undefined}
-        touched={
-          recentlyTouched?.has("add_topic") ||
-          recentlyTouched?.has("link_topics")
-        }
-      >
-        <TopicGraph data={draft.topics} />
-      </SectionCard>
-
       {/* ── People ─────────────────────────────────────────────────────── */}
       <div id={peopleAnchorId} className="scroll-mt-6">
         <PeopleSection
@@ -329,9 +305,43 @@ function ContextVaultPicker({
 }) {
   const t = useTranslations("setup.catalog");
   const list = vaults ?? [];
+  const [editing, setEditing] = useState(!draft.contextVaultId);
+
+  // Auto-select first vault if none set
+  useEffect(() => {
+    if (!draft.contextVaultId && list.length > 0) {
+      onPatch({ tool: "set_context_vault", args: { vaultId: list[0].id } });
+      setEditing(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (list.length === 0) {
     return <PlatePlaceholder>{t("contextEmpty")}</PlatePlaceholder>;
+  }
+
+  const selectedVault = list.find((v) => v.id === draft.contextVaultId) ?? list[0];
+
+  if (!editing && selectedVault) {
+    return (
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-1 items-center gap-2.5 rounded-card border border-line bg-surface-2 px-3 py-2.5">
+          <CheckCircle2 size={15} className="shrink-0 text-success" aria-hidden />
+          <Building2 size={13} className="shrink-0 text-fg-muted" aria-hidden />
+          <span className="truncate text-[length:var(--text-body-sm)] font-medium text-fg">
+            {selectedVault.name}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          aria-label={t("contextChange")}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-ui text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
+        >
+          <Pencil size={13} aria-hidden />
+        </button>
+      </div>
+    );
   }
 
   const options = [
@@ -344,9 +354,10 @@ function ContextVaultPicker({
       <Select
         aria-label={t("context")}
         value={draft.contextVaultId ?? ""}
-        onValueChange={(vaultId) =>
-          onPatch({ tool: "set_context_vault", args: { vaultId } })
-        }
+        onValueChange={(vaultId) => {
+          onPatch({ tool: "set_context_vault", args: { vaultId } });
+          if (vaultId) setEditing(false);
+        }}
         options={options}
         size="md"
       />
@@ -381,7 +392,7 @@ function GoalInput({
       rows={1}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full resize-none overflow-hidden bg-transparent text-fg leading-snug outline-none placeholder:text-fg-subtle"
+      className="w-full resize-none overflow-hidden bg-transparent font-normal text-fg leading-snug outline-none placeholder:text-fg-subtle"
       aria-label={ariaLabel}
     />
   );
