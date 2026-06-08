@@ -1,60 +1,67 @@
 "use client";
 
-import { useState } from "react";
-
 import { cn } from "@/lib/utils";
+
+export type EddaStatus = "ready" | "writing" | "error";
 
 interface EddaAvatarProps {
   size?: number;
+  status?: EddaStatus;
   className?: string;
 }
 
 /**
- * EDDA's identity glyph in the setup chat. Renders the avatar image from the
- * conventional public path `/edda-avatar.png`, falling back gracefully to the
- * "E" letter badge (the original hardcoded design) when the asset is missing or
- * fails to load. No dependency added: a plain <img> + onError mirrors
- * `OrgAvatar`'s pattern so it works the moment the asset is dropped in.
+ * edda's identity — a glowing orb in the inplicit brand (accent/orange), drawn
+ * purely in CSS (no image asset). A status node sits in the bottom-right corner:
+ *   • ready   → a green dot ("edda is here")
+ *   • writing → a small pill with three bobbing dots
+ *   • error   → a red dot
  */
-export function EddaAvatar({ size = 36, className }: EddaAvatarProps) {
-  const [failed, setFailed] = useState(false);
-  const dim = { width: size, height: size };
-
-  if (failed) {
-    return (
+export function EddaAvatar({ size = 36, status = "ready", className }: EddaAvatarProps) {
+  return (
+    <span
+      role="img"
+      aria-label={`edda — ${status}`}
+      className={cn("relative inline-flex shrink-0", className)}
+      style={{ width: size, height: size }}
+    >
       <span
-        aria-label="EDDA"
-        role="img"
-        className={cn(
-          "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-fg text-[length:var(--text-body)] font-semibold text-canvas ring-1 ring-line",
-          className,
-        )}
-        style={dim}
-      >
-        E
+        aria-hidden
+        className="size-full rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle at 32% 28%, color-mix(in oklab, var(--color-accent) 8%, #ffffff) 0%, var(--color-accent-strong) 32%, var(--color-accent) 64%, color-mix(in oklab, var(--color-accent) 60%, #000000) 100%)",
+          boxShadow:
+            "inset 0 0 6px -1px color-mix(in oklab, #ffffff 55%, transparent), 0 1px 12px -2px color-mix(in oklab, var(--color-accent) 60%, transparent)",
+        }}
+      />
+      <StatusNode status={status} />
+    </span>
+  );
+}
+
+function StatusNode({ status }: { status: EddaStatus }) {
+  if (status === "writing") {
+    return (
+      <span className="absolute -bottom-1 -right-1.5 inline-flex items-center gap-[3px] rounded-full bg-surface px-1.5 py-1 shadow-sm ring-2 ring-canvas">
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className="edda-typing-dot size-1 rounded-full bg-fg-muted"
+            style={{ animationDelay: `${i * 0.16}s` }}
+          />
+        ))}
       </span>
     );
   }
 
   return (
     <span
+      aria-hidden
       className={cn(
-        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-3xl ring-1 ring-line",
-        className,
+        "absolute bottom-0 right-0 size-3 rounded-full ring-2 ring-canvas",
+        status === "error" ? "bg-danger" : "bg-success",
       )}
-      style={dim}
-    >
-      {/* Plain <img> on purpose: a static public asset, so next/image's loader
-          buys us nothing here and onError gives us the clean "E" fallback. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/edda-avatar.png"
-        alt="EDDA"
-        width={size}
-        height={size}
-        onError={() => setFailed(true)}
-        className="h-full w-full object-cover"
-      />
-    </span>
+    />
   );
 }

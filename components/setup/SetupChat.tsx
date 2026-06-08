@@ -15,14 +15,13 @@ import {
   ChatShell,
   ChatComposerBar,
 } from "@/components/ui/chat-shell";
-import { StatusDisc } from "@/components/ui/status-disc";
 import { PromptInputAction } from "@/components/ui/prompt-input";
 import { StaticVoiceOrb } from "@/components/interview/StaticVoiceOrb";
 import { cn } from "@/lib/utils";
 import type { SetupToolCallCard } from "@/lib/api";
 import { leadSentences } from "@/lib/setup/leadSentences";
 import { ToolChecklist } from "./ToolChecklist";
-import { EddaAvatar } from "./EddaAvatar";
+import { EddaAvatar, type EddaStatus } from "./EddaAvatar";
 
 export type ChatTurn = {
   id: string;
@@ -32,25 +31,25 @@ export type ChatTurn = {
 };
 
 /**
- * The setup agent chat pane (doc 03 §7), in the white-modernist claude.ai style:
- * calm roomy turns — user = near-black bubble, assistant = a borderless reading
- * column — inside the canonical ChatShell flex envelope. Assistant turns
- * interleave prose with clean tool-call cards. A clean header carries the
- * honest-AI label (EU AI Act spirit, doc 03 §9). One scroll region with
- * stick-to-bottom + a floating "scroll to bottom" pill; a pinned claude.ai
- * composer. NO 100vh math — fills whatever height its parent gives.
+ * The setup agent (edda) chat pane. Calm, roomy turns — user = a near-black
+ * bubble, assistant = a borderless reading column. The header carries edda's
+ * glowing orb (status lives ON the orb now), nothing else. The reply
+ * SUGGESTIONS edda offers are lifted out of the message flow and shown directly
+ * above the composer; proposed points render as hairline-separated boxes so a
+ * proposal reads distinctly from edda's prose.
  */
 export function SetupChat({
   turns,
   streaming,
+  error,
   onSend,
 }: {
   turns: ChatTurn[];
   streaming: boolean;
+  error?: boolean;
   onSend: (message: string) => void;
 }) {
   const t = useTranslations("setup.chat");
-  const tAi = useTranslations("setup.ai");
   const prefersReducedMotion = useReducedMotion();
   const [value, setValue] = useState("");
 
@@ -60,6 +59,8 @@ export function SetupChat({
     onSend(msg);
     setValue("");
   }
+
+  const status: EddaStatus = streaming ? "writing" : error ? "error" : "ready";
 
   const turnTransition = prefersReducedMotion
     ? { duration: 0.15 }
@@ -74,32 +75,12 @@ export function SetupChat({
 
   return (
     <ChatShell height="fill">
-      {/* Honest-AI header — fixed, never scrolls. Borrows the interview-room
-          chrome vocabulary (StatusHud/TopBar): a calm identity glyph, EDDA's
-          name, and a live readout where the lone amber StatusDisc pulses only
-          while EDDA is drafting (idle/monochrome at rest). The disclaimer stays
-          as the quiet muted line beneath — the EU-AI-Act self-identification. */}
+      {/* Header — edda's orb (status lives on the orb) + lowercase name. */}
       <header className="flex shrink-0 items-center gap-3 border-b border-line bg-canvas px-5 py-4">
-        <EddaAvatar size={36} />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2.5">
-            <p className="text-[length:var(--text-subtitle)] font-semibold tracking-[-0.01em] text-fg">
-              EDDA
-            </p>
-            {/* Live state readout — amber only while drafting (one-accent rule). */}
-            <span className="inline-flex items-center gap-1.5 text-[length:var(--text-meta)] font-medium text-fg-muted">
-              <StatusDisc
-                state={streaming ? "live" : "idle"}
-                size="sm"
-                pulse={streaming}
-              />
-              {streaming ? t("drafting") : t("ready")}
-            </span>
-          </div>
-          <p className="truncate text-[length:var(--text-meta)] text-fg-muted">
-            {tAi("disclaimer")}
-          </p>
-        </div>
+        <EddaAvatar size={36} status={status} />
+        <p className="text-[length:var(--text-subtitle)] font-semibold tracking-[-0.01em] text-fg">
+          edda
+        </p>
       </header>
 
       {/* Conversation — the single scroll region, stick-to-bottom + floating pill. */}
@@ -112,6 +93,12 @@ export function SetupChat({
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-7">
           <AnimatePresence initial={false}>
             {turns.map((turn) => {
+              const thinking =
+                turn.role === "assistant" &&
+                turn.id === lastId &&
+                streaming &&
+                !turn.content &&
+                turn.toolCalls.length === 0;
               return (
                 <motion.div
                   key={turn.id}
@@ -133,14 +120,11 @@ export function SetupChat({
                       <StreamingLead content={turn.content} />
                     </div>
                   ) : (
-                    <div className="w-full max-w-[72ch] rounded-lg rounded-tl-sm border border-line bg-surface-2 px-4 py-3 text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
-                      {turn.content && (
-                        <p className="whitespace-pre-wrap">{turn.content}</p>
-                      )}
-                      <ToolChecklist
-                        cards={turn.toolCalls}
-                        onReply={streaming ? undefined : onSend}
-                      />
+                    <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
+                      {turn.content && <AssistantMessage content={turn.content} />}
+                      {/* request_input shows its QUESTION here (no chips — those
+                          live above the composer); commit cards show inline. */}
+                      <ToolChecklist cards={turn.toolCalls} />
                     </div>
                   )}
                 </motion.div>
@@ -154,8 +138,26 @@ export function SetupChat({
         </div>
       </ChatScrollAnchored>
 
-      {/* Composer — pinned, never scrolls away. */}
+      {/* Composer — pinned. Reply suggestions sit just above the input. */}
       <ChatComposerBar className="px-4 py-3 sm:px-5 sm:py-4">
+        {replyExamples.length > 0 && (
+          <div className="composer-shell mb-2.5 flex flex-wrap gap-2">
+            {replyExamples.map((ex, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => onSend(ex)}
+                className={cn(
+                  "rounded-full border border-line bg-surface px-3 py-1.5 text-[length:var(--text-caption)] text-fg-muted transition-colors",
+                  "hover:border-line-strong hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                )}
+              >
+                {ex}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* composer-shell: shared prompt-box width (WHY-93). */}
         <div className="composer-shell">
           <PromptInput
@@ -169,18 +171,8 @@ export function SetupChat({
               disabled={streaming}
             />
             <PromptInputActions className="justify-between pt-1.5">
-              {/* Voice affordance — DELIBERATELY DISABLED (coming-soon). Wears the
-                  interview-room voice-orb vocabulary (static amber disc + ring)
-                  so the room reads as voice-native, while the spoken interview
-                  is not yet wired. No STT/TTS. Tooltip carries the honest hint. */}
-              <PromptInputAction
-                tooltip={t("voiceComingSoonHint")}
-                side="top"
-              >
-                {/* aria-disabled (not the native `disabled` attr) keeps the
-                    control inert yet hover/focus-reachable, so the coming-soon
-                    tooltip still surfaces — a natively-disabled button emits no
-                    pointer events and would swallow the hint. */}
+              {/* Voice affordance — DELIBERATELY DISABLED (coming-soon). */}
+              <PromptInputAction tooltip={t("voiceComingSoonHint")} side="top">
                 <button
                   type="button"
                   aria-disabled
@@ -211,11 +203,10 @@ export function SetupChat({
   );
 }
 
-/** "Still drafting…" trailer — a shimmering label sweeping while EDDA streams
- * its next tool calls. Reduced-motion collapses the sweep to a static label. */
-function DraftingShimmer({ label }: { label: string }) {
+/** edda's "thinking" state — a compact, content-width bubble (not full-width). */
+function ThinkingBubble({ label }: { label: string }) {
   return (
-    <div className="text-[length:var(--text-meta)]">
+    <div className="inline-flex w-fit items-center rounded-lg rounded-bl-sm bg-surface-2 px-3 py-2 text-[length:var(--text-meta)]">
       <span className="edda-shimmer">{label}</span>
     </div>
   );

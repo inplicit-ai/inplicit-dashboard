@@ -150,9 +150,12 @@ export function ReviewLaunch({
           />
         </motion.div>
 
-        {/* Aside — sticky launch panel (gates + CTA) */}
+        {/* Aside — sticky launch panel; orange border until all gates green */}
         <motion.aside {...reveal(0.1)} className="lg:sticky lg:top-6">
-          <Card>
+          <Card className={blocked
+            ? "ring-2 ring-warning/60 ring-offset-0"
+            : "ring-2 ring-success/60 ring-offset-0"
+          }>
             <CardHeader>
               <CardTitle className="text-[length:var(--text-title)] tracking-[-0.015em]">
                 {t("launchpad")}
