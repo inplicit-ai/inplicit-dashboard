@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp } from "lucide-react";
@@ -105,19 +105,6 @@ export function SetupChat({
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-7">
           <AnimatePresence initial={false}>
             {turns.map((turn) => {
-              const thinking =
-                turn.role === "assistant" &&
-                turn.id === lastId &&
-                streaming &&
-                !turn.content &&
-                turn.toolCalls.length === 0;
-              // The turn that's actively streaming AND has begun emitting prose:
-              // we reveal edda's opening lines and mask the rest with a skeleton.
-              const streamingLead =
-                turn.role === "assistant" &&
-                turn.id === lastId &&
-                streaming &&
-                !!turn.content;
               return (
                 <motion.div
                   key={turn.id}
@@ -134,19 +121,13 @@ export function SetupChat({
                     <div className="max-w-[80%] rounded-lg rounded-br-sm bg-cta px-4 py-2.5 text-[length:var(--text-body-lg)] leading-[1.6] text-cta-fg">
                       {turn.content}
                     </div>
-                  ) : thinking ? (
-                    <ThinkingBubble label={t("thinking")} />
-                  ) : streamingLead ? (
-                    <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
-                      <StreamingLead content={turn.content} />
-                    </div>
                   ) : (
-                    <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
-                      {turn.content && <AssistantMessage content={turn.content} />}
-                      {/* request_input shows its QUESTION here (no chips — those
-                          live above the composer); commit cards show inline. */}
-                      <ToolChecklist cards={turn.toolCalls} />
-                    </div>
+                    <AssistantTurn
+                      content={turn.content}
+                      toolCalls={turn.toolCalls}
+                      isLast={turn.id === lastId}
+                      streaming={streaming}
+                    />
                   )}
                 </motion.div>
               );
@@ -217,6 +198,75 @@ export function SetupChat({
         </div>
       </ChatComposerBar>
     </ChatShell>
+  );
+}
+
+// How long edda's opening lines stay alone above the pulsing skeleton before the
+// full message is revealed. EDDA's deterministic turns deliver their whole text
+// in one shot (no real token stream), so this deliberate beat is what makes the
+// "confirmation + intent first, body loading" reading actually perceptible. For
+// genuinely streamed turns the stream itself already outlasts this, so it's a
+// floor, never an added wait.
+const MIN_LEAD_MS = 700;
+
+/**
+ * One assistant turn. Owns its own reveal: while it's the live turn it shows
+ * edda's first two sentences (her confirmation of the user's last input + what
+ * she's about to do) above a pulsing skeleton that masks the still-loading body,
+ * then reveals the full message once the turn has settled AND the lead has been
+ * visible for at least MIN_LEAD_MS. Restored history renders in full immediately.
+ */
+function AssistantTurn({
+  content,
+  toolCalls,
+  isLast,
+  streaming,
+}: {
+  content: string;
+  toolCalls: SetupToolCallCard[];
+  isLast: boolean;
+  streaming: boolean;
+}) {
+  const t = useTranslations("setup.chat");
+  // A turn that mounted WITH content is restored history — never stage it.
+  const startedEmpty = useRef(content.length === 0);
+  // When prose first lands, so we can hold the lead a minimum beat.
+  const leadShownAt = useRef<number | null>(null);
+  if (content && leadShownAt.current === null) leadShownAt.current = Date.now();
+
+  const [revealed, setRevealed] = useState(!startedEmpty.current);
+
+  useEffect(() => {
+    if (revealed || !startedEmpty.current || !content) return;
+    // Keep the body masked while this turn is still the streaming one.
+    if (isLast && streaming) return;
+    const elapsed = leadShownAt.current ? Date.now() - leadShownAt.current : 0;
+    const wait = Math.max(0, MIN_LEAD_MS - elapsed);
+    const id = window.setTimeout(() => setRevealed(true), wait);
+    return () => window.clearTimeout(id);
+  }, [revealed, content, isLast, streaming]);
+
+  // Pre-prose wait — the LLM is working and nothing has landed yet.
+  if (!content && isLast && streaming && toolCalls.length === 0) {
+    return <ThinkingBubble label={t("thinking")} />;
+  }
+
+  // Lead revealed, body still masked by the pulsing skeleton.
+  if (!revealed && content) {
+    return (
+      <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
+        <StreamingLead content={content} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
+      {content && <AssistantMessage content={content} />}
+      {/* request_input shows its QUESTION here (no chips — those live above the
+          composer); commit cards show inline. */}
+      <ToolChecklist cards={toolCalls} />
+    </div>
   );
 }
 
