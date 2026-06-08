@@ -4,18 +4,17 @@ import { getTranslations } from "next-intl/server";
 import {
   Building2,
   CheckCircle2,
-  Network,
   Plug,
   Search,
   TriangleAlert,
-  Upload,
+  Users,
 } from "lucide-react";
 import {
   makeApi,
   ApiError,
   type Vault,
   type VaultItem,
-  type TwinGraph as TwinGraphData,
+  type TwinRole,
 } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -24,13 +23,13 @@ import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TwinGraph } from "@/components/ctsim/TwinGraph";
 import { VaultFolderBreadcrumb } from "@/components/vaults/VaultFolderBreadcrumb";
 import { VaultAddButton } from "@/components/vaults/VaultAddButton";
+import { VaultItemRow } from "@/components/vaults/VaultItemRow";
 import { cn } from "@/lib/utils";
 
-type Folder = "org" | "roles" | "integrations" | "uploads";
-const FOLDERS: Folder[] = ["org", "roles", "integrations", "uploads"];
+type Folder = "org" | "roles" | "integrations";
+const FOLDERS: Folder[] = ["org", "roles", "integrations"];
 
 interface SearchParams {
   folder?: string;
@@ -67,26 +66,23 @@ export default async function KontextVaultPage({
 
   const orgVaults = vaults.filter((v) => (v.scope ?? "ORG") === "ORG");
   const activeId = sp.vault ?? orgVaults[0]?.id ?? null;
-  const activeVault = orgVaults.find((v) => v.id === activeId) ?? null;
 
   let items: VaultItem[] = [];
-  if (activeId && (folder === "org" || folder === "uploads")) {
+  if (activeId && folder === "org") {
     try {
       items = await api.vaults.listItems(activeId);
     } catch {
       items = [];
     }
   }
-  const fileItems = items.filter((it) => it.kind === "FILE");
   const docItems = items.filter((it) => it.kind !== "FILE");
 
-  let graph: TwinGraphData = { nodes: [], edges: [] };
-  if (folder === "roles") {
-    try {
-      graph = await api.twin.graph();
-    } catch {
-      graph = { nodes: [], edges: [] };
-    }
+  // Always fetch roles — used both for count badge and Rollen view.
+  let roles: TwinRole[] = [];
+  try {
+    roles = await api.twin.listRoles();
+  } catch {
+    roles = [];
   }
 
   // ── Server actions ──────────────────────────────────────────────────────────
@@ -108,9 +104,8 @@ export default async function KontextVaultPage({
   // ── Tab labels + counts ─────────────────────────────────────────────────────
   const tabs: { id: Folder; label: string; count?: number; comingSoon?: boolean }[] = [
     { id: "org",          label: t("orgTitle"),           count: orgVaults.length },
-    { id: "uploads",      label: t("uploadsTitle"),       count: fileItems.length },
-    { id: "roles",        label: t("rolesTitle"),         count: graph.nodes.length },
-    { id: "integrations", label: t("integrationsTitle"),  comingSoon: true },
+    { id: "roles",        label: t("rolesTitle"),         count: roles.length },
+    { id: "integrations", label: t("integrationsTitle") },
   ];
 
   // ── Layout ──────────────────────────────────────────────────────────────────
@@ -132,8 +127,14 @@ export default async function KontextVaultPage({
                 Durchsuchen
               </a>
             </Button>
-            {/* Kontext hinzufügen (⌘K) — needs an active vaultId */}
-            {activeId && <VaultAddButton vaultId={activeId} />}
+            {/* Kontext hinzufügen (⌘K) */}
+            {activeId && (
+              <VaultAddButton
+                vaultId={activeId}
+                folder={folder}
+                roles={roles}
+              />
+            )}
           </div>
         }
       />
@@ -186,15 +187,11 @@ export default async function KontextVaultPage({
       {/* ── Tab content ──────────────────────────────────────────────────────── */}
 
       {folder === "roles" && (
-        <div className="flex flex-col gap-4">
-          {graph.nodes.length === 0 ? (
-            <Card className="p-2">
-              <EmptyState icon={Network} title={t("rolesEmpty")} />
-            </Card>
-          ) : (
-            <TwinGraph data={graph} emptyLabel={t("rolesEmpty")} />
-          )}
-        </div>
+        <RolesView
+          roles={roles}
+          activeVaultId={activeId}
+          emptyLabel={t("rolesEmpty")}
+        />
       )}
 
       {folder === "integrations" && (
@@ -203,24 +200,17 @@ export default async function KontextVaultPage({
             <Plug size={20} aria-hidden />
           </span>
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold tracking-[-0.01em] text-fg">
-                {t("integrationsTitle")}
-              </h3>
-              <Badge variant="secondary">{t("comingSoon")}</Badge>
-            </div>
+            <h3 className="font-semibold tracking-[-0.01em] text-fg">
+              {t("integrationsTitle")}
+            </h3>
             <p className="mt-1 max-w-prose text-[length:var(--text-body-sm)] leading-relaxed text-fg-muted">
               {t("integrationsHubNote")}
             </p>
           </div>
-          <Button asChild variant="outline" size="sm" className="mt-2">
+          <Button asChild size="sm" className="mt-2">
             <a href="/integrations">{t("integrationsOpen")}</a>
           </Button>
         </Card>
-      )}
-
-      {folder === "uploads" && (
-        <UploadsView items={fileItems} emptyLabel={t("uploadsEmpty")} />
       )}
 
       {folder === "org" && (
@@ -234,6 +224,69 @@ export default async function KontextVaultPage({
         />
       )}
     </>
+  );
+}
+
+// ── Rollen list view ──────────────────────────────────────────────────────────
+function RolesView({
+  roles,
+  activeVaultId,
+  emptyLabel,
+}: {
+  roles: TwinRole[];
+  activeVaultId: string | null;
+  emptyLabel: string;
+}) {
+  if (roles.length === 0) {
+    return (
+      <Card className="p-2">
+        <EmptyState icon={Users} title={emptyLabel} />
+      </Card>
+    );
+  }
+
+  return (
+    <Card variant="ledger" className="overflow-hidden">
+      <ul className="divide-y divide-line-subtle">
+        {roles.map((role) => (
+          <li key={role.id} className="flex items-center gap-4 px-6 py-4">
+            {/* Avatar initials */}
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-2 text-[12px] font-semibold uppercase text-fg-muted">
+              {role.name.slice(0, 2)}
+            </span>
+
+            {/* Name + description */}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[length:var(--text-body-sm)] font-medium text-fg">
+                {role.name}
+              </p>
+              {role.description && (
+                <p className="truncate text-[length:var(--text-caption)] text-fg-subtle">
+                  {role.description}
+                </p>
+              )}
+            </div>
+
+            {/* Status badges */}
+            <div className="flex shrink-0 items-center gap-2">
+              {role.confirmed && (
+                <Badge variant="secondary" className="text-[10px]">
+                  Bestätigt
+                </Badge>
+              )}
+              {role.has_validated && (
+                <Badge variant="secondary" className="text-[10px] text-success">
+                  Validiert
+                </Badge>
+              )}
+              {!role.embedded && (
+                <span className="text-[10px] text-fg-faint">indexiert…</span>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }
 
@@ -293,30 +346,15 @@ async function OrgView({
               )}
             </div>
 
-            {/* Item list — max 5, human-readable labels */}
+            {/* Item list with 3-dot menus + summary */}
             {vaultItems.length > 0 && (
               <ul className="divide-y divide-line-subtle rounded-ui border border-line">
                 {vaultItems.slice(0, 5).map((it) => (
-                  <li key={it.id} className="flex items-start gap-2.5 px-3 py-2.5">
-                    <span className="mt-0.5 shrink-0 rounded border border-line bg-surface-2 px-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.05em] text-fg-subtle">
-                      {it.kind}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-medium text-fg">
-                        {itemLabel(it)}
-                      </p>
-                      {it.kind === "URL" && it.content && (
-                        <p className="truncate text-[11px] text-fg-faint">
-                          {it.content}
-                        </p>
-                      )}
-                    </div>
-                    {!it.embedded && (
-                      <span className="shrink-0 text-[10px] text-fg-faint">
-                        indexiert…
-                      </span>
-                    )}
-                  </li>
+                  <VaultItemRow
+                    key={it.id}
+                    item={it}
+                    vaultId={v.id}
+                  />
                 ))}
                 {vaultItems.length > 5 && (
                   <li className="px-3 py-2 text-[length:var(--text-caption)] text-fg-muted">
@@ -338,69 +376,12 @@ async function OrgView({
   );
 }
 
-/** Human-readable label for a VaultItem — never shows raw UUIDs. */
-function itemLabel(it: VaultItem): string {
-  if (it.title) return it.title;
-  if (it.kind === "URL" && it.content) {
-    try {
-      const u = new URL(it.content);
-      const readable = (u.hostname + u.pathname).replace(/\/$/, "");
-      return readable.length > 60 ? readable.slice(0, 57) + "…" : readable;
-    } catch {
-      return it.content.slice(0, 60);
-    }
-  }
-  if (it.kind === "TEXT" && it.content) {
-    const snippet = it.content.trim().replace(/\s+/g, " ").slice(0, 60);
-    return snippet.length < it.content.trim().length ? snippet + "…" : snippet;
-  }
-  return it.kind === "FILE" ? "Datei" : "Eintrag";
-}
-
-// ── Uploads view ──────────────────────────────────────────────────────────────
-function UploadsView({ items, emptyLabel }: { items: VaultItem[]; emptyLabel: string }) {
-  if (items.length === 0) {
-    return (
-      <Card className="p-2">
-        <EmptyState icon={Upload} title={emptyLabel} />
-      </Card>
-    );
-  }
-  return (
-    <Card variant="ledger" className="overflow-hidden">
-      <ul className="divide-y divide-line-subtle">
-        {items.map((it) => (
-          <li key={it.id} className="flex items-center gap-3 px-6 py-4">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-ui border border-line bg-surface-2 text-fg-muted">
-              <Upload size={16} aria-hidden />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[length:var(--text-body-sm)] font-medium text-fg">
-                {it.title ?? itemLabel(it)}
-              </p>
-              {it.mime && (
-                <p className="truncate text-[length:var(--text-caption)] text-fg-subtle">
-                  {it.mime}
-                </p>
-              )}
-            </div>
-            {typeof it.byte_size === "number" && (
-              <span className="shrink-0 text-[length:var(--text-meta)] tabular-nums text-fg-subtle">
-                {formatBytes(it.byte_size)}
-              </span>
-            )}
-          </li>
-        ))}
-      </ul>
-    </Card>
-  );
-}
-
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+void formatBytes; // used by UploadsView (retained for future use)
 
 function Flash({ type, message }: { type: "ok" | "err"; message: string }) {
   const Icon = type === "ok" ? CheckCircle2 : TriangleAlert;

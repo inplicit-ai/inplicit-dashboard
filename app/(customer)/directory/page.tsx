@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { AlertCircle, CheckCircle2, UserPlus, Users } from "lucide-react";
+import { AlertCircle, CheckCircle2, Users } from "lucide-react";
+import { AddPersonDialog } from "@/components/directory/AddPersonDialog";
 import {
   makeApi,
   type Employee,
@@ -216,6 +217,9 @@ export default async function DirectoryPage({
       <PageHeader
         title="Belegschaft"
         subtitle="Die Personen, die interviewt werden. Jede Person bekommt eine Rolle — der Kontext für maßgeschneiderte Interviews liegt auf der Rolle (anonym, für alle mit dieser Rolle wiederverwendbar)."
+        actions={
+          <AddPersonDialog action={addEmployee} roleListId={ROLE_LIST_ID} />
+        }
       />
 
       {sp.flash && <Flash type={sp.flashType ?? "ok"} message={sp.flash} />}
@@ -236,81 +240,36 @@ export default async function DirectoryPage({
         ))}
       </datalist>
 
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(240px,300px)]">
-        {/* Directory track */}
-        <div className="min-w-0">
-          {listError && (
-            <div className="mb-4 flex items-start gap-2.5 rounded-ui border border-pain-muted bg-pain-soft px-3.5 py-2.5 text-sm text-pain">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <p>{listError}</p>
-            </div>
-          )}
-
-          {!listError && employees.length === 0 ? (
-            <EmptyState
-              icon={Users}
-              title="Noch niemand im Verzeichnis"
-              hint="Füge die Personen hinzu, die interviewt werden sollen, und weise ihnen eine Rolle zu."
-            />
-          ) : (
-            employees.length > 0 && (
-              <>
-                <SectionHeading title="Personen" count={employees.length} />
-                <Card variant="ledger" className="overflow-hidden">
-                  <div className="w-full overflow-x-auto">
-                    <DataTable
-                      className="min-w-[680px]"
-                      columns={columns}
-                      rows={employees}
-                      rowKey={(e) => e.id}
-                    />
-                  </div>
-                </Card>
-              </>
-            )
-          )}
+      {listError && (
+        <div className="mb-4 flex items-start gap-2.5 rounded-ui border border-pain-muted bg-pain-soft px-3.5 py-2.5 text-sm text-pain">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>{listError}</p>
         </div>
+      )}
 
-        {/* Add-person rail */}
-        <aside className="lg:sticky lg:top-6 lg:self-start">
-          <Card className="gap-4 p-5">
-            <div className="space-y-1">
-              <h2 className="text-[length:var(--text-subtitle)] font-semibold tracking-[-0.015em] text-fg">
-                Person hinzufügen
-              </h2>
-              <p className="text-xs leading-relaxed text-fg-muted">
-                E-Mail ist erforderlich. Die Rolle bestimmt den
-                Interview-Kontext — eine neue Rolle wird automatisch angelegt.
-              </p>
-            </div>
-            <form action={addEmployee} className="flex flex-col gap-3">
-              <Input name="name" placeholder="Name" className="text-sm" />
-              <Input
-                name="email"
-                type="email"
-                required
-                placeholder="person@firma.de"
-                className="text-sm"
-              />
-              <Input
-                name="department"
-                placeholder="Abteilung (optional)"
-                className="text-sm"
-              />
-              <Input
-                name="role"
-                list={ROLE_LIST_ID}
-                placeholder="Rolle (optional)"
-                className="text-sm"
-              />
-              <Button type="submit" size="sm" className="w-full">
-                <UserPlus className="h-4 w-4" />
-                Hinzufügen
-              </Button>
-            </form>
-          </Card>
-        </aside>
-      </div>
+      {!listError && employees.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="Noch niemand im Verzeichnis"
+          hint="Füge die Personen hinzu, die interviewt werden sollen, und weise ihnen eine Rolle zu."
+        />
+      ) : (
+        employees.length > 0 && (
+          <>
+            <SectionHeading title="Personen" count={employees.length} />
+            <Card variant="ledger" className="overflow-hidden">
+              <div className="w-full overflow-x-auto">
+                <DataTable
+                  className="min-w-[680px]"
+                  columns={columns}
+                  rows={employees}
+                  rowKey={(e) => e.id}
+                />
+              </div>
+            </Card>
+          </>
+        )
+      )}
     </>
   );
 }
