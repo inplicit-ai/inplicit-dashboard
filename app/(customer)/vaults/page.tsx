@@ -1,5 +1,3 @@
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import {
   Building2,
@@ -7,9 +5,9 @@ import {
   Search,
   TriangleAlert,
 } from "lucide-react";
+
 import {
   makeApi,
-  ApiError,
   type Vault,
   type VaultItem,
   type TwinRole,
@@ -27,6 +25,8 @@ import { VaultAddButton } from "@/components/vaults/VaultAddButton";
 import { VaultItemRow } from "@/components/vaults/VaultItemRow";
 import { VaultIntegrationsTab } from "@/components/vaults/VaultIntegrationsTab";
 import { VaultRolesTab } from "@/components/vaults/VaultRolesTab";
+import { VaultCardMenu } from "@/components/vaults/VaultCardMenu";
+import { VaultSearchDialog } from "@/components/vaults/VaultSearchDialog";
 import { cn } from "@/lib/utils";
 
 type Folder = "org" | "roles" | "integrations";
@@ -96,21 +96,8 @@ export default async function KontextVaultPage({
     }
   }
 
-  // ── Server actions ──────────────────────────────────────────────────────────
-  async function deleteVault(formData: FormData) {
-    "use server";
-    const id = String(formData.get("id") ?? "");
-    if (!id) return;
-    const api = makeApi(await requestCookie());
-    try {
-      await api.vaults.remove(id);
-      revalidatePath("/vaults");
-      redirect("/vaults?folder=org&flashType=ok&flash=" + encodeURIComponent("Vault gelöscht"));
-    } catch (e) {
-      const msg = e instanceof ApiError ? e.message : (e as Error).message;
-      redirect(`/vaults?folder=org&flashType=err&flash=${encodeURIComponent(msg)}`);
-    }
-  }
+  // All vaults for cross-vault search (org + role vaults).
+  const allSearchableVaults = vaults.map((v) => ({ id: v.id, name: v.name }));
 
   // ── Tab labels + counts ─────────────────────────────────────────────────────
   const tabs: { id: Folder; label: string; count?: number; comingSoon?: boolean }[] = [
@@ -131,13 +118,16 @@ export default async function KontextVaultPage({
         subtitle={t("subtitle")}
         actions={
           <div className="flex items-center gap-2">
-            {/* Kontext durchsuchen → Wissens-Chat */}
-            <Button asChild variant="outline" size="sm" className="h-[36px] gap-1.5">
-              <a href="/chat">
-                <Search size={14} aria-hidden />
-                Durchsuchen
-              </a>
-            </Button>
+            {/* Kontext durchsuchen — inline vault search */}
+            <VaultSearchDialog
+              vaults={allSearchableVaults}
+              trigger={
+                <Button variant="outline" size="sm" className="h-[36px] gap-1.5">
+                  <Search size={14} aria-hidden />
+                  Durchsuchen
+                </Button>
+              }
+            />
             {/* Kontext hinzufügen (⌘K) */}
             {activeId && (
               <VaultAddButton
@@ -215,7 +205,6 @@ export default async function KontextVaultPage({
           activeId={activeId}
           docItems={docItems}
           canWrite={canWrite}
-          deleteVault={deleteVault}
           tv={tv}
         />
       )}
@@ -229,14 +218,12 @@ async function OrgView({
   activeId,
   docItems,
   canWrite,
-  deleteVault,
   tv,
 }: {
   orgVaults: Vault[];
   activeId: string | null;
   docItems: VaultItem[];
   canWrite: boolean;
-  deleteVault: (fd: FormData) => Promise<void>;
   tv: Awaited<ReturnType<typeof getTranslations<"vaults">>>;
 }) {
   if (orgVaults.length === 0) {
@@ -267,15 +254,11 @@ async function OrgView({
                 )}
               </div>
               {canWrite && (
-                <form action={deleteVault}>
-                  <input type="hidden" name="id" value={v.id} />
-                  <button
-                    type="submit"
-                    className="shrink-0 text-[length:var(--text-meta)] text-fg-subtle transition-colors hover:text-danger"
-                  >
-                    {tv("delete")}
-                  </button>
-                </form>
+                <VaultCardMenu
+                  vaultId={v.id}
+                  vaultName={v.name}
+                  vaultDescription={v.description}
+                />
               )}
             </div>
 
