@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, FileText, Link2, Plus, Upload, X } from "lucide-react";
+import { FileText, Link2, Plus, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,11 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { TwinRole } from "@/lib/api";
 
 type Mode = "url" | "text" | "file";
-
-type Folder = "org" | "roles" | "uploads" | "integrations";
 
 const MODE_OPTIONS: { id: Mode; icon: React.ReactNode; label: string }[] = [
   { id: "url",  icon: <Link2 size={14} aria-hidden />,   label: "URL" },
@@ -24,29 +21,16 @@ const MODE_OPTIONS: { id: Mode; icon: React.ReactNode; label: string }[] = [
 
 /**
  * "Hinzufügen" button (⌘K) — URL, Text or File upload.
- *
- * - `vaultId`  : active org vault (used when category = "org")
- * - `folder`   : currently selected tab, pre-selects the destination
- * - `roles`    : list of org roles for the "Rollen" destination option
- * - `roleVaults`: map role_id → vault_id (for role-scoped uploads)
+ * Always writes to the provided `vaultId` (org vault).
+ * Role context is managed directly via each role's own page.
  */
 export function VaultAddButton({
   vaultId,
-  folder = "org",
-  roles = [],
-  roleVaults = {},
 }: {
   vaultId: string;
-  folder?: Folder;
-  roles?: TwinRole[];
-  roleVaults?: Record<string, string>;
 }) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("url");
-  const [category, setCategory] = useState<"org" | "role">(
-    folder === "roles" ? "role" : "org",
-  );
-  const [roleId, setRoleId] = useState<string>(roles[0]?.id ?? "");
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -70,8 +54,6 @@ export function VaultAddButton({
 
   useEffect(() => {
     if (open) {
-      setCategory(folder === "roles" ? "role" : "org");
-      if (roles[0]) setRoleId(roles[0].id);
       setTimeout(() => titleRef.current?.focus(), 80);
     } else {
       setContent("");
@@ -79,11 +61,7 @@ export function VaultAddButton({
       setFile(null);
       setError(null);
     }
-  }, [open, folder, roles]);
-
-  // Active vault to write to
-  const targetVaultId =
-    category === "role" && roleId ? (roleVaults[roleId] ?? vaultId) : vaultId;
+  }, [open]);
 
   async function save() {
     setSaving(true);
@@ -93,7 +71,7 @@ export function VaultAddButton({
         if (!file) { setError("Bitte eine Datei auswählen."); setSaving(false); return; }
         // Step 1: get presigned URL
         const urlRes = await fetch(
-          `/dapi/orgs/me/vaults/${targetVaultId}/items/upload-url`,
+          `/dapi/orgs/me/vaults/${vaultId}/items/upload-url`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -117,7 +95,7 @@ export function VaultAddButton({
 
         // Step 3: finalize
         const fin = await fetch(
-          `/dapi/orgs/me/vaults/${targetVaultId}/items/${itemId}/finalize`,
+          `/dapi/orgs/me/vaults/${vaultId}/items/${itemId}/finalize`,
           { method: "POST" },
         );
         if (!fin.ok) throw new Error((await fin.json().catch(() => ({}))).error ?? `HTTP ${fin.status}`);
@@ -131,7 +109,7 @@ export function VaultAddButton({
             return;
           }
         }
-        const res = await fetch(`/dapi/orgs/me/vaults/${targetVaultId}/items`, {
+        const res = await fetch(`/dapi/orgs/me/vaults/${vaultId}/items`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -176,51 +154,6 @@ export function VaultAddButton({
           <DialogHeader>
             <DialogTitle>Kontext hinzufügen</DialogTitle>
           </DialogHeader>
-
-          {/* ── Category selector ── */}
-          <div className="space-y-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-fg-subtle">
-              Zielbereich
-            </p>
-            <div className="flex gap-1.5 flex-wrap">
-              <button
-                type="button"
-                onClick={() => setCategory("org")}
-                className={`inline-flex items-center gap-1.5 rounded-ui px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
-                  category === "org"
-                    ? "bg-fg text-canvas"
-                    : "border border-line text-fg-muted hover:border-line-strong hover:text-fg"
-                }`}
-              >
-                <Building2 size={12} aria-hidden />
-                Allgemein &amp; Unternehmen
-              </button>
-              {roles.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setCategory("role")}
-                  className={`inline-flex items-center gap-1.5 rounded-ui px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
-                    category === "role"
-                      ? "bg-fg text-canvas"
-                      : "border border-line text-fg-muted hover:border-line-strong hover:text-fg"
-                  }`}
-                >
-                  Rollen
-                </button>
-              )}
-            </div>
-            {category === "role" && roles.length > 0 && (
-              <select
-                value={roleId}
-                onChange={(e) => setRoleId(e.target.value)}
-                className="mt-1.5 w-full rounded-ui border border-line bg-surface px-2.5 py-1.5 text-[13px] text-fg outline-none focus:border-line-strong"
-              >
-                {roles.map((r) => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
-                ))}
-              </select>
-            )}
-          </div>
 
           {/* ── Type selector ── */}
           <div className="flex gap-1 rounded-ui border border-line-subtle bg-surface-2 p-1">

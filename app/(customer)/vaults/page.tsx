@@ -12,6 +12,7 @@ import {
   type VaultItem,
   type TwinRole,
   type Employee,
+  type OrgInterviewRow,
 } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -86,13 +87,19 @@ export default async function KontextVaultPage({
     roles = [];
   }
 
-  // Fetch employees for the Rollen tab (person count + department per role).
+  // Fetch employees + org interviews for the Rollen tab.
   let employees: Employee[] = [];
+  let orgInterviews: OrgInterviewRow[] = [];
   if (folder === "roles") {
     try {
       employees = await api.employees.list();
     } catch {
       employees = [];
+    }
+    try {
+      orgInterviews = await api.org.interviews();
+    } catch {
+      orgInterviews = [];
     }
   }
 
@@ -132,8 +139,6 @@ export default async function KontextVaultPage({
             {activeId && (
               <VaultAddButton
                 vaultId={activeId}
-                folder={folder}
-                roles={roles}
               />
             )}
           </div>
@@ -191,6 +196,7 @@ export default async function KontextVaultPage({
         <VaultRolesTab
           roles={roles}
           employees={employees}
+          orgInterviews={orgInterviews}
           emptyLabel={t("rolesEmpty")}
         />
       )}
