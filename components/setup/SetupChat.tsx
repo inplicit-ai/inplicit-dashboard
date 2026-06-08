@@ -20,6 +20,7 @@ import { PromptInputAction } from "@/components/ui/prompt-input";
 import { StaticVoiceOrb } from "@/components/interview/StaticVoiceOrb";
 import { cn } from "@/lib/utils";
 import type { SetupToolCallCard } from "@/lib/api";
+import { leadSentences } from "@/lib/setup/leadSentences";
 import { ToolChecklist } from "./ToolChecklist";
 import { EddaAvatar } from "./EddaAvatar";
 
@@ -63,6 +64,13 @@ export function SetupChat({
   const turnTransition = prefersReducedMotion
     ? { duration: 0.15 }
     : { type: "spring" as const, stiffness: 500, damping: 30 };
+
+  // The actively-streaming turn is always the last one while `streaming` holds.
+  const lastTurn = turns[turns.length - 1];
+  const lastId = lastTurn?.id;
+  // True once that turn has begun emitting prose: we reveal EDDA's opening lines
+  // and mask the still-generating body with a pulsing skeleton.
+  const leadStreaming = streaming && !!lastTurn?.content;
 
   return (
     <ChatShell height="fill">
@@ -120,6 +128,10 @@ export function SetupChat({
                     <div className="max-w-[80%] rounded-lg rounded-br-sm bg-cta px-4 py-2.5 text-[length:var(--text-body-lg)] leading-[1.6] text-cta-fg">
                       {turn.content}
                     </div>
+                  ) : leadStreaming && turn.id === lastId ? (
+                    <div className="w-full max-w-[72ch] rounded-lg rounded-tl-sm border border-line bg-surface-2 px-4 py-3 text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
+                      <StreamingLead content={turn.content} />
+                    </div>
                   ) : (
                     <div className="w-full max-w-[72ch] rounded-lg rounded-tl-sm border border-line bg-surface-2 px-4 py-3 text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
                       {turn.content && (
@@ -136,7 +148,9 @@ export function SetupChat({
             })}
           </AnimatePresence>
 
-          {streaming && <DraftingShimmer label={t("thinking")} />}
+          {/* The trailing "drafting…" label only covers the pre-prose THINKING
+              window; once EDDA's lead lands, the in-turn skeleton takes over. */}
+          {streaming && !leadStreaming && <DraftingShimmer label={t("thinking")} />}
         </div>
       </ChatScrollAnchored>
 
@@ -204,5 +218,39 @@ function DraftingShimmer({ label }: { label: string }) {
     <div className="text-[length:var(--text-meta)]">
       <span className="edda-shimmer">{label}</span>
     </div>
+  );
+}
+
+// Widths of the three masked body lines (last one short, like a closing clause).
+const SKELETON_WIDTHS = ["92%", "84%", "60%"];
+
+/** The pulsing body mask shown beneath EDDA's revealed opening lines. */
+function SkeletonBody() {
+  return (
+    <div className="mt-3 flex flex-col gap-2.5" aria-hidden>
+      {SKELETON_WIDTHS.map((width, i) => (
+        <div
+          key={i}
+          className="edda-skeleton-bar"
+          style={{ width, animationDelay: `${i * 0.15}s` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * The actively-streaming turn: EDDA's first two sentences — her confirmation of
+ * the user's last input and what she's about to do — are shown the moment they
+ * land, while the longer body that follows is masked by a pulsing skeleton until
+ * generation completes (then the full message replaces this entirely).
+ */
+function StreamingLead({ content }: { content: string }) {
+  const { lead } = leadSentences(content, 2);
+  return (
+    <>
+      {lead && <p className="whitespace-pre-wrap">{lead}</p>}
+      <SkeletonBody />
+    </>
   );
 }
