@@ -77,7 +77,8 @@ export function CampaignActionsMenu({
       const res = await fetch(`/dapi/campaigns/${campaignId}`, {
         method: "DELETE",
       });
-      if (!res.ok && res.status !== 204) {
+      // 204 = deleted, 404 = already gone (soft-delete already processed)
+      if (!res.ok && res.status !== 204 && res.status !== 404) {
         const body = await res.json().catch(() => ({})) as { error?: string };
         throw new Error(body.error ?? `HTTP ${res.status}`);
       }

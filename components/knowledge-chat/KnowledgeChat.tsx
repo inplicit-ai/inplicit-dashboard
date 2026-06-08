@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowUp, MessageSquareText } from "lucide-react";
+import { ArrowUp, Menu, MessageSquareText, Pencil, Plus, Trash2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +27,6 @@ import type {
   SendOrgChatResponse,
 } from "@/lib/api";
 import { OrgCitationChip } from "./OrgCitationChip";
-import { ConversationSwitcher } from "./ConversationSwitcher";
 
 // Client → backend via the same-origin /dapi proxy (forwards the session cookie).
 async function dapi<T>(path: string, init?: RequestInit): Promise<T> {
@@ -188,32 +187,91 @@ export function KnowledgeChat() {
     }
   }
 
-  // Full-height chat-container (design-contract §6): the page supplies the
-  // height envelope; this fills it as a `flex min-h-0` column. The thread rail
-  // is gone — conversation switching now rides in the header as a compact Card
-  // whose expanded panel floats over the chat (nothing below it moves).
+  // Full-height chat-container. No fixed header bar — just the chat area with a
+  // floating burger icon (top-left) that opens a side drawer for thread switching.
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden border-t border-line bg-canvas">
-      <header className="relative z-20 flex shrink-0 items-center justify-between gap-3 border-b border-line bg-canvas px-4 py-3 sm:px-8">
-        <ConversationSwitcher
-          threads={threads}
-          activeId={activeId}
-          onSelect={loadThread}
-          onNew={onNew}
-          onDelete={onDelete}
-          onRename={onRename}
-          busy={busy}
-        />
-        <div className="flex shrink-0 items-center gap-2.5">
-          {scope !== null && (
-            <DataChip tone="neutral" mono>
-              {t("scope", { count: scope })}
-            </DataChip>
-          )}
-          <StatusDisc state={pending ? "live" : "idle"} size="sm" />
-        </div>
-      </header>
+    <div className="relative flex h-full min-h-0 overflow-hidden border-t border-line bg-canvas">
+      {/* Side drawer overlay */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="absolute inset-0 z-30 bg-black/20"
+              onClick={() => setDrawerOpen(false)}
+            />
+            {/* Drawer panel */}
+            <motion.aside
+              key="drawer"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ duration: 0.22, ease: [0.2, 0.65, 0.3, 0.9] }}
+              className="absolute inset-y-0 left-0 z-40 flex w-72 flex-col bg-surface shadow-xl"
+            >
+              {/* Drawer header: black "Neuer Chat" button + close */}
+              <div className="flex shrink-0 items-center gap-2 border-b border-line p-3">
+                <button
+                  type="button"
+                  onClick={() => { void onNew(); setDrawerOpen(false); }}
+                  disabled={busy}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-ui bg-fg px-3 py-2 text-[length:var(--text-meta)] font-semibold text-canvas transition-opacity hover:opacity-80 disabled:opacity-50"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {t("newChat")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrawerOpen(false)}
+                  aria-label="Schließen"
+                  className="flex h-8 w-8 items-center justify-center rounded-ui text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Thread list */}
+              <ThreadList
+                threads={threads}
+                activeId={activeId}
+                onSelect={(id) => { loadThread(id); setDrawerOpen(false); }}
+                onDelete={onDelete}
+                onRename={onRename}
+              />
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Chat column */}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {/* Floating burger icon + scope chip */}
+        <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-3 py-2.5">
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Chats öffnen"
+            className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-ui border border-line bg-surface text-fg-muted shadow-sm transition-colors hover:bg-surface-2 hover:text-fg"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+          <div className="pointer-events-auto flex items-center gap-2">
+            {scope !== null && (
+              <DataChip tone="neutral" mono>
+                {t("scope", { count: scope })}
+              </DataChip>
+            )}
+            <StatusDisc state={pending ? "live" : "idle"} size="sm" />
+          </div>
+        </div>
+
         <Conversation
           messages={messages}
           pending={pending}
@@ -221,6 +279,105 @@ export function KnowledgeChat() {
           onSend={onSend}
         />
       </div>
+    </div>
+  );
+}
+
+/** Slim thread list used inside the drawer. */
+function ThreadList({
+  threads,
+  activeId,
+  onSelect,
+  onDelete,
+  onRename,
+}: {
+  threads: ChatThreadSummary[];
+  activeId: string | null;
+  onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
+  onRename: (id: string, title: string) => void;
+}) {
+  const t = useTranslations("knowledgeChat");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function startEdit(thread: ChatThreadSummary) {
+    setEditingId(thread.id);
+    setEditValue(thread.title);
+    setTimeout(() => inputRef.current?.select(), 0);
+  }
+
+  function commitEdit(id: string) {
+    onRename(id, editValue);
+    setEditingId(null);
+  }
+
+  return (
+    <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto p-1.5">
+      {threads.length === 0 ? (
+        <p className="px-3 py-4 text-[length:var(--text-meta)] text-fg-subtle">
+          {t("emptyThreads")}
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-0.5">
+          {threads.map((thread) => {
+            const active = thread.id === activeId;
+            const isEditing = editingId === thread.id;
+            return (
+              <li key={thread.id} className="group relative">
+                {isEditing ? (
+                  <input
+                    ref={inputRef}
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onBlur={() => commitEdit(thread.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") commitEdit(thread.id);
+                      if (e.key === "Escape") setEditingId(null);
+                    }}
+                    className="w-full rounded-ui bg-surface-2 px-3 py-2 text-[length:var(--text-meta)] text-fg outline-none ring-2 ring-inset ring-accent"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onSelect(thread.id)}
+                    aria-current={active ? "true" : undefined}
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-ui px-3 py-2.5 pr-16 text-left text-[length:var(--text-meta)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+                      active
+                        ? "bg-surface-2 font-medium text-fg shadow-[inset_2px_0_0_var(--color-accent)]"
+                        : "text-fg-muted hover:bg-surface-2 hover:text-fg",
+                    )}
+                  >
+                    <span className="min-w-0 flex-1 truncate">{thread.title}</span>
+                  </button>
+                )}
+                {!isEditing && (
+                  <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(thread)}
+                      aria-label="Umbenennen"
+                      className="rounded-ui p-1 text-fg-subtle transition-colors hover:text-fg"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDelete(thread.id)}
+                      aria-label={t("deleteThread")}
+                      className="rounded-ui p-1 text-fg-subtle transition-colors hover:text-danger"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

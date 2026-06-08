@@ -81,12 +81,20 @@ export default async function KontextVaultPage({
   const docItems = items.filter((it) => it.kind !== "FILE");
 
   let graph: TwinGraphData = { nodes: [], edges: [] };
+  let roleCount = 0;
   if (folder === "roles") {
     try {
       graph = await api.twin.graph();
     } catch {
       graph = { nodes: [], edges: [] };
     }
+  }
+  // Always fetch the role count so the tab badge is correct on every tab.
+  try {
+    const roles = await api.twin.listRoles();
+    roleCount = roles.length;
+  } catch {
+    roleCount = 0;
   }
 
   // ── Server actions ──────────────────────────────────────────────────────────
@@ -109,8 +117,8 @@ export default async function KontextVaultPage({
   const tabs: { id: Folder; label: string; count?: number; comingSoon?: boolean }[] = [
     { id: "org",          label: t("orgTitle"),           count: orgVaults.length },
     { id: "uploads",      label: t("uploadsTitle"),       count: fileItems.length },
-    { id: "roles",        label: t("rolesTitle"),         count: graph.nodes.length },
-    { id: "integrations", label: t("integrationsTitle"),  comingSoon: true },
+    { id: "roles",        label: t("rolesTitle"),         count: roleCount },
+    { id: "integrations", label: t("integrationsTitle") },
   ];
 
   // ── Layout ──────────────────────────────────────────────────────────────────
@@ -203,17 +211,14 @@ export default async function KontextVaultPage({
             <Plug size={20} aria-hidden />
           </span>
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold tracking-[-0.01em] text-fg">
-                {t("integrationsTitle")}
-              </h3>
-              <Badge variant="secondary">{t("comingSoon")}</Badge>
-            </div>
+            <h3 className="font-semibold tracking-[-0.01em] text-fg">
+              {t("integrationsTitle")}
+            </h3>
             <p className="mt-1 max-w-prose text-[length:var(--text-body-sm)] leading-relaxed text-fg-muted">
               {t("integrationsHubNote")}
             </p>
           </div>
-          <Button asChild variant="outline" size="sm" className="mt-2">
+          <Button asChild size="sm" className="mt-2">
             <a href="/integrations">{t("integrationsOpen")}</a>
           </Button>
         </Card>
