@@ -34,6 +34,8 @@ interface CrumbStore {
   setCampaignName: (name: string | undefined) => void;
   /** Replace the vault folder label (or clear it with `undefined`). */
   setVaultFolder: (label: string | undefined) => void;
+  /** Replace the role name (or clear it with `undefined`). */
+  setRoleName: (name: string | undefined) => void;
 }
 
 const CrumbStoreContext = createContext<CrumbStore | null>(null);
@@ -57,9 +59,15 @@ export function CrumbContextProvider({
     );
   }, []);
 
+  const setRoleName = useCallback((name: string | undefined) => {
+    setCtx((prev) =>
+      prev.roleName === name ? prev : { ...prev, roleName: name },
+    );
+  }, []);
+
   const store = useMemo<CrumbStore>(
-    () => ({ ctx, setCampaignName, setVaultFolder }),
-    [ctx, setCampaignName, setVaultFolder],
+    () => ({ ctx, setCampaignName, setVaultFolder, setRoleName }),
+    [ctx, setCampaignName, setVaultFolder, setRoleName],
   );
 
   return (
@@ -88,6 +96,21 @@ export function useRegisterCampaignName(name: string | undefined): void {
     setCampaignName(name);
     return () => setCampaignName(undefined);
   }, [setCampaignName, name]);
+}
+
+/**
+ * Register the role name for the breadcrumb trail while the calling component
+ * is mounted (e.g. "CEO"). Clears on unmount.
+ */
+export function useRegisterRoleName(name: string | undefined): void {
+  const store = useContext(CrumbStoreContext);
+  const setRoleName = store?.setRoleName;
+
+  useEffect(() => {
+    if (!setRoleName) return;
+    setRoleName(name);
+    return () => setRoleName(undefined);
+  }, [setRoleName, name]);
 }
 
 /**

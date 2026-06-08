@@ -4,10 +4,8 @@ import { getTranslations } from "next-intl/server";
 import {
   Building2,
   CheckCircle2,
-  ChevronRight,
   Search,
   TriangleAlert,
-  Users,
 } from "lucide-react";
 import {
   makeApi,
@@ -15,6 +13,7 @@ import {
   type Vault,
   type VaultItem,
   type TwinRole,
+  type Employee,
 } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -27,6 +26,7 @@ import { VaultFolderBreadcrumb } from "@/components/vaults/VaultFolderBreadcrumb
 import { VaultAddButton } from "@/components/vaults/VaultAddButton";
 import { VaultItemRow } from "@/components/vaults/VaultItemRow";
 import { VaultIntegrationsTab } from "@/components/vaults/VaultIntegrationsTab";
+import { VaultRolesTab } from "@/components/vaults/VaultRolesTab";
 import { cn } from "@/lib/utils";
 
 type Folder = "org" | "roles" | "integrations";
@@ -84,6 +84,16 @@ export default async function KontextVaultPage({
     roles = await api.twin.listRoles();
   } catch {
     roles = [];
+  }
+
+  // Fetch employees for the Rollen tab (person count + department per role).
+  let employees: Employee[] = [];
+  if (folder === "roles") {
+    try {
+      employees = await api.employees.list();
+    } catch {
+      employees = [];
+    }
   }
 
   // ── Server actions ──────────────────────────────────────────────────────────
@@ -188,9 +198,9 @@ export default async function KontextVaultPage({
       {/* ── Tab content ──────────────────────────────────────────────────────── */}
 
       {folder === "roles" && (
-        <RolesView
+        <VaultRolesTab
           roles={roles}
-          activeVaultId={activeId}
+          employees={employees}
           emptyLabel={t("rolesEmpty")}
         />
       )}
@@ -210,72 +220,6 @@ export default async function KontextVaultPage({
         />
       )}
     </>
-  );
-}
-
-// ── Rollen list view ──────────────────────────────────────────────────────────
-function RolesView({
-  roles,
-  activeVaultId,
-  emptyLabel,
-}: {
-  roles: TwinRole[];
-  activeVaultId: string | null;
-  emptyLabel: string;
-}) {
-  if (roles.length === 0) {
-    return (
-      <Card className="p-2">
-        <EmptyState icon={Users} title={emptyLabel} />
-      </Card>
-    );
-  }
-
-  return (
-    <Card variant="ledger" className="overflow-hidden">
-      <ul className="divide-y divide-line-subtle">
-        {roles.map((role) => (
-          <li key={role.id}>
-            <a
-              href={`/vaults/roles/${role.id}`}
-              className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-surface-2"
-            >
-              {/* Avatar initials */}
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-2 text-[12px] font-semibold uppercase text-fg-muted">
-                {role.name.slice(0, 2)}
-              </span>
-
-              {/* Name + description */}
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[length:var(--text-body-sm)] font-medium text-fg">
-                  {role.name}
-                </p>
-                {role.description && (
-                  <p className="truncate text-[length:var(--text-caption)] text-fg-subtle">
-                    {role.description}
-                  </p>
-                )}
-              </div>
-
-              {/* Status badges */}
-              <div className="flex shrink-0 items-center gap-2">
-                {role.confirmed && (
-                  <Badge variant="secondary" className="text-[10px]">
-                    Bestätigt
-                  </Badge>
-                )}
-                {role.has_validated && (
-                  <Badge variant="secondary" className="text-[10px] text-success">
-                    Validiert
-                  </Badge>
-                )}
-                <ChevronRight size={16} className="text-fg-faint" aria-hidden />
-              </div>
-            </a>
-          </li>
-        ))}
-      </ul>
-    </Card>
   );
 }
 
