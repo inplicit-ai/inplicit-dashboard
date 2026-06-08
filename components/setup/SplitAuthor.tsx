@@ -71,6 +71,15 @@ export function SplitAuthor({
   const streamTurnId = useRef<string | null>(null);
 
   const stream = useSetupStream(sessionId, {
+    onHint: (e) => {
+      // The shape EDDA announced for this turn — drives the layout-true skeleton
+      // the chat shows while the turn is still generating.
+      setTurns((prev) =>
+        prev.map((t) =>
+          t.id === streamTurnId.current ? { ...t, layout: e.layout } : t,
+        ),
+      );
+    },
     onToken: (text) => {
       setAgentError(false);
       setTurns((prev) =>
