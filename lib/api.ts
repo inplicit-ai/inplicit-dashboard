@@ -387,6 +387,15 @@ export function makeApi(cookie?: string) {
         ),
       getItem: (id: string, itemId: string) =>
         request<VaultItem>(`/api/orgs/me/vaults/${id}/items/${itemId}`),
+      removeItem: (id: string, itemId: string) =>
+        request<void>(`/api/orgs/me/vaults/${id}/items/${itemId}`, {
+          method: "DELETE",
+        }),
+      updateItem: (id: string, itemId: string, body: { title?: string }) =>
+        request<VaultItem>(`/api/orgs/me/vaults/${id}/items/${itemId}`, {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        }),
       search: (id: string, q: string) =>
         request<VaultSearchHit[]>(
           `/api/orgs/me/vaults/${id}/search?q=${encodeURIComponent(q)}`,
@@ -1096,6 +1105,8 @@ export interface VaultItem {
   mime?: string;
   byte_size?: number;
   embedded: boolean;
+  /** Backend-generated 1-2 sentence summary (populated after indexing). */
+  summary?: string;
   /** Vault scope this item belongs to (mirrors the parent vault). */
   scope?: "ORG" | "CAMPAIGN" | "ROLE";
   /** Set when the owning vault is role-scoped. */
