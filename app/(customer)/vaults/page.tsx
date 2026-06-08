@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import {
   Building2,
   CheckCircle2,
+  ChevronRight,
   Plug,
   Search,
   TriangleAlert,
@@ -249,40 +250,43 @@ function RolesView({
     <Card variant="ledger" className="overflow-hidden">
       <ul className="divide-y divide-line-subtle">
         {roles.map((role) => (
-          <li key={role.id} className="flex items-center gap-4 px-6 py-4">
-            {/* Avatar initials */}
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-2 text-[12px] font-semibold uppercase text-fg-muted">
-              {role.name.slice(0, 2)}
-            </span>
+          <li key={role.id}>
+            <a
+              href={`/vaults/roles/${role.id}`}
+              className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-surface-2"
+            >
+              {/* Avatar initials */}
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-2 text-[12px] font-semibold uppercase text-fg-muted">
+                {role.name.slice(0, 2)}
+              </span>
 
-            {/* Name + description */}
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[length:var(--text-body-sm)] font-medium text-fg">
-                {role.name}
-              </p>
-              {role.description && (
-                <p className="truncate text-[length:var(--text-caption)] text-fg-subtle">
-                  {role.description}
+              {/* Name + description */}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[length:var(--text-body-sm)] font-medium text-fg">
+                  {role.name}
                 </p>
-              )}
-            </div>
+                {role.description && (
+                  <p className="truncate text-[length:var(--text-caption)] text-fg-subtle">
+                    {role.description}
+                  </p>
+                )}
+              </div>
 
-            {/* Status badges */}
-            <div className="flex shrink-0 items-center gap-2">
-              {role.confirmed && (
-                <Badge variant="secondary" className="text-[10px]">
-                  Bestätigt
-                </Badge>
-              )}
-              {role.has_validated && (
-                <Badge variant="secondary" className="text-[10px] text-success">
-                  Validiert
-                </Badge>
-              )}
-              {!role.embedded && (
-                <span className="text-[10px] text-fg-faint">indexiert…</span>
-              )}
-            </div>
+              {/* Status badges */}
+              <div className="flex shrink-0 items-center gap-2">
+                {role.confirmed && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    Bestätigt
+                  </Badge>
+                )}
+                {role.has_validated && (
+                  <Badge variant="secondary" className="text-[10px] text-success">
+                    Validiert
+                  </Badge>
+                )}
+                <ChevronRight size={16} className="text-fg-faint" aria-hidden />
+              </div>
+            </a>
           </li>
         ))}
       </ul>
