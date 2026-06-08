@@ -78,6 +78,9 @@ const CUSTOMER_SECTIONS: NavSection[] = [
         tourId: "nav-chat",
         mobilePrimary: true,
       },
+      // The org's workforce directory — the people who get interviewed (kept
+      // separate from "team", which is admin collaborators).
+      { id: "directory", href: "/directory", icon: IconUsers, tourId: "nav-directory" },
       // WHY-115: /twin + /integrations are folded under the Kontext-Vault hub.
       // Their routes are kept; only the separate top-level nav entries are gone.
       { id: "vaults", href: "/vaults", icon: IconVault, tourId: "nav-vaults" },

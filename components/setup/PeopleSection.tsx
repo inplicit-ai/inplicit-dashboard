@@ -10,16 +10,25 @@ import type { CampaignDraft, Person, SetupToolCall } from "@/lib/api";
 import { SectionCard } from "./SectionCard";
 import { PlatePlaceholder } from "./Catalog";
 
-type OrgMember = { id: string; name?: string; email: string; department?: string };
+type Employee = {
+  id: string;
+  name?: string;
+  email: string;
+  department?: string;
+  role_id?: string | null;
+  role_name?: string | null;
+};
 type Mode = "all" | "department" | "individual";
 
 /**
  * People section — 3-mode pill selector:
- *  • Gesamtes Unternehmen: fetches all org members, adds them all
- *  • Abteilung/Team: fetches org members, filter by department
+ *  • Gesamtes Unternehmen: fetches the workforce directory, adds everyone
+ *  • Abteilung/Team: fetches the directory, filter by department
  *  • Einzelpersonen: manual email entry + CSV upload
  *
- * Data source: /dapi/orgs/me/members (org members, not dashboard admins)
+ * Data source: /dapi/orgs/me/employees (the org's workforce directory — the
+ * people who get interviewed). NOT /members, which are admin collaborators with
+ * dashboard access. The two groups are intentionally separate.
  */
 export function PeopleSection({
   draft,
@@ -35,19 +44,19 @@ export function PeopleSection({
   const people = draft.people ?? [];
 
   const [mode, setMode] = useState<Mode>("all");
-  const [members, setMembers] = useState<OrgMember[]>([]);
+  const [members, setMembers] = useState<Employee[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [selectedDepts, setSelectedDepts] = useState<Set<string>>(new Set());
 
   const emit = (next: Person[]) =>
     onPatch({ tool: "set_people", args: { people: next } });
 
-  // Fetch org members once
+  // Fetch the workforce directory once
   useEffect(() => {
     setLoadingMembers(true);
-    fetch("/dapi/orgs/me/members")
+    fetch("/dapi/orgs/me/employees")
       .then((r) => r.ok ? r.json() : [])
-      .then((data: OrgMember[]) => {
+      .then((data: Employee[]) => {
         setMembers(Array.isArray(data) ? data : []);
       })
       .catch(() => setMembers([]))
@@ -123,9 +132,9 @@ export function PeopleSection({
         {mode === "all" && (
           <div className="flex flex-col gap-3">
             {loadingMembers ? (
-              <PlatePlaceholder>Lade Mitglieder…</PlatePlaceholder>
+              <PlatePlaceholder>Lade Personen…</PlatePlaceholder>
             ) : members.length === 0 ? (
-              <PlatePlaceholder>Keine Mitglieder gefunden.</PlatePlaceholder>
+              <PlatePlaceholder>Noch keine Personen im Verzeichnis.</PlatePlaceholder>
             ) : (
               <div className="flex items-center justify-between rounded-card border border-line bg-surface-2 px-4 py-3">
                 <div className="flex flex-col gap-0.5">
@@ -133,7 +142,7 @@ export function PeopleSection({
                     {members.length} Personen
                   </p>
                   <p className="text-[length:var(--text-meta)] text-fg-muted">
-                    Alle Mitglieder der Organisation werden eingeladen
+                    Alle Personen im Verzeichnis werden eingeladen
                   </p>
                 </div>
                 <Button
