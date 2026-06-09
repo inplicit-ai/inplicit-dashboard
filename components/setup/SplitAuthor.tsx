@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
 import { StatusDisc } from "@/components/ui/status-disc";
+import { useSetSetupHeaderAction } from "./SetupActionContext";
 import { clientApi } from "@/lib/client-api";
 import type {
   CampaignDraft,
@@ -46,7 +46,6 @@ export function SplitAuthor({
   vaults?: Vault[];
 }) {
   const router = useRouter();
-  const tReview = useTranslations("setup.review");
 
   const [draft, setDraft] = useState<CampaignDraft>(initialDraft);
   const revRef = useRef<number>(initialRevision);
@@ -228,15 +227,31 @@ export function SplitAuthor({
 
   const reasons = validateForLaunch(draft);
 
+  // Publish "Prüfen & starten" + its launch gate to the header (SetupSteps),
+  // so the action lives in the top bar next to "Abbrechen" rather than a
+  // separate footer. Cleared on unmount so it only shows on this screen. Gated
+  // on primitives (gateReason/blocked) so it republishes only when readiness
+  // actually changes — no per-render cascade.
+  const setHeaderAction = useSetSetupHeaderAction();
+  const gateReason = reasons[0] ?? null;
+  const blocked = reasons.length > 0 || launching;
+  useEffect(() => {
+    setHeaderAction({ onReview, blocked, gateReason });
+    return () => setHeaderAction(null);
+  }, [setHeaderAction, onReview, blocked, gateReason]);
+
   return (
     // chat-fill makes this the flush, non-scrolling DIRECT child of .app-work:
     // it fills the viewport row exactly (height:100%; min-h:0; flex column) so
     // the PAGE never scrolls — only the chat message list and the catalog do.
     // surface-bleed keeps the full available width for the split author.
     // Stacks on mobile (chat pane caps at 50vh); fills height from md up.
-    <div className="surface-bleed chat-fill p-4 md:p-6">
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
-        {/* Full-width EDDA setup chat — catalog is only shown at the Prüfen step */}
+    // No top padding: the chat card sits directly under the step bar's mb-6,
+    // matching the tab-bar→content gap on the campaign tabs ("Fragen").
+    <div className="surface-bleed chat-fill px-4 pb-4 md:px-6 md:pb-6">
+      <div className="flex min-h-0 flex-1 flex-col">
+        {/* Full-width EDDA setup chat — catalog is only shown at the Prüfen step.
+            "Prüfen & starten" lives in the header (SetupSteps), not a footer. */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card">
           <SetupChat
             turns={turns}
@@ -244,23 +259,6 @@ export function SplitAuthor({
             error={agentError}
             onSend={onSend}
           />
-        </div>
-
-        {/* Advance bar — simple "Weiter zu Prüfen" when the draft has enough data */}
-        <div className="flex shrink-0 items-center justify-end gap-3 rounded-card border border-line bg-surface px-4 py-3 shadow-card">
-          {reasons.length > 0 && (
-            <span className="text-[13px] text-fg-muted">
-              {tReview(`gates.${reasons[0]}`)}
-            </span>
-          )}
-          <Button
-            onClick={onReview}
-            disabled={reasons.length > 0 || launching}
-            size="lg"
-            className="shrink-0"
-          >
-            {tReview("reviewCta")}
-          </Button>
         </div>
       </div>
     </div>

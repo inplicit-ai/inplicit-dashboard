@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { motion, useReducedMotion } from "framer-motion";
 import { matchFlow, activeStepIndex } from "@/lib/shell/flows";
+import { useSetupHeaderAction } from "@/components/setup/SetupActionContext";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -54,9 +55,13 @@ function hrefForStep(i: number, _active: number, pathname: string): string | nul
 export function SetupSteps() {
   const pathname = usePathname() ?? "";
   const t = useTranslations("flows.setup");
+  const tReview = useTranslations("setup.review");
   const reduceMotion = useReducedMotion();
   const router = useRouter();
   const [cancelOpen, setCancelOpen] = useState(false);
+  // The authoring screen (SplitAuthor) publishes its launch-readiness here so
+  // "Prüfen & starten" can live in this header row, next to "Abbrechen".
+  const headerAction = useSetupHeaderAction();
 
   const flow = matchFlow(pathname);
   if (!flow) return null;
@@ -113,14 +118,36 @@ export function SetupSteps() {
       </nav>
       </div>
 
-      {/* Abbrechen — same style as topbar locale/feedback buttons */}
-      <button
-        type="button"
-        onClick={() => setCancelOpen(true)}
-        className="shell-locale shrink-0"
-      >
-        <span className="text-[length:var(--text-caption)] font-medium">Abbrechen</span>
-      </button>
+      <div className="flex shrink-0 items-center gap-3">
+        {/* "Prüfen & starten" — moved up from the authoring footer into the
+            header. Stays dark (default Button variant); disabled with a muted
+            gate hint until the draft is launch-ready. */}
+        {headerAction && (
+          <>
+            {headerAction.gateReason && (
+              <span className="hidden text-[length:var(--text-caption)] text-fg-muted sm:inline">
+                {tReview(`gates.${headerAction.gateReason}`)}
+              </span>
+            )}
+            <Button
+              size="sm"
+              onClick={headerAction.onReview}
+              disabled={headerAction.blocked}
+            >
+              {tReview("reviewCta")}
+            </Button>
+          </>
+        )}
+
+        {/* Abbrechen — same style as topbar locale/feedback buttons */}
+        <button
+          type="button"
+          onClick={() => setCancelOpen(true)}
+          className="shell-locale"
+        >
+          <span className="text-[length:var(--text-caption)] font-medium">Abbrechen</span>
+        </button>
+      </div>
     </div>
 
     {/* Discard / save-draft dialog */}

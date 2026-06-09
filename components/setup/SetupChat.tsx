@@ -91,11 +91,11 @@ export function SetupChat({
 
   return (
     <ChatShell height="fill">
-      {/* Header — edda's orb (status lives on the orb) + lowercase name. */}
+      {/* Header — Edda's orb (status lives on the orb) + name. */}
       <header className="flex shrink-0 items-center gap-3 border-b border-line bg-canvas px-5 py-4">
         <EddaAvatar size={36} status={status} />
         <p className="text-[length:var(--text-subtitle)] font-semibold tracking-[-0.01em] text-fg">
-          edda
+          Edda
         </p>
       </header>
 
