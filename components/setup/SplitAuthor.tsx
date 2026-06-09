@@ -236,31 +236,31 @@ export function SplitAuthor({
     // Stacks on mobile (chat pane caps at 50vh); fills height from md up.
     <div className="surface-bleed chat-fill p-4 md:p-6">
       <div className="flex min-h-0 flex-1 flex-col gap-4">
-        {/* Full-width EDDA setup chat — catalog is only shown at the Prüfen step */}
+        {/* Full-width EDDA setup chat — advance bar lives inside the card */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card">
           <SetupChat
             turns={turns}
             streaming={stream.streaming}
             error={agentError}
             onSend={onSend}
+            reviewAction={
+              <div className="flex items-center justify-end gap-3 border-t border-line px-4 py-3">
+                {reasons.length > 0 && (
+                  <span className="text-[13px] text-fg-muted">
+                    {tReview(`gates.${reasons[0]}`)}
+                  </span>
+                )}
+                <Button
+                  onClick={onReview}
+                  disabled={reasons.length > 0 || launching}
+                  size="lg"
+                  className="shrink-0"
+                >
+                  {tReview("reviewCta")}
+                </Button>
+              </div>
+            }
           />
-        </div>
-
-        {/* Advance bar — simple "Weiter zu Prüfen" when the draft has enough data */}
-        <div className="flex shrink-0 items-center justify-end gap-3 rounded-card border border-line bg-surface px-4 py-3 shadow-card">
-          {reasons.length > 0 && (
-            <span className="text-[13px] text-fg-muted">
-              {tReview(`gates.${reasons[0]}`)}
-            </span>
-          )}
-          <Button
-            onClick={onReview}
-            disabled={reasons.length > 0 || launching}
-            size="lg"
-            className="shrink-0"
-          >
-            {tReview("reviewCta")}
-          </Button>
         </div>
       </div>
     </div>

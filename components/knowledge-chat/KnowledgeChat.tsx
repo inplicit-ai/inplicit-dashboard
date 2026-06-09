@@ -257,20 +257,30 @@ export function KnowledgeChat() {
               style={{ transformOrigin: "top left" }}
               className="absolute left-3 top-[3.25rem] z-40 flex max-h-[min(60vh,32rem)] w-72 flex-col overflow-hidden rounded-card border-[length:var(--border-card)] border-solid border-line bg-card shadow-card-hover"
             >
-              {/* Card header: black "Neuer Chat" button. */}
+              {/* Card header: black "Neuer Chat" button + X close. */}
               <div className="shrink-0 border-b border-line p-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    void onNew();
-                    setMenuOpen(false);
-                  }}
-                  disabled={busy}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-ui bg-fg px-3 py-2 text-[length:var(--text-meta)] font-semibold text-canvas transition-opacity hover:opacity-80 disabled:opacity-50"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  {t("newChat")}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void onNew();
+                      setMenuOpen(false);
+                    }}
+                    disabled={busy}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-ui bg-fg px-3 py-2 text-[length:var(--text-meta)] font-semibold text-canvas transition-opacity hover:opacity-80 disabled:opacity-50"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    {t("newChat")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen(false)}
+                    aria-label="Schließen"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-ui border border-line text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
 
               <ThreadList
