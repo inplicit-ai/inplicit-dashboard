@@ -46,43 +46,6 @@ const ROLE_MODE_OPTIONS: { id: RoleMode; icon: React.ReactNode; label: string; h
 const ACCEPTED = ".pdf,.txt,.md,.csv,.rtf,.json";
 const CSV_ACCEPTED = ".csv,.xlsx,.xls,.tsv";
 
-/**
- * Extract text from a file in the browser — no S3 or backend needed.
- * Supports PDF (via pdfjs-dist), plain text, markdown, CSV, JSON.
- */
-async function extractText(file: File): Promise<string> {
-  const { type, name } = file;
-
-  // ── PDF ──────────────────────────────────────────────────────────────────
-  if (type === "application/pdf" || name.toLowerCase().endsWith(".pdf")) {
-    // Dynamically import pdfjs-dist so it's only bundled when used
-    const pdfjsLib = await import("pdfjs-dist");
-    // Worker file is copied to /public during build — no bundler magic needed
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
-
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    const pages: string[] = [];
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((item: any) => ("str" in item ? item.str : ""))
-        .join(" ");
-      pages.push(pageText);
-    }
-    return pages.join("\n\n");
-  }
-
-  // ── Plain text, Markdown, CSV, JSON, RTF ─────────────────────────────────
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error("Datei konnte nicht gelesen werden."));
-    reader.readAsText(file, "utf-8");
-  });
-}
 
 /**
  * "Hinzufügen" button (⌘K) — context-aware:
@@ -162,36 +125,24 @@ export function VaultAddButton({
       if (effectiveMode === "file") {
         if (!file) { setError("Bitte eine Datei auswählen."); setSaving(false); return; }
 
-        // Extract text client-side — no S3 needed
+        // Upload directly to backend — server extracts text + converts to Markdown via Mistral.
+        // The original file is stored in Postgres so users can download it later.
         setExtracting(true);
-        let extracted: string;
         try {
-          extracted = await extractText(file);
-        } catch (e) {
-          setError((e as Error).message ?? "Text konnte nicht aus der Datei gelesen werden.");
-          return;
+          const form = new FormData();
+          form.append("file", file, file.name);
+          if (title.trim()) form.append("title", title.trim());
+
+          const res = await fetch(`/dapi/orgs/me/vaults/${targetVaultId}/items/upload-direct`, {
+            method: "POST",
+            body: form,
+          });
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({})) as { error?: string };
+            throw new Error(body.error ?? `HTTP ${res.status}`);
+          }
         } finally {
           setExtracting(false);
-        }
-
-        const trimmed = extracted.trim();
-        if (!trimmed) {
-          setError("Die Datei enthält keinen lesbaren Text. Bitte füge den Inhalt manuell als Text ein.");
-          return;
-        }
-
-        const res = await fetch(`/dapi/orgs/me/vaults/${targetVaultId}/items`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            kind: "TEXT",
-            content: trimmed,
-            title: title.trim() || file.name,
-          }),
-        });
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({})) as { error?: string };
-          throw new Error(body.error ?? `HTTP ${res.status}`);
         }
       } else {
         const trimmed = content.trim();
@@ -226,7 +177,7 @@ export function VaultAddButton({
     }
   }
 
-  const busyLabel = extracting ? "Text wird extrahiert…" : saving ? "Wird gespeichert…" : "Hinzufügen";
+  const busyLabel = extracting ? "Wird hochgeladen & konvertiert…" : saving ? "Wird gespeichert…" : "Hinzufügen";
   const busy = extracting || saving;
   const canSubmit = effectiveMode === "file" ? !!file : !!content.trim();
 
