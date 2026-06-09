@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, FileText, Link2, Plus, Upload, X } from "lucide-react";
+import { Building2, FileText, Link2, Loader2, Plus, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { clientApi } from "@/lib/client-api";
 import type { TwinRole } from "@/lib/api";
 
 type Mode = "url" | "text" | "file";
@@ -46,7 +47,22 @@ export function VaultAddButton({
   const [category, setCategory] = useState<"org" | "role">(
     folder === "roles" ? "role" : "org",
   );
+  // Roles live in local state so a freshly created role is selectable
+  // immediately, before the server refresh lands. We resync during render when
+  // the server sends a fresh set (React's endorsed prop→state adjustment — no
+  // effect, no cascading render).
+  const [localRoles, setLocalRoles] = useState<TwinRole[]>(roles);
+  const [prevRoles, setPrevRoles] = useState<TwinRole[]>(roles);
+  if (roles !== prevRoles) {
+    setPrevRoles(roles);
+    setLocalRoles(roles);
+  }
   const [roleId, setRoleId] = useState<string>(roles[0]?.id ?? "");
+  // Inline "create a new role" form (under the Rollen target).
+  const [showCreateRole, setShowCreateRole] = useState(false);
+  const [newRoleName, setNewRoleName] = useState("");
+  const [newRoleDesc, setNewRoleDesc] = useState("");
+  const [creatingRole, setCreatingRole] = useState(false);
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -71,19 +87,51 @@ export function VaultAddButton({
   useEffect(() => {
     if (open) {
       setCategory(folder === "roles" ? "role" : "org");
-      if (roles[0]) setRoleId(roles[0].id);
+      if (localRoles[0]) setRoleId(localRoles[0].id);
       setTimeout(() => titleRef.current?.focus(), 80);
     } else {
       setContent("");
       setTitle("");
       setFile(null);
       setError(null);
+      setShowCreateRole(false);
+      setNewRoleName("");
+      setNewRoleDesc("");
     }
-  }, [open, folder, roles]);
+    // localRoles intentionally omitted: we only want to seed roleId on open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, folder]);
 
   // Active vault to write to
   const targetVaultId =
     category === "role" && roleId ? (roleVaults[roleId] ?? vaultId) : vaultId;
+
+  // Create a brand-new MANUAL role from the Rollen target. The new role is
+  // appended locally + selected immediately; router.refresh() updates the
+  // server-rendered Rollen tab and its count.
+  async function createRole() {
+    const name = newRoleName.trim();
+    if (!name) return;
+    setCreatingRole(true);
+    setError(null);
+    try {
+      const role = await clientApi.twin.createRole({
+        name,
+        description: newRoleDesc.trim() || undefined,
+        source: "MANUAL",
+      });
+      setLocalRoles((prev) => [...prev, role]);
+      setRoleId(role.id);
+      setNewRoleName("");
+      setNewRoleDesc("");
+      setShowCreateRole(false);
+      router.refresh();
+    } catch (e) {
+      setError((e as Error).message || "Rolle konnte nicht erstellt werden.");
+    } finally {
+      setCreatingRole(false);
+    }
+  }
 
   async function save() {
     setSaving(true);
@@ -195,30 +243,87 @@ export function VaultAddButton({
                 <Building2 size={12} aria-hidden />
                 Allgemein &amp; Unternehmen
               </button>
-              {roles.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setCategory("role")}
-                  className={`inline-flex items-center gap-1.5 rounded-ui px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
-                    category === "role"
-                      ? "bg-fg text-canvas"
-                      : "border border-line text-fg-muted hover:border-line-strong hover:text-fg"
-                  }`}
-                >
-                  Rollen
-                </button>
-              )}
-            </div>
-            {category === "role" && roles.length > 0 && (
-              <select
-                value={roleId}
-                onChange={(e) => setRoleId(e.target.value)}
-                className="mt-1.5 w-full rounded-ui border border-line bg-surface px-2.5 py-1.5 text-[13px] text-fg outline-none focus:border-line-strong"
+              <button
+                type="button"
+                onClick={() => setCategory("role")}
+                className={`inline-flex items-center gap-1.5 rounded-ui px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
+                  category === "role"
+                    ? "bg-fg text-canvas"
+                    : "border border-line text-fg-muted hover:border-line-strong hover:text-fg"
+                }`}
               >
-                {roles.map((r) => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
-                ))}
-              </select>
+                Rollen
+              </button>
+            </div>
+            {category === "role" && (
+              <div className="mt-1.5 space-y-2">
+                {localRoles.length > 0 && !showCreateRole && (
+                  <select
+                    value={roleId}
+                    onChange={(e) => setRoleId(e.target.value)}
+                    className="w-full rounded-ui border border-line bg-surface px-2.5 py-1.5 text-[13px] text-fg outline-none focus:border-line-strong"
+                  >
+                    {localRoles.map((r) => (
+                      <option key={r.id} value={r.id}>{r.name}</option>
+                    ))}
+                  </select>
+                )}
+
+                {showCreateRole ? (
+                  <div className="space-y-2 rounded-ui border border-line bg-surface-2 p-2.5">
+                    <input
+                      type="text"
+                      autoFocus
+                      placeholder="Rollenname (z. B. Vertriebsleitung)"
+                      value={newRoleName}
+                      onChange={(e) => setNewRoleName(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && void createRole()}
+                      className="w-full rounded-ui border border-line bg-surface px-2.5 py-1.5 text-[13px] text-fg outline-none transition-colors placeholder:text-fg-faint focus:border-line-strong"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Beschreibung (optional)"
+                      value={newRoleDesc}
+                      onChange={(e) => setNewRoleDesc(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && void createRole()}
+                      className="w-full rounded-ui border border-line bg-surface px-2.5 py-1.5 text-[13px] text-fg outline-none transition-colors placeholder:text-fg-faint focus:border-line-strong"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowCreateRole(false);
+                          setNewRoleName("");
+                          setNewRoleDesc("");
+                        }}
+                        disabled={creatingRole}
+                      >
+                        Abbrechen
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => void createRole()}
+                        disabled={creatingRole || !newRoleName.trim()}
+                      >
+                        {creatingRole && (
+                          <Loader2 size={14} className="animate-spin" aria-hidden />
+                        )}
+                        Rolle anlegen
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateRole(true)}
+                    className="inline-flex items-center gap-1.5 rounded-ui border border-dashed border-line px-2.5 py-1.5 text-[12px] font-medium text-fg-muted transition-colors hover:border-line-strong hover:text-fg"
+                  >
+                    <Plus size={12} aria-hidden />
+                    Neue Rolle
+                  </button>
+                )}
+              </div>
             )}
           </div>
 

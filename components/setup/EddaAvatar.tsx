@@ -21,7 +21,7 @@ export function EddaAvatar({ size = 36, status = "ready", className }: EddaAvata
   return (
     <span
       role="img"
-      aria-label={`edda — ${status}`}
+      aria-label={`Edda — ${status}`}
       className={cn("relative inline-flex shrink-0", className)}
       style={{ width: size, height: size }}
     >
