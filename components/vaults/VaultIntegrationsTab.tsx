@@ -150,9 +150,18 @@ export function VaultIntegrationsTab({ vaultId }: { vaultId: string | null }) {
           {/* Action button */}
           <div className="shrink-0">
             {connected ? (
-              <Button size="sm" variant="outline" onClick={() => void handleSync()}>
-                Jetzt synchronisieren
-              </Button>
+              <div className="flex flex-col items-end gap-1.5">
+                <Button size="sm" variant="outline" onClick={() => void handleSync()}>
+                  Jetzt synchronisieren
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => void handleConnect()}
+                  className="text-[length:var(--text-caption)] text-fg-subtle underline-offset-2 hover:text-fg hover:underline"
+                >
+                  Anderes Konto verbinden
+                </button>
+              </div>
             ) : syncing ? (
               <Button size="sm" variant="outline" disabled>
                 <Loader2 className="h-4 w-4 animate-spin" />
