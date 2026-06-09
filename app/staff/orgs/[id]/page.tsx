@@ -181,12 +181,12 @@ export default async function OrgDetailPage({
               <StatusBadge status={org.status} withIcon className="self-start" />
 
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line-subtle pt-5 text-[length:var(--text-caption)]">
-                <InfoRow label="Sprache" value={org.default_locale.toUpperCase()} />
+                <InfoRow label="Sprache" value={(org.default_locale ?? "de").toUpperCase()} />
                 <InfoRow
                   label="Interviewdauer"
-                  value={`${org.default_interview_length_min} min`}
+                  value={`${org.default_interview_length_min ?? "—"} min`}
                 />
-                <InfoRow label="Voice-ID" value={String(org.default_voice_id)} />
+                <InfoRow label="Voice-ID" value={String(org.default_voice_id ?? "—")} />
                 <InfoRow
                   label="Erstellt"
                   value={
@@ -295,12 +295,12 @@ export default async function OrgDetailPage({
             <Card className="p-6">
               <SectionHeading title="Defaults für neue Kampagnes" />
               <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-                <InfoRow label="Sprache" value={org.default_locale.toUpperCase()} />
+                <InfoRow label="Sprache" value={(org.default_locale ?? "de").toUpperCase()} />
                 <InfoRow
                   label="Interviewdauer"
-                  value={`${org.default_interview_length_min} min`}
+                  value={`${org.default_interview_length_min ?? "—"} min`}
                 />
-                <InfoRow label="Voice-ID" value={String(org.default_voice_id)} />
+                <InfoRow label="Voice-ID" value={String(org.default_voice_id ?? "—")} />
                 <InfoRow label="Status" value={org.status} />
               </dl>
             </Card>
