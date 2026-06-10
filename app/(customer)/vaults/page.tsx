@@ -28,6 +28,7 @@ import { VaultIntegrationsTab } from "@/components/vaults/VaultIntegrationsTab";
 import { VaultRolesTab } from "@/components/vaults/VaultRolesTab";
 import { VaultCardMenu } from "@/components/vaults/VaultCardMenu";
 import { VaultSearchDialog } from "@/components/vaults/VaultSearchDialog";
+import { VaultOrgSuggestions } from "@/components/vaults/VaultOrgSuggestions";
 import { cn } from "@/lib/utils";
 
 type Folder = "org" | "roles" | "integrations";
@@ -285,6 +286,9 @@ async function OrgView({
                 )}
               </ul>
             )}
+
+            {/* Suggested content types not yet covered */}
+            <VaultOrgSuggestions existingItems={vaultItems} vaultId={v.id} />
 
             <Button asChild variant="ghost" size="sm" className="self-start text-fg-muted">
               <a href={`/vaults?folder=org&vault=${v.id}`}>
