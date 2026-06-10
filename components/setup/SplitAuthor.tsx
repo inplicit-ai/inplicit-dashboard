@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
 import { StatusDisc } from "@/components/ui/status-disc";
 import { clientApi } from "@/lib/client-api";
+import { useSetSetupHeaderAction } from "@/components/setup/SetupActionContext";
 import type {
   CampaignDraft,
   SetupMessage,
@@ -228,38 +228,33 @@ export function SplitAuthor({
 
   const reasons = validateForLaunch(draft);
 
+  // Publish the launch-readiness state to the step-bar header (SetupSteps),
+  // which renders "Prüfen & starten" next to "Abbrechen". Clears on unmount.
+  const setHeaderAction = useSetSetupHeaderAction();
+  useEffect(() => {
+    setHeaderAction({
+      onReview,
+      blocked: reasons.length > 0 || launching,
+      gateReason: reasons[0] ?? null,
+    });
+    return () => setHeaderAction(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reasons.length, launching]);
+
   return (
     // chat-fill makes this the flush, non-scrolling DIRECT child of .app-work:
     // it fills the viewport row exactly (height:100%; min-h:0; flex column) so
     // the PAGE never scrolls — only the chat message list and the catalog do.
     // surface-bleed keeps the full available width for the split author.
-    // Stacks on mobile (chat pane caps at 50vh); fills height from md up.
     <div className="surface-bleed chat-fill p-4 md:p-6">
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
-        {/* Full-width EDDA setup chat — advance bar lives inside the card */}
+      <div className="flex min-h-0 flex-1 flex-col">
+        {/* Full-width EDDA setup chat — no bottom bar; CTA lives in step header */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card">
           <SetupChat
             turns={turns}
             streaming={stream.streaming}
             error={agentError}
             onSend={onSend}
-            reviewAction={
-              <div className="flex items-center justify-end gap-3 border-t border-line px-4 py-3">
-                {reasons.length > 0 && (
-                  <span className="text-[13px] text-fg-muted">
-                    {tReview(`gates.${reasons[0]}`)}
-                  </span>
-                )}
-                <Button
-                  onClick={onReview}
-                  disabled={reasons.length > 0 || launching}
-                  size="lg"
-                  className="shrink-0"
-                >
-                  {tReview("reviewCta")}
-                </Button>
-              </div>
-            }
           />
         </div>
       </div>
