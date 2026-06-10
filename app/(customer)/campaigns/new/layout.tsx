@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { SetupSteps } from "@/components/setup/SetupSteps";
+import { SetupActionProvider } from "@/components/setup/SetupActionContext";
 
 /**
  * Create-flow layout (WHY-104). The step bar (SetupSteps) lives OUTSIDE the
@@ -18,13 +19,13 @@ export default function NewCampaignLayout({
   children: ReactNode;
 }) {
   return (
-    <>
+    <SetupActionProvider>
       {/* Step bar: direct .app-work child → always max-width centered, consistent position */}
       <SetupSteps />
       {/* Content: surface-bleed for full-width + chat-fill aware height filling */}
       <div className="surface-bleed [&:has(.chat-fill)]:flex [&:has(.chat-fill)]:min-h-0 [&:has(.chat-fill)]:flex-1 [&:has(.chat-fill)]:flex-col">
         {children}
       </div>
-    </>
+    </SetupActionProvider>
   );
 }

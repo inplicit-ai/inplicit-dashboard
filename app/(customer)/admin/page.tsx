@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Users, Plug, Vault as VaultIcon } from "lucide-react";
+import { Users, Vault as VaultIcon } from "lucide-react";
 import { makeApi, type OrgMember } from "@/lib/api";
 import { requireOrgOwner, requestCookie } from "@/lib/auth";
 import { PageHeader } from "@/components/ui/page-header";
@@ -39,12 +39,6 @@ export default async function AdminPage() {
       icon: VaultIcon,
       title: t("vaultsTitle"),
       body: t("vaultsBody"),
-    },
-    {
-      href: "/integrations",
-      icon: Plug,
-      title: t("integrationsTitle"),
-      body: t("integrationsBody"),
     },
   ];
 

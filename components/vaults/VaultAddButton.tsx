@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { TwinRole } from "@/lib/api";
 
 type Mode = "url" | "text" | "file";
 type RoleMode = "csv" | "doc" | "text";
@@ -54,9 +53,6 @@ const CSV_ACCEPTED = ".csv,.xlsx,.xls,.tsv";
  */
 export function VaultAddButton({
   vaultId,
-  folder = "org",
-  roles = [],
-  roleVaults = {},
 }: {
   vaultId: string;
   folder?: "org" | "roles" | "integrations";
@@ -154,7 +150,7 @@ export function VaultAddButton({
             return;
           }
         }
-        const res = await fetch(`/dapi/orgs/me/vaults/${targetVaultId}/items`, {
+        const res = await fetch(`/dapi/orgs/me/vaults/${vaultId}/items`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -152,7 +152,7 @@ export function RoleContextManager({
             onChange={(e) => setText(e.target.value)}
             placeholder="Kontext für diese Rolle — z. B. typische Aufgaben, Systeme, Fachbegriffe, Eigenheiten…"
             rows={5}
-            className="w-full resize-y rounded-ui border border-line bg-surface px-3.5 py-2.5 text-[length:var(--text-body-sm)] text-fg outline-none transition-colors placeholder:text-fg-faint focus-visible:border-accent focus-visible:shadow-[var(--shadow-focus)]"
+            className="w-full resize-y rounded-ui border border-line bg-surface px-3.5 py-2.5 text-[length:var(--text-body-sm)] text-fg outline-none transition-colors placeholder:text-fg-faint focus-visible:border-line-strong"
           />
           <Button
             type="button"
