@@ -15,8 +15,6 @@ import {
   ChatShell,
   ChatComposerBar,
 } from "@/components/ui/chat-shell";
-import { PromptInputAction } from "@/components/ui/prompt-input";
-import { StaticVoiceOrb } from "@/components/interview/StaticVoiceOrb";
 import { cn } from "@/lib/utils";
 import type { SetupToolCallCard } from "@/lib/api";
 import type { LayoutHint } from "@/lib/setup/useSetupStream";
@@ -53,11 +51,14 @@ export function SetupChat({
   streaming,
   error,
   onSend,
+  reviewAction,
 }: {
   turns: ChatTurn[];
   streaming: boolean;
   error?: boolean;
   onSend: (message: string) => void;
+  /** Optional slot rendered below the composer (e.g. advance-to-review bar). */
+  reviewAction?: React.ReactNode;
 }) {
   const t = useTranslations("setup.chat");
   const prefersReducedMotion = useReducedMotion();
@@ -91,12 +92,15 @@ export function SetupChat({
 
   return (
     <ChatShell height="fill">
-      {/* Header — Edda's orb (status lives on the orb) + name. */}
+      {/* Header — edda's orb + name + role label. */}
       <header className="flex shrink-0 items-center gap-3 border-b border-line bg-canvas px-5 py-4">
         <EddaAvatar size={36} status={status} />
-        <p className="text-[length:var(--text-subtitle)] font-semibold tracking-[-0.01em] text-fg">
-          Edda
-        </p>
+        <div className="flex flex-col gap-0.5">
+          <p className="text-[length:var(--text-subtitle)] font-semibold tracking-[-0.01em] text-fg">
+            edda
+          </p>
+          <p className="text-[11px] font-medium text-fg-subtle">Kampagnen-Planer</p>
+        </div>
       </header>
 
       {/* Conversation — the single scroll region, stick-to-bottom + floating pill. */}
@@ -173,21 +177,7 @@ export function SetupChat({
               placeholder={t("placeholder")}
               disabled={streaming}
             />
-            <PromptInputActions className="justify-between pt-1.5">
-              {/* Voice affordance — DELIBERATELY DISABLED (coming-soon). */}
-              <PromptInputAction tooltip={t("voiceComingSoonHint")} side="top">
-                <button
-                  type="button"
-                  aria-disabled
-                  tabIndex={0}
-                  aria-label={t("voiceComingSoon")}
-                  className="inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-line bg-surface px-2.5 py-1 text-[length:var(--text-caption)] font-medium text-fg-subtle opacity-70 shadow-sm"
-                >
-                  <StaticVoiceOrb size={18} />
-                  <span className="hidden sm:inline">{t("voiceComingSoon")}</span>
-                </button>
-              </PromptInputAction>
-
+            <PromptInputActions className="justify-end pt-1.5">
               <Button
                 type="button"
                 size="icon-sm"
@@ -202,6 +192,9 @@ export function SetupChat({
           </PromptInput>
         </div>
       </ChatComposerBar>
+
+      {/* Review/advance action slot — rendered below composer, inside the card. */}
+      {reviewAction}
     </ChatShell>
   );
 }
