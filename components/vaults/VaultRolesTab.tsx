@@ -63,10 +63,15 @@ export function VaultRolesTab({
     });
   }, [roles, employees, orgInterviews]);
 
-  // All unique departments across all roles
+  // All unique departments — capped at 30 chars to exclude full company names
+  // (the department field is free-text and sometimes contains the org name)
   const allDepartments = useMemo(() => {
     const s = new Set<string>();
-    rows.forEach((r) => r.departments.forEach((d) => s.add(d)));
+    rows.forEach((r) =>
+      r.departments.forEach((d) => {
+        if (d.length <= 30) s.add(d);
+      }),
+    );
     return Array.from(s).sort();
   }, [rows]);
 

@@ -6,7 +6,6 @@ import { requireAdmin, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ErrorState";
 import { PageHeader } from "@/components/ui/page-header";
-import { StatBand } from "@/components/ui/stat-band";
 import { CardGrid, EntityCard } from "@/components/ui/card-grid";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -78,19 +77,16 @@ export default async function StaffUsersPage({
     redirect(redirectTo);
   }
 
-  const verified = users.filter((u) => u.email_verified_at).length;
-  const invited = users.length - verified;
-
   return (
     <>
       <PageHeader
-        title="Team"
-        subtitle="Inplicit-Staff mit Cross-Org-Zugriff. Login per Magic-Link."
+        title="Admins"
+        subtitle="Inplicit-interne Accounts mit Zugriff auf alle Organisationen."
         actions={
           <Button asChild size="sm">
             <Link href="/staff/users/new">
               <Plus className="h-4 w-4" />
-              Staff hinzufügen
+              Admin hinzufügen
             </Link>
           </Button>
         }
@@ -113,28 +109,16 @@ export default async function StaffUsersPage({
         />
       )}
 
-      {users.length > 0 && (
-        <div className="mb-8">
-          <StatBand
-            cells={[
-              { label: "Staff", value: users.length },
-              { label: "Verifiziert", value: verified },
-              { label: "Eingeladen", value: invited },
-            ]}
-          />
-        </div>
-      )}
-
       {!error && users.length === 0 && (
         <EmptyState
           icon={Users}
-          title="Kein zusätzliches Staff-Mitglied"
-          hint="Du bist aktuell der einzige Account mit Zugriff aufs Back-Office. Lege weitere Staff-User an, damit Kollegen Customer-Orgs verwalten können."
+          title="Noch kein weiterer Admin"
+          hint="Du bist aktuell der einzige Account mit Zugriff auf das Back-Office. Füge weitere Admins hinzu, damit Kollegen Organisationen verwalten können."
           action={
             <Button asChild size="sm">
               <Link href="/staff/users/new">
                 <Plus className="h-4 w-4" />
-                Erstes Staff-Mitglied hinzufügen
+                Ersten Admin hinzufügen
               </Link>
             </Button>
           }
