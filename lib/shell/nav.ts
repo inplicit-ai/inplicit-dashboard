@@ -84,7 +84,7 @@ const CUSTOMER_SECTIONS: NavSection[] = [
       // WHY-115: /twin + /integrations are folded under the Kontext-Vault hub.
       // Their routes are kept; only the separate top-level nav entries are gone.
       { id: "vaults", href: "/vaults", icon: IconVault, tourId: "nav-vaults" },
-      { id: "mcp", href: "/mcp", icon: IconBoxes, comingSoon: true },
+      { id: "mcp", href: "/mcp", icon: IconBoxes },
       { id: "admin", href: "/admin", icon: IconBuilding },
     ],
   },
