@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { getTranslations } from "next-intl/server";
 import {
   Building2,
@@ -263,52 +264,54 @@ async function OrgView({
       {orgVaults.map((v) => {
         const vaultItems = v.id === activeId ? docItems : [];
         return (
-          <Card key={v.id} className="flex flex-col gap-3 p-5">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="font-semibold text-fg">{v.name}</p>
-                {v.description && (
-                  <p className="mt-0.5 text-[length:var(--text-caption)] text-fg-muted">
-                    {v.description}
-                  </p>
+          <Fragment key={v.id}>
+            <Card className="flex flex-col gap-3 p-5">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-semibold text-fg">{v.name}</p>
+                  {v.description && (
+                    <p className="mt-0.5 text-[length:var(--text-caption)] text-fg-muted">
+                      {v.description}
+                    </p>
+                  )}
+                </div>
+                {canWrite && (
+                  <VaultCardMenu
+                    vaultId={v.id}
+                    vaultName={v.name}
+                    vaultDescription={v.description}
+                  />
                 )}
               </div>
-              {canWrite && (
-                <VaultCardMenu
-                  vaultId={v.id}
-                  vaultName={v.name}
-                  vaultDescription={v.description}
-                />
+
+              {/* Item list with 3-dot menus + summary */}
+              {vaultItems.length > 0 && (
+                <ul className="divide-y divide-line-subtle rounded-ui border border-line">
+                  {vaultItems.slice(0, 5).map((it) => (
+                    <VaultItemRow
+                      key={it.id}
+                      item={it}
+                      vaultId={v.id}
+                    />
+                  ))}
+                  {vaultItems.length > 5 && (
+                    <li className="px-3 py-2 text-[length:var(--text-caption)] text-fg-muted">
+                      + {vaultItems.length - 5} weitere
+                    </li>
+                  )}
+                </ul>
               )}
-            </div>
 
-            {/* Item list with 3-dot menus + summary */}
-            {vaultItems.length > 0 && (
-              <ul className="divide-y divide-line-subtle rounded-ui border border-line">
-                {vaultItems.slice(0, 5).map((it) => (
-                  <VaultItemRow
-                    key={it.id}
-                    item={it}
-                    vaultId={v.id}
-                  />
-                ))}
-                {vaultItems.length > 5 && (
-                  <li className="px-3 py-2 text-[length:var(--text-caption)] text-fg-muted">
-                    + {vaultItems.length - 5} weitere
-                  </li>
-                )}
-              </ul>
-            )}
+              <Button asChild variant="ghost" size="sm" className="self-start text-fg-muted">
+                <a href={`/vaults?folder=org&vault=${v.id}`}>
+                  {vaultItems.length === 0 ? "Einträge ansehen" : tv("entriesCount", { count: vaultItems.length })}
+                </a>
+              </Button>
+            </Card>
 
-            {/* Suggested content types not yet covered */}
+            {/* Suggestion cards as separate grid cells alongside the vault card */}
             <VaultOrgSuggestions existingItems={vaultItems} vaultId={v.id} />
-
-            <Button asChild variant="ghost" size="sm" className="self-start text-fg-muted">
-              <a href={`/vaults?folder=org&vault=${v.id}`}>
-                {vaultItems.length === 0 ? "Einträge ansehen" : tv("entriesCount", { count: vaultItems.length })}
-              </a>
-            </Button>
-          </Card>
+          </Fragment>
         );
       })}
     </div>
