@@ -5,8 +5,7 @@ import {
   type Vault,
   type VaultItem,
   type TwinRole,
-  type Employee,
-  type OrgInterviewRow,
+  type Campaign,
 } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
 import { PageHeader } from "@/components/ui/page-header";
@@ -33,16 +32,14 @@ export default async function RoleContextPage({
   let role: TwinRole | undefined;
   let roleVault: Vault | null = null;
   let items: VaultItem[] = [];
-  let employees: Employee[] = [];
-  let orgInterviews: OrgInterviewRow[] = [];
+  let campaigns: Campaign[] = [];
   let error: unknown = null;
 
   try {
-    const [roles, vaults, emps, interviews] = await Promise.all([
+    const [roles, vaults, camps] = await Promise.all([
       api.twin.listRoles(),
       api.vaults.list(),
-      api.employees.list().catch(() => [] as Employee[]),
-      api.org.interviews().catch(() => [] as OrgInterviewRow[]),
+      api.campaigns.list().catch(() => [] as Campaign[]),
     ]);
     role = roles.find((r) => r.id === roleId);
     roleVault =
@@ -50,8 +47,7 @@ export default async function RoleContextPage({
     if (role && roleVault) {
       items = await api.vaults.listItems(roleVault.id);
     }
-    employees = emps;
-    orgInterviews = interviews;
+    campaigns = camps;
   } catch (e) {
     error = e;
   }
@@ -65,37 +61,6 @@ export default async function RoleContextPage({
     );
   }
   if (!role) notFound();
-
-  // Interviews that belong to this role via department matching
-  const roleMembers = employees.filter((e) => e.role_id === roleId);
-  const roleDepts = Array.from(
-    new Set(
-      roleMembers
-        .map((e) => e.department ?? e.role_department)
-        .filter(Boolean) as string[],
-    ),
-  );
-  const roleInterviews =
-    roleDepts.length > 0
-      ? orgInterviews.filter(
-          (iv) =>
-            iv.department &&
-            roleDepts.some(
-              (d) => iv.department!.toLowerCase() === d.toLowerCase(),
-            ),
-        )
-      : [];
-
-  // Group interviews by campaign
-  const byCampaign = roleInterviews.reduce<
-    Record<string, { label: string; count: number }>
-  >((acc, iv) => {
-    if (!acc[iv.campaign_id]) {
-      acc[iv.campaign_id] = { label: iv.campaign_label, count: 0 };
-    }
-    acc[iv.campaign_id]!.count++;
-    return acc;
-  }, {});
 
   const textItems = items.filter(
     (it) => it.kind === "TEXT" && (it.content || it.summary),
@@ -171,26 +136,26 @@ export default async function RoleContextPage({
             )}
           </div>
 
-          {/* Campaigns & interviews for this role */}
-          {Object.keys(byCampaign).length > 0 && (
+          {/* All org campaigns */}
+          {campaigns.length > 0 && (
             <div>
               <SectionHeading
-                title="Kampagnen mit dieser Rolle"
-                count={Object.keys(byCampaign).length}
+                title="Kampagnen"
+                count={campaigns.length}
               />
               <Card variant="ledger" className="overflow-hidden">
                 <ul className="divide-y divide-line-subtle">
-                  {Object.entries(byCampaign).map(([campaignId, { label, count }]) => (
-                    <li key={campaignId}>
+                  {campaigns.map((c) => (
+                    <li key={c.id}>
                       <a
-                        href={`/campaigns/${campaignId}`}
+                        href={`/campaigns/${c.id}`}
                         className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2"
                       >
                         <MessageSquare size={14} className="shrink-0 text-fg-faint" aria-hidden />
-                        <span className="min-w-0 flex-1 truncate text-[13px] text-fg">{label}</span>
-                        <span className="shrink-0 text-[12px] tabular-nums text-fg-muted">
-                          {count} Interview{count !== 1 ? "s" : ""}
+                        <span className="min-w-0 flex-1 truncate text-[13px] text-fg">
+                          {c.name ?? c.org_name}
                         </span>
+                        <span className="shrink-0 text-[11px] capitalize text-fg-subtle">{c.status}</span>
                       </a>
                     </li>
                   ))}

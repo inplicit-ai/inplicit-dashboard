@@ -193,9 +193,7 @@ export function VaultRolesTab({
     <div className="space-y-0">
       {/* Column-aligned filter row — each control sits above its column */}
       <div className="mb-1 flex items-center gap-4 px-6">
-        <div className="w-8 shrink-0" />
-
-        {/* Role search above role name column */}
+        {/* Role search spans full left width (initials + role name) */}
         <div className="min-w-0 flex-1">
           <input
             type="search"

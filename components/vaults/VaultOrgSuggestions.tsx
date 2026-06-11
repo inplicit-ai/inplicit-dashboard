@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import type { VaultItem } from "@/lib/api";
 
 type Suggestion = {
@@ -58,11 +59,6 @@ const SUGGESTIONS: Suggestion[] = [
   },
 ];
 
-/**
- * Suggestion cards in the org vault overview. Each card opens a quick-add text
- * dialog pre-scoped to that content type. Suggestions disappear once a matching
- * item exists in the vault.
- */
 export function VaultOrgSuggestions({
   existingItems,
   vaultId,
@@ -81,11 +77,11 @@ export function VaultOrgSuggestions({
   if (visible.length === 0) return null;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-fg-faint">
         Vorschläge
       </p>
-      <div className="grid grid-cols-2 gap-1.5">
+      <div className="flex flex-col gap-2">
         {visible.map((s) => (
           <SuggestionCard key={s.label} suggestion={s} vaultId={vaultId} />
         ))}
@@ -145,18 +141,25 @@ function SuggestionCard({
 
   return (
     <>
-      <button
-        type="button"
+      <Card
+        interactive
+        className="cursor-pointer px-4 py-3.5"
         onClick={openDialog}
-        className="flex items-start gap-2 rounded-ui border border-line px-2.5 py-2 text-left transition-colors hover:border-line-strong hover:bg-surface-2"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && openDialog()}
       >
-        <span className="mt-0.5 shrink-0 text-fg-faint">{suggestion.icon}</span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[12px] font-medium text-fg-muted">{suggestion.label}</p>
-          <p className="text-[10px] text-fg-faint">{suggestion.hint}</p>
+        <div className="flex items-center gap-3">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-ui border border-line bg-surface-2 text-fg-muted">
+            {suggestion.icon}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-medium text-fg">{suggestion.label}</p>
+            <p className="text-[11px] text-fg-subtle">{suggestion.hint}</p>
+          </div>
+          <Plus size={14} className="shrink-0 text-fg-faint" aria-hidden />
         </div>
-        <Plus size={12} className="ml-auto mt-0.5 shrink-0 text-fg-faint" aria-hidden />
-      </button>
+      </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
