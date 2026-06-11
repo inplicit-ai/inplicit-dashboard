@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/prompt-input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusDisc } from "@/components/ui/status-disc";
-import { cn } from "@/lib/utils";
+import { NoEvidenceCard } from "@/components/chat/NoEvidenceCard";
 import type { ChatMessage } from "@/lib/api";
 import { CitationChip } from "./CitationChip";
 
@@ -179,10 +179,30 @@ function MessageTurn({
     );
   }
 
+  // No evidence in interviews or Kontext → offer to reach people who can answer,
+  // rather than a greyed-out dead end.
+  if (message.declined) {
+    return (
+      <motion.div {...enter} className="flex w-full flex-col">
+        <NoEvidenceCard
+          title={t("noEvidenceTitle")}
+          body={t("noEvidenceBody")}
+          cta={t("noEvidenceCta")}
+          comingSoon={t("noEvidenceComingSoon")}
+        />
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-[length:var(--text-caption)] text-fg-faint">
+            {t("aiLabel")}
+          </span>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div {...enter} className="flex w-full flex-col">
       <div className="w-full max-w-[68ch] text-[length:var(--text-body-lg)] leading-[1.65] text-fg">
-        <p className={cn("whitespace-pre-wrap", message.declined && "text-fg-muted")}>
+        <p className="whitespace-pre-wrap">
           {message.content}
         </p>
 

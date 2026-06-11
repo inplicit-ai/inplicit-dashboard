@@ -107,7 +107,11 @@
       "append_only": "Nur hinzufügen",
       "future_only": "Nur künftige Interviews",
       "locked": "Gesperrt"
-    }
+    },
+    "noEvidenceTitle": "Wir konnten keine Antwort finden",
+    "noEvidenceBody": "In den Interviews dieser Kampagne und in deinem Kontext gibt es dazu noch nichts.",
+    "noEvidenceCta": "Personen per E-Mail fragen",
+    "noEvidenceComingSoon": "Bald verfügbar"
   },
   "flows": {
     "setup": {
@@ -404,7 +408,11 @@
     "cachedNote": "Gecachte Antwort",
     "citationsLabel": "Quellen",
     "deleteThread": "Unterhaltung löschen",
-    "errorGeneric": "Etwas ist schiefgelaufen. Bitte erneut versuchen."
+    "errorGeneric": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+    "noEvidenceTitle": "Wir konnten keine Antwort finden",
+    "noEvidenceBody": "In deinen Kampagnen und in deinem Kontext gibt es dazu noch nichts.",
+    "noEvidenceCta": "Personen per E-Mail fragen",
+    "noEvidenceComingSoon": "Bald verfügbar"
   },
   "vaults": {
     "eyebrow": "Organisation",

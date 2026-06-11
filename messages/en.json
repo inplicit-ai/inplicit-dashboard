@@ -106,7 +106,11 @@
       "append_only": "Append only",
       "future_only": "Future interviews only",
       "locked": "Locked"
-    }
+    },
+    "noEvidenceTitle": "We couldn't find an answer",
+    "noEvidenceBody": "Nothing in this campaign's interviews or your Kontext answers this yet.",
+    "noEvidenceCta": "Email people who can answer",
+    "noEvidenceComingSoon": "Coming soon"
   },
   "flows": {
     "setup": {
@@ -392,7 +396,11 @@
     "cachedNote": "Cached answer",
     "citationsLabel": "Sources",
     "deleteThread": "Delete conversation",
-    "errorGeneric": "Something went wrong. Please try again."
+    "errorGeneric": "Something went wrong. Please try again.",
+    "noEvidenceTitle": "We couldn't find an answer",
+    "noEvidenceBody": "Nothing across your campaigns or your Kontext answers this yet.",
+    "noEvidenceCta": "Email people who can answer",
+    "noEvidenceComingSoon": "Coming soon"
   },
   "vaults": {
     "eyebrow": "Organization",
