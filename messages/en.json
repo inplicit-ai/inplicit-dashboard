@@ -617,10 +617,9 @@
   "feedback": {
     "trigger": "Feedback",
     "title": "Give feedback",
-    "description": "Tell us what works well on this page or what could be better.",
-    "placeholder": "Your feedback …",
+    "description": "Start a screen recording — console logs and network requests are captured automatically.",
     "cancel": "Cancel",
-    "submit": "Send"
+    "record": "Start recording"
   },
   "team": {
     "title": "Team",

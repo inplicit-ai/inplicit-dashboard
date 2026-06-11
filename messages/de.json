@@ -629,10 +629,9 @@
   "feedback": {
     "trigger": "Feedback",
     "title": "Feedback geben",
-    "description": "Sag uns, was auf dieser Seite gut funktioniert oder besser sein könnte.",
-    "placeholder": "Dein Feedback …",
+    "description": "Starte eine Bildschirmaufnahme – wir sehen Console-Logs und Netzwerk-Requests automatisch mit.",
     "cancel": "Abbrechen",
-    "submit": "Senden"
+    "record": "Aufnahme starten"
   },
   "team": {
     "title": "Team",
