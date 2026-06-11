@@ -617,9 +617,9 @@
   "feedback": {
     "trigger": "Feedback",
     "title": "Give feedback",
-    "description": "Start a screen recording — console logs and network requests are captured automatically.",
+    "description": "Take a screenshot or start a recording — console logs and network requests are attached automatically.",
     "cancel": "Cancel",
-    "record": "Start recording"
+    "record": "Screenshot / Record"
   },
   "team": {
     "title": "Team",

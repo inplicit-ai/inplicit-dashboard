@@ -629,9 +629,9 @@
   "feedback": {
     "trigger": "Feedback",
     "title": "Feedback geben",
-    "description": "Starte eine Bildschirmaufnahme – wir sehen Console-Logs und Netzwerk-Requests automatisch mit.",
+    "description": "Screenshot oder Bildschirmaufnahme starten — Console-Logs und Netzwerk-Requests werden automatisch mitgeliefert.",
     "cancel": "Abbrechen",
-    "record": "Aufnahme starten"
+    "record": "Screenshot / Aufnahme"
   },
   "team": {
     "title": "Team",
