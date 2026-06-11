@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { AlertCircle, CheckCircle2, Users } from "lucide-react";
 import { AddPersonDialog } from "@/components/directory/AddPersonDialog";
+import { CreateTeamDialog } from "@/components/directory/CreateTeamDialog";
 import {
   makeApi,
   type Employee,
@@ -218,7 +219,10 @@ export default async function DirectoryPage({
         title="Belegschaft"
         subtitle="Die Personen, die interviewt werden. Jede Person bekommt eine Rolle — der Kontext für maßgeschneiderte Interviews liegt auf der Rolle (anonym, für alle mit dieser Rolle wiederverwendbar)."
         actions={
-          <AddPersonDialog action={addEmployee} roleListId={ROLE_LIST_ID} />
+          <div className="flex items-center gap-2">
+            <CreateTeamDialog employees={employees} />
+            <AddPersonDialog action={addEmployee} roleListId={ROLE_LIST_ID} />
+          </div>
         }
       />
 
@@ -267,10 +271,55 @@ export default async function DirectoryPage({
                 />
               </div>
             </Card>
+
+            <DeptGroups employees={employees} />
           </>
         )
       )}
     </>
+  );
+}
+
+/**
+ * Read-only Abteilungs-Gruppen-Ansicht — zeigt Personen nach Abteilung
+ * gruppiert (nur wenn mindestens eine Abteilung vergeben ist).
+ */
+function DeptGroups({ employees }: { employees: Employee[] }) {
+  const byDept = employees.reduce<Record<string, Employee[]>>((acc, e) => {
+    const key = e.department ?? "__none__";
+    acc[key] ??= [];
+    acc[key].push(e);
+    return acc;
+  }, {});
+
+  const deptKeys = Object.keys(byDept).filter((k) => k !== "__none__").sort();
+  if (deptKeys.length === 0) return null;
+
+  return (
+    <div className="mt-8">
+      <SectionHeading title="Abteilungen" count={deptKeys.length} />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {deptKeys.map((dept) => {
+          const members = byDept[dept]!;
+          return (
+            <Card key={dept} className="flex flex-col gap-2 p-4">
+              <p className="text-[13px] font-semibold text-fg">{dept}</p>
+              <p className="text-[11px] text-fg-subtle">{members.length} Person{members.length !== 1 ? "en" : ""}</p>
+              <ul className="space-y-1">
+                {members.slice(0, 5).map((e) => (
+                  <li key={e.id} className="truncate text-[12px] text-fg-muted">
+                    {e.name || e.email}
+                  </li>
+                ))}
+                {members.length > 5 && (
+                  <li className="text-[11px] text-fg-faint">+ {members.length - 5} weitere</li>
+                )}
+              </ul>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

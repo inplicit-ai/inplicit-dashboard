@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { AlertCircle, CheckCircle2, UserPlus, Users } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { AlertCircle, CheckCircle2, Crown, UserPlus, Users } from "lucide-react";
 import { makeApi, type OrgMember, ApiError } from "@/lib/api";
 import { requireOrgOwner, requestCookie } from "@/lib/auth";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -27,9 +28,10 @@ export default async function TeamPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  await requireOrgOwner();
+  const { me } = await requireOrgOwner();
   const sp = await searchParams;
   const api = makeApi(await requestCookie());
+  const t = await getTranslations("team");
 
   let members: OrgMember[] = [];
   let listError: string | null = null;
@@ -37,27 +39,26 @@ export default async function TeamPage({
     members = await api.orgMembers.list();
   } catch (e) {
     listError =
-      e instanceof ApiError
-        ? e.message
-        : "Mitgliederliste konnte nicht geladen werden.";
+      e instanceof ApiError ? e.message : t("errorList");
   }
 
   async function inviteMember(formData: FormData) {
     "use server";
+    const t2 = await getTranslations("team");
     const email = String(formData.get("email") ?? "").trim().toLowerCase();
     if (!email || !email.includes("@")) {
       redirect(
         "/campaigns/team?flashType=err&flash=" +
-          encodeURIComponent("Bitte eine gültige E-Mail-Adresse eingeben."),
+          encodeURIComponent(t2("errorEmail")),
       );
     }
     const cookie = await requestCookie();
-    const api = makeApi(cookie);
+    const api2 = makeApi(cookie);
     try {
-      const result = await api.orgMembers.invite(email);
+      const result = await api2.orgMembers.invite(email);
       const params = new URLSearchParams({
         flashType: "ok",
-        flash: `Einladung an ${email} verschickt.`,
+        flash: t2("flashInvited", { email }),
         invited_email: email,
       });
       if (result.magic_link) params.set("magic_link", result.magic_link);
@@ -73,16 +74,17 @@ export default async function TeamPage({
 
   async function removeMember(formData: FormData) {
     "use server";
+    const t2 = await getTranslations("team");
     const id = String(formData.get("id") ?? "");
     if (!id) return;
     const cookie = await requestCookie();
-    const api = makeApi(cookie);
+    const api2 = makeApi(cookie);
     try {
-      await api.orgMembers.remove(id);
+      await api2.orgMembers.remove(id);
       revalidatePath("/campaigns/team");
       redirect(
         "/campaigns/team?flashType=ok&flash=" +
-          encodeURIComponent("Mitglied entfernt."),
+          encodeURIComponent(t2("flashRemoved")),
       );
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : (e as Error).message;
@@ -95,68 +97,101 @@ export default async function TeamPage({
   const activeCount = members.filter((m) => m.accepted_at).length;
   const pendingCount = members.length - activeCount;
 
+  // Owner row rendered separately at the top of the table.
+  // We re-use OrgMember shape with a sentinel id so the table key stays stable.
+  const ownerRow: OrgMember = {
+    id: "__owner__",
+    email: me.email,
+    accepted_at: me.last_login_at ?? new Date().toISOString(),
+    expires_at: "",
+    created_at: "",
+  };
+
   const columns: DataTableColumn<OrgMember>[] = [
     {
       key: "disc",
       header: "",
       headClassName: "w-[28px]",
-      cell: (m) => (
-        <StatusDisc state={m.accepted_at ? "done" : "pending"} size="sm" />
-      ),
+      cell: (m) =>
+        m.id === "__owner__" ? (
+          <Crown className="h-3.5 w-3.5 text-fg-muted" aria-hidden />
+        ) : (
+          <StatusDisc state={m.accepted_at ? "done" : "pending"} size="sm" />
+        ),
     },
     {
       key: "email",
-      header: "E-Mail",
+      header: t("colEmail"),
       mono: true,
-      cell: (m) => <span className="text-fg-muted">{m.email}</span>,
-    },
-    {
-      key: "status",
-      header: "Status",
       cell: (m) => (
-        <StatusBadge
-          status={m.accepted_at ? "ACTIVE" : "PENDING"}
-          label={m.accepted_at ? "Aktiv" : "Eingeladen"}
-        />
-      ),
-    },
-    {
-      key: "date",
-      header: "Datum",
-      numeric: true,
-      cell: (m) => (
-        <span className="text-fg-muted">
-          {m.accepted_at
-            ? new Date(m.accepted_at).toLocaleDateString("de-DE")
-            : `läuft ab ${new Date(m.expires_at).toLocaleDateString("de-DE")}`}
+        <span className={cn("text-fg-muted", m.id === "__owner__" && "font-medium text-fg")}>
+          {m.email}
         </span>
       ),
     },
     {
-      key: "action",
-      header: "Aktion",
+      key: "status",
+      header: t("colStatus"),
+      cell: (m) =>
+        m.id === "__owner__" ? (
+          <StatusBadge status="ACTIVE" label={t("statusOwner")} />
+        ) : (
+          <StatusBadge
+            status={m.accepted_at ? "ACTIVE" : "PENDING"}
+            label={m.accepted_at ? t("statusActive") : t("statusInvited")}
+          />
+        ),
+    },
+    {
+      key: "date",
+      header: t("colDate"),
       numeric: true,
-      cell: (m) => (
-        <form action={removeMember} className="flex justify-end">
-          <input type="hidden" name="id" value={m.id} />
-          <Button
-            type="submit"
-            variant="ghost"
-            size="sm"
-            className="text-xs text-fg-muted hover:bg-pain-soft hover:text-pain"
-          >
-            Entfernen
-          </Button>
-        </form>
-      ),
+      cell: (m) => {
+        if (m.id === "__owner__") return null;
+        return (
+          <span className="text-fg-muted">
+            {m.accepted_at
+              ? t("joinedAt", {
+                  date: new Date(m.accepted_at).toLocaleDateString(),
+                })
+              : t("expiresAt", {
+                  date: new Date(m.expires_at).toLocaleDateString(),
+                })}
+          </span>
+        );
+      },
+    },
+    {
+      key: "action",
+      header: t("colAction"),
+      numeric: true,
+      cell: (m) => {
+        if (m.id === "__owner__") return null;
+        return (
+          <form action={removeMember} className="flex justify-end">
+            <input type="hidden" name="id" value={m.id} />
+            <Button
+              type="submit"
+              variant="ghost"
+              size="sm"
+              className="text-xs text-fg-muted hover:bg-pain-soft hover:text-pain"
+            >
+              {t("btnRemove")}
+            </Button>
+          </form>
+        );
+      },
     },
   ];
+
+  // Owner always first, then invited members.
+  const allRows: OrgMember[] = [ownerRow, ...members];
 
   return (
     <>
       <PageHeader
-        title="Team"
-        subtitle="Workspace-Mitglieder. Eingeladene Kolleginnen können nur den Insights-Search nutzen, ohne Kampagnes zu verwalten."
+        title={t("title")}
+        subtitle={t("subtitle")}
       />
 
       {sp.flash && <Flash type={sp.flashType ?? "ok"} message={sp.flash} />}
@@ -164,14 +199,14 @@ export default async function TeamPage({
       {sp.magic_link && (
         <Card className="mb-6 gap-2 border-success/30 bg-success-soft p-5">
           <p className="text-sm font-semibold text-fg">
-            Einladungs-Link
+            {t("inviteLinkTitle")}
             {sp.invited_email && (
               <span className="ml-2 text-xs font-normal text-fg-muted">
-                für {sp.invited_email}
+                {t("inviteLinkFor", { email: sp.invited_email })}
               </span>
             )}
           </p>
-          <p className="text-xs text-fg-muted">7 Tage gültig, single-use.</p>
+          <p className="text-xs text-fg-muted">{t("inviteLinkValidity")}</p>
           <div className="mt-1 break-all rounded-ui border border-line bg-canvas p-3 font-mono text-xs">
             <a className="text-accent-strong hover:underline" href={sp.magic_link}>
               {sp.magic_link}
@@ -183,9 +218,9 @@ export default async function TeamPage({
       <StatBand
         className="mb-8"
         cells={[
-          { label: "Mitglieder", value: members.length },
-          { label: "Aktiv", value: activeCount },
-          { label: "Eingeladen", value: pendingCount },
+          { label: t("statMembers"), value: members.length + 1 /* +1 for owner */ },
+          { label: t("statActive"), value: activeCount + 1 },
+          { label: t("statInvited"), value: pendingCount },
         ]}
       />
 
@@ -199,28 +234,27 @@ export default async function TeamPage({
             </div>
           )}
 
-          {!listError && members.length === 0 ? (
-            <EmptyState
-              icon={Users}
-              title="Noch keine Mitglieder"
-              hint="Lade Kolleginnen ein — sie nutzen den Insights-Search."
-            />
-          ) : (
-            members.length > 0 && (
-              <>
-                <SectionHeading title="Mitglieder" count={members.length} />
-                <Card variant="ledger" className="overflow-hidden">
-                  <div className="w-full overflow-x-auto">
-                    <DataTable
-                      className="min-w-[560px]"
-                      columns={columns}
-                      rows={members}
-                      rowKey={(m) => m.id}
-                    />
-                  </div>
-                </Card>
-              </>
-            )
+          {!listError && (
+            <>
+              <SectionHeading title={t("sectionMembers")} count={allRows.length} />
+              <Card variant="ledger" className="overflow-hidden">
+                <div className="w-full overflow-x-auto">
+                  <DataTable
+                    className="min-w-[560px]"
+                    columns={columns}
+                    rows={allRows}
+                    rowKey={(m) => m.id}
+                  />
+                </div>
+              </Card>
+            </>
+          )}
+
+          {!listError && members.length === 0 && (
+            <p className="mt-4 text-sm text-fg-muted">
+              <Users className="mr-1.5 inline h-4 w-4 align-middle" />
+              {t("emptyHint")}
+            </p>
           )}
         </div>
 
@@ -229,11 +263,10 @@ export default async function TeamPage({
           <Card className="gap-4 p-5">
             <div className="space-y-1">
               <h2 className="text-[length:var(--text-subtitle)] font-semibold tracking-[-0.015em] text-fg">
-                Mitglied einladen
+                {t("inviteTitle")}
               </h2>
               <p className="text-xs leading-relaxed text-fg-muted">
-                Das Mitglied erhält einen Einladungs-Link per E-Mail und kann
-                danach nur den Insights-Search nutzen.
+                {t("inviteHint")}
               </p>
             </div>
             <form action={inviteMember} className="flex flex-col gap-3">
@@ -241,12 +274,12 @@ export default async function TeamPage({
                 name="email"
                 type="email"
                 required
-                placeholder="kollegin@firma.de"
+                placeholder={t("invitePlaceholder")}
                 className="text-sm"
               />
               <Button type="submit" size="sm" className="w-full">
                 <UserPlus className="h-4 w-4" />
-                Einladen
+                {t("inviteBtn")}
               </Button>
             </form>
           </Card>

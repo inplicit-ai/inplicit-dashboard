@@ -73,8 +73,7 @@
     "role": "Rolle",
     "campaign": "Kampagne",
     "interview": "Interview",
-    "record": "Eintrag",
-    "role": "Rolle"
+    "record": "Eintrag"
   },
   "insights": {
     "comingSoonToggle": "Erweiterte Gruppierung",
@@ -634,5 +633,36 @@
     "placeholder": "Dein Feedback …",
     "cancel": "Abbrechen",
     "submit": "Senden"
+  },
+  "team": {
+    "title": "Team",
+    "subtitle": "Workspace-Mitglieder. Eingeladene Kolleginnen können nur den Insights-Search nutzen, ohne Kampagnen zu verwalten.",
+    "statMembers": "Mitglieder",
+    "statActive": "Aktiv",
+    "statInvited": "Eingeladen",
+    "sectionMembers": "Mitglieder",
+    "colEmail": "E-Mail",
+    "colStatus": "Status",
+    "colDate": "Datum",
+    "colAction": "Aktion",
+    "statusActive": "Aktiv",
+    "statusInvited": "Eingeladen",
+    "statusOwner": "Inhaber",
+    "expiresAt": "läuft ab {date}",
+    "joinedAt": "beigetreten {date}",
+    "btnRemove": "Entfernen",
+    "emptyTitle": "Noch keine Mitglieder",
+    "emptyHint": "Lade Kolleginnen ein — sie nutzen den Insights-Search.",
+    "inviteTitle": "Mitglied einladen",
+    "inviteHint": "Das Mitglied erhält einen Einladungs-Link per E-Mail und kann danach nur den Insights-Search nutzen.",
+    "invitePlaceholder": "kollegin@firma.de",
+    "inviteBtn": "Einladen",
+    "inviteLinkTitle": "Einladungs-Link",
+    "inviteLinkFor": "für {email}",
+    "inviteLinkValidity": "7 Tage gültig, single-use.",
+    "errorList": "Mitgliederliste konnte nicht geladen werden.",
+    "errorEmail": "Bitte eine gültige E-Mail-Adresse eingeben.",
+    "flashInvited": "Einladung an {email} verschickt.",
+    "flashRemoved": "Mitglied entfernt."
   }
 }
