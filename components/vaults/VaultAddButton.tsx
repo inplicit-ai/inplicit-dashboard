@@ -49,7 +49,7 @@ const CSV_ACCEPTED = ".csv,.xlsx,.xls,.tsv";
 
 /**
  * "Hinzufügen" button (⌘K) — context-aware:
- * - folder "org"   → URL / Text / File upload (PDF extraction client-side)
+ * - folder "org"   → URL / Text / File upload (text extraction server-side)
  * - folder "roles" → "Rollen hinzufügen": CSV / Dokument / Text, mit Rollenauswahl
  */
 export function VaultAddButton({
@@ -125,8 +125,8 @@ export function VaultAddButton({
       if (effectiveMode === "file") {
         if (!file) { setError("Bitte eine Datei auswählen."); setSaving(false); return; }
 
-        // Upload directly to backend — server extracts text + converts to Markdown via Mistral.
-        // The original file is stored in Postgres so users can download it later.
+        // Upload directly to backend — the server stores the raw file in S3 and
+        // extracts text deterministically (context-engine ingest path).
         setExtracting(true);
         try {
           const form = new FormData();
