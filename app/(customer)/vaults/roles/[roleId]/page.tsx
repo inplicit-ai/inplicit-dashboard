@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft, FileStack, Plug, Sparkles } from "lucide-react";
+import { ArrowLeft, FileStack, MessageSquare, Plug, Sparkles } from "lucide-react";
 import {
   makeApi,
   type Vault,
   type VaultItem,
   type TwinRole,
+  type Campaign,
 } from "@/lib/api";
 import { requireUser, requestCookie } from "@/lib/auth";
 import { PageHeader } from "@/components/ui/page-header";
@@ -18,13 +19,6 @@ import { VaultItemRow } from "@/components/vaults/VaultItemRow";
 import { RoleContextManager } from "@/components/vaults/RoleContextManager";
 import { RoleCrumbRegistrar } from "@/components/vaults/RoleCrumbRegistrar";
 
-/**
- * Per-role context page (WHY-115 hub sub-page). Lets an org owner give a single
- * role tailored, anonymous interview context — uploaded texts/files now,
- * integrations later. The context lives in the role's ROLE-scoped vault and is
- * folded into the interviewer's system prompt at interview time, so the agent
- * works with role-specific knowledge without ever seeing per-person PII.
- */
 export default async function RoleContextPage({
   params,
 }: {
@@ -38,20 +32,22 @@ export default async function RoleContextPage({
   let role: TwinRole | undefined;
   let roleVault: Vault | null = null;
   let items: VaultItem[] = [];
+  let campaigns: Campaign[] = [];
   let error: unknown = null;
 
   try {
-    const [roles, vaults] = await Promise.all([
+    const [roles, vaults, camps] = await Promise.all([
       api.twin.listRoles(),
       api.vaults.list(),
+      api.campaigns.list().catch(() => [] as Campaign[]),
     ]);
     role = roles.find((r) => r.id === roleId);
-    // notFound() throws — call it AFTER the try so the catch can't swallow it.
     roleVault =
       vaults.find((v) => v.scope === "ROLE" && v.role_id === roleId) ?? null;
     if (role && roleVault) {
       items = await api.vaults.listItems(roleVault.id);
     }
+    campaigns = camps;
   } catch (e) {
     error = e;
   }
@@ -65,6 +61,10 @@ export default async function RoleContextPage({
     );
   }
   if (!role) notFound();
+
+  const textItems = items.filter(
+    (it) => it.kind === "TEXT" && (it.content || it.summary),
+  );
 
   return (
     <>
@@ -89,45 +89,88 @@ export default async function RoleContextPage({
 
       <div className="mb-6 flex items-center gap-2">
         {role.confirmed && (
-          <Badge variant="secondary" className="text-[10px]">
-            Bestätigt
-          </Badge>
+          <Badge variant="secondary" className="text-[10px]">Bestätigt</Badge>
         )}
         {role.has_validated && (
-          <Badge variant="secondary" className="text-[10px] text-success">
-            Validiert
-          </Badge>
+          <Badge variant="secondary" className="text-[10px] text-success">Validiert</Badge>
         )}
       </div>
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
-        {/* Context items */}
-        <div className="min-w-0">
-          <SectionHeading title="Rollen-Kontext" count={items.length || undefined} />
-          {items.length === 0 ? (
-            <Card className="p-8">
-              <EmptyState
-                icon={FileStack}
-                title="Noch kein Kontext"
-                hint={
-                  canWrite
-                    ? "Füge Texte oder Dateien hinzu — der Interview-Agent nutzt sie für diese Rolle."
-                    : "Für diese Rolle wurde noch kein Kontext hinterlegt."
-                }
-              />
-            </Card>
-          ) : (
-            <Card variant="ledger" className="overflow-hidden">
-              <ul className="divide-y divide-line-subtle">
-                {items.map((it) => (
-                  <VaultItemRow key={it.id} item={it} vaultId={roleVault!.id} />
-                ))}
-              </ul>
-            </Card>
-          )}
+        {/* Left: context items + campaigns */}
+        <div className="min-w-0 space-y-8">
+
+          {/* Role context items */}
+          <div>
+            <SectionHeading title="Rollen-Kontext" count={items.length || undefined} />
+            {items.length === 0 ? (
+              <Card className="p-8">
+                <EmptyState
+                  icon={FileStack}
+                  title="Noch kein Kontext"
+                  hint={
+                    canWrite
+                      ? "Füge Texte oder Dateien hinzu — der Interview-Agent nutzt sie für diese Rolle."
+                      : "Für diese Rolle wurde noch kein Kontext hinterlegt."
+                  }
+                />
+              </Card>
+            ) : (
+              <Card variant="ledger" className="overflow-hidden">
+                <ul className="divide-y divide-line-subtle">
+                  {items.map((it) => (
+                    <li key={it.id}>
+                      <VaultItemRow item={it} vaultId={roleVault!.id} />
+                      {/* Text preview for TEXT items */}
+                      {it.kind === "TEXT" && (it.content || it.summary) && (
+                        <div className="border-t border-line-subtle bg-surface-2 px-4 py-2.5">
+                          <p className="line-clamp-3 text-[12px] leading-relaxed text-fg-muted">
+                            {it.summary ?? it.content}
+                          </p>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            )}
+          </div>
+
+          {/* All org campaigns */}
+          <div>
+            <SectionHeading title="Kampagnen" count={campaigns.length || undefined} />
+            {campaigns.length === 0 ? (
+              <Card className="p-8">
+                <EmptyState
+                  icon={MessageSquare}
+                  title="Noch keine Kampagnen"
+                  hint="Diese Rolle hat noch an keiner Kampagne teilgenommen."
+                />
+              </Card>
+            ) : (
+              <Card variant="ledger" className="overflow-hidden">
+                <ul className="divide-y divide-line-subtle">
+                  {campaigns.map((c) => (
+                    <li key={c.id}>
+                      <a
+                        href={`/campaigns/${c.id}`}
+                        className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2"
+                      >
+                        <MessageSquare size={14} className="shrink-0 text-fg-faint" aria-hidden />
+                        <span className="min-w-0 flex-1 truncate text-[13px] text-fg">
+                          {c.name ?? c.org_name}
+                        </span>
+                        <span className="shrink-0 text-[11px] capitalize text-fg-subtle">{c.status}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            )}
+          </div>
 
           {/* Integrations — coming soon */}
-          <div className="mt-8">
+          <div>
             <SectionHeading title="Integrationen" />
             <Card className="p-5 opacity-80">
               <div className="flex items-center gap-3">
@@ -139,19 +182,16 @@ export default async function RoleContextPage({
                     Quellen pro Rolle verbinden
                   </p>
                   <p className="text-[length:var(--text-caption)] text-fg-muted">
-                    Confluence, Notion, Google Drive & mehr — automatisch als
-                    Rollen-Kontext.
+                    Confluence, Notion, Google Drive & mehr — automatisch als Rollen-Kontext.
                   </p>
                 </div>
-                <Badge variant="secondary" className="shrink-0 text-[10px]">
-                  Bald
-                </Badge>
+                <Badge variant="secondary" className="shrink-0 text-[10px]">Bald</Badge>
               </div>
             </Card>
           </div>
         </div>
 
-        {/* Add rail */}
+        {/* Right: add rail */}
         {canWrite && (
           <aside className="lg:sticky lg:top-6 lg:self-start">
             <div className="mb-3 space-y-1">
@@ -159,8 +199,8 @@ export default async function RoleContextPage({
                 Kontext hinzufügen
               </h2>
               <p className="text-xs leading-relaxed text-fg-muted">
-                Maßgeschneidertes Wissen für diese Rolle. Wird extrahiert,
-                indexiert und dem Interview-Agent als Rollen-Kontext mitgegeben.
+                Maßgeschneidertes Wissen für diese Rolle. Wird extrahiert, indexiert und dem
+                Interview-Agent als Rollen-Kontext mitgegeben.
               </p>
             </div>
             <RoleContextManager

@@ -213,6 +213,7 @@ export async function reindexFileItem(
 export async function uploadFileToVault(
   vaultId: string,
   file: File,
+  title?: string,
 ): Promise<VaultItem> {
   const { itemId, uploadUrl } = await jsonOrThrow<{
     itemId: string;
@@ -236,11 +237,21 @@ export async function uploadFileToVault(
   });
   if (!put.ok) throw new Error(`S3 ${put.status}`);
 
-  return jsonOrThrow<VaultItem>(
+  const item = await jsonOrThrow<VaultItem>(
     await fetch(dapi(`orgs/me/vaults/${vaultId}/items/${itemId}/finalize`), {
       method: "POST",
     }),
   );
+
+  if (title?.trim()) {
+    await fetch(dapi(`orgs/me/vaults/${vaultId}/items/${itemId}`), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: title.trim() }),
+    }).catch(() => undefined);
+  }
+
+  return item;
 }
 
 /** Add a TEXT or URL item via the existing items endpoint. */
