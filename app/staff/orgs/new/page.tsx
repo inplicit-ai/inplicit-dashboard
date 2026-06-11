@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, makeDurationOptions } from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
+import { makeDurationOptions } from "@/lib/duration-options";
 import { Textarea } from "@/components/ui/textarea";
 import { SectionHeading } from "@/components/ui/section-heading";
 

@@ -126,18 +126,9 @@ Select.displayName = "Select";
 
 /* ─── Shared option presets ──────────────────────────────────────────────── */
 
-/** Build duration options on the 5-minute grid (inclusive). */
-export function makeDurationOptions(
-  min = 5,
-  max = 60,
-  step = 5,
-): SelectOption[] {
-  const out: SelectOption[] = [];
-  for (let m = min; m <= max; m += step) {
-    out.push({ value: String(m), label: `${m} min` });
-  }
-  return out;
-}
+import { makeDurationOptions } from "@/lib/duration-options";
+
+export { makeDurationOptions };
 
 /** 5, 10, 15 … 60 minutes. */
 export const DURATION_OPTIONS: SelectOption[] = makeDurationOptions();
