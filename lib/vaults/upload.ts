@@ -204,6 +204,21 @@ export async function reindexFileItem(
 }
 
 /**
+ * Retry indexing for any item kind (TEXT/URL/FILE) — re-embeds whatever text
+ * the item holds. The retry surface for `embedded=false` rows.
+ */
+export async function reindexItem(
+  vaultId: string,
+  itemId: string,
+): Promise<VaultItem> {
+  const res = await fetch(
+    dapi(`orgs/me/vaults/${vaultId}/items/${itemId}/reindex`),
+    { method: "POST" },
+  );
+  return jsonOrThrow<VaultItem>(res);
+}
+
+/**
  * Upload a single FILE to a vault via the presigned flow (upload-url → PUT →
  * finalize), returning the finalized item. Unlike {@link useVaultUpload} this is
  * a one-shot async call with no progress state or polling — the index-status

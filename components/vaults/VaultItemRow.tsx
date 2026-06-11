@@ -45,6 +45,7 @@ export function VaultItemRow({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [title, setTitle] = useState(item.title ?? "");
   const [saving, setSaving] = useState(false);
+  const [reindexing, setReindexing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -99,7 +100,22 @@ export function VaultItemRow({
       router.refresh();
     } catch (e) {
       setError((e as Error).message);
+    } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleReindex() {
+    setReindexing(true);
+    setError(null);
+    try {
+      const { reindexItem } = await import("@/lib/vaults/upload");
+      await reindexItem(vaultId, item.id);
+      router.refresh();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setReindexing(false);
     }
   }
 
@@ -138,7 +154,15 @@ export function VaultItemRow({
       </div>
 
       {!item.embedded && (
-        <span className="mt-0.5 shrink-0 text-[10px] text-fg-faint">indexiert…</span>
+        <button
+          type="button"
+          onClick={() => void handleReindex()}
+          disabled={reindexing}
+          title="Noch nicht durchsuchbar — klicken zum erneuten Indexieren"
+          className="mt-0.5 shrink-0 rounded-full border border-warning/40 bg-warning-soft px-2 py-0.5 text-[10px] font-medium text-warning transition-colors hover:border-warning disabled:opacity-60"
+        >
+          {reindexing ? "indexiere…" : "nicht indexiert — erneut versuchen"}
+        </button>
       )}
 
       {/* 3-dot menu */}
