@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Link2, Plus, Upload, Users, X } from "lucide-react";
+import { FileText, Link2, Plus, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,7 +13,7 @@ import {
 import type { TwinRole } from "@/lib/api";
 
 type Mode = "url" | "text" | "file";
-type RoleMode = "csv" | "doc" | "text";
+type RoleMode = "doc" | "text";
 
 const MODE_OPTIONS: { id: Mode; icon: React.ReactNode; label: string }[] = [
   { id: "url",  icon: <Link2 size={14} aria-hidden />,   label: "URL" },
@@ -21,13 +21,11 @@ const MODE_OPTIONS: { id: Mode; icon: React.ReactNode; label: string }[] = [
   { id: "file", icon: <Upload size={14} aria-hidden />,   label: "Datei" },
 ];
 
+// NOTE: the "Personen (CSV)" tile was removed (Kontext audit): it promised an
+// employee import ("Spalten: Name, E-Mail, Abteilung") but only stored the CSV
+// as a plain text document. People are imported via the workforce directory;
+// re-add a CSV tile only once a real parse-into-employees flow exists.
 const ROLE_MODE_OPTIONS: { id: RoleMode; icon: React.ReactNode; label: string; hint: string }[] = [
-  {
-    id: "csv",
-    icon: <Users size={15} aria-hidden />,
-    label: "Personen (CSV)",
-    hint: "Mitarbeiterliste importieren",
-  },
   {
     id: "doc",
     icon: <Upload size={15} aria-hidden />,
@@ -44,7 +42,6 @@ const ROLE_MODE_OPTIONS: { id: RoleMode; icon: React.ReactNode; label: string; h
 
 // Supported file types and their labels
 const ACCEPTED = ".pdf,.txt,.md,.csv,.rtf,.json";
-const CSV_ACCEPTED = ".csv,.xlsx,.xls,.tsv";
 
 
 /**
@@ -77,6 +74,7 @@ export function VaultAddButton({
   const [file, setFile] = useState<File | null>(null);
   const [extracting, setExtracting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
@@ -104,6 +102,7 @@ export function VaultAddButton({
       setFile(null);
       setError(null);
       setExtracting(false);
+      setSuccess(false);
     }
   }, [open, roles]);
 
@@ -154,11 +153,14 @@ export function VaultAddButton({
             return;
           }
         }
-        const res = await fetch(`/dapi/orgs/me/vaults/${vaultId}/items`, {
+        // Roles mode must write to the ROLE vault, never silently fall back
+        // to the org vault; and URLs must be sent as URL items so the backend
+        // fetches + extracts the page (kind was hardcoded TEXT before).
+        const res = await fetch(`/dapi/orgs/me/vaults/${targetVaultId}/items`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            kind: "TEXT",
+            kind: effectiveMode === "url" ? "URL" : "TEXT",
             content: trimmed,
             title: title.trim() || undefined,
           }),
@@ -168,8 +170,11 @@ export function VaultAddButton({
           throw new Error(body.error ?? `HTTP ${res.status}`);
         }
       }
-      setOpen(false);
+      // Visible confirmation before the dialog closes — a silent close is
+      // indistinguishable from a failed upload.
+      setSuccess(true);
       router.refresh();
+      setTimeout(() => setOpen(false), 900);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -230,7 +235,7 @@ export function VaultAddButton({
               )}
 
               {/* Role content type tiles */}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {ROLE_MODE_OPTIONS.map((rm) => (
                   <button
                     key={rm.id}
@@ -361,6 +366,11 @@ export function VaultAddButton({
           {error && (
             <p className="text-[12px] text-danger" role="alert">{error}</p>
           )}
+          {success && (
+            <p className="text-[12px] font-medium text-success" role="status">
+              ✓ Hinzugefügt — wird indexiert.
+            </p>
+          )}
 
           <div className="flex justify-end gap-2">
             <Button variant="ghost" size="sm" onClick={() => setOpen(false)} disabled={busy}>
@@ -403,21 +413,6 @@ function RoleModeFields({
   titleRef: React.RefObject<HTMLInputElement | null>;
   fileRef: React.RefObject<HTMLInputElement | null>;
 }) {
-  if (roleMode === "csv") {
-    return (
-      <FileDropzone
-        file={file}
-        title={title}
-        accept={CSV_ACCEPTED}
-        hint="CSV, Excel — Spalten: Name, E-Mail, Abteilung"
-        onFile={onFile}
-        onTitleChange={onTitleChange}
-        onClear={() => onFile(null)}
-        titleRef={titleRef}
-        fileRef={fileRef}
-      />
-    );
-  }
   if (roleMode === "doc") {
     return (
       <FileDropzone

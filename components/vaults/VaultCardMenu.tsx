@@ -85,6 +85,7 @@ export function VaultCardMenu({
       router.refresh();
     } catch (e) {
       setError((e as Error).message);
+    } finally {
       setSaving(false);
     }
   }
