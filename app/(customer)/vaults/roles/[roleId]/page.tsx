@@ -137,12 +137,17 @@ export default async function RoleContextPage({
           </div>
 
           {/* All org campaigns */}
-          {campaigns.length > 0 && (
-            <div>
-              <SectionHeading
-                title="Kampagnen"
-                count={campaigns.length}
-              />
+          <div>
+            <SectionHeading title="Kampagnen" count={campaigns.length || undefined} />
+            {campaigns.length === 0 ? (
+              <Card className="p-8">
+                <EmptyState
+                  icon={MessageSquare}
+                  title="Noch keine Kampagnen"
+                  hint="Diese Rolle hat noch an keiner Kampagne teilgenommen."
+                />
+              </Card>
+            ) : (
               <Card variant="ledger" className="overflow-hidden">
                 <ul className="divide-y divide-line-subtle">
                   {campaigns.map((c) => (
@@ -161,8 +166,8 @@ export default async function RoleContextPage({
                   ))}
                 </ul>
               </Card>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Integrations — coming soon */}
           <div>
