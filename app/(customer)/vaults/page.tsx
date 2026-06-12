@@ -60,8 +60,8 @@ export default async function KontextVaultPage({
     error = e;
   }
 
-  // The org folder lists CONTEXT sections (the 6 seeded + any custom). ROLE /
-  // CAMPAIGN sections are surfaced through their own routes.
+  // The org folder lists CONTEXT sections (the 6 seeded + any custom, incl.
+  // converted ex-campaign sections, mig 049). ROLE sections have their own tab.
   const contextSections: VaultSection[] = (vault?.sections ?? [])
     .filter((s) => s.kind === "CONTEXT")
     .sort((a, b) => a.position - b.position);

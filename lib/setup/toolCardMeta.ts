@@ -55,7 +55,7 @@ const KNOWN_TOOLS = [
   "set_language",
   "set_goals",
   "refine_goal",
-  "set_background",
+  "select_context",
   "add_topic",
   "link_topics",
   "set_success_criteria",
@@ -152,6 +152,11 @@ export function summarize(card: SetupToolCallCard): string {
       return a.mode === "slots" ? "booking slots" : "instant link";
     case "set_objective":
       return String(a.text ?? "");
+    case "select_context": {
+      const ids = a.sectionIds;
+      if (ids === null || ids === undefined) return "alle Bereiche";
+      return Array.isArray(ids) ? `${ids.length} Bereiche` : "";
+    }
     case "request_input":
       return String(a.question ?? a.prompt ?? "");
     default:

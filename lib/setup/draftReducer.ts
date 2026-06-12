@@ -28,7 +28,7 @@ export const KNOWN_TOOLS = [
   "set_language",
   "set_goals",
   "refine_goal",
-  "set_background",
+  "select_context",
   "add_topic",
   "link_topics",
   "set_success_criteria",
@@ -140,10 +140,23 @@ export function applyPatch(
         : [...existing, { id, text }];
       return { ...draft, goals };
     }
-    case "set_background": {
-      const notes = arg<string>(args, "notes") ?? "";
-      const prev = draft.background ?? { notes: "", files: [] };
-      return { ...draft, background: { ...prev, notes } };
+    case "select_context": {
+      // Kontext selection (mig 049): which vault sections ground the interview.
+      // `sectionIds: null`/absent = the whole vault; an array = exactly those.
+      // Mirrors the server: UUID-shaped strings only, deduped, capped at 100.
+      const raw = args.sectionIds;
+      if (raw === null || raw === undefined) {
+        return { ...draft, contextSectionIds: null };
+      }
+      if (!Array.isArray(raw) || raw.length > 100) return draft;
+      const uuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const ids: string[] = [];
+      for (const v of raw) {
+        if (typeof v !== "string" || !uuid.test(v)) return draft;
+        if (!ids.includes(v)) ids.push(v);
+      }
+      return { ...draft, contextSectionIds: ids };
     }
     case "add_topic": {
       const title = arg<string>(args, "title");

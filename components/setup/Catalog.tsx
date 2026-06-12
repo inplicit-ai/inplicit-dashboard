@@ -15,6 +15,7 @@ import { PeopleSection } from "./PeopleSection";
 import { ScheduleSection } from "./ScheduleSection";
 import { EmailTemplateSection } from "./EmailTemplateSection";
 import { RoleContextUpload } from "./RoleContextUpload";
+import { ContextSelect } from "./ContextSelect";
 
 /**
  * The catalog (right pane) — a stack of clean white section cards (claude.ai).
@@ -178,14 +179,18 @@ export function Catalog({
         )}
       </SectionCard>
 
-      {/* ── Company context — sourced from the org's single Kontext vault ── */}
-      {/* The org now has ONE Kontext vault; its CONTEXT sections are the company
-          context for every campaign automatically (no per-campaign picker). The
-          agent + interviewer read it directly — managed on the Kontext page. */}
-      <SectionCard title={t("context")}>
+      {/* ── Company context — SELECTED from the org's single Kontext vault ── */}
+      {/* All context lives in the Kontext vault (mig 049); a campaign never owns
+          context of its own. This card selects which vault sections ground the
+          interviews (default: all). New content is uploaded on the Kontext page. */}
+      <SectionCard
+        title={t("context")}
+        touched={recentlyTouched?.has("select_context")}
+      >
         <p className="text-[length:var(--text-meta)] text-fg-subtle">
           {t("contextHint")}
         </p>
+        <ContextSelect draft={draft} onPatch={onPatch} />
         {/* Role-specific context — upload files attached to a twin role, landing
             in that role's ROLE section of the org vault. */}
         <RoleContextUpload />
