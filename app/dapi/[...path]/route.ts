@@ -42,13 +42,14 @@ async function forward(req: NextRequest, segments: string[]): Promise<Response> 
   try {
     const res = await fetch(target, init);
     const buf = await res.arrayBuffer();
-    return new Response(buf, {
-      status: res.status,
-      headers: {
-        "content-type":
-          res.headers.get("content-type") ?? "application/json",
-      },
-    });
+    const headers: Record<string, string> = {
+      "content-type": res.headers.get("content-type") ?? "application/json",
+    };
+    // Binary assets (org logo) declare their own caching; JSON endpoints
+    // never send the header, so this stays a pass-through, not a policy.
+    const cacheControl = res.headers.get("cache-control");
+    if (cacheControl) headers["cache-control"] = cacheControl;
+    return new Response(buf, { status: res.status, headers });
   } catch (e) {
     console.error(`[dapi] ${req.method} ${target} → ${(e as Error).message}`);
     return NextResponse.json(

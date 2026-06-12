@@ -8,6 +8,16 @@ interface OrgAvatarProps {
 }
 
 /**
+ * An uploaded logo's `logo_url` is the backend's own serving route
+ * (`/api/orgs/:id/logo?v=…`). The browser can't reach the backend origin
+ * directly — rewrite to the same-origin `/dapi` proxy, which attaches the
+ * session cookie. Pasted third-party URLs pass through untouched.
+ */
+function resolveLogoSrc(logoUrl: string): string {
+  return logoUrl.startsWith("/api/") ? `/dapi${logoUrl.slice(4)}` : logoUrl;
+}
+
+/**
  * Square avatar for an organization. Renders the uploaded `logo_url` when
  * present, falls back to the first initial of `name`. Used in the sidebar
  * and the staff org-detail edit form so both stay in sync.
@@ -34,7 +44,7 @@ export function OrgAvatar({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={logoUrl}
+          src={resolveLogoSrc(logoUrl)}
           alt={name ? `${name} Logo` : "Organisation Logo"}
           width={size}
           height={size}

@@ -7,6 +7,7 @@ import {
   type LaunchResult,
   type NewVaultItemInput,
   type NewTwinRoleInput,
+  type Organization,
   type SetupDraftState,
   type SetupLaunchResult,
   type SetupPatchInput,
@@ -79,8 +80,29 @@ async function clientRequest<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
+/** Multipart logo POST shared by the self-service and staff routes (WHY-126). */
+function uploadLogoRequest(path: string, file: File): Promise<Organization> {
+  const form = new FormData();
+  form.append("file", file, file.name);
+  return clientRequest<Organization>(path, { method: "POST", body: form });
+}
+
 /** Browser-only client. Mirrors the server `api` methods used by "use client" components. */
 export const clientApi = {
+  // ── Org logo (WHY-126): multipart through the server, like vault uploads ─
+  orgs: {
+    uploadLogo: (file: File) => uploadLogoRequest("/api/orgs/me/logo", file),
+    removeLogo: () =>
+      clientRequest<Organization>("/api/orgs/me/logo", { method: "DELETE" }),
+  },
+  staffOrgs: {
+    uploadLogo: (orgId: string, file: File) =>
+      uploadLogoRequest(`/api/staff/orgs/${orgId}/logo`, file),
+    removeLogo: (orgId: string) =>
+      clientRequest<Organization>(`/api/staff/orgs/${orgId}/logo`, {
+        method: "DELETE",
+      }),
+  },
   setup: {
     createSession: (body: CreateSetupSessionInput) =>
       clientRequest<SetupSessionCreated>("/api/orgs/me/setup-sessions", {
