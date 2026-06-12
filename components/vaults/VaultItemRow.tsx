@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { clientApi } from "@/lib/client-api";
-import type { VaultItem } from "@/lib/api";
+import { ApiError, type VaultItem } from "@/lib/api";
 
 /** Human-readable label for a VaultItem — never shows raw UUIDs. */
 function itemLabel(it: VaultItem): string {
@@ -95,7 +95,14 @@ export function VaultItemRow({
       setDeleteOpen(false);
       flashAndRefresh();
     } catch (e) {
-      setError((e as Error).message);
+      // 404 = already deleted (e.g. the first click succeeded behind a network
+      // blip). The desired end state is reached — close and refresh.
+      if (e instanceof ApiError && e.status === 404) {
+        setDeleteOpen(false);
+        flashAndRefresh();
+      } else {
+        setError((e as Error).message);
+      }
     } finally {
       setSaving(false);
     }

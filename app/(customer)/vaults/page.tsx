@@ -51,14 +51,26 @@ export default async function KontextVaultPage({
     ? (sp.folder as Folder)
     : "org";
 
-  // The vault always exists + always carries its sections (even when empty).
-  let vault: VaultView | null = null;
+  // One parallel fan-out instead of a sequential waterfall — every mutation
+  // re-renders this page via router.refresh(), so serial awaits multiply into
+  // user-visible lag on each click. Only the per-section item lists depend on
+  // the vault response; everything else is independent.
   let error: unknown = null;
-  try {
-    vault = await api.vault.get();
-  } catch (e) {
-    error = e;
-  }
+  const [vault, roles, employees, orgInterviews] = await Promise.all([
+    api.vault.get().catch((e: unknown): VaultView | null => {
+      error = e;
+      return null;
+    }),
+    // Always fetch roles — used both for count badge and Rollen view.
+    api.twin.listRoles().catch((): TwinRole[] => []),
+    // Employees + org interviews only feed the Rollen tab.
+    folder === "roles"
+      ? api.employees.list().catch((): Employee[] => [])
+      : Promise.resolve<Employee[]>([]),
+    folder === "roles"
+      ? api.org.interviews().catch((): OrgInterviewRow[] => [])
+      : Promise.resolve<OrgInterviewRow[]>([]),
+  ]);
 
   // The org folder lists CONTEXT sections (the 6 seeded + any custom). ROLE /
   // CAMPAIGN sections are surfaced through their own routes.
@@ -79,30 +91,6 @@ export default async function KontextVaultPage({
         }
       }),
     );
-  }
-
-  // Always fetch roles — used both for count badge and Rollen view.
-  let roles: TwinRole[] = [];
-  try {
-    roles = await api.twin.listRoles();
-  } catch {
-    roles = [];
-  }
-
-  // Fetch employees + org interviews for the Rollen tab.
-  let employees: Employee[] = [];
-  let orgInterviews: OrgInterviewRow[] = [];
-  if (folder === "roles") {
-    try {
-      employees = await api.employees.list();
-    } catch {
-      employees = [];
-    }
-    try {
-      orgInterviews = await api.org.interviews();
-    } catch {
-      orgInterviews = [];
-    }
   }
 
   // ── Tab labels + counts ─────────────────────────────────────────────────────
