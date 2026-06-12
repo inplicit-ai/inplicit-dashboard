@@ -25,6 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { ErrorState } from "@/components/ErrorState";
 import { OrgAvatar } from "@/components/OrgAvatar";
+import { StaffOrgLogoButton } from "@/components/StaffOrgLogoButton";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -168,7 +169,7 @@ export default async function OrgDetailPage({
           <aside className="flex flex-col gap-6 lg:sticky lg:top-6 lg:self-start">
             <Card className="gap-5 p-6">
               <div className="flex items-start gap-3">
-                <OrgAvatar name={org.name} logoUrl={org.logo_url} size={44} />
+                <StaffOrgLogoButton orgId={org.id} orgName={org.name} currentLogoUrl={org.logo_url} size={44} />
                 <div className="min-w-0">
                   <h1 className="text-[length:var(--text-title)] font-semibold leading-tight tracking-[-0.015em] text-fg">
                     {org.name}
