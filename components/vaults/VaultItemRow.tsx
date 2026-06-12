@@ -11,7 +11,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { IndexStatusPill } from "@/components/vaults/IndexStatusPill";
 import { clientApi } from "@/lib/client-api";
 import type { VaultItem } from "@/lib/api";
 
@@ -47,6 +46,7 @@ export function VaultItemRow({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [title, setTitle] = useState(item.title ?? "");
   const [saving, setSaving] = useState(false);
+  const [reindexing, setReindexing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [flash, setFlash] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -101,6 +101,19 @@ export function VaultItemRow({
     }
   }
 
+  async function handleReindex() {
+    setReindexing(true);
+    setError(null);
+    try {
+      await clientApi.vault.items.reindex(sectionId, item.id);
+      router.refresh();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setReindexing(false);
+    }
+  }
+
   const label = itemLabel(item);
 
   return (
@@ -120,15 +133,17 @@ export function VaultItemRow({
         <span className="mt-0.5 inline-flex shrink-0 items-center gap-1 text-[10px] font-medium text-success">
           <Check size={11} aria-hidden /> gespeichert
         </span>
-      ) : (
-        <span className="mt-0.5 shrink-0">
-          <IndexStatusPill
-            embedded={item.embedded}
-            indexedLabel="durchsuchbar"
-            indexingLabel="wird indexiert"
-          />
-        </span>
-      )}
+      ) : !item.embedded ? (
+        <button
+          type="button"
+          onClick={() => void handleReindex()}
+          disabled={reindexing}
+          title="Noch nicht durchsuchbar — klicken zum erneuten Indexieren"
+          className="mt-0.5 shrink-0 rounded-full border border-warning/40 bg-warning-soft px-2 py-0.5 text-[10px] font-medium text-warning transition-colors hover:border-warning disabled:opacity-60"
+        >
+          {reindexing ? "indexiere…" : "nicht indexiert — erneut versuchen"}
+        </button>
+      ) : null}
 
       {/* 3-dot menu */}
       <div ref={menuRef} className="relative shrink-0">
