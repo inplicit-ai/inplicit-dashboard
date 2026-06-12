@@ -251,30 +251,34 @@ export default async function DirectoryPage({
         </div>
       )}
 
-      {!listError && employees.length === 0 ? (
-        <EmptyState
-          icon={Users}
-          title="Noch niemand im Verzeichnis"
-          hint="Füge die Personen hinzu, die interviewt werden sollen, und weise ihnen eine Rolle zu."
-        />
-      ) : (
-        employees.length > 0 && (
-          <>
-            <SectionHeading title="Personen" count={employees.length} />
-            <Card variant="ledger" className="overflow-hidden">
-              <div className="w-full overflow-x-auto">
+      {/* Identical layout whether populated or empty — the empty state is a hint
+          row INSIDE the table body, never a separate empty screen. */}
+      {!listError && (
+        <>
+          <SectionHeading title="Personen" count={employees.length || undefined} />
+          <Card variant="ledger" className="overflow-hidden">
+            <div className="w-full overflow-x-auto">
+              {employees.length === 0 ? (
+                <div className="px-6 py-10">
+                  <EmptyState
+                    icon={Users}
+                    title="Noch niemand im Verzeichnis"
+                    hint="Füge die Personen hinzu, die interviewt werden sollen, und weise ihnen eine Rolle zu."
+                  />
+                </div>
+              ) : (
                 <DataTable
                   className="min-w-[680px]"
                   columns={columns}
                   rows={employees}
                   rowKey={(e) => e.id}
                 />
-              </div>
-            </Card>
+              )}
+            </div>
+          </Card>
 
-            <DeptGroups employees={employees} />
-          </>
-        )
+          {employees.length > 0 && <DeptGroups employees={employees} />}
+        </>
       )}
     </>
   );

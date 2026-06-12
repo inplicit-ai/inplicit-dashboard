@@ -1,21 +1,11 @@
-import { Fragment } from "react";
 import { getTranslations } from "next-intl/server";
-import {
-  Building2,
-  CheckCircle2,
-  FileText,
-  GitBranch,
-  LayoutGrid,
-  Search,
-  TrendingUp,
-  TriangleAlert,
-  Users,
-} from "lucide-react";
+import { CheckCircle2, Search, TriangleAlert } from "lucide-react";
 
 import {
   makeApi,
-  type Vault,
   type VaultItem,
+  type VaultSection,
+  type VaultView,
   type TwinRole,
   type Employee,
   type OrgInterviewRow,
@@ -24,17 +14,13 @@ import { requireUser, requestCookie } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ErrorState";
 import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { VaultFolderBreadcrumb } from "@/components/vaults/VaultFolderBreadcrumb";
 import { VaultAddButton } from "@/components/vaults/VaultAddButton";
-import { VaultItemRow } from "@/components/vaults/VaultItemRow";
 import { VaultIntegrationsTab } from "@/components/vaults/VaultIntegrationsTab";
 import { VaultRolesTab } from "@/components/vaults/VaultRolesTab";
-import { VaultCardMenu } from "@/components/vaults/VaultCardMenu";
 import { VaultSearchDialog } from "@/components/vaults/VaultSearchDialog";
-import { VaultOrgSuggestions } from "@/components/vaults/VaultOrgSuggestions";
+import { VaultSectionGrid } from "@/components/vaults/VaultOrgSuggestions";
 import { cn } from "@/lib/utils";
 
 type Folder = "org" | "roles" | "integrations";
@@ -42,12 +28,13 @@ const FOLDERS: Folder[] = ["org", "roles", "integrations"];
 
 interface SearchParams {
   folder?: string;
-  vault?: string;
   flash?: string;
   flashType?: "ok" | "err";
 }
 
-// WHY-115: Kontext-Vault hub. Single tabbed page — tabs at TOP.
+// WHY-115: Kontext-Vault hub. ONE vault per org + typed sections. Single tabbed
+// page — tabs at TOP. The hub renders an identical layout for a brand-new org
+// (the 6 seeded CONTEXT sections, each empty) and a fully loaded one.
 export default async function KontextVaultPage({
   searchParams,
 }: {
@@ -56,7 +43,6 @@ export default async function KontextVaultPage({
   const { me } = await requireUser();
   const sp = await searchParams;
   const t = await getTranslations("vaultHub");
-  const tv = await getTranslations("vaults");
   const api = makeApi(await requestCookie());
   const canWrite = me.role === "ORG_OWNER";
 
@@ -65,31 +51,35 @@ export default async function KontextVaultPage({
     ? (sp.folder as Folder)
     : "org";
 
-  let vaults: Vault[] = [];
+  // The vault always exists + always carries its sections (even when empty).
+  let vault: VaultView | null = null;
   let error: unknown = null;
   try {
-    vaults = await api.vaults.list();
+    vault = await api.vault.get();
   } catch (e) {
     error = e;
   }
 
-  const orgVaults = vaults.filter((v) => (v.scope ?? "ORG") === "ORG");
-  const roleVaultsMap: Record<string, string> = Object.fromEntries(
-    vaults
-      .filter((v) => v.scope === "ROLE" && v.role_id)
-      .map((v) => [v.role_id!, v.id]),
-  );
-  const activeId = sp.vault ?? orgVaults[0]?.id ?? null;
+  // The org folder lists CONTEXT sections (the 6 seeded + any custom). ROLE /
+  // CAMPAIGN sections are surfaced through their own routes.
+  const contextSections: VaultSection[] = (vault?.sections ?? [])
+    .filter((s) => s.kind === "CONTEXT")
+    .sort((a, b) => a.position - b.position);
 
-  let items: VaultItem[] = [];
-  if (activeId && folder === "org") {
-    try {
-      items = await api.vaults.listItems(activeId);
-    } catch {
-      items = [];
-    }
+  // Fetch a few top items per CONTEXT section for the card previews. Only when
+  // the org folder is active (the roles/integrations tabs don't need them).
+  const itemsBySection: Record<string, VaultItem[]> = {};
+  if (folder === "org") {
+    await Promise.all(
+      contextSections.map(async (section) => {
+        try {
+          itemsBySection[section.id] = await api.vault.items.list(section.id);
+        } catch {
+          itemsBySection[section.id] = [];
+        }
+      }),
+    );
   }
-  const docItems = items.filter((it) => it.kind !== "FILE");
 
   // Always fetch roles — used both for count badge and Rollen view.
   let roles: TwinRole[] = [];
@@ -115,12 +105,9 @@ export default async function KontextVaultPage({
     }
   }
 
-  // All vaults for cross-vault search (org + role vaults).
-  const allSearchableVaults = vaults.map((v) => ({ id: v.id, name: v.name }));
-
   // ── Tab labels + counts ─────────────────────────────────────────────────────
   const tabs: { id: Folder; label: string; count?: number; comingSoon?: boolean }[] = [
-    { id: "org",          label: t("orgTitle"),           count: orgVaults.length },
+    { id: "org",          label: t("orgTitle"),           count: contextSections.length },
     { id: "roles",        label: t("rolesTitle"),         count: roles.length },
     { id: "integrations", label: t("integrationsTitle") },
   ];
@@ -137,9 +124,8 @@ export default async function KontextVaultPage({
         subtitle={t("subtitle")}
         actions={
           <div className="flex items-center gap-2">
-            {/* Kontext durchsuchen — inline vault search */}
+            {/* Kontext durchsuchen — org-wide vault search */}
             <VaultSearchDialog
-              vaults={allSearchableVaults}
               trigger={
                 <Button variant="outline" size="sm" className="h-[36px] gap-1.5">
                   <Search size={14} aria-hidden />
@@ -147,15 +133,8 @@ export default async function KontextVaultPage({
                 </Button>
               }
             />
-            {/* Kontext hinzufügen (⌘K) */}
-            {activeId && folder !== "integrations" && (
-              <VaultAddButton
-                vaultId={activeId}
-                folder={folder}
-                roles={roles}
-                roleVaults={roleVaultsMap}
-              />
-            )}
+            {/* Bereich hinzufügen (⌘K) — ALWAYS visible (org folder, owners). */}
+            {canWrite && folder === "org" && <VaultAddButton />}
           </div>
         }
       />
@@ -216,196 +195,18 @@ export default async function KontextVaultPage({
         />
       )}
 
-      {folder === "integrations" && (
-        <VaultIntegrationsTab vaultId={activeId} />
-      )}
+      {folder === "integrations" && <VaultIntegrationsTab />}
 
       {folder === "org" && (
-        <OrgView
-          orgVaults={orgVaults}
-          activeId={activeId}
-          docItems={docItems}
+        <VaultSectionGrid
+          sections={contextSections}
+          itemsBySection={itemsBySection}
           canWrite={canWrite}
-          tv={tv}
         />
       )}
     </>
   );
 }
-
-// ── Org vault grid ────────────────────────────────────────────────────────────
-async function OrgView({
-  orgVaults,
-  activeId,
-  docItems,
-  canWrite,
-  tv,
-}: {
-  orgVaults: Vault[];
-  activeId: string | null;
-  docItems: VaultItem[];
-  canWrite: boolean;
-  tv: Awaited<ReturnType<typeof getTranslations<"vaults">>>;
-}) {
-  if (orgVaults.length === 0) {
-    return (
-      <Card className="p-8">
-        <EmptyState
-          icon={Building2}
-          title={tv("title")}
-          hint={tv("empty")}
-        />
-      </Card>
-    );
-  }
-
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {orgVaults.map((v) => {
-        const vaultItems = v.id === activeId ? docItems : [];
-        return (
-          <Fragment key={v.id}>
-            <Card className="flex flex-col gap-3 p-5">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-semibold text-fg">{v.name}</p>
-                  {v.description && (
-                    <p className="mt-0.5 text-[length:var(--text-caption)] text-fg-muted">
-                      {v.description}
-                    </p>
-                  )}
-                </div>
-                {canWrite && (
-                  <VaultCardMenu
-                    vaultId={v.id}
-                    vaultName={v.name}
-                    vaultDescription={v.description}
-                  />
-                )}
-              </div>
-
-              {/* Item list with 3-dot menus + summary */}
-              {vaultItems.length > 0 && (
-                <ul className="divide-y divide-line-subtle rounded-ui border border-line">
-                  {vaultItems.slice(0, 5).map((it) => (
-                    <VaultItemRow
-                      key={it.id}
-                      item={it}
-                      vaultId={v.id}
-                    />
-                  ))}
-                  {vaultItems.length > 5 && (
-                    <li className="px-3 py-2 text-[length:var(--text-caption)] text-fg-muted">
-                      + {vaultItems.length - 5} weitere
-                    </li>
-                  )}
-                </ul>
-              )}
-
-              <Button asChild variant="ghost" size="sm" className="self-start text-fg-muted">
-                <a href={`/vaults?folder=org&vault=${v.id}`}>
-                  {vaultItems.length === 0 ? "Einträge ansehen" : tv("entriesCount", { count: vaultItems.length })}
-                </a>
-              </Button>
-            </Card>
-
-            {/* Suggestion cards as separate grid cells alongside the vault card */}
-            <VaultOrgSuggestions existingItems={vaultItems} vaultId={v.id} />
-          </Fragment>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── Vault suggestion cards ────────────────────────────────────────────────────
-
-const ORG_SUGGESTIONS: {
-  icon: React.ReactNode;
-  label: string;
-  hint: string;
-  /** If the vault already has an item whose title includes one of these keywords, hide this suggestion. */
-  keywords?: string[];
-}[] = [
-  {
-    icon: <Users size={14} aria-hidden />,
-    label: "Organigramm",
-    hint: "Struktur & Hierarchie",
-    keywords: ["organigramm", "struktur", "hierarchie"],
-  },
-  {
-    icon: <TrendingUp size={14} aria-hidden />,
-    label: "Finanzberichte",
-    hint: "Umsatz, Budget, Prognosen",
-    keywords: ["finanz", "budget", "umsatz", "prognose"],
-  },
-  {
-    icon: <GitBranch size={14} aria-hidden />,
-    label: "Prozesse & Flowcharts",
-    hint: "Abläufe & Workflows",
-    keywords: ["prozess", "workflow", "ablauf", "flowchart"],
-  },
-  {
-    icon: <LayoutGrid size={14} aria-hidden />,
-    label: "Produktstrategie",
-    hint: "Vision, Roadmap, OKRs",
-    keywords: ["strategie", "roadmap", "okr", "vision"],
-  },
-  {
-    icon: <FileText size={14} aria-hidden />,
-    label: "Unternehmensrichtlinien",
-    hint: "Policies, Handbücher",
-    keywords: ["richtlinie", "policy", "handbuch", "compliance"],
-  },
-];
-
-function VaultSuggestions({
-  existingItems,
-  vaultId,
-}: {
-  existingItems: VaultItem[];
-  vaultId: string;
-}) {
-  const existingTitles = existingItems
-    .map((it) => (it.title ?? "").toLowerCase())
-    .join(" ");
-
-  const visible = ORG_SUGGESTIONS.filter((s) => {
-    if (!s.keywords) return true;
-    return !s.keywords.some((kw) => existingTitles.includes(kw));
-  }).slice(0, 4);
-
-  if (visible.length === 0) return null;
-
-  return (
-    <div className="space-y-1.5">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-fg-faint">
-        Vorschläge
-      </p>
-      <ul className="space-y-1">
-        {visible.map((s) => (
-          <li key={s.label}>
-            <a
-              href={`/vaults?folder=org&vault=${vaultId}`}
-              className="flex items-center gap-2.5 rounded-ui px-2.5 py-2 text-fg-faint transition-colors hover:bg-surface-2 hover:text-fg-muted"
-            >
-              <span className="shrink-0">{s.icon}</span>
-              <span className="text-[12px]">{s.label}</span>
-              <span className="ml-auto text-[11px] text-fg-faint">{s.hint}</span>
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-void formatBytes; // used by UploadsView (retained for future use)
 
 function Flash({ type, message }: { type: "ok" | "err"; message: string }) {
   const Icon = type === "ok" ? CheckCircle2 : TriangleAlert;

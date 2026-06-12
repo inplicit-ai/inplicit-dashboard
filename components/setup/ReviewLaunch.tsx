@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { type CampaignDraft, type Vault, type SetupToolCall } from "@/lib/api";
+import { type CampaignDraft, type SetupToolCall } from "@/lib/api";
 import { clientApi } from "@/lib/client-api";
 import { applyPatch, validateForLaunch } from "@/lib/setup/draftReducer";
 import { Catalog } from "./Catalog";
@@ -41,13 +41,11 @@ export function ReviewLaunch({
   draft: initialDraft,
   initialRevision,
   orgName,
-  vaults = [],
 }: {
   draftId: string;
   draft: CampaignDraft;
   initialRevision?: number;
   orgName?: string;
-  vaults?: Vault[];
 }) {
   const t = useTranslations("setup.review");
   const router = useRouter();
@@ -145,7 +143,6 @@ export function ReviewLaunch({
             draft={draft}
             onPatch={onPatch}
             orgName={orgName}
-            vaults={vaults}
             peopleAnchorId={PEOPLE_ANCHOR}
           />
         </motion.div>

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { makeApi, type Vault } from "@/lib/api";
+import { makeApi } from "@/lib/api";
 import { requestCookie } from "@/lib/auth";
 import { ReviewLaunch } from "@/components/setup/ReviewLaunch";
 
@@ -19,21 +19,14 @@ export default async function ReviewPage({
     notFound();
   }
 
-  // Fetch vaults so the review screen can show the selected context vault by name.
-  let vaults: Vault[] = [];
-  try {
-    vaults = await api.vaults.list();
-  } catch {
-    vaults = [];
-  }
-
+  // Company context is sourced from the org's single Kontext vault — no
+  // per-campaign vault selection to resolve for the review screen.
   return (
     <ReviewLaunch
       draftId={session.draft_id}
       draft={session.config}
       initialRevision={session.revision}
       orgName={session.org_name}
-      vaults={vaults}
     />
   );
 }

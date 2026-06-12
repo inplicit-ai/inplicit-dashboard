@@ -355,51 +355,71 @@ export function makeApi(cookie?: string) {
           method: "DELETE",
         }),
     },
-    // ── Context Vaults (O-8) ────────────────────────────────────────────
-    vaults: {
-      list: () => request<Vault[]>("/api/orgs/me/vaults"),
-      create: (body: NewVaultInput) =>
-        request<Vault>("/api/orgs/me/vaults", {
-          method: "POST",
-          body: JSON.stringify(body),
-        }),
-      remove: (id: string) =>
-        request<void>(`/api/orgs/me/vaults/${id}`, { method: "DELETE" }),
-      listItems: (id: string) =>
-        request<VaultItem[]>(`/api/orgs/me/vaults/${id}/items`),
-      addItem: (id: string, body: NewVaultItemInput) =>
-        request<VaultItem>(`/api/orgs/me/vaults/${id}/items`, {
-          method: "POST",
-          body: JSON.stringify(body),
-        }),
-      // F1 — presigned upload flow (2-step): request a presigned S3 PUT URL,
-      // upload bytes directly, then finalize so the server extracts text + runs
-      // ingestion and returns the embeddable ItemView.
-      uploadUrl: (id: string, body: VaultUploadUrlInput) =>
-        request<VaultUploadUrl>(`/api/orgs/me/vaults/${id}/items/upload-url`, {
-          method: "POST",
-          body: JSON.stringify(body),
-        }),
-      finalize: (id: string, itemId: string) =>
-        request<VaultItem>(
-          `/api/orgs/me/vaults/${id}/items/${itemId}/finalize`,
-          { method: "POST" },
-        ),
-      getItem: (id: string, itemId: string) =>
-        request<VaultItem>(`/api/orgs/me/vaults/${id}/items/${itemId}`),
-      removeItem: (id: string, itemId: string) =>
-        request<void>(`/api/orgs/me/vaults/${id}/items/${itemId}`, {
-          method: "DELETE",
-        }),
-      updateItem: (id: string, itemId: string, body: { title?: string }) =>
-        request<VaultItem>(`/api/orgs/me/vaults/${id}/items/${itemId}`, {
-          method: "PATCH",
-          body: JSON.stringify(body),
-        }),
-      search: (id: string, q: string) =>
-        request<VaultSearchHit[]>(
-          `/api/orgs/me/vaults/${id}/search?q=${encodeURIComponent(q)}`,
-        ),
+    // ── Kontext Vault (O-8) — ONE vault per org + typed sections ─────────
+    vault: {
+      /** The org's single vault + its sections (always seeded). */
+      get: () => request<VaultView>("/api/orgs/me/vault"),
+      sections: {
+        /** Create a custom CONTEXT section. */
+        create: (name: string) =>
+          request<VaultSection>("/api/orgs/me/vault/sections", {
+            method: "POST",
+            body: JSON.stringify({ name }),
+          }),
+        /** Rename a CONTEXT section (400 for ROLE/CAMPAIGN). */
+        rename: (sid: string, name: string) =>
+          request<VaultSection>(`/api/orgs/me/vault/sections/${sid}`, {
+            method: "PATCH",
+            body: JSON.stringify({ name }),
+          }),
+        /** Delete a CONTEXT section (400 for ROLE/CAMPAIGN). */
+        delete: (sid: string) =>
+          request<void>(`/api/orgs/me/vault/sections/${sid}`, {
+            method: "DELETE",
+          }),
+        /** Idempotent resolve-or-create of a role's ROLE section. */
+        resolveRole: (roleId: string) =>
+          request<VaultSection>("/api/orgs/me/vault/role-sections", {
+            method: "POST",
+            body: JSON.stringify({ role_id: roleId }),
+          }),
+      },
+      items: {
+        list: (sid: string) =>
+          request<VaultItem[]>(`/api/orgs/me/vault/sections/${sid}/items`),
+        add: (sid: string, body: NewVaultItemInput) =>
+          request<VaultItem>(`/api/orgs/me/vault/sections/${sid}/items`, {
+            method: "POST",
+            body: JSON.stringify(body),
+          }),
+        // NOTE: `uploadDirect` (multipart) lives ONLY on the browser client
+        // (`clientApi.vault.items.uploadDirect`) — the server `request` pins a
+        // JSON content type, which would corrupt the multipart boundary.
+        patch: (sid: string, itemId: string, body: { title: string }) =>
+          request<VaultItem>(
+            `/api/orgs/me/vault/sections/${sid}/items/${itemId}`,
+            { method: "PATCH", body: JSON.stringify(body) },
+          ),
+        delete: (sid: string, itemId: string) =>
+          request<void>(
+            `/api/orgs/me/vault/sections/${sid}/items/${itemId}`,
+            { method: "DELETE" },
+          ),
+        reindex: (sid: string, itemId: string) =>
+          request<VaultItem>(
+            `/api/orgs/me/vault/sections/${sid}/items/${itemId}/reindex`,
+            { method: "POST" },
+          ),
+      },
+      /** Semantic search; omit `section` for org-wide. */
+      search: (q: string, opts?: { section?: string; k?: number }) => {
+        const params = new URLSearchParams({ q });
+        if (opts?.section) params.set("section", opts.section);
+        if (opts?.k) params.set("k", String(opts.k));
+        return request<VaultSearchHit[]>(
+          `/api/orgs/me/vault/search?${params.toString()}`,
+        );
+      },
     },
     // ── Integrations registry (O-8) ─────────────────────────────────────
     integrations: {
@@ -774,11 +794,6 @@ export interface CampaignDraft {
   prompt?: string;
   goals?: Goal[];
   background?: { notes: string; files: FileRef[] };
-  /** WHY-116: the org Context Vault selected as the campaign's company-context
-   *  source. Replaces the free-text background block in the catalog UI. Persisted
-   *  server-side via the `set_context_vault` tool (`context_vault_id` column);
-   *  the launch path materialises it onto the campaign. */
-  contextVaultId?: string;
   topics?: TopicGraph;
   successCriteria?: SuccessCriteria;
   inductiveFlag?: boolean;
@@ -1077,63 +1092,61 @@ export interface SendOrgChatResponse {
   assistant_message: OrgChatMessage;
 }
 
-// ── Context Vault DTOs (mirror backend/src/api/vaults.rs) ──────────────────
-export interface Vault {
+// ── Kontext Vault DTOs (mirror backend/src/api/vault/{mod,sections,items}.rs)
+// ONE vault per org + typed sections. The vault always exists and is seeded
+// with 6 CONTEXT sections, even for a brand-new org.
+
+export type SectionKind = "CONTEXT" | "ROLE" | "CAMPAIGN";
+
+/** A typed section inside the org's single vault. */
+export interface VaultSection {
+  id: string;
+  kind: SectionKind;
+  name: string;
+  /** Set when `kind === "ROLE"` — the twin role this section is bound to. */
+  role_id: string | null;
+  /** Set when `kind === "CAMPAIGN"`. */
+  campaign_id: string | null;
+  position: number;
+  /** Only present on the hub GET (`VaultView.sections`), not on mutation responses. */
+  item_count?: number;
+}
+
+/** The org's single vault with its sections + per-section item counts. */
+export interface VaultView {
   id: string;
   name: string;
-  description?: string;
-  scope: "ORG" | "CAMPAIGN" | "ROLE";
-  campaign_id?: string;
-  /** Set when `scope === "ROLE"` — the twin role this vault is attached to. */
-  role_id?: string;
+  description: string | null;
+  vault_revision: number;
   created_at: string;
   updated_at: string;
+  sections: VaultSection[];
 }
-export interface NewVaultInput {
-  name: string;
-  description?: string;
-  scope?: "ORG" | "CAMPAIGN" | "ROLE";
-  campaign_id?: string;
-  /** Required when `scope === "ROLE"`. */
-  role_id?: string;
-}
+
 export interface VaultItem {
   id: string;
+  /** The section this item lives in. */
+  section_id: string;
   kind: "TEXT" | "URL" | "FILE";
-  title?: string;
-  content?: string;
-  mime?: string;
-  byte_size?: number;
+  title: string | null;
+  content: string | null;
+  mime: string | null;
+  byte_size: number | null;
   embedded: boolean;
-  /** Backend-generated 1-2 sentence summary (populated after indexing). */
-  summary?: string;
-  /** Vault scope this item belongs to (mirrors the parent vault). */
-  scope?: "ORG" | "CAMPAIGN" | "ROLE";
-  /** Set when the owning vault is role-scoped. */
-  role_id?: string;
   created_at: string;
 }
+
+/** Body for adding a TEXT or URL item (FILE goes through `uploadDirect`). */
 export interface NewVaultItemInput {
-  kind: "TEXT" | "URL" | "FILE";
+  kind: "TEXT" | "URL";
   title?: string;
-  content?: string;
-  s3_key?: string;
-  mime?: string;
-  byte_size?: number;
+  content: string;
 }
-// F1 — presigned upload contract (mirrors backend/src/api/vaults.rs).
-export interface VaultUploadUrlInput {
-  filename: string;
-  mime: string;
-  byteSize: number;
-}
-export interface VaultUploadUrl {
-  itemId: string;
-  uploadUrl: string;
-}
+
+/** One search snippet (mirrors `services::vault_rag::VaultSnippet`). */
 export interface VaultSearchHit {
   item_id: string;
-  title: string;
+  title: string | null;
   snippet: string;
   score: number;
 }
