@@ -6,29 +6,25 @@ import { Upload, FileText, Loader2 } from "lucide-react";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { IndexStatusPill } from "@/components/vaults/IndexStatusPill";
-import { useVaultUpload, type UploadTask } from "@/lib/vaults/upload";
 import { clientApi } from "@/lib/client-api";
 import { ApiError, BackendDownError } from "@/lib/api";
-import type { TwinRole, Vault, VaultItem } from "@/lib/api";
+import type { TwinRole, VaultItem, VaultSection } from "@/lib/api";
 import { PlatePlaceholder } from "./Catalog";
 
 /* ────────────────────────────────────────────────────────────────────────────
  * RoleContextUpload — upload ROLE-specific context during EDDA setup.
  *
- * The user picks an existing twin role; the component resolves (or lazily
- * creates) that role's ROLE-scoped vault, then uploads one or more files into
- * it via the SHARED presigned flow (`useVaultUpload` in lib/vaults/upload.ts —
- * the exact same plumbing the Kontext page uses). Uploaded items land in the
- * vault under the role and are listed back here.
+ * The user picks an existing twin role; the component resolves (find-or-create)
+ * that role's ROLE section in the org's single vault via
+ * `sections.resolveRole(roleId)`, then uploads one or more files into it via the
+ * multipart `upload-direct` endpoint. Uploaded items land in the section under
+ * the role and are listed back here.
  *
  * Endpoints, in order (all via the same-origin /dapi proxy):
- *   GET  /orgs/me/roles                          — role picker options
- *   GET  /orgs/me/roles/:rid/vaults              — existing ROLE vault(s)
- *   POST /orgs/me/vaults  {scope:"ROLE",role_id} — create on first upload
- *   POST /orgs/me/vaults/:id/items/upload-url    — presigned S3 PUT
- *   PUT  <presigned S3 url>                       — bytes
- *   POST /orgs/me/vaults/:id/items/:itemId/finalize — extract + index
- *   GET  /orgs/me/vaults/:id/items               — list uploaded items
+ *   GET  /orgs/me/roles                                  — role picker options
+ *   POST /orgs/me/vault/role-sections {role_id}          — resolve/create section
+ *   POST /orgs/me/vault/sections/:sid/items/upload-direct — bytes (multipart)
+ *   GET  /orgs/me/vault/sections/:sid/items               — list uploaded items
  * ────────────────────────────────────────────────────────────────────────── */
 
 /** Turn an unknown thrown value into a user-facing message. */
@@ -39,6 +35,18 @@ function messageFor(e: unknown, fallback: string): string {
   return fallback;
 }
 
+type UploadPhase = "uploading" | "ready" | "error";
+interface UploadTask {
+  id: string;
+  filename: string;
+  phase: UploadPhase;
+  error?: string;
+}
+
+function newTaskId(): string {
+  return `up-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export function RoleContextUpload() {
   const t = useTranslations("setup.catalog");
 
@@ -46,9 +54,10 @@ export function RoleContextUpload() {
   const [rolesLoading, setRolesLoading] = useState(true);
   const [roleId, setRoleId] = useState("");
 
-  // The resolved ROLE vault for the selected role (null until resolved/created).
-  const [vault, setVault] = useState<Vault | null>(null);
+  // The resolved ROLE section for the selected role (null until resolved).
+  const [section, setSection] = useState<VaultSection | null>(null);
   const [items, setItems] = useState<VaultItem[]>([]);
+  const [tasks, setTasks] = useState<UploadTask[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,28 +82,22 @@ export function RoleContextUpload() {
     };
   }, [t]);
 
-  // ── Refresh the item list for the active vault ───────────────────────────
-  const refreshItems = useCallback(async (vaultId: string) => {
+  // ── Refresh the item list for the active section ─────────────────────────
+  const refreshItems = useCallback(async (sectionId: string) => {
     try {
-      const list = await clientApi.vaults.listItems(vaultId);
+      const list = await clientApi.vault.items.list(sectionId);
       setItems(list);
     } catch {
       // A failed refresh is non-fatal — the upload itself may still be fine.
     }
   }, []);
 
-  // Shared presigned upload state machine, bound to the resolved vault id.
-  const { tasks, uploadMany, dismiss } = useVaultUpload(
-    vault?.id ?? null,
-    () => {
-      if (vault?.id) void refreshItems(vault.id);
-    },
-  );
-
-  // ── When the selected role changes, resolve its existing ROLE vault ──────
+  // ── When the selected role changes, resolve its ROLE section ─────────────
+  // `resolveRole` is idempotent (find-or-create), so selecting a role and
+  // listing its items reuses the existing section without duplicating it.
   useEffect(() => {
     if (!roleId) {
-      setVault(null);
+      setSection(null);
       setItems([]);
       setError(null);
       return;
@@ -102,15 +105,14 @@ export function RoleContextUpload() {
     let alive = true;
     setBusy(true);
     setError(null);
-    setVault(null);
+    setSection(null);
     setItems([]);
-    clientApi.vaults
-      .listForRole(roleId)
-      .then(async (list) => {
+    clientApi.vault.sections
+      .resolveRole(roleId)
+      .then(async (sec) => {
         if (!alive) return;
-        const existing = list[0] ?? null;
-        setVault(existing);
-        if (existing) await refreshItems(existing.id);
+        setSection(sec);
+        await refreshItems(sec.id);
       })
       .catch((e) => {
         if (alive) setError(messageFor(e, t("roleContextLoadError")));
@@ -123,38 +125,55 @@ export function RoleContextUpload() {
     };
   }, [roleId, refreshItems, t]);
 
-  // ── Ensure a ROLE vault exists, creating one on first upload ─────────────
-  const ensureVault = useCallback(async (): Promise<Vault> => {
-    if (vault) return vault;
-    const role = roles.find((r) => r.id === roleId);
-    const created = await clientApi.vaults.create({
-      scope: "ROLE",
-      role_id: roleId,
-      name: role ? t("roleContextVaultName", { role: role.name }) : "Role context",
-    });
-    setVault(created);
-    return created;
-  }, [vault, roles, roleId, t]);
-
-  // ── File picker → ensure vault → hand bytes to the shared upload hook ────
+  // ── File picker → upload each file into the role's section ───────────────
   const onFilesPicked = useCallback(
     async (files: FileList | null) => {
       if (!files || files.length === 0 || !roleId) return;
       setError(null);
+      let sid = section?.id ?? null;
       try {
-        await ensureVault();
-        // `useVaultUpload` reads the freshly-set vault id on its next render;
-        // defer the dispatch a tick so the bound id is current.
-        const picked = Array.from(files);
-        queueMicrotask(() => uploadMany(picked));
+        if (!sid) {
+          const sec = await clientApi.vault.sections.resolveRole(roleId);
+          setSection(sec);
+          sid = sec.id;
+        }
       } catch (e) {
         setError(messageFor(e, t("roleContextUploadError")));
-      } finally {
         if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
       }
+
+      const sectionId = sid;
+      for (const file of Array.from(files)) {
+        const taskId = newTaskId();
+        setTasks((prev) => [
+          ...prev,
+          { id: taskId, filename: file.name, phase: "uploading" },
+        ]);
+        try {
+          await clientApi.vault.items.uploadDirect(sectionId, file);
+          setTasks((prev) =>
+            prev.map((tk) => (tk.id === taskId ? { ...tk, phase: "ready" } : tk)),
+          );
+          await refreshItems(sectionId);
+        } catch (e) {
+          setTasks((prev) =>
+            prev.map((tk) =>
+              tk.id === taskId
+                ? { ...tk, phase: "error", error: messageFor(e, t("roleContextUploadError")) }
+                : tk,
+            ),
+          );
+        }
+      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
     },
-    [roleId, ensureVault, uploadMany, t],
+    [roleId, section, refreshItems, t],
   );
+
+  const dismissTask = useCallback((id: string) => {
+    setTasks((prev) => prev.filter((tk) => tk.id !== id));
+  }, []);
 
   const roleOptions = [
     { value: "", label: t("roleContextPickRole") },
@@ -219,16 +238,16 @@ export function RoleContextUpload() {
             </p>
           )}
 
-          {/* Active upload tasks (uploading → indexing → ready/error). */}
+          {/* Active upload tasks (uploading → ready/error). */}
           {tasks.length > 0 && (
             <ul className="flex flex-col gap-1.5">
               {tasks.map((task) => (
-                <UploadTaskRow key={task.id} task={task} onDismiss={dismiss} />
+                <UploadTaskRow key={task.id} task={task} onDismiss={dismissTask} />
               ))}
             </ul>
           )}
 
-          {/* Already-uploaded items in this role's vault. */}
+          {/* Already-uploaded items in this role's section. */}
           {roleId && !busy && items.length > 0 && (
             <ul className="flex flex-col gap-1.5">
               {items.map((item) => (
@@ -271,10 +290,8 @@ function UploadTaskRow({
 }) {
   const t = useTranslations("setup.catalog");
 
-  const phaseLabel: Record<UploadTask["phase"], string> = {
+  const phaseLabel: Record<UploadPhase, string> = {
     uploading: t("roleContextPhaseUploading"),
-    extracting: t("roleContextPhaseExtracting"),
-    indexing: t("roleContextPhaseIndexing"),
     ready: t("roleContextPhaseReady"),
     error: task.error ?? t("roleContextUploadError"),
   };

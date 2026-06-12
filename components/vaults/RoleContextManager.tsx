@@ -6,32 +6,31 @@ import { FileText, Link2, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { addVaultItem, uploadFileToVault } from "@/lib/vaults/upload";
+import { clientApi } from "@/lib/client-api";
 
 type Mode = "text" | "url" | "file";
 
 /**
- * Add context to a single role. Context lives in the role's ROLE-scoped vault
- * (one per role); the vault is created on demand on the first add so empty roles
- * don't accumulate empty vaults. After every change we `router.refresh()` so the
- * server-rendered item list (and the index-status pill) update.
+ * Add context to a single role. Context lives in the role's ROLE section of the
+ * org's single vault. The section is resolved (find-or-create) on the first add
+ * via `sections.resolveRole(roleId)` so empty roles don't accumulate empty
+ * sections. After every change we `router.refresh()` so the server-rendered
+ * item list (and the index-status pill) update.
  *
- * `vaultId` is the role's existing context vault, or `null` when it has none yet.
+ * `sectionId` is the role's existing ROLE section, or `null` when it has none yet.
  */
 export function RoleContextManager({
   roleId,
-  roleName,
-  vaultId: initialVaultId,
+  sectionId: initialSectionId,
 }: {
   roleId: string;
-  roleName: string;
-  vaultId: string | null;
+  sectionId: string | null;
 }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   // Survives across adds before the server refresh lands, so a second add in the
-  // same session reuses the just-created vault instead of creating another.
-  const vaultIdRef = useRef<string | null>(initialVaultId);
+  // same session reuses the just-resolved section instead of resolving again.
+  const sectionIdRef = useRef<string | null>(initialSectionId);
 
   const [mode, setMode] = useState<Mode>("text");
   const [title, setTitle] = useState("");
@@ -41,25 +40,12 @@ export function RoleContextManager({
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /** Resolve the role's vault, creating it on first use. */
-  async function ensureVault(): Promise<string> {
-    if (vaultIdRef.current) return vaultIdRef.current;
-    const res = await fetch("/dapi/orgs/me/vaults", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: `${roleName} – Kontext`,
-        scope: "ROLE",
-        role_id: roleId,
-      }),
-    });
-    if (!res.ok) {
-      const body = (await res.json().catch(() => ({}))) as { error?: string };
-      throw new Error(body.error ?? `HTTP ${res.status}`);
-    }
-    const vault = (await res.json()) as { id: string };
-    vaultIdRef.current = vault.id;
-    return vault.id;
+  /** Resolve the role's ROLE section, creating it on first use. Idempotent. */
+  async function ensureSection(): Promise<string> {
+    if (sectionIdRef.current) return sectionIdRef.current;
+    const section = await clientApi.vault.sections.resolveRole(roleId);
+    sectionIdRef.current = section.id;
+    return section.id;
   }
 
   async function addTextOrUrl() {
@@ -72,8 +58,8 @@ export function RoleContextManager({
     setBusy(true);
     setError(null);
     try {
-      const vid = await ensureVault();
-      await addVaultItem(vid, {
+      const sid = await ensureSection();
+      await clientApi.vault.items.add(sid, {
         kind: mode === "url" ? "URL" : "TEXT",
         title: title.trim() || undefined,
         content,
@@ -95,9 +81,9 @@ export function RoleContextManager({
     setBusy(true);
     setError(null);
     try {
-      const vid = await ensureVault();
+      const sid = await ensureSection();
       for (const file of list) {
-        await uploadFileToVault(vid, file);
+        await clientApi.vault.items.uploadDirect(sid, file);
       }
       router.refresh();
     } catch (e) {

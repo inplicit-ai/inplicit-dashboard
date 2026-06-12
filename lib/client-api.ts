@@ -5,7 +5,7 @@ import {
   BackendDownError,
   type CreateSetupSessionInput,
   type LaunchResult,
-  type NewVaultInput,
+  type NewVaultItemInput,
   type NewTwinRoleInput,
   type SetupDraftState,
   type SetupLaunchResult,
@@ -14,8 +14,10 @@ import {
   type SetupSessionCreated,
   type SetupSessionRef,
   type TwinRole,
-  type Vault,
   type VaultItem,
+  type VaultSearchHit,
+  type VaultSection,
+  type VaultView,
 } from "./api";
 
 /**
@@ -37,12 +39,17 @@ async function clientRequest<T>(path: string, init?: RequestInit): Promise<T> {
   // `/api/...` (backend route) → `/dapi/...` (same-origin proxy).
   const proxied = `/dapi${path.replace(/^\/api/, "")}`;
 
+  // A FormData body must NOT carry a manual Content-Type — the browser sets the
+  // multipart boundary itself. Only default JSON for non-FormData bodies.
+  const isFormData =
+    typeof FormData !== "undefined" && init?.body instanceof FormData;
+
   let res: Response;
   try {
     res = await fetch(proxied, {
       ...init,
       headers: {
-        "Content-Type": "application/json",
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
         ...(init?.headers as Record<string, string> | undefined),
       },
       cache: "no-store",
@@ -113,20 +120,75 @@ export const clientApi = {
         body: JSON.stringify(body),
       }),
   },
-  // ── Context Vaults (browser mirror of server `api.vaults.*`) ────────────
-  // Only the methods needed for the setup role-context upload are mirrored;
-  // the heavy presigned upload state machine lives in `lib/vaults/upload.ts`
-  // (shared with the Kontext page) and is NOT duplicated here.
-  vaults: {
-    list: () => clientRequest<Vault[]>("/api/orgs/me/vaults"),
-    create: (body: NewVaultInput) =>
-      clientRequest<Vault>("/api/orgs/me/vaults", {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
-    listForRole: (roleId: string) =>
-      clientRequest<Vault[]>(`/api/orgs/me/roles/${roleId}/vaults`),
-    listItems: (id: string) =>
-      clientRequest<VaultItem[]>(`/api/orgs/me/vaults/${id}/items`),
+  // ── Kontext Vault (browser mirror of server `api.vault.*`) ──────────────
+  // ONE vault per org + typed sections. The browser mirrors only what the
+  // client components need; the section-bound upload uses the multipart
+  // `upload-direct` endpoint (no presigned state machine anymore).
+  vault: {
+    get: () => clientRequest<VaultView>("/api/orgs/me/vault"),
+    sections: {
+      create: (name: string) =>
+        clientRequest<VaultSection>("/api/orgs/me/vault/sections", {
+          method: "POST",
+          body: JSON.stringify({ name }),
+        }),
+      rename: (sid: string, name: string) =>
+        clientRequest<VaultSection>(`/api/orgs/me/vault/sections/${sid}`, {
+          method: "PATCH",
+          body: JSON.stringify({ name }),
+        }),
+      delete: (sid: string) =>
+        clientRequest<void>(`/api/orgs/me/vault/sections/${sid}`, {
+          method: "DELETE",
+        }),
+      /** Idempotent resolve-or-create of a role's ROLE section. */
+      resolveRole: (roleId: string) =>
+        clientRequest<VaultSection>("/api/orgs/me/vault/role-sections", {
+          method: "POST",
+          body: JSON.stringify({ role_id: roleId }),
+        }),
+    },
+    items: {
+      list: (sid: string) =>
+        clientRequest<VaultItem[]>(`/api/orgs/me/vault/sections/${sid}/items`),
+      add: (sid: string, body: NewVaultItemInput) =>
+        clientRequest<VaultItem>(`/api/orgs/me/vault/sections/${sid}/items`, {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      /** Multipart upload through the same-origin proxy (field name `file`). */
+      uploadDirect: (sid: string, file: File, title?: string) => {
+        const form = new FormData();
+        form.append("file", file, file.name);
+        if (title?.trim()) form.append("title", title.trim());
+        return clientRequest<VaultItem>(
+          `/api/orgs/me/vault/sections/${sid}/items/upload-direct`,
+          { method: "POST", body: form },
+        );
+      },
+      patch: (sid: string, itemId: string, body: { title: string }) =>
+        clientRequest<VaultItem>(
+          `/api/orgs/me/vault/sections/${sid}/items/${itemId}`,
+          { method: "PATCH", body: JSON.stringify(body) },
+        ),
+      delete: (sid: string, itemId: string) =>
+        clientRequest<void>(
+          `/api/orgs/me/vault/sections/${sid}/items/${itemId}`,
+          { method: "DELETE" },
+        ),
+      reindex: (sid: string, itemId: string) =>
+        clientRequest<VaultItem>(
+          `/api/orgs/me/vault/sections/${sid}/items/${itemId}/reindex`,
+          { method: "POST" },
+        ),
+    },
+    search: (q: string, opts?: { section?: string; k?: number }) => {
+      const params = new URLSearchParams({ q });
+      if (opts?.section) params.set("section", opts.section);
+      if (opts?.k) params.set("k", String(opts.k));
+      return clientRequest<VaultSearchHit[]>(
+        `/api/orgs/me/vault/search?${params.toString()}`,
+      );
+    },
   },
 };

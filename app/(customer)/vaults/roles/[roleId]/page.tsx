@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, FileStack, MessageSquare, Plug, Sparkles } from "lucide-react";
 import {
   makeApi,
-  type Vault,
   type VaultItem,
+  type VaultSection,
   type TwinRole,
   type Campaign,
 } from "@/lib/api";
@@ -30,22 +30,25 @@ export default async function RoleContextPage({
   const canWrite = me.role === "ORG_OWNER";
 
   let role: TwinRole | undefined;
-  let roleVault: Vault | null = null;
+  let roleSection: VaultSection | null = null;
   let items: VaultItem[] = [];
   let campaigns: Campaign[] = [];
   let error: unknown = null;
 
   try {
-    const [roles, vaults, camps] = await Promise.all([
+    const [roles, vault, camps] = await Promise.all([
       api.twin.listRoles(),
-      api.vaults.list(),
+      api.vault.get(),
       api.campaigns.list().catch(() => [] as Campaign[]),
     ]);
     role = roles.find((r) => r.id === roleId);
-    roleVault =
-      vaults.find((v) => v.scope === "ROLE" && v.role_id === roleId) ?? null;
-    if (role && roleVault) {
-      items = await api.vaults.listItems(roleVault.id);
+    // The role's ROLE section is created lazily (on first add). Find it if it
+    // already exists; otherwise the add path resolves-or-creates it on demand.
+    roleSection =
+      vault.sections.find((s) => s.kind === "ROLE" && s.role_id === roleId) ??
+      null;
+    if (role && roleSection) {
+      items = await api.vault.items.list(roleSection.id);
     }
     campaigns = camps;
   } catch (e) {
@@ -61,10 +64,6 @@ export default async function RoleContextPage({
     );
   }
   if (!role) notFound();
-
-  const textItems = items.filter(
-    (it) => it.kind === "TEXT" && (it.content || it.summary),
-  );
 
   return (
     <>
@@ -120,12 +119,12 @@ export default async function RoleContextPage({
                 <ul className="divide-y divide-line-subtle">
                   {items.map((it) => (
                     <li key={it.id}>
-                      <VaultItemRow item={it} vaultId={roleVault!.id} />
+                      <VaultItemRow item={it} sectionId={roleSection!.id} />
                       {/* Text preview for TEXT items */}
-                      {it.kind === "TEXT" && (it.content || it.summary) && (
+                      {it.kind === "TEXT" && it.content && (
                         <div className="border-t border-line-subtle bg-surface-2 px-4 py-2.5">
                           <p className="line-clamp-3 text-[12px] leading-relaxed text-fg-muted">
-                            {it.summary ?? it.content}
+                            {it.content}
                           </p>
                         </div>
                       )}
@@ -205,8 +204,7 @@ export default async function RoleContextPage({
             </div>
             <RoleContextManager
               roleId={role.id}
-              roleName={role.name}
-              vaultId={roleVault?.id ?? null}
+              sectionId={roleSection?.id ?? null}
             />
           </aside>
         )}

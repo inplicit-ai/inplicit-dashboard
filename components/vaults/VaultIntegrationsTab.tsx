@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 type IntegrationStatus = "connected" | "disconnected" | "connecting" | "syncing";
 
-export function VaultIntegrationsTab({ vaultId }: { vaultId: string | null }) {
+export function VaultIntegrationsTab() {
   const [granolaStatus, setGranolaStatus] = useState<IntegrationStatus>("disconnected");
   const [lastSynced, setLastSynced] = useState<string | null>(null);
   const [syncResult, setSyncResult] = useState<{ synced: number } | null>(null);
@@ -48,12 +48,12 @@ export function VaultIntegrationsTab({ vaultId }: { vaultId: string | null }) {
   // One-click login: ask the backend for the Granola authorization URL (which it
   // builds after registering an OAuth client + PKCE), then send the browser there.
   async function handleConnect() {
-    if (!vaultId) return;
     setGranolaStatus("connecting");
     setError(null);
     try {
+      // The backend resolves the org's single vault itself — no vault_id param.
       const res = await fetch(
-        `/dapi/orgs/me/integrations/granola/connect?vault_id=${vaultId}`,
+        `/dapi/orgs/me/integrations/granola/connect`,
         { headers: { accept: "application/json" } },
       );
       // The response may not be JSON (e.g. an HTML 502/504 from the proxy if the
@@ -181,7 +181,7 @@ export function VaultIntegrationsTab({ vaultId }: { vaultId: string | null }) {
                 Verbinde…
               </Button>
             ) : (
-              <Button size="sm" onClick={() => void handleConnect()} disabled={!vaultId}>
+              <Button size="sm" onClick={() => void handleConnect()}>
                 Verbinden
               </Button>
             )}
@@ -191,7 +191,6 @@ export function VaultIntegrationsTab({ vaultId }: { vaultId: string | null }) {
 
       {/* Notion card */}
       <NotionCard
-        vaultId={vaultId}
         connected={notionConnected}
         lastSynced={notionLastSynced}
         onConnected={(syncedAt) => {
@@ -214,12 +213,10 @@ export function VaultIntegrationsTab({ vaultId }: { vaultId: string | null }) {
  * hourly sync pulls every page shared with the integration into this vault.
  */
 function NotionCard({
-  vaultId,
   connected,
   lastSynced,
   onConnected,
 }: {
-  vaultId: string | null;
   connected: boolean;
   lastSynced: string | null;
   onConnected: (syncedAt: string) => void;
@@ -231,16 +228,17 @@ function NotionCard({
   const [error, setError] = useState<string | null>(null);
 
   async function handleConnect() {
-    if (!vaultId || !token.trim()) return;
+    if (!token.trim()) return;
     setBusy("connecting");
     setError(null);
     try {
+      // The backend attaches the org's single vault — no vault_id in config.
       const res = await fetch("/dapi/orgs/me/integrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           provider: "notion",
-          config: { api_key: token.trim(), vault_id: vaultId },
+          config: { api_key: token.trim() },
         }),
       });
       const body = (await res.json().catch(() => ({}))) as { error?: string };
@@ -375,7 +373,7 @@ function NotionCard({
             <Button
               size="sm"
               onClick={() => void handleConnect()}
-              disabled={!vaultId || !token.trim() || busy !== null}
+              disabled={!token.trim() || busy !== null}
             >
               {busy === "connecting" || busy === "syncing" ? (
                 <>
@@ -387,7 +385,7 @@ function NotionCard({
               )}
             </Button>
           ) : (
-            <Button size="sm" onClick={() => setShowTokenInput(true)} disabled={!vaultId}>
+            <Button size="sm" onClick={() => setShowTokenInput(true)}>
               Verbinden
             </Button>
           )}

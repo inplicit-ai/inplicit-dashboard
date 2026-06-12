@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Check, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { IndexStatusPill } from "@/components/vaults/IndexStatusPill";
+import { clientApi } from "@/lib/client-api";
 import type { VaultItem } from "@/lib/api";
 
 /** Human-readable label for a VaultItem — never shows raw UUIDs. */
@@ -34,10 +36,10 @@ function itemLabel(it: VaultItem): string {
 
 export function VaultItemRow({
   item,
-  vaultId,
+  sectionId,
 }: {
   item: VaultItem;
-  vaultId: string;
+  sectionId: string;
 }) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -46,7 +48,7 @@ export function VaultItemRow({
   const [title, setTitle] = useState(item.title ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [flash, setFlash] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -60,26 +62,27 @@ export function VaultItemRow({
     return () => document.removeEventListener("mousedown", handler);
   }, [menuOpen]);
 
+  /** Brief success flash after a mutation, then refresh the server render. */
+  function flashAndRefresh() {
+    setFlash(true);
+    setTimeout(() => setFlash(false), 1500);
+    router.refresh();
+  }
+
   async function handleRename() {
     const trimmed = title.trim();
     if (!trimmed) return;
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/dapi/orgs/me/vaults/${vaultId}/items/${item.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: trimmed }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({})) as { error?: string };
-        throw new Error(body.error ?? `HTTP ${res.status}`);
-      }
+      await clientApi.vault.items.patch(sectionId, item.id, { title: trimmed });
       setRenameOpen(false);
-      router.refresh();
+      flashAndRefresh();
     } catch (e) {
       setError((e as Error).message);
     } finally {
+      // Always clear the busy flag — the original code leaked a stuck spinner
+      // on the SUCCESS path because it only reset on error.
       setSaving(false);
     }
   }
@@ -88,26 +91,17 @@ export function VaultItemRow({
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/dapi/orgs/me/vaults/${vaultId}/items/${item.id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok && res.status !== 204 && res.status !== 404) {
-        const body = await res.json().catch(() => ({})) as { error?: string };
-        throw new Error(body.error ?? `HTTP ${res.status}`);
-      }
+      await clientApi.vault.items.delete(sectionId, item.id);
       setDeleteOpen(false);
-      router.refresh();
+      flashAndRefresh();
     } catch (e) {
       setError((e as Error).message);
+    } finally {
       setSaving(false);
     }
   }
 
   const label = itemLabel(item);
-  const summary = item.summary;
-  const SUMMARY_CUTOFF = 100;
-  const summaryTruncated = summary && summary.length > SUMMARY_CUTOFF && !summaryExpanded;
-  const summaryText = summaryTruncated ? summary.slice(0, SUMMARY_CUTOFF) + "…" : summary;
 
   return (
     <li className="flex items-start gap-2.5 px-3 py-2.5">
@@ -120,25 +114,20 @@ export function VaultItemRow({
         {item.kind === "URL" && item.content && (
           <p className="truncate text-[11px] text-fg-faint">{item.content}</p>
         )}
-        {/* Auto-generated summary */}
-        {summaryText && (
-          <p className="mt-0.5 text-[11px] leading-relaxed text-fg-muted">
-            {summaryText}
-            {summaryTruncated && (
-              <button
-                type="button"
-                onClick={() => setSummaryExpanded(true)}
-                className="ml-1 text-fg-subtle underline hover:text-fg"
-              >
-                mehr anzeigen
-              </button>
-            )}
-          </p>
-        )}
       </div>
 
-      {!item.embedded && (
-        <span className="mt-0.5 shrink-0 text-[10px] text-fg-faint">indexiert…</span>
+      {flash ? (
+        <span className="mt-0.5 inline-flex shrink-0 items-center gap-1 text-[10px] font-medium text-success">
+          <Check size={11} aria-hidden /> gespeichert
+        </span>
+      ) : (
+        <span className="mt-0.5 shrink-0">
+          <IndexStatusPill
+            embedded={item.embedded}
+            indexedLabel="durchsuchbar"
+            indexingLabel="wird indexiert"
+          />
+        </span>
       )}
 
       {/* 3-dot menu */}

@@ -10,7 +10,6 @@ import type {
   CampaignDraft,
   SetupMessage,
   SetupToolCall,
-  Vault,
 } from "@/lib/api";
 import { applyPatch, validateForLaunch } from "@/lib/setup/draftReducer";
 import { useSetupStream } from "@/lib/setup/useSetupStream";
@@ -36,14 +35,12 @@ export function SplitAuthor({
   initialRevision,
   initialMessages,
   orgName,
-  vaults,
 }: {
   sessionId: string;
   initialDraft: CampaignDraft;
   initialRevision: number;
   initialMessages: SetupMessage[];
   orgName?: string;
-  vaults?: Vault[];
 }) {
   const router = useRouter();
   const tReview = useTranslations("setup.review");

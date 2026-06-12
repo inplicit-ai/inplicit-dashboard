@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { CheckCircle2, Pencil, Building2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, DURATION_OPTIONS } from "@/components/ui/select";
 import { EvidenceTree, type EvidenceNode } from "@/components/ui/agent-list";
 import { DataChip } from "@/components/ui/data-chip";
 import { cn } from "@/lib/utils";
-import type { CampaignDraft, Locale, SetupToolCall, Vault } from "@/lib/api";
+import type { CampaignDraft, Locale, SetupToolCall } from "@/lib/api";
 import { SectionCard } from "./SectionCard";
 import { TopicGraph } from "./TopicGraph";
 import { PeopleSection } from "./PeopleSection";
@@ -35,14 +34,12 @@ export function Catalog({
   onPatch,
   recentlyTouched,
   orgName,
-  vaults,
   peopleAnchorId,
 }: {
   draft: CampaignDraft;
   onPatch: (call: SetupToolCall) => void;
   recentlyTouched?: Set<string>;
   orgName?: string;
-  vaults?: Vault[];
   /** Optional anchor id placed on the People section wrapper — lets the review
    *  screen scroll the participant editor into view from its launch hint. */
   peopleAnchorId?: string;
@@ -181,20 +178,16 @@ export function Catalog({
         )}
       </SectionCard>
 
-      {/* ── Company context — Context Vault selection (WHY-116) ──────────── */}
-      {/* WHY-116: "Unternehmenskontext" is ONLY a Context Vault selection (a
-          picker), not a free-text block. The agent + interviewer read the
-          selected vault's items as company context. The picker dispatches the
-          `set_context_vault` tool (arg `vaultId`), which the server persists as
-          `context_vault_id` and the launch path attaches to the campaign. */}
-      <SectionCard
-        title={t("context")}
-        touched={recentlyTouched?.has("set_context_vault")}
-      >
-        <ContextVaultPicker draft={draft} onPatch={onPatch} vaults={vaults} />
-        {/* WHY: role-specific context — upload files attached to a twin role,
-            landing in that role's ROLE-scoped vault (additive to the campaign's
-            single company-context vault selected above). */}
+      {/* ── Company context — sourced from the org's single Kontext vault ── */}
+      {/* The org now has ONE Kontext vault; its CONTEXT sections are the company
+          context for every campaign automatically (no per-campaign picker). The
+          agent + interviewer read it directly — managed on the Kontext page. */}
+      <SectionCard title={t("context")}>
+        <p className="text-[length:var(--text-meta)] text-fg-subtle">
+          {t("contextHint")}
+        </p>
+        {/* Role-specific context — upload files attached to a twin role, landing
+            in that role's ROLE section of the org vault. */}
         <RoleContextUpload />
       </SectionCard>
 
@@ -286,85 +279,6 @@ function ObjectiveSection({
         aria-label={t("objective")}
       />
     </SectionCard>
-  );
-}
-
-/**
- * Company-context selector (WHY-104). A single picker that binds the campaign
- * to one of the org's Context Vaults — replacing the old free-text background.
- * When the org has no vaults yet, a quiet hint points to the Vaults surface.
- */
-function ContextVaultPicker({
-  draft,
-  onPatch,
-  vaults,
-}: {
-  draft: CampaignDraft;
-  onPatch: (call: SetupToolCall) => void;
-  vaults?: Vault[];
-}) {
-  const t = useTranslations("setup.catalog");
-  const list = vaults ?? [];
-  const [editing, setEditing] = useState(!draft.contextVaultId);
-
-  // Auto-select first vault if none set
-  useEffect(() => {
-    if (!draft.contextVaultId && list.length > 0) {
-      onPatch({ tool: "set_context_vault", args: { vaultId: list[0].id } });
-      setEditing(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  if (list.length === 0) {
-    return <PlatePlaceholder>{t("contextEmpty")}</PlatePlaceholder>;
-  }
-
-  const selectedVault = list.find((v) => v.id === draft.contextVaultId) ?? list[0];
-
-  if (!editing && selectedVault) {
-    return (
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-1 items-center gap-2.5 rounded-card border border-line bg-surface-2 px-3 py-2.5">
-          <CheckCircle2 size={15} className="shrink-0 text-success" aria-hidden />
-          <Building2 size={13} className="shrink-0 text-fg-muted" aria-hidden />
-          <span className="truncate text-[length:var(--text-body-sm)] font-medium text-fg">
-            {selectedVault.name}
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          aria-label={t("contextChange")}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-ui text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
-        >
-          <Pencil size={13} aria-hidden />
-        </button>
-      </div>
-    );
-  }
-
-  const options = [
-    { value: "", label: t("contextNone") },
-    ...list.map((v) => ({ value: v.id, label: v.name })),
-  ];
-
-  return (
-    <div className="flex flex-col gap-2">
-      <Select
-        aria-label={t("context")}
-        value={draft.contextVaultId ?? ""}
-        onValueChange={(vaultId) => {
-          onPatch({ tool: "set_context_vault", args: { vaultId } });
-          if (vaultId) setEditing(false);
-        }}
-        options={options}
-        size="md"
-      />
-      <p className="text-[length:var(--text-meta)] text-fg-subtle">
-        {t("contextHint")}
-      </p>
-    </div>
   );
 }
 
