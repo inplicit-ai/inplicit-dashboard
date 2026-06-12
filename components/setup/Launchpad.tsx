@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { motion, useReducedMotion } from "framer-motion";
 import { Composer } from "@/components/ui/composer";
-import { type Locale } from "@/lib/api";
+import { type Employee, type Locale } from "@/lib/api";
 import { clientApi } from "@/lib/client-api";
 
 /**
@@ -49,6 +49,16 @@ export function Launchpad({
   const [value, setValue] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<string[]>([]);
+
+  useEffect(() => {
+    clientApi.directory.listEmployees().then((employees: Employee[]) => {
+      const depts = Array.from(
+        new Set(employees.map((e) => e.department).filter((d): d is string => !!d))
+      ).sort();
+      setDepartments(depts);
+    }).catch(() => {/* non-fatal */});
+  }, []);
 
   const roleNames = prefilledRoles?.names ?? [];
   const hasPrefilledRoles = roleNames.length > 0;
@@ -167,6 +177,34 @@ export function Launchpad({
           );
         })}
       </div>
+
+      {/* ── Abteilungs-Vorschläge (aus dem Org-Verzeichnis) ──────────────── */}
+      {departments.length > 0 ? (
+        <div className="mt-8">
+          <p className="mb-3 text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-fg-subtle">
+            {t("departmentsLabel")}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {departments.map((dept) => (
+              <button
+                key={dept}
+                type="button"
+                disabled={creating}
+                onClick={() =>
+                  setValue((prev) =>
+                    prev.trim()
+                      ? prev
+                      : t("departmentPrompt", { dept })
+                  )
+                }
+                className="inline-flex items-center rounded-ui border border-line bg-surface px-3 py-1.5 text-[length:var(--text-meta)] font-medium text-fg shadow-sm transition-colors hover:border-line-strong hover:bg-surface-2 disabled:opacity-60"
+              >
+                {dept}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </motion.div>
   );
 }

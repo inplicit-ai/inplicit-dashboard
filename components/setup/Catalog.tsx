@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,7 +8,8 @@ import { Select, DURATION_OPTIONS } from "@/components/ui/select";
 import { EvidenceTree, type EvidenceNode } from "@/components/ui/agent-list";
 import { DataChip } from "@/components/ui/data-chip";
 import { cn } from "@/lib/utils";
-import type { CampaignDraft, Locale, SetupToolCall } from "@/lib/api";
+import type { CampaignDraft, Locale, SetupToolCall, VaultSection } from "@/lib/api";
+import { clientApi } from "@/lib/client-api";
 import { SectionCard } from "./SectionCard";
 import { TopicGraph } from "./TopicGraph";
 import { PeopleSection } from "./PeopleSection";
@@ -178,18 +179,8 @@ export function Catalog({
         )}
       </SectionCard>
 
-      {/* ── Company context — sourced from the org's single Kontext vault ── */}
-      {/* The org now has ONE Kontext vault; its CONTEXT sections are the company
-          context for every campaign automatically (no per-campaign picker). The
-          agent + interviewer read it directly — managed on the Kontext page. */}
-      <SectionCard title={t("context")}>
-        <p className="text-[length:var(--text-meta)] text-fg-subtle">
-          {t("contextHint")}
-        </p>
-        {/* Role-specific context — upload files attached to a twin role, landing
-            in that role's ROLE section of the org vault. */}
-        <RoleContextUpload />
-      </SectionCard>
+      {/* ── Company context — vault section picker ─────────────────────── */}
+      <VaultContextPicker draft={draft} onPatch={onPatch} />
 
       {/* ── Research method (Forschungsweise) ──────────────────────────── */}
       {/* WHY-104: the inductive/deductive choice is a research METHOD, not a
@@ -246,6 +237,100 @@ export function Catalog({
         orgName={orgName}
       />
     </div>
+  );
+}
+
+/* ─── Vault context picker ───────────────────────────────────────────────── */
+
+/**
+ * Lets the user choose which vault sections (CONTEXT + ROLE) the campaign
+ * can access. The selection is stored as `vaultContextIds` on the draft.
+ * When empty/unset the backend falls back to "all sections" (existing behaviour).
+ */
+function VaultContextPicker({
+  draft,
+  onPatch,
+}: {
+  draft: CampaignDraft;
+  onPatch: (call: SetupToolCall) => void;
+}) {
+  const t = useTranslations("setup.catalog");
+  const [sections, setSections] = useState<VaultSection[] | null>(null);
+
+  useEffect(() => {
+    clientApi.vault.get().then((v) => {
+      setSections(v.sections.filter((s) => s.kind === "CONTEXT" || s.kind === "ROLE"));
+    }).catch(() => setSections([]));
+  }, []);
+
+  const selected: string[] = (draft as Record<string, unknown>).vaultContextIds as string[] ?? [];
+
+  function toggle(id: string) {
+    const next = selected.includes(id)
+      ? selected.filter((x) => x !== id)
+      : [...selected, id];
+    onPatch({ tool: "set_vault_context", args: { sectionIds: next } } as SetupToolCall);
+  }
+
+  function selectAll() {
+    onPatch({ tool: "set_vault_context", args: { sectionIds: [] } } as SetupToolCall);
+  }
+
+  const allSelected = selected.length === 0;
+
+  return (
+    <SectionCard title={t("context")}>
+      <p className="text-[length:var(--text-meta)] text-fg-subtle">
+        {t("contextHint")}
+      </p>
+
+      {sections === null ? (
+        <p className="text-[length:var(--text-meta)] text-fg-subtle">{t("contextLoading")}</p>
+      ) : sections.length === 0 ? (
+        <PlatePlaceholder>{t("contextEmpty")}</PlatePlaceholder>
+      ) : (
+        <div className="mt-2 flex flex-col gap-1.5">
+          {/* "All sections" toggle */}
+          <label className="flex cursor-pointer items-center gap-3 rounded-ui border border-line bg-surface px-3 py-2 transition-colors hover:bg-surface-2">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={selectAll}
+              className="h-4 w-4 rounded accent-fg"
+            />
+            <span className="text-[length:var(--text-body)] font-medium text-fg">
+              {t("contextAllLabel")}
+            </span>
+          </label>
+          {/* Individual section toggles */}
+          {sections.map((s) => {
+            const checked = allSelected ? false : selected.includes(s.id);
+            const kindLabel = s.kind === "ROLE" ? t("contextSectionRole") : t("contextSectionContext");
+            return (
+              <label
+                key={s.id}
+                className={cn(
+                  "flex cursor-pointer items-center gap-3 rounded-ui border px-3 py-2 transition-colors hover:bg-surface-2",
+                  checked ? "border-accent bg-surface-2" : "border-line bg-surface",
+                )}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggle(s.id)}
+                  className="h-4 w-4 rounded accent-fg"
+                />
+                <span className="flex-1 text-[length:var(--text-body)] text-fg">{s.name}</span>
+                <span className="text-[length:var(--text-meta)] text-fg-subtle">{kindLabel}</span>
+              </label>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Role-specific context upload */}
+      <RoleContextUpload />
+    </SectionCard>
   );
 }
 

@@ -4,6 +4,7 @@ import {
   ApiError,
   BackendDownError,
   type CreateSetupSessionInput,
+  type Employee,
   type LaunchResult,
   type NewVaultItemInput,
   type NewTwinRoleInput,
@@ -110,6 +111,10 @@ export const clientApi = {
       clientRequest<LaunchResult>(`/api/campaigns/${id}/launch`, {
         method: "POST",
       }),
+  },
+  // ── Org directory (employees) ───────────────────────────────────────────
+  directory: {
+    listEmployees: () => clientRequest<Employee[]>("/api/orgs/me/employees"),
   },
   // ── Digital Twin roles (browser mirror of server `api.twin.*`) ──────────
   twin: {
