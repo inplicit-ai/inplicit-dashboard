@@ -138,7 +138,16 @@
     "themeHint": "System folgt deiner Betriebssystem-Einstellung. Wird nur auf diesem Gerät gespeichert.",
     "language": "Sprache",
     "languageHint": "Gilt im gesamten Dashboard.",
+    "organization": "Organisation",
     "close": "Schließen"
+  },
+  "orgLogo": {
+    "upload": "Logo hochladen",
+    "uploading": "Wird hochgeladen…",
+    "remove": "Entfernen",
+    "hint": "PNG, JPEG oder WebP · max. 2 MB",
+    "errorType": "Nur PNG-, JPEG- oder WebP-Dateien sind erlaubt.",
+    "errorSize": "Datei ist zu groß (max. 2 MB)."
   },
   "placeholder": {
     "comingSoon": "Demnächst",

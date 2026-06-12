@@ -4,6 +4,7 @@ import { useState, useTransition, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import {
+  Building2,
   Languages,
   Monitor,
   Moon,
@@ -23,6 +24,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { OrgLogoUpload } from "@/components/OrgLogoUpload";
 import { Separator } from "@/components/ui/separator";
 import { LOCALES, LOCALE_COOKIE, type Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
@@ -118,6 +120,20 @@ export function SettingsDialog({ me, trigger }: SettingsDialogProps) {
               {t("languageHint")}
             </p>
           </Section>
+
+          {me?.role === "ORG_OWNER" && me.org && (
+            <>
+              <Separator />
+              <Section title={t("organization")} icon={Building2}>
+                <div className="px-1 pt-1">
+                  <OrgLogoUpload
+                    orgName={me.org.name}
+                    currentLogoUrl={me.org.logo_url}
+                  />
+                </div>
+              </Section>
+            </>
+          )}
         </div>
 
         <DialogFooter className="shrink-0 border-t border-line-subtle px-6 py-4">

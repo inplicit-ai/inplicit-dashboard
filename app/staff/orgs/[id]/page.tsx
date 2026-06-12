@@ -22,9 +22,9 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { makeDurationOptions } from "@/lib/duration-options";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import { ErrorState } from "@/components/ErrorState";
 import { OrgAvatar } from "@/components/OrgAvatar";
+import { OrgLogoUpload } from "@/components/OrgLogoUpload";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -91,19 +91,17 @@ export default async function OrgDetailPage({
       const v = formData.get(k);
       return typeof v === "string" ? v.trim() : "";
     };
-    // logo_url: only forward when the field was present in the form; an
-    // empty string is meaningful — it clears the existing logo.
-    const logoRaw = formData.get("logo_url");
+    // Setup fields only. Content (company context) lives in the org's
+    // Kontext vault and is never edited from the staff console; the logo
+    // uploads immediately via its own endpoint, not with this form.
     const patch: UpdateOrgInput = {
       name: get("name") || undefined,
-      company_context: get("company_context") || undefined,
       industry: get("industry") || undefined,
       default_locale: get("default_locale") || undefined,
       default_voice_id: parseIntOr(get("default_voice_id")),
       default_interview_length_min: parseIntOr(
         get("default_interview_length_min"),
       ),
-      logo_url: typeof logoRaw === "string" ? logoRaw.trim() : undefined,
     };
     const api = makeApi(await requestCookie());
     let redirectTo: string;
@@ -278,22 +276,6 @@ export default async function OrgDetailPage({
             )}
 
             <Card className="p-6">
-              <SectionHeading title="Unternehmenskontext" />
-              <p className="text-[length:var(--text-caption)] text-fg-muted">
-                Wird in jeden Interview-System-Prompt der Org eingespeist.
-                Kampagnes können das pro Kampagne überschreiben.
-              </p>
-              <p className="mt-4 whitespace-pre-wrap text-[length:var(--text-body-lg)] leading-relaxed text-fg">
-                {org.company_context}
-              </p>
-              {org.industry && (
-                <p className="mt-3 text-[length:var(--text-caption)] text-fg-muted">
-                  Branche: <Mono>{org.industry}</Mono>
-                </p>
-              )}
-            </Card>
-
-            <Card className="p-6">
               <SectionHeading title="Defaults für neue Kampagnes" />
               <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
                 <InfoRow label="Sprache" value={(org.default_locale ?? "de").toUpperCase()} />
@@ -311,6 +293,7 @@ export default async function OrgDetailPage({
               <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
                 <InfoRow label="Org-ID" value={org.id} mono />
                 <InfoRow label="Slug" value={org.slug} mono />
+                <InfoRow label="Branche" value={org.industry || "—"} />
                 <InfoRow
                   label="Erstellt"
                   value={
@@ -417,34 +400,13 @@ export default async function OrgDetailPage({
 
               <Field
                 id="edit-logo"
-                label="Profilbild (URL)"
-                hint="Hosted-Image-URL. Leer lassen, um das Logo zu entfernen."
+                label="Logo"
+                hint="Wird sofort übernommen — unabhängig von „Speichern“."
               >
-                <div className="flex items-start gap-3">
-                  <OrgAvatar name={org.name} logoUrl={org.logo_url} size={56} />
-                  <Input
-                    id="edit-logo"
-                    name="logo_url"
-                    type="url"
-                    inputMode="url"
-                    defaultValue={org.logo_url ?? ""}
-                    placeholder="https://cdn.example.com/logo.png"
-                    className="flex-1"
-                  />
-                </div>
-              </Field>
-
-              <Field
-                id="edit-context"
-                label="Unternehmenskontext"
-                hint="Wird in jeden Interview-System-Prompt eingespeist."
-              >
-                <Textarea
-                  id="edit-context"
-                  name="company_context"
-                  rows={6}
-                  defaultValue={org.company_context}
-                  className="min-h-[150px]"
+                <OrgLogoUpload
+                  orgName={org.name}
+                  currentLogoUrl={org.logo_url}
+                  staffOrgId={org.id}
                 />
               </Field>
 

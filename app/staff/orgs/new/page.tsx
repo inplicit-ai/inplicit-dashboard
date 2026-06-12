@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { makeDurationOptions } from "@/lib/duration-options";
-import { Textarea } from "@/components/ui/textarea";
 import { SectionHeading } from "@/components/ui/section-heading";
 
 export default async function NewOrgPage({
@@ -37,7 +36,9 @@ export default async function NewOrgPage({
     const body: ProvisionOrgInput = {
       name: get("name"),
       slug: get("slug"),
-      company_context: get("company_context"),
+      // Content is never collected here — the customer curates context in
+      // their Kontext vault. The column defaults to '' backend-side.
+      company_context: "",
       industry: get("industry") || undefined,
       default_locale: get("default_locale") || "de",
       default_voice_id: parseIntOr(get("default_voice_id"), 438),
@@ -50,13 +51,7 @@ export default async function NewOrgPage({
       issue_magic_link: formData.get("issue_magic_link") === "on",
     };
 
-    if (
-      !body.name ||
-      !body.slug ||
-      !body.company_context ||
-      !body.owner_email ||
-      !body.owner_name
-    ) {
+    if (!body.name || !body.slug || !body.owner_email || !body.owner_name) {
       const stickyParam = encodeURIComponent(JSON.stringify(body));
       redirect(
         `/staff/orgs/new?error=${encodeURIComponent("Bitte alle Pflichtfelder ausfüllen.")}&sticky=${stickyParam}`,
@@ -170,23 +165,6 @@ export default async function NewOrgPage({
               pattern="[a-z0-9\-]+"
               placeholder="acme-gmbh"
               defaultValue={sticky.slug}
-            />
-          </Field>
-
-          <Field
-            id="company_context"
-            label="Unternehmenskontext"
-            required
-            hint="2–4 Sätze. Branche, Größe, Produkt, Zielgruppe. Wird in jeden Interview-System-Prompt eingespeist."
-          >
-            <Textarea
-              id="company_context"
-              name="company_context"
-              required
-              rows={6}
-              placeholder="Acme GmbH ist ein B2B-SaaS für Logistikfirmen mit Sitz in Berlin..."
-              defaultValue={sticky.company_context}
-              className="min-h-[150px]"
             />
           </Field>
 

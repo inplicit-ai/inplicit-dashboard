@@ -137,7 +137,16 @@
     "themeHint": "System follows your OS preference. Saved on this device only.",
     "language": "Language",
     "languageHint": "Applies across the dashboard.",
+    "organization": "Organization",
     "close": "Close"
+  },
+  "orgLogo": {
+    "upload": "Upload logo",
+    "uploading": "Uploading…",
+    "remove": "Remove",
+    "hint": "PNG, JPEG or WebP · max 2 MB",
+    "errorType": "Only PNG, JPEG or WebP files are allowed.",
+    "errorSize": "File is too large (max 2 MB)."
   },
   "placeholder": {
     "comingSoon": "Coming soon",
