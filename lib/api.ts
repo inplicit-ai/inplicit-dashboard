@@ -793,7 +793,10 @@ export interface CampaignDraft {
   language?: { default: Locale; allowSwitch: boolean };
   prompt?: string;
   goals?: Goal[];
-  background?: { notes: string; files: FileRef[] };
+  /** Kontext selection (mig 049): which vault sections ground the interview.
+   *  `null`/absent = the whole vault (default). There is no free-text campaign
+   *  context — all content lives in the org's Kontext vault. */
+  contextSectionIds?: string[] | null;
   topics?: TopicGraph;
   successCriteria?: SuccessCriteria;
   inductiveFlag?: boolean;
@@ -895,11 +898,6 @@ export interface Goal {
   id: string;
   text: string;
   needsNarrowing?: boolean;
-}
-export interface FileRef {
-  id: string;
-  name: string;
-  s3_key?: string;
 }
 export interface TopicGraph {
   nodes: TopicNode[];
@@ -1096,17 +1094,16 @@ export interface SendOrgChatResponse {
 // ONE vault per org + typed sections. The vault always exists and is seeded
 // with 6 CONTEXT sections, even for a brand-new org.
 
-export type SectionKind = "CONTEXT" | "ROLE" | "CAMPAIGN";
+export type SectionKind = "CONTEXT" | "ROLE";
 
-/** A typed section inside the org's single vault. */
+/** A typed section inside the org's single vault. Campaigns own no sections
+ *  (mig 049) — they only SELECT CONTEXT sections in the setup catalog. */
 export interface VaultSection {
   id: string;
   kind: SectionKind;
   name: string;
   /** Set when `kind === "ROLE"` — the twin role this section is bound to. */
   role_id: string | null;
-  /** Set when `kind === "CAMPAIGN"`. */
-  campaign_id: string | null;
   position: number;
   /** Only present on the hub GET (`VaultView.sections`), not on mutation responses. */
   item_count?: number;
