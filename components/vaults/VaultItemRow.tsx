@@ -138,7 +138,11 @@ export function VaultItemRow({
           type="button"
           onClick={() => void handleReindex()}
           disabled={reindexing}
-          title="Noch nicht durchsuchbar — klicken zum erneuten Indexieren"
+          title={
+            item.index_error
+              ? `Indexierung fehlgeschlagen: ${item.index_error}`
+              : "Noch nicht durchsuchbar — klicken zum erneuten Indexieren"
+          }
           className="mt-0.5 shrink-0 rounded-full border border-warning/40 bg-warning-soft px-2 py-0.5 text-[10px] font-medium text-warning transition-colors hover:border-warning disabled:opacity-60"
         >
           {reindexing ? "indexiere…" : "nicht indexiert — erneut versuchen"}

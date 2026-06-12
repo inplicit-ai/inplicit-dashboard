@@ -1133,6 +1133,8 @@ export interface VaultItem {
   mime: string | null;
   byte_size: number | null;
   embedded: boolean;
+  /** Why the last indexing attempt failed; null when indexed / never tried. */
+  index_error: string | null;
   created_at: string;
 }
 
