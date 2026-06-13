@@ -50,14 +50,14 @@ export function DeleteConfirmButton({
             <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
               Abbrechen
             </Button>
-            <form action={action}>
+            <form
+              action={async (fd) => {
+                await action(fd);
+                setOpen(false);
+              }}
+            >
               <input type="hidden" name="id" value={employeeId} />
-              <Button
-                type="submit"
-                size="sm"
-                variant="destructive"
-                onClick={() => setOpen(false)}
-              >
+              <Button type="submit" size="sm" variant="destructive">
                 <Trash2 className="h-3.5 w-3.5" />
                 Entfernen
               </Button>
