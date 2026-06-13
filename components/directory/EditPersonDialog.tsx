@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { UserPlus } from "lucide-react";
+import { Pencil } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,18 +11,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { Employee } from "@/lib/api";
 
-/**
- * "Person hinzufügen" button + dialog.
- *
- * The actual form action is a server action passed in as a prop so this client
- * component stays thin and the page stays a server component.
- */
-export function AddPersonDialog({
+export function EditPersonDialog({
+  employee,
   action,
   roleListId,
   deptListId,
 }: {
+  employee: Employee;
   action: (formData: FormData) => Promise<void>;
   roleListId: string;
   deptListId: string;
@@ -32,18 +29,23 @@ export function AddPersonDialog({
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>
-        <UserPlus className="h-4 w-4" />
-        Person hinzufügen
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => setOpen(true)}
+        aria-label={`${employee.name ?? employee.email} bearbeiten`}
+        className="text-xs text-fg-muted hover:text-fg"
+      >
+        <Pencil className="h-3.5 w-3.5" />
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Person hinzufügen</DialogTitle>
+            <DialogTitle>Person bearbeiten</DialogTitle>
             <DialogDescription>
-              E-Mail ist erforderlich. Die Rolle bestimmt den Interview-Kontext —
-              eine neue Rolle wird automatisch angelegt.
+              Ändere Name, E-Mail, Abteilung oder Rolle.
             </DialogDescription>
           </DialogHeader>
 
@@ -55,24 +57,33 @@ export function AddPersonDialog({
             }}
             className="flex flex-col gap-3"
           >
-            <Input name="name" placeholder="Name" className="text-sm" />
+            <input type="hidden" name="id" value={employee.id} />
+            <Input
+              name="name"
+              placeholder="Name"
+              defaultValue={employee.name ?? ""}
+              className="text-sm"
+            />
             <Input
               name="email"
               type="email"
               required
               placeholder="person@firma.de"
+              defaultValue={employee.email}
               className="text-sm"
             />
             <Input
               name="department"
               list={deptListId}
               placeholder="Abteilung (optional)"
+              defaultValue={employee.department ?? ""}
               className="text-sm"
             />
             <Input
               name="role"
               list={roleListId}
               placeholder="Rolle (optional)"
+              defaultValue={employee.role_name ?? ""}
               className="text-sm"
             />
             <div className="flex justify-end gap-2 pt-1">
@@ -85,8 +96,7 @@ export function AddPersonDialog({
                 Abbrechen
               </Button>
               <Button type="submit" size="sm">
-                <UserPlus className="h-4 w-4" />
-                Hinzufügen
+                Speichern
               </Button>
             </div>
           </form>

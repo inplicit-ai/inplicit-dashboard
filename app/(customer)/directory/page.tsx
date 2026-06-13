@@ -2,6 +2,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { AlertCircle, CheckCircle2, Users } from "lucide-react";
 import { AddPersonDialog } from "@/components/directory/AddPersonDialog";
+import { EditPersonDialog } from "@/components/directory/EditPersonDialog";
+import { DeleteConfirmButton } from "@/components/directory/DeleteConfirmButton";
 import { CreateTeamDialog } from "@/components/directory/CreateTeamDialog";
 import {
   makeApi,
@@ -10,9 +12,7 @@ import {
   ApiError,
 } from "@/lib/api";
 import { requireOrgOwner, requestCookie } from "@/lib/auth";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { StatBand } from "@/components/ui/stat-band";
@@ -22,8 +22,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { StatusDisc } from "@/components/ui/status-disc";
 import { cn } from "@/lib/utils";
 
+
 const PATH = "/directory";
 const ROLE_LIST_ID = "directory-role-options";
+const DEPT_LIST_ID = "directory-dept-options";
 
 interface SearchParams {
   flash?: string;
@@ -92,6 +94,38 @@ export default async function DirectoryPage({
     }
   }
 
+  async function editEmployee(formData: FormData) {
+    "use server";
+    const id = String(formData.get("id") ?? "");
+    const email = String(formData.get("email") ?? "").trim().toLowerCase();
+    const name = String(formData.get("name") ?? "").trim();
+    const department = String(formData.get("department") ?? "").trim();
+    const role_name = String(formData.get("role") ?? "").trim();
+    if (!id || !email || !email.includes("@")) {
+      redirect(
+        `${PATH}?flashType=err&flash=` +
+          encodeURIComponent("Ungültige Eingabe."),
+      );
+    }
+    const api = makeApi(await requestCookie());
+    try {
+      await api.employees.update(id, {
+        email,
+        name: name || undefined,
+        department: department || undefined,
+        role_name: role_name || undefined,
+      });
+      revalidatePath(PATH);
+      redirect(
+        `${PATH}?flashType=ok&flash=` +
+          encodeURIComponent(`${name || email} aktualisiert.`),
+      );
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : (e as Error).message;
+      redirect(`${PATH}?flashType=err&flash=` + encodeURIComponent(msg));
+    }
+  }
+
   async function assignRole(formData: FormData) {
     "use server";
     const id = String(formData.get("id") ?? "");
@@ -137,6 +171,9 @@ export default async function DirectoryPage({
   const withRole = employees.filter((e) => e.role_id).length;
   const withoutRole = employees.length - withRole;
   const roleNames = roles.map((r) => r.name);
+  const deptNames = Array.from(
+    new Set(employees.map((e) => e.department).filter((d): d is string => !!d))
+  ).sort();
 
   const columns: DataTableColumn<Employee>[] = [
     {
@@ -171,44 +208,27 @@ export default async function DirectoryPage({
       key: "role",
       header: "Rolle",
       cell: (e) => (
-        <form action={assignRole} className="flex items-center gap-1.5">
-          <input type="hidden" name="id" value={e.id} />
-          <input type="hidden" name="email" value={e.email} />
-          <Input
-            name="role"
-            list={ROLE_LIST_ID}
-            defaultValue={e.role_name ?? ""}
-            placeholder="Rolle zuweisen…"
-            className="h-8 w-[10rem] text-xs"
-          />
-          <Button
-            type="submit"
-            variant="ghost"
-            size="sm"
-            className="text-xs text-fg-muted hover:text-fg"
-            aria-label="Rolle speichern"
-          >
-            <CheckCircle2 className="h-4 w-4" />
-          </Button>
-        </form>
+        <span className="text-fg-muted">{e.role_name || "—"}</span>
       ),
     },
     {
       key: "action",
-      header: "Aktion",
+      header: "",
       numeric: true,
       cell: (e) => (
-        <form action={removeEmployee} className="flex justify-end">
-          <input type="hidden" name="id" value={e.id} />
-          <Button
-            type="submit"
-            variant="ghost"
-            size="sm"
-            className="text-xs text-fg-muted hover:bg-pain-soft hover:text-pain"
-          >
-            Entfernen
-          </Button>
-        </form>
+        <div className="flex items-center justify-end gap-1">
+          <EditPersonDialog
+            employee={e}
+            action={editEmployee}
+            roleListId={ROLE_LIST_ID}
+            deptListId={DEPT_LIST_ID}
+          />
+          <DeleteConfirmButton
+            action={removeEmployee}
+            employeeId={e.id}
+            employeeName={e.name ?? e.email}
+          />
+        </div>
       ),
     },
   ];
@@ -221,7 +241,11 @@ export default async function DirectoryPage({
         actions={
           <div className="flex items-center gap-2">
             <CreateTeamDialog employees={employees} />
-            <AddPersonDialog action={addEmployee} roleListId={ROLE_LIST_ID} />
+            <AddPersonDialog
+              action={addEmployee}
+              roleListId={ROLE_LIST_ID}
+              deptListId={DEPT_LIST_ID}
+            />
           </div>
         }
       />
@@ -237,11 +261,11 @@ export default async function DirectoryPage({
         ]}
       />
 
-      {/* Native autocomplete source for every role input on the page. */}
       <datalist id={ROLE_LIST_ID}>
-        {roleNames.map((n) => (
-          <option key={n} value={n} />
-        ))}
+        {roleNames.map((n) => <option key={n} value={n} />)}
+      </datalist>
+      <datalist id={DEPT_LIST_ID}>
+        {deptNames.map((n) => <option key={n} value={n} />)}
       </datalist>
 
       {listError && (

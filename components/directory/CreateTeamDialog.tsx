@@ -86,12 +86,11 @@ export function CreateTeamDialog({ employees }: { employees: Employee[] }) {
   return (
     <>
       <Button
-        size="sm"
         variant="outline"
         onClick={() => { reset(); setOpen(true); }}
         className="gap-1.5"
       >
-        <Plus size={13} aria-hidden />
+        <Plus size={15} aria-hidden />
         Neue Abteilung
       </Button>
 
