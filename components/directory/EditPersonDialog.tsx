@@ -11,18 +11,21 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DeptCombobox } from "./DeptCombobox";
 import type { Employee } from "@/lib/api";
 
 export function EditPersonDialog({
   employee,
   action,
   roleListId,
-  deptListId,
+  deptListId: _deptListId,
+  deptOptions = [],
 }: {
   employee: Employee;
   action: (formData: FormData) => Promise<void>;
   roleListId: string;
   deptListId: string;
+  deptOptions?: string[];
 }) {
   const [open, setOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -72,12 +75,11 @@ export function EditPersonDialog({
               defaultValue={employee.email}
               className="text-sm"
             />
-            <Input
+            <DeptCombobox
               name="department"
-              list={deptListId}
+              options={deptOptions}
               placeholder="Abteilung (optional)"
               defaultValue={employee.department ?? ""}
-              className="text-sm"
             />
             <Input
               name="role"

@@ -222,6 +222,7 @@ export default async function DirectoryPage({
             action={editEmployee}
             roleListId={ROLE_LIST_ID}
             deptListId={DEPT_LIST_ID}
+            deptOptions={deptNames}
           />
           <DeleteConfirmButton
             action={removeEmployee}
@@ -245,6 +246,7 @@ export default async function DirectoryPage({
               action={addEmployee}
               roleListId={ROLE_LIST_ID}
               deptListId={DEPT_LIST_ID}
+              deptOptions={deptNames}
             />
           </div>
         }
@@ -263,9 +265,6 @@ export default async function DirectoryPage({
 
       <datalist id={ROLE_LIST_ID}>
         {roleNames.map((n) => <option key={n} value={n} />)}
-      </datalist>
-      <datalist id={DEPT_LIST_ID}>
-        {deptNames.map((n) => <option key={n} value={n} />)}
       </datalist>
 
       {listError && (
