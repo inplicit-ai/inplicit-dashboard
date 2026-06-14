@@ -173,6 +173,9 @@ export const clientApi = {
     items: {
       list: (sid: string) =>
         clientRequest<VaultItem[]>(`/api/orgs/me/vault/sections/${sid}/items`),
+      /** Fetch one item by id (org-fenced) — backs the search→detail popup. */
+      get: (itemId: string) =>
+        clientRequest<VaultItem>(`/api/orgs/me/vault/items/${itemId}`),
       add: (sid: string, body: NewVaultItemInput) =>
         clientRequest<VaultItem>(`/api/orgs/me/vault/sections/${sid}/items`, {
           method: "POST",

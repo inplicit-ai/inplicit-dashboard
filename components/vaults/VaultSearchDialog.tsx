@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { clientApi } from "@/lib/client-api";
 import type { VaultSearchHit } from "@/lib/api";
+import { VaultItemDialog } from "@/components/vaults/VaultItemDialog";
 
 /**
  * Org-wide semantic search over the single Kontext vault. One request to
@@ -28,6 +29,8 @@ export function VaultSearchDialog({
   const [hits, setHits] = useState<VaultSearchHit[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // The hit whose detail popup is open (clicking a result opens it on top).
+  const [selected, setSelected] = useState<VaultSearchHit | null>(null);
 
   /** Reset transient state in the open handler — not in an effect — so the next
    *  open starts clean without a setState-in-effect cascade. */
@@ -113,8 +116,12 @@ export function VaultSearchDialog({
             ) : (
               <ul className="max-h-96 divide-y divide-line-subtle overflow-y-auto rounded-ui border border-line">
                 {hits.map((h, i) => (
-                  <li key={`${h.item_id}-${i}`} className="px-4 py-3">
-                    <div className="flex items-start justify-between gap-3">
+                  <li key={`${h.item_id}-${i}`}>
+                    <button
+                      type="button"
+                      onClick={() => setSelected(h)}
+                      className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-2"
+                    >
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[13px] font-medium text-fg">
                           {h.title ?? "Ohne Titel"}
@@ -126,7 +133,7 @@ export function VaultSearchDialog({
                       <span className="shrink-0 rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-mono tabular-nums text-fg-subtle">
                         {(h.score * 100).toFixed(0)}%
                       </span>
-                    </div>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -140,6 +147,14 @@ export function VaultSearchDialog({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Detail popup: opens on top of the results, showing what was extracted. */}
+      <VaultItemDialog
+        itemId={selected?.item_id ?? null}
+        open={selected !== null}
+        onOpenChange={(o) => !o && setSelected(null)}
+        fallbackTitle={selected?.title}
+      />
     </>
   );
 }

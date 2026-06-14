@@ -387,6 +387,9 @@ export function makeApi(cookie?: string) {
       items: {
         list: (sid: string) =>
           request<VaultItem[]>(`/api/orgs/me/vault/sections/${sid}/items`),
+        /** Fetch one item by id (org-fenced) — backs the search→detail popup. */
+        get: (itemId: string) =>
+          request<VaultItem>(`/api/orgs/me/vault/items/${itemId}`),
         add: (sid: string, body: NewVaultItemInput) =>
           request<VaultItem>(`/api/orgs/me/vault/sections/${sid}/items`, {
             method: "POST",
