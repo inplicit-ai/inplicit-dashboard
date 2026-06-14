@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, FileText, AlertTriangle } from "lucide-react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Dialog,
   DialogContent,
@@ -12,52 +14,52 @@ import { clientApi } from "@/lib/client-api";
 import type { VaultItem } from "@/lib/api";
 
 /**
- * Item-detail popup: shows exactly what was extracted/stored for one vault item
- * (markdown for OCR'd PDFs — tables/headings preserved). Fetches lazily by id
- * when opened, so search hits (which carry only `item_id`) can open it directly.
- *
- * Content is rendered as monospace preformatted text — a faithful view of the
- * stored markdown. (A rich markdown renderer can replace the <pre> later without
- * touching the data flow.)
+ * Item-detail popup: shows exactly what was extracted/stored for one vault item,
+ * rendered as real markdown (OCR'd PDF tables/headings/lists). Either pass a
+ * preloaded `item` (section rows already have it) or an `itemId` to fetch lazily
+ * (search hits carry only the id).
  */
 export function VaultItemDialog({
+  item: preloaded,
   itemId,
   open,
   onOpenChange,
   fallbackTitle,
 }: {
-  itemId: string | null;
+  item?: VaultItem | null;
+  itemId?: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Shown in the header until the full item loads (e.g. the search hit title). */
+  /** Shown in the header until a fetched item loads (e.g. the search hit title). */
   fallbackTitle?: string | null;
 }) {
-  const [item, setItem] = useState<VaultItem | null>(null);
+  const [fetched, setFetched] = useState<VaultItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!open || !itemId) return;
+    // Preloaded items need no fetch; otherwise resolve by id on open.
+    if (preloaded || !open || !itemId) return;
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setItem(null);
-    clientApi.vault.items
-      .get(itemId)
-      .then((data) => {
-        if (!cancelled) setItem(data);
-      })
-      .catch((e: unknown) => {
+    void (async () => {
+      setLoading(true);
+      setError(null);
+      setFetched(null);
+      try {
+        const data = await clientApi.vault.items.get(itemId);
+        if (!cancelled) setFetched(data);
+      } catch (e) {
         if (!cancelled) setError((e as Error).message);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [open, itemId]);
+  }, [open, itemId, preloaded]);
 
+  const item = preloaded ?? fetched;
   const title = item?.title ?? fallbackTitle ?? "Ohne Titel";
 
   return (
@@ -113,7 +115,28 @@ function ItemMeta({ item }: { item: VaultItem }) {
   );
 }
 
-/** Extracted content (markdown) as preformatted monospace, or an empty-state. */
+/** Markdown element styling via Tailwind arbitrary variants on the container —
+ *  no typography plugin, no per-element override map. Tables/headings/lists/code
+ *  all get design-token styling; the GFM table plugin handles the table syntax. */
+const MD_CLASS = [
+  "max-h-[60vh] overflow-auto rounded-ui border border-line bg-surface-2 p-4",
+  "text-[13px] leading-relaxed text-fg-muted",
+  "[&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:text-[15px] [&_h1]:font-semibold [&_h1]:text-fg [&_h1:first-child]:mt-0",
+  "[&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-[14px] [&_h2]:font-semibold [&_h2]:text-fg [&_h2:first-child]:mt-0",
+  "[&_h3]:mt-3 [&_h3]:mb-1.5 [&_h3]:text-[13px] [&_h3]:font-semibold [&_h3]:text-fg [&_h3:first-child]:mt-0",
+  "[&_p]:my-2 [&_strong]:font-semibold [&_strong]:text-fg [&_a]:text-accent [&_a]:underline",
+  "[&_ul]:my-2 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5",
+  "[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5",
+  "[&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-line [&_blockquote]:pl-3 [&_blockquote]:italic",
+  "[&_code]:rounded [&_code]:bg-surface [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[11px]",
+  "[&_pre]:my-2 [&_pre]:overflow-auto [&_pre]:rounded-ui [&_pre]:border [&_pre]:border-line [&_pre]:bg-surface [&_pre]:p-3 [&_pre]:text-[11px]",
+  "[&_table]:my-3 [&_table]:w-full [&_table]:border-collapse [&_table]:text-[12px]",
+  "[&_th]:border [&_th]:border-line [&_th]:bg-surface [&_th]:px-2 [&_th]:py-1 [&_th]:text-left [&_th]:font-semibold [&_th]:text-fg",
+  "[&_td]:border [&_td]:border-line [&_td]:px-2 [&_td]:py-1 [&_td]:align-top",
+  "[&_hr]:my-3 [&_hr]:border-line",
+].join(" ");
+
+/** Extracted content rendered as markdown, or an empty-state. */
 function ItemBody({ item }: { item: VaultItem }) {
   const content = item.content?.trim();
   if (!content) {
@@ -126,8 +149,8 @@ function ItemBody({ item }: { item: VaultItem }) {
     );
   }
   return (
-    <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded-ui border border-line bg-surface-2 p-4 font-mono text-[12px] leading-relaxed text-fg">
-      {content}
-    </pre>
+    <div className={MD_CLASS}>
+      <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+    </div>
   );
 }

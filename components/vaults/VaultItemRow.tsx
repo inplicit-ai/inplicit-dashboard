@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { clientApi } from "@/lib/client-api";
 import type { VaultItem } from "@/lib/api";
+import { VaultItemDialog } from "@/components/vaults/VaultItemDialog";
 
 /** Human-readable label for a VaultItem — never shows raw UUIDs. */
 function itemLabel(it: VaultItem): string {
@@ -44,6 +45,7 @@ export function VaultItemRow({
   const [menuOpen, setMenuOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [title, setTitle] = useState(item.title ?? "");
   const [saving, setSaving] = useState(false);
   const [reindexing, setReindexing] = useState(false);
@@ -123,7 +125,14 @@ export function VaultItemRow({
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-medium text-fg">{label}</p>
+        <button
+          type="button"
+          onClick={() => setDetailOpen(true)}
+          title="Extrahierten Inhalt ansehen"
+          className="block w-full truncate text-left text-[13px] font-medium text-fg transition-colors hover:text-accent"
+        >
+          {label}
+        </button>
         {item.kind === "URL" && item.content && (
           <p className="truncate text-[11px] text-fg-faint">{item.content}</p>
         )}
@@ -191,6 +200,9 @@ export function VaultItemRow({
           </div>
         )}
       </div>
+
+      {/* Detail popup — what was extracted for THIS item (markdown rendered). */}
+      <VaultItemDialog item={item} open={detailOpen} onOpenChange={setDetailOpen} />
 
       {/* Rename dialog */}
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
