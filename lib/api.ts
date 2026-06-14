@@ -43,6 +43,11 @@ export function makeApi(cookie?: string) {
       throw new ApiError(res.status, msg, detail);
     }
 
+    // 204/205/304 carry no body — `void` callers expect no JSON; parsing an
+    // empty body would throw and make a successful request look failed.
+    if (res.status === 204 || res.status === 205 || res.status === 304) {
+      return undefined as T;
+    }
     return (await res.json()) as T;
   }
 

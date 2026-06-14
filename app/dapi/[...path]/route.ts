@@ -41,7 +41,12 @@ async function forward(req: NextRequest, segments: string[]): Promise<Response> 
 
   try {
     const res = await fetch(target, init);
-    const buf = await res.arrayBuffer();
+    // 204/205/304 are "null body status": constructing a Response with a body
+    // (even an empty ArrayBuffer) throws, which previously fell into the catch
+    // below and surfaced a bogus "Backend nicht erreichbar" 502 on a SUCCESSFUL
+    // DELETE. Forward those body-less.
+    const nullBody = res.status === 204 || res.status === 205 || res.status === 304;
+    const buf = nullBody ? null : await res.arrayBuffer();
     const headers: Record<string, string> = {
       "content-type": res.headers.get("content-type") ?? "application/json",
     };
