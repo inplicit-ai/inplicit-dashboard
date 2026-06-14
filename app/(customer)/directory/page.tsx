@@ -223,6 +223,7 @@ export default async function DirectoryPage({
             roleListId={ROLE_LIST_ID}
             deptListId={DEPT_LIST_ID}
             deptOptions={deptNames}
+            roleOptions={roleNames}
           />
           <DeleteConfirmButton
             action={removeEmployee}
@@ -247,6 +248,7 @@ export default async function DirectoryPage({
               roleListId={ROLE_LIST_ID}
               deptListId={DEPT_LIST_ID}
               deptOptions={deptNames}
+              roleOptions={roleNames}
             />
           </div>
         }
@@ -263,9 +265,6 @@ export default async function DirectoryPage({
         ]}
       />
 
-      <datalist id={ROLE_LIST_ID}>
-        {roleNames.map((n) => <option key={n} value={n} />)}
-      </datalist>
 
       {listError && (
         <div className="mb-4 flex items-start gap-2.5 rounded-ui border border-pain-muted bg-pain-soft px-3.5 py-2.5 text-sm text-pain">

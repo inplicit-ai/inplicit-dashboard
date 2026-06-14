@@ -18,11 +18,13 @@ export function AddPersonDialog({
   roleListId,
   deptListId: _deptListId,
   deptOptions = [],
+  roleOptions = [],
 }: {
   action: (formData: FormData) => Promise<void>;
   roleListId: string;
   deptListId: string;
   deptOptions?: string[];
+  roleOptions?: string[];
 }) {
   const [open, setOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -65,11 +67,10 @@ export function AddPersonDialog({
               options={deptOptions}
               placeholder="Abteilung (optional)"
             />
-            <Input
+            <DeptCombobox
               name="role"
-              list={roleListId}
+              options={roleOptions}
               placeholder="Rolle (optional)"
-              className="text-sm"
             />
             <div className="flex justify-end gap-2 pt-1">
               <Button
