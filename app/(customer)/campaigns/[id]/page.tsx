@@ -24,7 +24,6 @@ import { MetricCard } from "@/components/ui/metric-card";
 import { Card } from "@/components/ui/card";
 import { StatusDisc } from "@/components/ui/status-disc";
 import { RefineButton } from "@/components/campaign-chat/RefineButton";
-import { ContextSection } from "@/components/campaign/ContextSection";
 import { CampaignActionsMenu } from "@/components/campaign/CampaignActionsMenu";
 import { cn } from "@/lib/utils";
 
@@ -211,9 +210,6 @@ export default async function CampaignOverview({
             </div>
           </div>
         </Card>
-
-        {/* Company context — full-width card grid with "Mehr lesen" collapse. */}
-        <ContextSection companyContext={campaign.company_context} />
       </div>
     </div>
   );
