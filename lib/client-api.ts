@@ -77,6 +77,11 @@ async function clientRequest<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(res.status, msg, detail);
   }
 
+  // 204/205/304 carry no body — `void` callers (DELETE) expect no JSON. Parsing
+  // an empty body here would throw and make a successful delete look failed.
+  if (res.status === 204 || res.status === 205 || res.status === 304) {
+    return undefined as T;
+  }
   return (await res.json()) as T;
 }
 
