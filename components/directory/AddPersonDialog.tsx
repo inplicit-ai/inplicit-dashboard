@@ -11,20 +11,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DeptCombobox } from "./DeptCombobox";
 
 export function AddPersonDialog({
   action,
   roleListId,
-  deptListId: _deptListId,
-  deptOptions = [],
-  roleOptions = [],
+  deptListId,
 }: {
   action: (formData: FormData) => Promise<void>;
   roleListId: string;
   deptListId: string;
-  deptOptions?: string[];
-  roleOptions?: string[];
 }) {
   const [open, setOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -62,15 +57,17 @@ export function AddPersonDialog({
               placeholder="person@firma.de"
               className="text-sm"
             />
-            <DeptCombobox
+            <Input
               name="department"
-              options={deptOptions}
+              list={deptListId}
               placeholder="Abteilung (optional)"
+              className="text-sm"
             />
-            <DeptCombobox
+            <Input
               name="role"
-              options={roleOptions}
+              list={roleListId}
               placeholder="Rolle (optional)"
+              className="text-sm"
             />
             <div className="flex justify-end gap-2 pt-1">
               <Button

@@ -113,36 +113,15 @@ export default async function DirectoryPage({
         email,
         name: name || undefined,
         department: department || undefined,
-        role_name: role_name || undefined,
+        // Empty role clears it (backend treats "" as "remove role"). name/dept
+        // can't be cleared via update — backend keeps the old value on empty.
+        // ponytail: clear-name/dept needs 3-state Option plumbing; add when asked.
+        role_name,
       });
       revalidatePath(PATH);
       redirect(
         `${PATH}?flashType=ok&flash=` +
           encodeURIComponent(`${name || email} aktualisiert.`),
-      );
-    } catch (e) {
-      const msg = e instanceof ApiError ? e.message : (e as Error).message;
-      redirect(`${PATH}?flashType=err&flash=` + encodeURIComponent(msg));
-    }
-  }
-
-  async function assignRole(formData: FormData) {
-    "use server";
-    const id = String(formData.get("id") ?? "");
-    const email = String(formData.get("email") ?? "").trim();
-    const role_name = String(formData.get("role") ?? "").trim();
-    if (!id) return;
-    const api = makeApi(await requestCookie());
-    try {
-      // Empty role_name clears the role; email is echoed back unchanged so the
-      // backend leaves the rest of the record alone.
-      await api.employees.update(id, { email, role_name });
-      revalidatePath(PATH);
-      redirect(
-        `${PATH}?flashType=ok&flash=` +
-          encodeURIComponent(
-            role_name ? `Rolle „${role_name}" zugewiesen.` : "Rolle entfernt.",
-          ),
       );
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : (e as Error).message;
@@ -208,7 +187,7 @@ export default async function DirectoryPage({
       key: "role",
       header: "Rolle",
       cell: (e) => (
-        <span className="text-fg-muted">{e.role_name || "—"}</span>
+        <span className="text-fg">{e.role_name || "—"}</span>
       ),
     },
     {
@@ -222,8 +201,6 @@ export default async function DirectoryPage({
             action={editEmployee}
             roleListId={ROLE_LIST_ID}
             deptListId={DEPT_LIST_ID}
-            deptOptions={deptNames}
-            roleOptions={roleNames}
           />
           <DeleteConfirmButton
             action={removeEmployee}
@@ -247,12 +224,22 @@ export default async function DirectoryPage({
               action={addEmployee}
               roleListId={ROLE_LIST_ID}
               deptListId={DEPT_LIST_ID}
-              deptOptions={deptNames}
-              roleOptions={roleNames}
             />
           </div>
         }
       />
+
+      {/* Native autocomplete sources for the role/dept inputs in both dialogs. */}
+      <datalist id={ROLE_LIST_ID}>
+        {roleNames.map((n) => (
+          <option key={n} value={n} />
+        ))}
+      </datalist>
+      <datalist id={DEPT_LIST_ID}>
+        {deptNames.map((n) => (
+          <option key={n} value={n} />
+        ))}
+      </datalist>
 
       {sp.flash && <Flash type={sp.flashType ?? "ok"} message={sp.flash} />}
 

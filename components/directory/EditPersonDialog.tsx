@@ -11,23 +11,18 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DeptCombobox } from "./DeptCombobox";
 import type { Employee } from "@/lib/api";
 
 export function EditPersonDialog({
   employee,
   action,
   roleListId,
-  deptListId: _deptListId,
-  deptOptions = [],
-  roleOptions = [],
+  deptListId,
 }: {
   employee: Employee;
   action: (formData: FormData) => Promise<void>;
   roleListId: string;
   deptListId: string;
-  deptOptions?: string[];
-  roleOptions?: string[];
 }) {
   const [open, setOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -77,17 +72,19 @@ export function EditPersonDialog({
               defaultValue={employee.email}
               className="text-sm"
             />
-            <DeptCombobox
+            <Input
               name="department"
-              options={deptOptions}
+              list={deptListId}
               placeholder="Abteilung (optional)"
               defaultValue={employee.department ?? ""}
+              className="text-sm"
             />
-            <DeptCombobox
+            <Input
               name="role"
-              options={roleOptions}
+              list={roleListId}
               placeholder="Rolle (optional)"
               defaultValue={employee.role_name ?? ""}
+              className="text-sm"
             />
             <div className="flex justify-end gap-2 pt-1">
               <Button
